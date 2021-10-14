@@ -1,0 +1,9 @@
+max_width = 120
+newline_style = "Unix"
+indent_style = "Block"
+normalize_comments = true
+brace_style = "PreferSameLine"
+reorder_imports = true
+reorder_impl_items = true
+reorder_modules = true
+tab_spaces = 2
