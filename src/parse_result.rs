@@ -1,0 +1,86 @@
+use crate::parse_error::ParseError;
+
+#[derive(Debug, Clone)]
+pub enum ParseResult<'a, I, A> {
+  Success { get: A, length: usize },
+  Failure { get: ParseError<'a, I>, is_committed: bool },
+}
+
+impl<'a, I, A> ParseResult<'a, I, A> {
+  pub fn successful(get: A, length: usize) -> Self {
+    ParseResult::Success { get, length }
+  }
+
+  pub fn failed(get: ParseError<'a, I>, is_committed: bool) -> Self {
+    ParseResult::Failure { get, is_committed }
+  }
+
+  pub fn failed_with_un_commit(get: ParseError<'a, I>) -> Self {
+    ParseResult::Failure {
+      get,
+      is_committed: false,
+    }
+  }
+
+  pub fn failed_with_commit(get: ParseError<'a, I>) -> Self {
+    ParseResult::Failure {
+      get,
+      is_committed: true,
+    }
+  }
+
+  pub fn extract(self) -> Result<A, ParseError<'a, I>> {
+    match self {
+      ParseResult::Failure { get: e, .. } => Err(e),
+      ParseResult::Success { get: a, .. } => Ok(a),
+    }
+  }
+
+  pub fn with_un_commit(self) -> Self {
+    match self {
+      ParseResult::Failure {
+        get: e,
+        is_committed: true,
+      } => ParseResult::Failure {
+        get: e,
+        is_committed: false,
+      },
+      _ => self,
+    }
+  }
+
+  pub fn map_err_is_committed_fallback(self, is_committed: bool) -> Self {
+    match self {
+      ParseResult::Failure {
+        get: e,
+        is_committed: c,
+      } => ParseResult::Failure {
+        get: e,
+        is_committed: c || is_committed,
+      },
+      _ => self,
+    }
+  }
+
+  pub fn map_err<F>(self, f: F) -> Self
+  where
+    F: Fn(ParseError<'a, I>) -> ParseError<'a, I>, {
+    match self {
+      ParseResult::Failure {
+        get: e,
+        is_committed: c,
+      } => ParseResult::Failure {
+        get: f(e),
+        is_committed: c,
+      },
+      _ => self,
+    }
+  }
+
+  pub fn with_add_length(self, n: usize) -> Self {
+    match self {
+      ParseResult::Success { get: a, length: m } => ParseResult::Success { get: a, length: n + m },
+      _ => self,
+    }
+  }
+}
