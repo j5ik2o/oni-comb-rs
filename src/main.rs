@@ -1,6 +1,7 @@
 #![feature(generic_associated_types)]
 #![feature(associated_type_defaults)]
 #![allow(incomplete_features)]
+
 // https://github.com/fpinscala/fpinscala/blob/first-edition/answers/src/main/scala/fpinscala/parsing/Parsers.scala
 use regex::Regex;
 
@@ -52,7 +53,7 @@ pub trait Parsers {
   }
 
   fn default_succeed<A>(&self, a: A) -> Self::P<A> {
-    self.map(self.string("".to_string()),move |_| a)
+    self.map(self.string("".to_string()), move |_| a)
   }
 
   fn succeed<A>(&self, a: A) -> Self::P<A>;
@@ -64,7 +65,7 @@ pub trait Parsers {
     PF: Fn() -> Self::P<A>, {
     self.map2(
       pf(),
-     || self.many(pf),
+      || self.many(pf),
       |a, b: Vec<A>| {
         let mut m = vec![];
         m.push(a);
@@ -142,15 +143,15 @@ pub trait Parsers {
 
   fn attempt<A>(&self, p: Self::P<A>) -> Self::P<A>;
 
-  fn skip_l<X, B, PF>(&self, p1: Self::P<X>, p2f: PF) -> Self::P<B>
+  fn skip_l<A, B, PF>(&self, p1: Self::P<A>, p2f: PF) -> Self::P<B>
   where
-    PF: Fn() -> Self::P<B>, {
+    PF: FnOnce() -> Self::P<B>, {
     self.map2(self.slice(p1), p2f, |_, b| b)
   }
 
-  fn skip_r<X, A, PF>(&self, p1: Self::P<A>, p2f: PF) -> Self::P<A>
+  fn skip_r<A, B, PF>(&self, p1: Self::P<A>, p2f: PF) -> Self::P<A>
   where
-    PF: FnOnce() -> Self::P<X>, {
+    PF: FnOnce() -> Self::P<B>, {
     self.map2(p1, || self.slice(p2f()), |a, _| a)
   }
 
@@ -201,6 +202,21 @@ pub trait Parsers {
   //     },
   //   )
   // }
+
+  fn surround<X, Y, A>(&self, start: Self::P<X>, stop: Self::P<Y>, p: Self::P<A>) -> Self::P<A> {
+    self.skip_l(start, || self.skip_r(p,  || stop))
+  }
+
+  fn eof(&self) -> Self::P<String> {
+    self.label(
+      "unexpected trailing characters".to_string(),
+      self.regex(Regex::new("\\z").unwrap()),
+    )
+  }
+
+  fn root<A>(&self, p: Self::P<A>) -> Self::P<A> {
+    self.skip_r(p, || self.eof())
+  }
 }
 
 fn main() {
