@@ -57,7 +57,7 @@ impl Parsers for SimpleParsers {
     B: 'a, {
     SimpleParser::new(move |parse_state| match parser.run(parse_state.clone()) {
       ParseResult::Success { get: a, length: n } => f(a)
-        .run(Rc::new(parse_state.advance_by(n)))
+        .run(Rc::new(parse_state.with_add_offset(n)))
         .map_err_is_committed_fallback(n != 0)
         .with_add_length(n),
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
@@ -73,7 +73,7 @@ impl Parsers for SimpleParsers {
     SimpleParser::new(move |parse_state| match parser.run(parse_state.clone()) {
       ParseResult::Success { get: a, length } => ParseResult::Success {
         get: f(a),
-        length: parse_state.offset() + length,
+        length,
       },
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })
@@ -100,7 +100,7 @@ impl BasicCombinators for SimpleParsers {
     Self::P<'a, I, B>: 'a, {
     SimpleParser::new(move |parse_state| match pa.run(Rc::clone(&parse_state)) {
       ParseResult::Success { get: r1, length: n1 } => {
-        let ps = Rc::new(parse_state.advance_by(n1));
+        let ps = Rc::new(parse_state.with_add_offset(n1));
         match pb.run(ps) {
           ParseResult::Success { get: r2, length: n2 } => ParseResult::successful(Tuple::new(r1, r2), n1 + n2),
           ParseResult::Failure { get, is_committed } => ParseResult::Failure { get, is_committed },
@@ -126,7 +126,7 @@ impl BasicCombinators for SimpleParsers {
       let mut items = vec![];
 
       if let ParseResult::Success { get, length } = pa.run(Rc::clone(&ps)) {
-        ps = Rc::new(ps.advance_by(length));
+        ps = Rc::new(ps.with_add_offset(length));
         items.push(get);
         pos += length;
         loop {
@@ -146,14 +146,14 @@ impl BasicCombinators for SimpleParsers {
 
           if let Some(sep) = &separator {
             if let ParseResult::Success { length, .. } = sep.run(Rc::clone(&ps)) {
-              ps = Rc::new(ps.advance_by(length));
+              ps = Rc::new(ps.with_add_offset(length));
               pos += length;
             } else {
               break;
             }
           }
           if let ParseResult::Success { get, length } = pa.run(Rc::clone(&ps)) {
-            ps = Rc::new(ps.advance_by(length));
+            ps = Rc::new(ps.with_add_offset(length));
             items.push(get);
             pos += length;
           } else {
@@ -172,7 +172,7 @@ impl BasicCombinators for SimpleParsers {
         }
       }
       let len = items.len();
-      ParseResult::successful(items, s.offset() + len)
+      ParseResult::successful(items,  len)
     })
   }
 }
@@ -205,7 +205,7 @@ impl ElementParsers for SimpleParsers {
     F: Fn(&I) -> bool + 'a,
     I: Clone + PartialEq + 'a, {
     SimpleParser::new(move |s| {
-      let i = s.offset();
+      let offset = s.offset();
       let msg = format!("offset: {}", i);
       let ss = s.input();
       if let Some(actual) = ss.get(0) {
@@ -213,7 +213,7 @@ impl ElementParsers for SimpleParsers {
           return ParseResult::successful(actual.clone(), 1);
         }
       }
-      ParseResult::failed_with_un_commit(s.location.clone().with_add_offset(i).to_error(msg))
+      ParseResult::failed_with_un_commit(s.location.clone().with_add_offset(1).to_error(msg))
     })
   }
 
@@ -227,7 +227,7 @@ impl ElementParsers for SimpleParsers {
       let mut index = 0;
       loop {
         if index == tag.len() {
-          return ParseResult::successful(tag.clone(), offset + index);
+          return ParseResult::successful(tag.clone(), index);
         }
         let pos = offset + index;
         if let Some(str) = input.get(pos) {
@@ -253,11 +253,11 @@ impl ElementParsers for SimpleParsers {
   where
     'b: 'a, {
     SimpleParser::new(move |s| {
-      let start = s.offset();
+      let offset = s.offset();
       let input = s.input();
       let mut index = 0;
       for c in tag.chars() {
-        let pos = start + index;
+        let pos = offset + index;
         if let Some(actual) = input.get(pos) {
           if c != *actual {
             return ParseResult::failed_with_un_commit(

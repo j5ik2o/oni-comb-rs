@@ -14,7 +14,7 @@ impl<'a, I: Clone> ParseState<'a, I> {
     self.location.offset
   }
 
-  pub fn advance_by(&self, num_chars: usize) -> ParseState<'a, I> {
+  pub fn with_add_offset(&self, num_chars: usize) -> ParseState<'a, I> {
     let mut l = self.location.clone();
     l.add_offset(num_chars);
     Self { location: l }
