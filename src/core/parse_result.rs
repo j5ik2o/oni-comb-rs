@@ -1,4 +1,4 @@
-use crate::parse_error::ParseError;
+use crate::core::parse_error::ParseError;
 
 #[derive(Debug, Clone)]
 pub enum ParseResult<'a, I, A> {
@@ -33,6 +33,13 @@ impl<'a, I, A> ParseResult<'a, I, A> {
     match self {
       ParseResult::Failure { get: e, .. } => Err(e),
       ParseResult::Success { get: a, .. } => Ok(a),
+    }
+  }
+
+  pub fn is_committed(&self) -> Option<bool> {
+    match self {
+      &ParseResult::Failure { is_committed, .. } => Some(is_committed),
+      _ => None,
     }
   }
 
