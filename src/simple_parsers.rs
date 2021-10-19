@@ -71,10 +71,7 @@ impl Parsers for SimpleParsers {
     A: 'a,
     B: 'a, {
     SimpleParser::new(move |parse_state| match parser.run(parse_state.clone()) {
-      ParseResult::Success { get: a, length } => ParseResult::Success {
-        get: f(a),
-        length,
-      },
+      ParseResult::Success { get: a, length } => ParseResult::Success { get: f(a), length },
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })
   }
@@ -172,7 +169,7 @@ impl BasicCombinators for SimpleParsers {
         }
       }
       let len = items.len();
-      ParseResult::successful(items,  len)
+      ParseResult::successful(items, len)
     })
   }
 }
@@ -206,9 +203,9 @@ impl ElementParsers for SimpleParsers {
     I: Clone + PartialEq + 'a, {
     SimpleParser::new(move |s| {
       let offset = s.offset();
-      let msg = format!("offset: {}", i);
-      let ss = s.input();
-      if let Some(actual) = ss.get(0) {
+      let msg = format!("offset: {}", offset);
+      let input = s.input();
+      if let Some(actual) = input.get(0) {
         if f(actual) {
           return ParseResult::successful(actual.clone(), 1);
         }
@@ -222,15 +219,13 @@ impl ElementParsers for SimpleParsers {
     I: Clone + PartialEq + Debug + 'a,
     'b: 'a, {
     SimpleParser::new(move |s| {
-      let offset = s.offset();
       let input = s.input();
       let mut index = 0;
       loop {
         if index == tag.len() {
           return ParseResult::successful(tag.clone(), index);
         }
-        let pos = offset + index;
-        if let Some(str) = input.get(pos) {
+        if let Some(str) = input.get(index) {
           if tag[index] != *str {
             return ParseResult::failed_with_un_commit(
               s.location
@@ -253,22 +248,23 @@ impl ElementParsers for SimpleParsers {
   where
     'b: 'a, {
     SimpleParser::new(move |s| {
-      let offset = s.offset();
       let input = s.input();
+      log::debug!("input = {:?}", input);
       let mut index = 0;
       for c in tag.chars() {
-        let pos = offset + index;
-        if let Some(actual) = input.get(pos) {
+        log::debug!("c = {}", c);
+        if let Some(actual) = input.get(index) {
+          log::debug!("actual = {}", actual);
           if c != *actual {
             return ParseResult::failed_with_un_commit(
               s.location
                 .clone()
-                .with_add_offset(pos)
+                .with_add_offset(index)
                 .to_error(format!("tag {:?} expect: {:?}, found: {}", tag, c, actual)),
             );
           }
         } else {
-          return ParseResult::failed_with_un_commit(s.location.clone().with_add_offset(pos).to_error("".to_string()));
+          return ParseResult::failed_with_un_commit(s.location.clone().with_add_offset(index).to_error("".to_string()));
         }
         index += 1;
       }
@@ -465,5 +461,45 @@ mod tests {
     let result = SimpleParsers::run(p, b"ab").unwrap();
     log::debug!("result = {:?}", result);
     assert_eq!(result, pv1);
+  }
+
+  #[test]
+  fn test_example1() {
+    init();
+    let pa = || SimpleParsers::elem('a');
+    let pb = || SimpleParsers::elem('b');
+    let pc = || SimpleParsers::elem('c');
+    let pd = || SimpleParsers::elem('d');
+    let p = || pa().and(pb()).and(pc().or(pd()));
+
+    let input = "abc".chars().collect::<Vec<char>>();
+    let Tuple {
+      a: Tuple { a, b },
+      b: c,
+    } = SimpleParsers::run(p(), &input).unwrap();
+    log::debug!("result = {:?}, {:?}, {:?}", a, b, c);
+
+    let input = "abd".chars().collect::<Vec<char>>();
+    let Tuple {
+      a: Tuple { a, b },
+      b: c,
+    } = SimpleParsers::run(p(), &input).unwrap();
+    log::debug!("result = {:?}, {:?}, {:?}", a, b, c);
+  }
+
+
+  #[test]
+  fn test_example2() {
+    init();
+    let pa = || SimpleParsers::elem('a');
+    let pb = || SimpleParsers::tag("name");
+    let p = || pa().and(pb());
+
+    let input = "aname".chars().collect::<Vec<char>>();
+    let Tuple {
+      a,
+      b,
+    } = SimpleParsers::run(p(), &input).unwrap();
+    log::debug!("result = {:?}, {:?}", a, b);
   }
 }

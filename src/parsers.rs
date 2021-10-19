@@ -38,5 +38,4 @@ pub trait Parsers {
     I: Clone + 'a,
     A: 'a,
     B: 'a;
-
 }
