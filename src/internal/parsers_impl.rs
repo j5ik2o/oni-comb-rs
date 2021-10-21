@@ -40,12 +40,13 @@ impl CoreParsers for ParsersImpl {
     })
   }
 
-  fn failed<'a, I, A>(parser_error: ParseError<'a, I>) -> Self::P<'a, I, A>
+  fn failed<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
   where
-    I: Clone + 'a,
+    F: Fn() -> ParseError<'a, I> + 'a,
+    I: 'a,
     A: 'a, {
     Parser::new(move |_| ParseResult::Failure {
-      get: parser_error.clone(),
+      get: f(),
       is_committed: false,
     })
   }
@@ -55,7 +56,7 @@ impl CoreParsers for ParsersImpl {
     F: Fn(A) -> Self::P<'a, I, B> + 'a,
     A: 'a,
     B: 'a, {
-    Parser::new(move |parse_state| match parser.run(parse_state.clone()) {
+    Parser::new(move |parse_state| match parser.run(Rc::clone(&parse_state)) {
       ParseResult::Success { get: a, length: n } => f(a)
         .run(Rc::new(parse_state.add_offset(n)))
         .map_err_is_committed_fallback(n != 0)
@@ -69,7 +70,7 @@ impl CoreParsers for ParsersImpl {
     F: Fn(A) -> B + 'a,
     A: 'a,
     B: 'a, {
-    Parser::new(move |parse_state| match parser.run(parse_state.clone()) {
+    Parser::new(move |parse_state| match parser.run(Rc::clone(&parse_state)) {
       ParseResult::Success { get: a, length } => ParseResult::Success { get: f(a), length },
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })
@@ -83,7 +84,7 @@ impl ConversionCombinators for ParsersImpl {
     E: Debug,
     A: 'a,
     B: 'a, {
-    Parser::new(move |parse_state| match parser.run(parse_state.clone()) {
+    Parser::new(move |parse_state| match parser.run(Rc::clone(&parse_state)) {
       ParseResult::Success { get: a, length } => match f(a) {
         Ok(get) => ParseResult::Success { get: get, length },
         Err(err) => {
@@ -369,7 +370,7 @@ impl BasicParsers for ParsersImpl {
       let mut index = 0;
       loop {
         if index == tag.len() {
-          return ParseResult::successful(tag.clone(), index);
+          return ParseResult::successful(tag, index);
         }
         if let Some(str) = input.get(index) {
           if tag[index] != *str {
@@ -405,7 +406,7 @@ impl BasicParsers for ParsersImpl {
         }
         index += 1;
       }
-      ParseResult::successful(tag.clone(), index)
+      ParseResult::successful(tag, index)
     })
   }
 
@@ -413,7 +414,7 @@ impl BasicParsers for ParsersImpl {
   where
     'b: 'a, {
     Parser::new(move |parse_state: Rc<ParseState<char>>| {
-      let input = parse_state.clone().input();
+      let input = Rc::clone(&parse_state).input();
       let mut index = 0;
       for c in tag.chars() {
         if let Some(&actual) = input.get(index) {
@@ -428,7 +429,7 @@ impl BasicParsers for ParsersImpl {
         }
         index += 1;
       }
-      ParseResult::successful(tag.clone(), index)
+      ParseResult::successful(tag, index)
     })
   }
 

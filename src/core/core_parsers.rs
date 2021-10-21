@@ -19,9 +19,10 @@ pub trait CoreParsers {
     F: Fn() -> A + 'a,
     A: 'a;
 
-  fn failed<'a, I, A>(parser_error: ParseError<'a, I>) -> Self::P<'a, I, A>
+  fn failed<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
   where
-    I: Clone + 'a,
+    F: Fn() -> ParseError<'a, I> + 'a,
+    I: 'a,
     A: 'a;
 
   fn flat_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>

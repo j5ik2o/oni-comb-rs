@@ -162,25 +162,25 @@ where
 
 pub fn space_seq_0<'a, I>() -> Parser<'a, I, &'a [I]>
 where
-  I: Element + Clone + PartialEq + Debug + 'a, {
+  I: Element + PartialEq + Debug + 'a, {
   ParsersImpl::space_seq_0()
 }
 
 pub fn space_seq_1<'a, I>() -> Parser<'a, I, &'a [I]>
 where
-  I: Element + Clone + PartialEq + Debug + 'a, {
+  I: Element + PartialEq + Debug + 'a, {
   ParsersImpl::space_seq_1()
 }
 
 pub fn space_seq_n_m<'a, I>(n: usize, m: usize) -> Parser<'a, I, &'a [I]>
 where
-  I: Element + Clone + PartialEq + Debug + 'a, {
+  I: Element + PartialEq + Debug + 'a, {
   ParsersImpl::space_seq_n_m(n, m)
 }
 
 pub fn space_seq_of_n<'a, I>(n: usize) -> Parser<'a, I, &'a [I]>
 where
-  I: Element + Clone + PartialEq + Debug + 'a, {
+  I: Element + PartialEq + Debug + 'a, {
   ParsersImpl::space_seq_of_n(n)
 }
 
