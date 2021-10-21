@@ -4,7 +4,7 @@
 
 use std::fmt::{Debug, Display};
 
-use crate::core::BasicParsers;
+use crate::core::{BasicParsers, ParseError};
 use crate::core::{CoreParsers, Element};
 use crate::extension::{BasicCombinators, BasicRepeatParsers};
 use crate::internal::ParsersImpl;
@@ -23,12 +23,6 @@ pub mod utils;
 // https://hazm.at/mox/lang/rust/nom/index.html
 // https://github.com/J-F-Liu/pom
 
-// pub fn parse<'a, 'b, I, A>(parser: &Parser<'a, I, A>, input: &'b [I]) -> Result<A, ParseError<'a, I>>
-// where
-//   'b: 'a, {
-//   ParsersImpl::parse(parser, input)
-// }
-
 pub fn lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
 where
   F: Fn() -> Parser<'a, I, A> + 'a,
@@ -40,12 +34,20 @@ pub fn unit<'a, I>() -> Parser<'a, I, ()> {
   ParsersImpl::unit()
 }
 
-pub fn successful<'a, I, A, F>(value: F) -> Parser<'a, I, A>
+pub fn successful<'a, I, A, F>(f: F) -> Parser<'a, I, A>
 where
   I: 'a,
   F: Fn() -> A + 'a,
   A: 'a, {
-  ParsersImpl::successful(value)
+  ParsersImpl::successful(f)
+}
+
+pub fn failed<'a, I, A, F>(f: F) -> Parser<'a, I, A>
+  where
+      F: Fn() -> ParseError<'a, I> + 'a,
+      I: 'a,
+      A: 'a {
+  ParsersImpl::failed(f)
 }
 
 pub fn end<'a, I>() -> Parser<'a, I, ()>
@@ -375,10 +377,10 @@ mod tests {
     init();
     let p1 = elm(b'a');
     let p2 = elm(b',');
-    let p = p1.count_sep(3, p2).collect();
+    let p = p1.map(|e| *e).count_sep(3, p2);
 
     let r = p.parse(b"a,a,a").unwrap();
-    assert_eq!(r, vec![b'a', b',', b'a', b',', b'a']);
+    assert_eq!(r, vec![b'a', b'a', b'a']);
   }
 
   #[test]
