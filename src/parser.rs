@@ -168,7 +168,7 @@ impl<'a, I, A> RepeatCombinator<'a> for Parser<'a, I, A> {
     R: RangeArgument<usize> + Debug + 'a,
     Self::Output: Debug + 'a,
     Self: Sized, {
-    ParsersImpl::rep(self, range)
+    ParsersImpl::repeat(self, range)
   }
 
   fn many_0(self) -> Self::P<'a, Self::Input, Vec<Self::Output>>
@@ -204,7 +204,7 @@ impl<'a, I, A> RepeatCombinator<'a> for Parser<'a, I, A> {
     R: RangeArgument<usize> + Debug + 'a,
     Self::Output: Debug + 'a,
     B: Debug + 'a, {
-    ParsersImpl::rep_sep(self, range, separator)
+    ParsersImpl::repeat_sep(self, range, separator)
   }
 
   fn many_0_sep<B>(self, separator: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, Vec<Self::Output>>

@@ -208,7 +208,7 @@ impl OffsetCombinators for ParsersImpl {
 }
 
 impl RepeatCombinators for ParsersImpl {
-  fn rep_sep<'a, I, A, B, R>(
+  fn repeat_sep<'a, I, A, B, R>(
     pa: Self::P<'a, I, A>,
     range: R,
     separator: Option<Self::P<'a, I, B>>,
