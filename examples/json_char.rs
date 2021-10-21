@@ -39,7 +39,7 @@ fn string<'a>() -> Parser<'a, char, String> {
     | elm('t').map(|_| &'\t');
   let escape_sequence = elm('\\') * special_char;
   let char_string = (none_of("\\\"") | escape_sequence)
-      .map(|c| *c)
+    .map(|c| *c)
     .repeat(1..)
     .map(String::from_iter);
   let utf16_char = tag("\\u")
