@@ -29,16 +29,18 @@ fn number<'a>() -> Parser<'a, char, f64> {
 }
 
 fn string<'a>() -> Parser<'a, char, String> {
-  let special_char = elm('\\')
-    | elm('/')
-    | elm('"')
+  let special_char = elm('\\').map(|c| *c)
+    | elm('/').map(|c| *c)
+    | elm('"').map(|c| *c)
     | elm('b').map(|_| '\x08')
     | elm('f').map(|_| '\x0C')
     | elm('n').map(|_| '\n')
     | elm('r').map(|_| '\r')
     | elm('t').map(|_| '\t');
-  let escape_sequence = elm('\\') * special_char;
-  let char_string = (none_of("\\\"") | escape_sequence).repeat(1..).map(String::from_iter);
+  let escape_sequence = elm('\\').map(|c| *c) * special_char;
+  let char_string = (none_of("\\\"").map(|c| *c) | escape_sequence)
+    .repeat(1..)
+    .map(String::from_iter);
   let utf16_char = tag("\\u")
     * elm_pred(|c: &char| c.is_digit(16))
       .repeat(4)

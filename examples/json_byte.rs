@@ -31,20 +31,21 @@ fn number<'a>() -> Parser<'a, u8, f64> {
 }
 
 fn string<'a>() -> Parser<'a, u8, String> {
-  let special_char = elm(b'\\')
-    | elm(b'/')
-    | elm(b'"')
+  let special_char = elm(b'\\').map(|c| *c)
+    | elm(b'/').map(|c| *c)
+    | elm(b'"').map(|c| *c)
     | elm(b'b').map(|_| b'\x08')
     | elm(b'f').map(|_| b'\x0C')
     | elm(b'n').map(|_| b'\n')
     | elm(b'r').map(|_| b'\r')
     | elm(b't').map(|_| b'\t');
-  let escape_sequence = elm(b'\\') * special_char;
-  let char_string = (none_of(b"\\\"") | escape_sequence)
+  let escape_sequence = elm(b'\\').map(|c| *c) * special_char;
+  let char_string = (none_of(b"\\\"").map(|c| *c) | escape_sequence)
     .repeat(1..)
     .convert(String::from_utf8);
   let utf16_char = seq(b"\\u")
     * elm_hex_digit()
+      .map(|c| *c)
       .repeat(4)
       .convert(String::from_utf8)
       .convert(|digits| u16::from_str_radix(&digits, 16));

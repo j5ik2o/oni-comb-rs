@@ -58,64 +58,64 @@ pub fn empty<'a, I>() -> Parser<'a, I, ()> {
   ParsersImpl::empty()
 }
 
-pub fn elm_any<'a, I>() -> Parser<'a, I, I>
+pub fn elm_any<'a, I>() -> Parser<'a, I, &'a I>
 where
-  I: Element + Clone + PartialEq + 'a, {
+  I: Element + PartialEq + 'a, {
   ParsersImpl::elm_any()
 }
 
-pub fn elm<'a, I>(c: I) -> Parser<'a, I, I>
+pub fn elm<'a, I>(c: I) -> Parser<'a, I, &'a I>
 where
-  I: Element + Clone + PartialEq + 'a, {
+  I: Element + PartialEq + 'a, {
   ParsersImpl::elm(c)
 }
 
-pub fn elm_pred<'a, I, F>(f: F) -> Parser<'a, I, I>
+pub fn elm_pred<'a, I, F>(f: F) -> Parser<'a, I, &'a I>
 where
   F: Fn(&I) -> bool + 'a,
-  I: Element + Clone + PartialEq + 'a, {
+  I: Element + PartialEq + 'a, {
   ParsersImpl::elm_pred(f)
 }
 
-pub fn elm_space<'a, I>() -> Parser<'a, I, I>
+pub fn elm_space<'a, I>() -> Parser<'a, I, &'a I>
 where
-  I: Element + Clone + PartialEq + 'a, {
+  I: Element + PartialEq + 'a, {
   ParsersImpl::elm_space()
 }
 
-pub fn elm_multi_space<'a, I>() -> Parser<'a, I, I>
+pub fn elm_multi_space<'a, I>() -> Parser<'a, I, &'a I>
 where
-  I: Element + Clone + PartialEq + 'a, {
+  I: Element + PartialEq + 'a, {
   ParsersImpl::elm_multi_space()
 }
 
-pub fn elm_alpha<'a, I>() -> Parser<'a, I, I>
+pub fn elm_alpha<'a, I>() -> Parser<'a, I, &'a I>
 where
-  I: Element + Clone + PartialEq + 'a, {
+  I: Element + PartialEq + 'a, {
   ParsersImpl::elm_alpha()
 }
 
-pub fn elm_alpha_num<'a, I>() -> Parser<'a, I, I>
+pub fn elm_alpha_num<'a, I>() -> Parser<'a, I, &'a I>
 where
-  I: Element + Clone + PartialEq + 'a, {
+  I: Element + PartialEq + 'a, {
   ParsersImpl::elm_alpha_num()
 }
 
-pub fn elm_digit<'a, I>() -> Parser<'a, I, I>
+pub fn elm_digit<'a, I>() -> Parser<'a, I, &'a I>
 where
-  I: Element + Clone + PartialEq + 'a, {
+  I: Element + PartialEq + 'a, {
   ParsersImpl::elm_digit()
 }
 
-pub fn elm_hex_digit<'a, I>() -> Parser<'a, I, I>
+pub fn elm_hex_digit<'a, I>() -> Parser<'a, I, &'a I>
 where
-  I: Element + Clone + PartialEq + 'a, {
+  I: Element + PartialEq + 'a, {
   ParsersImpl::elm_hex_digit()
 }
 
-pub fn elm_oct_digit<'a, I>() -> Parser<'a, I, I>
+pub fn elm_oct_digit<'a, I>() -> Parser<'a, I, &'a I>
 where
-  I: Element + Clone + PartialEq + 'a, {
+  I: Element + PartialEq + 'a, {
   ParsersImpl::elm_oct_digit()
 }
 
@@ -146,39 +146,39 @@ pub fn skip<'a, I>(n: usize) -> Parser<'a, I, ()> {
   ParsersImpl::skip(n)
 }
 
-pub fn one_of<'a, I, S>(set: &'a S) -> Parser<'a, I, I>
+pub fn one_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
 where
-  I: Clone + PartialEq + Display + Debug + 'a,
+  I: PartialEq + Display + Debug + 'a,
   S: Set<I> + ?Sized, {
   ParsersImpl::one_of(set)
 }
 
-pub fn none_of<'a, I, S>(set: &'a S) -> Parser<'a, I, I>
+pub fn none_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
 where
-  I: Clone + PartialEq + Display + Debug + 'a,
+  I: PartialEq + Display + Debug + 'a,
   S: Set<I> + ?Sized, {
   ParsersImpl::none_of(set)
 }
 
-pub fn space_seq_0<'a, I>() -> Parser<'a, I, Vec<I>>
+pub fn space_seq_0<'a, I>() -> Parser<'a, I, &'a [I]>
 where
   I: Element + Clone + PartialEq + Debug + 'a, {
   ParsersImpl::space_seq_0()
 }
 
-pub fn space_seq_1<'a, I>() -> Parser<'a, I, Vec<I>>
+pub fn space_seq_1<'a, I>() -> Parser<'a, I, &'a [I]>
 where
   I: Element + Clone + PartialEq + Debug + 'a, {
   ParsersImpl::space_seq_1()
 }
 
-pub fn space_seq_n_m<'a, I>(n: usize, m: usize) -> Parser<'a, I, Vec<I>>
+pub fn space_seq_n_m<'a, I>(n: usize, m: usize) -> Parser<'a, I, &'a [I]>
 where
   I: Element + Clone + PartialEq + Debug + 'a, {
   ParsersImpl::space_seq_n_m(n, m)
 }
 
-pub fn space_seq_of_n<'a, I>(n: usize) -> Parser<'a, I, Vec<I>>
+pub fn space_seq_of_n<'a, I>(n: usize) -> Parser<'a, I, &'a [I]>
 where
   I: Element + Clone + PartialEq + Debug + 'a, {
   ParsersImpl::space_seq_of_n(n)
@@ -265,7 +265,7 @@ mod tests {
     let p = elm(b'a');
 
     let r = p.parse(b"a").unwrap();
-    assert_eq!(r, b'a');
+    assert_eq!(*r, b'a');
   }
 
   #[test]
@@ -279,7 +279,7 @@ mod tests {
     for index in 0..b.len() {
       let r = p.parse(&b[index..]);
       assert!(r.is_ok());
-      assert_eq!(r.unwrap(), b[index]);
+      assert_eq!(r.unwrap(), &b[index]);
     }
 
     let r = p.parse(b"g");
@@ -301,13 +301,13 @@ mod tests {
 
     let r = p.parse(b"g");
     assert!(r.is_ok());
-    assert_eq!(r.unwrap(), b'g');
+    assert_eq!(*r.unwrap(), b'g');
   }
 
   #[test]
   fn test_rep() {
     init();
-    let p = elm(b'a').repeat(..=3);
+    let p = elm(b'a').repeat(..=3).collect();
 
     let r = p.parse(b"");
     assert!(r.is_ok());
@@ -325,7 +325,7 @@ mod tests {
   #[test]
   fn test_many_0() {
     init();
-    let p = elm(b'a').many_0();
+    let p = elm(b'a').many_0().collect();
 
     let r = p.parse(b"").unwrap();
     assert_eq!(r, vec![]);
@@ -340,7 +340,7 @@ mod tests {
   #[test]
   fn test_many_1() {
     init();
-    let p = elm(b'a').many_1();
+    let p = elm(b'a').many_1().collect();
 
     let r = p.parse(b"");
     assert!(r.is_err());
@@ -355,7 +355,7 @@ mod tests {
   #[test]
   fn test_many_n_m() {
     init();
-    let p = elm(b'a').many_n_m(1, 2) + end();
+    let p = elm(b'a').many_n_m(1, 2).collect() + end();
 
     let r = p.parse(b"");
     assert!(r.is_err());
@@ -375,10 +375,10 @@ mod tests {
     init();
     let p1 = elm(b'a');
     let p2 = elm(b',');
-    let p = p1.count_sep(3, p2);
+    let p = p1.count_sep(3, p2).collect();
 
     let r = p.parse(b"a,a,a").unwrap();
-    assert_eq!(r, vec![b'a', b'a', b'a']);
+    assert_eq!(r, vec![b'a', b',', b'a', b',', b'a']);
   }
 
   #[test]
@@ -453,8 +453,8 @@ mod tests {
     let result = p.parse(b"ab").unwrap();
     log::debug!("result = {:?}", result);
     let (a, b) = result;
-    assert_eq!(a, pv1);
-    assert_eq!(b, pv2);
+    assert_eq!(*a, pv1);
+    assert_eq!(*b, pv2);
   }
 
   #[test]
@@ -496,11 +496,11 @@ mod tests {
 
     let result = p.parse(b"ab").unwrap();
     log::debug!("result = {:?}", result);
-    assert_eq!(result, pv1);
+    assert_eq!(*result, pv1);
 
     let result = p.parse(b"ba").unwrap();
     log::debug!("result = {:?}", result);
-    assert_eq!(result, pv2);
+    assert_eq!(*result, pv2);
   }
 
   #[test]
@@ -512,7 +512,7 @@ mod tests {
 
     let result = p.parse(b"ab").unwrap();
     log::debug!("result = {:?}", result);
-    assert_eq!(result, pv2);
+    assert_eq!(*result, pv2);
   }
 
   #[test]
@@ -526,7 +526,7 @@ mod tests {
 
     let result = p.parse(b"ab").unwrap();
     log::debug!("result = {:?}", result);
-    assert_eq!(result, pv1);
+    assert_eq!(*result, pv1);
   }
 
   #[test]

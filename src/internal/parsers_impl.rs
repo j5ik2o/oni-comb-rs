@@ -8,7 +8,8 @@ use crate::core::ParseState;
 use crate::core::ParserRunner;
 use crate::core::{CoreParsers, Element};
 use crate::extension::{
-  BasicCombinators, BasicRepeatParsers, ConversionCombinators, OffsetCombinators, RepeatCombinators, SkipCombinators,
+  BasicCombinator, BasicCombinators, BasicRepeatParsers, ConversionCombinators, OffsetCombinators, RepeatCombinators,
+  SkipCombinators,
 };
 use crate::utils::Set;
 use crate::utils::{Bound, RangeArgument};
@@ -298,15 +299,15 @@ impl BasicParsers for ParsersImpl {
     Self::unit()
   }
 
-  fn elm_pred<'a, I, F>(f: F) -> Self::P<'a, I, I>
+  fn elm_pred<'a, I, F>(f: F) -> Self::P<'a, I, &'a I>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Clone + PartialEq + 'a, {
+    I: Element + PartialEq + 'a, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       if let Some(actual) = input.get(0) {
         if f(actual) {
-          return ParseResult::successful(actual.clone(), 1);
+          return ParseResult::successful(actual, 1);
         }
       }
       let offset = parse_state.next_offset();
@@ -317,45 +318,45 @@ impl BasicParsers for ParsersImpl {
     })
   }
 
-  fn elm_space<'a, I>() -> Self::P<'a, I, I>
+  fn elm_space<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + Clone + PartialEq + 'a, {
+    I: Element + PartialEq + 'a, {
     Self::elm_pred(Element::is_ascii_space)
   }
 
-  fn elm_multi_space<'a, I>() -> Self::P<'a, I, I>
+  fn elm_multi_space<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + Clone + PartialEq + 'a, {
+    I: Element + PartialEq + 'a, {
     Self::elm_pred(Element::is_ascii_multi_space)
   }
 
-  fn elm_alpha<'a, I>() -> Self::P<'a, I, I>
+  fn elm_alpha<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + Clone + PartialEq + 'a, {
+    I: Element + PartialEq + 'a, {
     Self::elm_pred(Element::is_ascii_alphabetic)
   }
 
-  fn elm_alpha_num<'a, I>() -> Self::P<'a, I, I>
+  fn elm_alpha_num<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + Clone + PartialEq + 'a, {
+    I: Element + PartialEq + 'a, {
     Self::elm_pred(Element::is_ascii_alphanumeric)
   }
 
-  fn elm_digit<'a, I>() -> Self::P<'a, I, I>
+  fn elm_digit<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + Clone + PartialEq + 'a, {
+    I: Element + PartialEq + 'a, {
     Self::elm_pred(Element::is_ascii_digit)
   }
 
-  fn elm_hex_digit<'a, I>() -> Self::P<'a, I, I>
+  fn elm_hex_digit<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + Clone + PartialEq + 'a, {
+    I: Element + PartialEq + 'a, {
     Self::elm_pred(Element::is_ascii_hex_digit)
   }
 
-  fn elm_oct_digit<'a, I>() -> Self::P<'a, I, I>
+  fn elm_oct_digit<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + Clone + PartialEq + 'a, {
+    I: Element + PartialEq + 'a, {
     Self::elm_pred(Element::is_ascii_oct_digit)
   }
 
@@ -453,15 +454,15 @@ impl BasicParsers for ParsersImpl {
     })
   }
 
-  fn one_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, I>
+  fn one_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
   where
-    I: Clone + PartialEq + Display + Debug + 'a,
+    I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       if let Some(s) = input.get(0) {
         if set.contains(s) {
-          ParseResult::successful(s.clone(), 1)
+          ParseResult::successful(s, 1)
         } else {
           let msg = format!("expect one of: {}, found: {}", set.to_str(), s);
           let ps = parse_state.add_offset(1);
@@ -474,15 +475,15 @@ impl BasicParsers for ParsersImpl {
     })
   }
 
-  fn none_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, I>
+  fn none_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
   where
-    I: Clone + PartialEq + Display + Debug + 'a,
+    I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       if let Some(s) = input.get(0) {
         if !set.contains(s) {
-          ParseResult::successful(s.clone(), 1)
+          ParseResult::successful(s, 1)
         } else {
           let msg = format!("expect none of: {}, found: {}", set.to_str(), s);
           let ps = parse_state.add_offset(1);
@@ -497,171 +498,171 @@ impl BasicParsers for ParsersImpl {
 }
 
 impl BasicRepeatParsers for ParsersImpl {
-  fn any_seq_0<'a, I>() -> Self::P<'a, I, Vec<I>>
+  fn any_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_0(Self::elm_any())
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_0(Self::elm_any()).collect()
   }
 
-  fn any_seq_1<'a, I>() -> Self::P<'a, I, Vec<I>>
+  fn any_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_1(Self::elm_any())
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_1(Self::elm_any()).collect()
   }
 
-  fn any_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, Vec<I>>
+  fn any_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_n_m(Self::elm_any(), n, m)
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_n_m(Self::elm_any(), n, m).collect()
   }
 
-  fn any_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, Vec<I>>
+  fn any_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::count(Self::elm_any(), n)
+    I: Element + PartialEq + Debug + 'a, {
+    Self::count(Self::elm_any(), n).collect()
   }
 
-  fn space_seq_0<'a, I>() -> Self::P<'a, I, Vec<I>>
+  fn space_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_0(Self::elm_space())
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_0(Self::elm_space()).collect()
   }
 
-  fn space_seq_1<'a, I>() -> Self::P<'a, I, Vec<I>>
+  fn space_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_1(Self::elm_space())
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_1(Self::elm_space()).collect()
   }
 
-  fn space_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, Vec<I>>
+  fn space_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_n_m(Self::elm_space(), n, m)
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_n_m(Self::elm_space(), n, m).collect()
   }
 
-  fn space_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, Vec<I>>
+  fn space_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::count(Self::elm_space(), n)
+    I: Element + PartialEq + Debug + 'a, {
+    Self::count(Self::elm_space(), n).collect()
   }
 
-  fn multi_space_seq_0<'a, I>() -> Self::P<'a, I, Vec<I>>
+  fn multi_space_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_0(Self::elm_multi_space())
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_0(Self::elm_multi_space()).collect()
   }
 
-  fn multi_space_seq_1<'a, I>() -> Self::P<'a, I, Vec<I>>
+  fn multi_space_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_1(Self::elm_multi_space())
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_1(Self::elm_multi_space()).collect()
   }
 
-  fn multi_space_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, Vec<I>>
+  fn multi_space_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_n_m(Self::elm_multi_space(), n, m)
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_n_m(Self::elm_multi_space(), n, m).collect()
   }
 
-  fn multi_space_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, Vec<I>>
+  fn multi_space_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::count(Self::elm_multi_space(), n)
+    I: Element + PartialEq + Debug + 'a, {
+    Self::count(Self::elm_multi_space(), n).collect()
   }
 
-  fn alphabet_seq_0<'a, I>() -> Self::P<'a, I, Vec<I>>
+  fn alphabet_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_0(Self::elm_pred(Element::is_ascii_alphabetic))
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_0(Self::elm_pred(Element::is_ascii_alphabetic)).collect()
   }
 
-  fn alphabet_seq_1<'a, I>() -> Self::P<'a, I, Vec<I>>
+  fn alphabet_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_1(Self::elm_alpha())
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_1(Self::elm_alpha()).collect()
   }
 
-  fn alphabet_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, Vec<I>>
+  fn alphabet_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_n_m(Self::elm_alpha(), n, m)
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_n_m(Self::elm_alpha(), n, m).collect()
   }
 
-  fn alphabet_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, Vec<I>>
+  fn alphabet_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::count(Self::elm_alpha(), n)
+    I: Element + PartialEq + Debug + 'a, {
+    Self::count(Self::elm_alpha(), n).collect()
   }
 
-  fn digit_seq_0<'a, I>() -> Self::P<'a, I, Vec<I>>
+  fn digit_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_0(Self::elm_digit())
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_0(Self::elm_digit()).collect()
   }
 
-  fn digit_seq_1<'a, I>() -> Self::P<'a, I, Vec<I>>
+  fn digit_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_1(Self::elm_digit())
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_1(Self::elm_digit()).collect()
   }
 
-  fn digit_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, Vec<I>>
+  fn digit_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_n_m(Self::elm_digit(), n, m)
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_n_m(Self::elm_digit(), n, m).collect()
   }
 
-  fn digit_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, Vec<I>>
+  fn digit_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::count(Self::elm_digit(), n)
+    I: Element + PartialEq + Debug + 'a, {
+    Self::count(Self::elm_digit(), n).collect()
   }
 
-  fn hex_digit_seq_0<'a, I>() -> Self::P<'a, I, Vec<I>>
+  fn hex_digit_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_0(Self::elm_hex_digit())
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_0(Self::elm_hex_digit()).collect()
   }
 
-  fn hex_digit_seq_1<'a, I>() -> Self::P<'a, I, Vec<I>>
+  fn hex_digit_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_1(Self::elm_hex_digit())
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_1(Self::elm_hex_digit()).collect()
   }
 
-  fn hex_digit_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, Vec<I>>
+  fn hex_digit_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_n_m(Self::elm_hex_digit(), n, m)
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_n_m(Self::elm_hex_digit(), n, m).collect()
   }
 
-  fn hex_digit_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, Vec<I>>
+  fn hex_digit_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::count(Self::elm_hex_digit(), n)
+    I: Element + PartialEq + Debug + 'a, {
+    Self::count(Self::elm_hex_digit(), n).collect()
   }
 
-  fn oct_digit_seq_0<'a, I>() -> Self::P<'a, I, Vec<I>>
+  fn oct_digit_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_0(Self::elm_oct_digit())
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_0(Self::elm_oct_digit()).collect()
   }
 
-  fn oct_digit_seq_1<'a, I>() -> Self::P<'a, I, Vec<I>>
+  fn oct_digit_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_1(Self::elm_oct_digit())
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_1(Self::elm_oct_digit()).collect()
   }
 
-  fn oct_digit_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, Vec<I>>
+  fn oct_digit_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::many_n_m(Self::elm_oct_digit(), n, m)
+    I: Element + PartialEq + Debug + 'a, {
+    Self::many_n_m(Self::elm_oct_digit(), n, m).collect()
   }
 
-  fn oct_digit_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, Vec<I>>
+  fn oct_digit_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, &'a [I]>
   where
-    I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::count(Self::elm_oct_digit(), n)
+    I: Element + PartialEq + Debug + 'a, {
+    Self::count(Self::elm_oct_digit(), n).collect()
   }
 }
