@@ -511,9 +511,20 @@ mod tests {
     init();
     let p = take_while_n_m(1, 3, |c: &u8| c.is_ascii_digit()).convert(std::str::from_utf8);
 
+    let result = p.parse(b"a1b");
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), "1");
+
+    let result = p.parse(b"a12b");
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), "12");
+
     let result = p.parse(b"a123b");
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), "123");
+
+    let result = p.parse(b"a1234b");
+    assert!(result.is_err());
 
     let result = p.parse(b"def");
     assert!(result.is_err());
