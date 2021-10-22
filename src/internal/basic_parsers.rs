@@ -1,4 +1,6 @@
+use regex::Regex;
 use std::fmt::{Debug, Display};
+use std::iter::FromIterator;
 use std::rc::Rc;
 
 use crate::core::BasicParsers;
@@ -506,6 +508,24 @@ impl BasicParsers for ParsersImpl {
         }
       } else {
         ParseResult::failed_with_un_commit(ParseError::of_in_complete())
+      }
+    })
+  }
+
+  fn regex<'a>(regex: Regex) -> Self::P<'a, char, String> {
+    Parser::new(move |parse_state| {
+      let input: &[char] = parse_state.input();
+      let str = String::from_iter(input);
+      if let Some(result) = regex.captures(&str).as_ref() {
+        if let Some(sp) = result.at(0) {
+          ParseResult::successful(sp.to_string(), sp.len())
+        } else {
+          let msg = format!("regex {:?} found: {:?}", regex, str);
+          let pe = ParseError::of_mismatch(input, parse_state.next_offset(), msg);
+          return ParseResult::failed_with_un_commit(pe);
+        }
+      } else {
+        return ParseResult::failed_with_un_commit(ParseError::of_in_complete());
       }
     })
   }

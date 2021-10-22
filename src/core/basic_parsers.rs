@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::fmt::{Debug, Display};
 
 use crate::core::element::Element;
@@ -115,4 +116,6 @@ pub trait BasicParsers: CoreParsers {
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized;
+
+  fn regex<'a>(regex: Regex) -> Self::P<'a, char, String>;
 }

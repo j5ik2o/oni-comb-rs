@@ -3,6 +3,7 @@
 #![allow(incomplete_features)]
 
 use std::fmt::{Debug, Display};
+use regex::Regex;
 
 use crate::core::*;
 use crate::extension::{LazyCombinators, SkipCombinators};
@@ -19,6 +20,10 @@ pub mod utils;
 // https://github.com/Geal/nom
 // https://hazm.at/mox/lang/rust/nom/index.html
 // https://github.com/J-F-Liu/pom
+
+pub fn regex<'a>(regex: Regex) -> Parser<'a, char, String> {
+  ParsersImpl::regex(regex)
+}
 
 pub fn lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
 where
