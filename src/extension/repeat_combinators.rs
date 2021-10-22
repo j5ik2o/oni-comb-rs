@@ -15,13 +15,13 @@ pub trait RepeatCombinators: BasicCombinators {
     Self::repeat_sep::<'a, I, A, (), R>(parser, range, None)
   }
 
-  fn many_0<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, Vec<A>>
+  fn many0<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, Vec<A>>
   where
     A: Debug + 'a, {
     Self::repeat_sep(parser, 0.., None as Option<Self::P<'a, I, ()>>)
   }
 
-  fn many_1<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, Vec<A>>
+  fn many1<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, Vec<A>>
   where
     A: Debug + 'a, {
     Self::repeat_sep(parser, 1.., None as Option<Self::P<'a, I, ()>>)
@@ -49,14 +49,14 @@ pub trait RepeatCombinators: BasicCombinators {
     A: Debug + 'a,
     B: Debug + 'a;
 
-  fn many_0_sep<'a, I, A, B>(parser: Self::P<'a, I, A>, separator: Self::P<'a, I, B>) -> Self::P<'a, I, Vec<A>>
+  fn many0_sep<'a, I, A, B>(parser: Self::P<'a, I, A>, separator: Self::P<'a, I, B>) -> Self::P<'a, I, Vec<A>>
   where
     A: Debug + 'a,
     B: Debug + 'a, {
     Self::repeat_sep(parser, 0.., Some(separator))
   }
 
-  fn many_1_sep<'a, I, A, B>(parser: Self::P<'a, I, A>, separator: Self::P<'a, I, B>) -> Self::P<'a, I, Vec<A>>
+  fn many1_sep<'a, I, A, B>(parser: Self::P<'a, I, A>, separator: Self::P<'a, I, B>) -> Self::P<'a, I, Vec<A>>
   where
     A: Debug + 'a,
     B: Debug + 'a, {

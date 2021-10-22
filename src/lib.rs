@@ -148,11 +148,11 @@ pub fn skip<'a, I>(n: usize) -> Parser<'a, I, ()> {
   ParsersImpl::skip(n)
 }
 
-pub fn one_of_set<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
+pub fn elm_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
 where
   I: PartialEq + Display + Debug + 'a,
   S: Set<I> + ?Sized, {
-  ParsersImpl::one_of_set(set)
+  ParsersImpl::elm_of(set)
 }
 
 pub fn elm_in<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
@@ -167,11 +167,11 @@ where
   ParsersImpl::elm_from_until(start, end)
 }
 
-pub fn none_of_set<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
+pub fn not_elm_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
 where
   I: PartialEq + Display + Debug + 'a,
   S: Set<I> + ?Sized, {
-  ParsersImpl::none_of_set(set)
+  ParsersImpl::not_elm_of(set)
 }
 
 pub fn space_seq_0<'a, I>() -> Parser<'a, I, &'a [I]>
@@ -288,7 +288,7 @@ mod tests {
     let patterns = b'a'..=b'f';
     let e = patterns.clone();
     let b = e.enumerate().into_iter().map(|e| e.1).collect::<Vec<_>>();
-    let p = one_of_set(&patterns);
+    let p = elm_of(&patterns);
 
     for index in 0..b.len() {
       let r = p.parse(&b[index..]);
@@ -306,7 +306,7 @@ mod tests {
     let patterns = b'a'..=b'f';
     let e = patterns.clone();
     let b = e.enumerate().into_iter().map(|e| e.1).collect::<Vec<_>>();
-    let p = none_of_set(&patterns);
+    let p = not_elm_of(&patterns);
 
     for index in 0..b.len() {
       let r = p.parse(&b[index..]);
@@ -339,7 +339,7 @@ mod tests {
   #[test]
   fn test_many_0() {
     init();
-    let p = elm(b'a').many_0().collect();
+    let p = elm(b'a').many0().collect();
 
     let r = p.parse(b"").unwrap();
     assert_eq!(r, vec![]);
@@ -354,7 +354,7 @@ mod tests {
   #[test]
   fn test_many_1() {
     init();
-    let p = elm(b'a').many_1().collect();
+    let p = elm(b'a').many1().collect();
 
     let r = p.parse(b"");
     assert!(r.is_err());

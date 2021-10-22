@@ -1,5 +1,5 @@
 use std::fmt::Debug;
-use std::ops::{Add, BitOr, Deref, Mul, Not, Sub};
+use std::ops::{Add, BitOr, Mul, Not, Sub};
 use std::rc::Rc;
 
 use crate::core::ParseState;
@@ -171,16 +171,16 @@ impl<'a, I, A> RepeatCombinator<'a> for Parser<'a, I, A> {
     ParsersImpl::repeat(self, range)
   }
 
-  fn many_0(self) -> Self::P<'a, Self::Input, Vec<Self::Output>>
+  fn many0(self) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     Self::Output: Debug + 'a, {
-    ParsersImpl::many_0(self)
+    ParsersImpl::many0(self)
   }
 
-  fn many_1(self) -> Self::P<'a, Self::Input, Vec<Self::Output>>
+  fn many1(self) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     Self::Output: Debug + 'a, {
-    ParsersImpl::many_1(self)
+    ParsersImpl::many1(self)
   }
 
   fn many_n_m(self, n: usize, m: usize) -> Self::P<'a, Self::Input, Vec<Self::Output>>
@@ -207,18 +207,18 @@ impl<'a, I, A> RepeatCombinator<'a> for Parser<'a, I, A> {
     ParsersImpl::repeat_sep(self, range, separator)
   }
 
-  fn many_0_sep<B>(self, separator: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, Vec<Self::Output>>
+  fn many0_sep<B>(self, separator: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     Self::Output: Debug + 'a,
     B: Debug + 'a, {
-    ParsersImpl::many_0_sep(self, separator)
+    ParsersImpl::many0_sep(self, separator)
   }
 
-  fn many_1_sep<B>(self, separator: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, Vec<Self::Output>>
+  fn many1_sep<B>(self, separator: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     Self::Output: Debug + 'a,
     B: Debug + 'a, {
-    ParsersImpl::many_1_sep(self, separator)
+    ParsersImpl::many1_sep(self, separator)
   }
 
   fn many_n_m_sep<B>(

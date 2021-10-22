@@ -17,13 +17,13 @@ pub enum JsonValue {
 }
 
 fn space<'a>() -> Parser<'a, char, ()> {
-  one_of_set(" \t\r\n").repeat(0..).discard()
+  elm_of(" \t\r\n").repeat(0..).discard()
 }
 
 fn number<'a>() -> Parser<'a, char, f64> {
-  let integer = elm_in('1', '9') - elm_in('0', '9').repeat(0..) | elm('0');
-  let frac = elm('.') + elm_in('0', '9').repeat(1..);
-  let exp = one_of_set("eE") + one_of_set("+-").opt() + elm_in('0', '9').repeat(1..);
+  let integer = elm_in('1', '9') - elm_in('0', '9').many0() | elm('0');
+  let frac = elm('.') + elm_in('0', '9').many1();
+  let exp = elm_of("eE") + elm_of("+-").opt() + elm_in('0', '9').many1();
   let number = elm('-').opt() + integer + frac.opt() + exp.opt();
   number.collect().map(String::from_iter).convert(|s| f64::from_str(&s))
 }
@@ -38,14 +38,14 @@ fn string<'a>() -> Parser<'a, char, String> {
     | elm('r').map(|_| &'\r')
     | elm('t').map(|_| &'\t');
   let escape_sequence = elm('\\') * special_char;
-  let char_string = (none_of_set("\\\"") | escape_sequence)
+  let char_string = (not_elm_of("\\\"") | escape_sequence)
     .map(|c| *c)
-    .repeat(1..)
+    .many1()
     .map(String::from_iter);
-  let utf16_char = tag("\\u")
-    * elm_pred(|c: &char| c.is_digit(16))
+  let utf16_char: Parser<char, u16> = tag("\\u")
+    * elm_pred(|c: &chr| c.is_digit(16))
       .map(|c| *c)
-      .repeat(4)
+      .count(4)
       .map(String::from_iter)
       .convert(|digits| u16::from_str_radix(&digits, 16));
   let utf16_string = utf16_char.repeat(1..).map(|chars| {
@@ -53,18 +53,18 @@ fn string<'a>() -> Parser<'a, char, String> {
       .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
       .collect::<String>()
   });
-  let string = elm('"') * (char_string | utf16_string).repeat(0..) - elm('"');
+  let string = elm('"') * (char_string | utf16_string).many0() - elm('"');
   string.map(|strings| strings.concat())
 }
 
 fn array<'a>() -> Parser<'a, char, Vec<JsonValue>> {
-  let elems = lazy(value).many_0_sep(elm(',') * space());
+  let elems = lazy(value).many0_sep(elm(',') * space());
   elm('[') * space() * elems - elm(']')
 }
 
 fn object<'a>() -> Parser<'a, char, HashMap<String, JsonValue>> {
   let member = string() - space() - elm(':') - space() + lazy(value);
-  let members = member.many_0_sep(elm(',') * space());
+  let members = member.many0_sep(elm(',') * space());
   let obj = elm('{') * space() * members - elm('}');
   obj.map(|members| members.into_iter().collect::<HashMap<_, _>>())
 }

@@ -72,7 +72,7 @@ pub trait BasicParsers: CoreParsers {
 
   fn skip<'a, I>(n: usize) -> Self::P<'a, I, ()>;
 
-  fn one_of_set<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
+  fn elm_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized;
@@ -85,7 +85,7 @@ pub trait BasicParsers: CoreParsers {
   where
     I: PartialEq + PartialOrd + Display + Debug + Copy + 'a;
 
-  fn none_of_set<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
+  fn not_elm_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized;

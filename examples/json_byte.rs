@@ -16,13 +16,13 @@ pub enum JsonValue {
 }
 
 fn space<'a>() -> Parser<'a, u8, ()> {
-  one_of_set(b" \t\r\n").repeat(0..).discard()
+  elm_of(b" \t\r\n").repeat(0..).discard()
 }
 
 fn number<'a>() -> Parser<'a, u8, f64> {
   let integer = elm_in(b'1', b'9') - elm_in(b'0', b'9').repeat(0..) | elm(b'0');
   let frac = elm(b'.') + elm_in(b'0', b'9').repeat(1..);
-  let exp = one_of_set(b"eE") + one_of_set(b"+-").opt() + elm_in(b'0', b'9').repeat(1..);
+  let exp = elm_of(b"eE") + elm_of(b"+-").opt() + elm_in(b'0', b'9').repeat(1..);
   let number = elm(b'-').opt() + integer + frac.opt() + exp.opt();
   let p1 = number.collect();
   let p2 = p1.convert(std::str::from_utf8);
@@ -40,7 +40,7 @@ fn string<'a>() -> Parser<'a, u8, String> {
     | elm(b'r').map(|_| &b'\r')
     | elm(b't').map(|_| &b'\t');
   let escape_sequence = elm(b'\\') * special_char;
-  let char_string = (none_of_set(b"\\\"") | escape_sequence)
+  let char_string = (not_elm_of(b"\\\"") | escape_sequence)
     .map(|e| *e)
     .repeat(1..)
     .convert(String::from_utf8);
@@ -60,13 +60,13 @@ fn string<'a>() -> Parser<'a, u8, String> {
 }
 
 fn array<'a>() -> Parser<'a, u8, Vec<JsonValue>> {
-  let elems = lazy(value).many_0_sep(elm(b',') * space());
+  let elems = lazy(value).many0_sep(elm(b',') * space());
   elm(b'[') * space() * elems - elm(b']')
 }
 
 fn object<'a>() -> Parser<'a, u8, HashMap<String, JsonValue>> {
   let member = string() - space() - elm(b':') - space() + lazy(value);
-  let members = member.many_0_sep(elm(b',') * space());
+  let members = member.many0_sep(elm(b',') * space());
   let obj = elm(b'{') * space() * members - elm(b'}');
   obj.map(|members| members.into_iter().collect::<HashMap<_, _>>())
 }

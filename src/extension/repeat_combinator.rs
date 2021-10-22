@@ -9,11 +9,11 @@ pub trait RepeatCombinator<'a>: BasicCombinator<'a> {
     Self::Output: Debug + 'a,
     Self: Sized;
 
-  fn many_0(self) -> Self::P<'a, Self::Input, Vec<Self::Output>>
+  fn many0(self) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     Self::Output: Debug + 'a;
 
-  fn many_1(self) -> Self::P<'a, Self::Input, Vec<Self::Output>>
+  fn many1(self) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     Self::Output: Debug + 'a;
 
@@ -35,12 +35,12 @@ pub trait RepeatCombinator<'a>: BasicCombinator<'a> {
     Self::Output: Debug + 'a,
     B: Debug + 'a;
 
-  fn many_0_sep<B>(self, separator: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, Vec<Self::Output>>
+  fn many0_sep<B>(self, separator: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     Self::Output: Debug + 'a,
     B: Debug + 'a;
 
-  fn many_1_sep<B>(self, separator: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, Vec<Self::Output>>
+  fn many1_sep<B>(self, separator: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     Self::Output: Debug + 'a,
     B: Debug + 'a;

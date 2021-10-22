@@ -455,7 +455,7 @@ impl BasicParsers for ParsersImpl {
     })
   }
 
-  fn one_of_set<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
+  fn elm_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized, {
@@ -486,7 +486,7 @@ impl BasicParsers for ParsersImpl {
         if set.contains(s) {
           ParseResult::successful(s, 1)
         } else {
-          let msg = format!("expect one of: {}, found: {}", set.to_str(), s);
+          let msg = format!("expect elm of: {}, found: {}", set.to_str(), s);
           let ps = parse_state.add_offset(1);
           let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
           ParseResult::failed_with_un_commit(pe)
@@ -507,7 +507,7 @@ impl BasicParsers for ParsersImpl {
         if set.contains(s) {
           ParseResult::successful(s, 1)
         } else {
-          let msg = format!("expect one of: {}, found: {}", set.to_str(), s);
+          let msg = format!("expect elm of: {}, found: {}", set.to_str(), s);
           let ps = parse_state.add_offset(1);
           let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
           ParseResult::failed_with_un_commit(pe)
@@ -518,7 +518,7 @@ impl BasicParsers for ParsersImpl {
     })
   }
 
-  fn none_of_set<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
+  fn not_elm_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized, {
@@ -544,13 +544,13 @@ impl BasicRepeatParsers for ParsersImpl {
   fn any_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
-    Self::many_0(Self::elm_any()).collect()
+    Self::many0(Self::elm_any()).collect()
   }
 
   fn any_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
-    Self::many_1(Self::elm_any()).collect()
+    Self::many1(Self::elm_any()).collect()
   }
 
   fn any_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
@@ -568,13 +568,13 @@ impl BasicRepeatParsers for ParsersImpl {
   fn space_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
-    Self::many_0(Self::elm_space()).collect()
+    Self::many0(Self::elm_space()).collect()
   }
 
   fn space_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
-    Self::many_1(Self::elm_space()).collect()
+    Self::many1(Self::elm_space()).collect()
   }
 
   fn space_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
@@ -592,13 +592,13 @@ impl BasicRepeatParsers for ParsersImpl {
   fn multi_space_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
-    Self::many_0(Self::elm_multi_space()).collect()
+    Self::many0(Self::elm_multi_space()).collect()
   }
 
   fn multi_space_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
-    Self::many_1(Self::elm_multi_space()).collect()
+    Self::many1(Self::elm_multi_space()).collect()
   }
 
   fn multi_space_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
@@ -616,13 +616,13 @@ impl BasicRepeatParsers for ParsersImpl {
   fn alpha_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
-    Self::many_0(Self::elm_pred(Element::is_ascii_alpha)).collect()
+    Self::many0(Self::elm_pred(Element::is_ascii_alpha)).collect()
   }
 
   fn alpha_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
-    Self::many_1(Self::elm_alpha()).collect()
+    Self::many1(Self::elm_alpha()).collect()
   }
 
   fn alpha_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
@@ -640,13 +640,13 @@ impl BasicRepeatParsers for ParsersImpl {
   fn digit_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
-    Self::many_0(Self::elm_digit()).collect()
+    Self::many0(Self::elm_digit()).collect()
   }
 
   fn digit_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
-    Self::many_1(Self::elm_digit()).collect()
+    Self::many1(Self::elm_digit()).collect()
   }
 
   fn digit_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
@@ -664,13 +664,13 @@ impl BasicRepeatParsers for ParsersImpl {
   fn hex_digit_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
-    Self::many_0(Self::elm_hex_digit()).collect()
+    Self::many0(Self::elm_hex_digit()).collect()
   }
 
   fn hex_digit_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
-    Self::many_1(Self::elm_hex_digit()).collect()
+    Self::many1(Self::elm_hex_digit()).collect()
   }
 
   fn hex_digit_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
@@ -688,13 +688,13 @@ impl BasicRepeatParsers for ParsersImpl {
   fn oct_digit_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
-    Self::many_0(Self::elm_oct_digit()).collect()
+    Self::many0(Self::elm_oct_digit()).collect()
   }
 
   fn oct_digit_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
-    Self::many_1(Self::elm_oct_digit()).collect()
+    Self::many1(Self::elm_oct_digit()).collect()
   }
 
   fn oct_digit_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
