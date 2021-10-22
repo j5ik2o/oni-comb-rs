@@ -43,7 +43,7 @@ fn string<'a>() -> Parser<'a, char, String> {
     .many1()
     .map(String::from_iter);
   let utf16_char: Parser<char, u16> = tag("\\u")
-    * elm_pred(|c: &chr| c.is_digit(16))
+    * elm_pred(|c: &char| c.is_digit(16))
       .map(|c| *c)
       .count(4)
       .map(String::from_iter)
