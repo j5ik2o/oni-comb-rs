@@ -16,18 +16,15 @@ pub enum JsonValue {
 }
 
 fn space<'a>() -> Parser<'a, u8, ()> {
-  elm_of(b" \t\r\n").repeat(0..).discard()
+  elm_of(b" \t\r\n").many0().discard()
 }
 
 fn number<'a>() -> Parser<'a, u8, f64> {
-  let integer = elm_in(b'1', b'9') - elm_in(b'0', b'9').repeat(0..) | elm(b'0');
-  let frac = elm(b'.') + elm_in(b'0', b'9').repeat(1..);
-  let exp = elm_of(b"eE") + elm_of(b"+-").opt() + elm_in(b'0', b'9').repeat(1..);
+  let integer = elm_in(b'1', b'9') - elm_in(b'0', b'9').many0() | elm(b'0');
+  let frac = elm(b'.') + elm_in(b'0', b'9').many1();
+  let exp = elm_of(b"eE") + elm_of(b"+-").opt() + elm_in(b'0', b'9').many1();
   let number = elm(b'-').opt() + integer + frac.opt() + exp.opt();
-  let p1 = number.collect();
-  let p2 = p1.convert(std::str::from_utf8);
-  let p3 = p2.convert(f64::from_str);
-  p3
+  number.collect().convert(std::str::from_utf8).convert(f64::from_str)
 }
 
 fn string<'a>() -> Parser<'a, u8, String> {
@@ -42,20 +39,20 @@ fn string<'a>() -> Parser<'a, u8, String> {
   let escape_sequence = elm(b'\\') * special_char;
   let char_string = (not_elm_of(b"\\\"") | escape_sequence)
     .map(|e| *e)
-    .repeat(1..)
+    .many1()
     .convert(String::from_utf8);
   let utf16_char = seq(b"\\u")
     * elm_hex_digit()
       .map(|e| *e)
-      .repeat(4)
+      .count(4)
       .convert(String::from_utf8)
       .convert(|digits| u16::from_str_radix(&digits, 16));
-  let utf16_string = utf16_char.repeat(1..).map(|chars| {
+  let utf16_string = utf16_char.many1().map(|chars| {
     decode_utf16(chars)
       .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
       .collect::<String>()
   });
-  let string = elm(b'"') * (char_string | utf16_string).repeat(0..) - elm(b'"');
+  let string = elm(b'"') * (char_string | utf16_string).many0() - elm(b'"');
   string.map(|strings| strings.concat())
 }
 

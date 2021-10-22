@@ -17,7 +17,7 @@ pub enum JsonValue {
 }
 
 fn space<'a>() -> Parser<'a, char, ()> {
-  elm_of(" \t\r\n").repeat(0..).discard()
+  elm_of(" \t\r\n").many0().discard()
 }
 
 fn number<'a>() -> Parser<'a, char, f64> {
@@ -48,7 +48,7 @@ fn string<'a>() -> Parser<'a, char, String> {
       .count(4)
       .map(String::from_iter)
       .convert(|digits| u16::from_str_radix(&digits, 16));
-  let utf16_string = utf16_char.repeat(1..).map(|chars| {
+  let utf16_string = utf16_char.many1().map(|chars| {
     decode_utf16(chars)
       .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
       .collect::<String>()
