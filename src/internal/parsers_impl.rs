@@ -447,7 +447,7 @@ impl BasicParsers for ParsersImpl {
   fn take_while0<'a, I, F>(f: F) -> Self::P<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + 'a, {
+    I: Element + Debug + 'a, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       let mut start: Option<usize> = None;
@@ -472,7 +472,7 @@ impl BasicParsers for ParsersImpl {
   fn take_while1<'a, I, F>(f: F) -> Self::P<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + 'a, {
+    I: Element + Debug + 'a, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       let mut start: Option<usize> = None;
@@ -497,7 +497,7 @@ impl BasicParsers for ParsersImpl {
   fn take_while_n_m<'a, I, F>(n: usize, m: usize, f: F) -> Self::P<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + 'a, {
+    I: Element + Debug + 'a, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       let mut start: Option<usize> = None;
