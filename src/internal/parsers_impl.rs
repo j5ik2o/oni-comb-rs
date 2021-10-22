@@ -455,7 +455,7 @@ impl BasicParsers for ParsersImpl {
     })
   }
 
-  fn one_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
+  fn one_of_set<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized, {
@@ -476,7 +476,49 @@ impl BasicParsers for ParsersImpl {
     })
   }
 
-  fn none_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
+  fn one_of_from_to<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
+  where
+    I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+    Parser::new(move |parse_state| {
+      let set = start..=end;
+      let input = parse_state.input();
+      if let Some(s) = input.get(0) {
+        if set.contains(s) {
+          ParseResult::successful(s, 1)
+        } else {
+          let msg = format!("expect one of: {}, found: {}", set.to_str(), s);
+          let ps = parse_state.add_offset(1);
+          let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
+          ParseResult::failed_with_un_commit(pe)
+        }
+      } else {
+        ParseResult::failed_with_un_commit(ParseError::of_in_complete())
+      }
+    })
+  }
+
+  fn one_of_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
+  where
+    I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+    Parser::new(move |parse_state| {
+      let set = start..end;
+      let input = parse_state.input();
+      if let Some(s) = input.get(0) {
+        if set.contains(s) {
+          ParseResult::successful(s, 1)
+        } else {
+          let msg = format!("expect one of: {}, found: {}", set.to_str(), s);
+          let ps = parse_state.add_offset(1);
+          let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
+          ParseResult::failed_with_un_commit(pe)
+        }
+      } else {
+        ParseResult::failed_with_un_commit(ParseError::of_in_complete())
+      }
+    })
+  }
+
+  fn none_of_set<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized, {

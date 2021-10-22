@@ -17,13 +17,13 @@ pub enum JsonValue {
 }
 
 fn space<'a>() -> Parser<'a, char, ()> {
-  one_of(" \t\r\n").repeat(0..).discard()
+  one_of_set(" \t\r\n").repeat(0..).discard()
 }
 
 fn number<'a>() -> Parser<'a, char, f64> {
-  let integer = one_of("123456789") - one_of("0123456789").repeat(0..) | elm('0');
-  let frac = elm('.') + one_of("0123456789").repeat(1..);
-  let exp = one_of("eE") + one_of("+-").opt() + one_of("0123456789").repeat(1..);
+  let integer = one_of_from_to('1','9') - one_of_from_to('0', '9').repeat(0..) | elm('0');
+  let frac = elm('.') + one_of_from_to('0', '9').repeat(1..);
+  let exp = one_of_set("eE") + one_of_set("+-").opt() + one_of_from_to('0', '9').repeat(1..);
   let number = elm('-').opt() + integer + frac.opt() + exp.opt();
   number.collect().map(String::from_iter).convert(|s| f64::from_str(&s))
 }
@@ -38,7 +38,7 @@ fn string<'a>() -> Parser<'a, char, String> {
     | elm('r').map(|_| &'\r')
     | elm('t').map(|_| &'\t');
   let escape_sequence = elm('\\') * special_char;
-  let char_string = (none_of("\\\"") | escape_sequence)
+  let char_string = (none_of_set("\\\"") | escape_sequence)
     .map(|c| *c)
     .repeat(1..)
     .map(String::from_iter);

@@ -43,10 +43,10 @@ where
 }
 
 pub fn failed<'a, I, A, F>(f: F) -> Parser<'a, I, A>
-  where
-      F: Fn() -> ParseError<'a, I> + 'a,
-      I: 'a,
-      A: 'a {
+where
+  F: Fn() -> ParseError<'a, I> + 'a,
+  I: 'a,
+  A: 'a, {
   ParsersImpl::failed(f)
 }
 
@@ -148,18 +148,30 @@ pub fn skip<'a, I>(n: usize) -> Parser<'a, I, ()> {
   ParsersImpl::skip(n)
 }
 
-pub fn one_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
+pub fn one_of_set<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
 where
   I: PartialEq + Display + Debug + 'a,
   S: Set<I> + ?Sized, {
-  ParsersImpl::one_of(set)
+  ParsersImpl::one_of_set(set)
 }
 
-pub fn none_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
+pub fn one_of_from_to<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
+  where
+      I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+  ParsersImpl::one_of_from_to(start, end)
+}
+
+pub fn one_of_from_until<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
+  where
+      I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+  ParsersImpl::one_of_from_until(start, end)
+}
+
+pub fn none_of_set<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
 where
   I: PartialEq + Display + Debug + 'a,
   S: Set<I> + ?Sized, {
-  ParsersImpl::none_of(set)
+  ParsersImpl::none_of_set(set)
 }
 
 pub fn space_seq_0<'a, I>() -> Parser<'a, I, &'a [I]>
@@ -276,7 +288,7 @@ mod tests {
     let patterns = b'a'..=b'f';
     let e = patterns.clone();
     let b = e.enumerate().into_iter().map(|e| e.1).collect::<Vec<_>>();
-    let p = one_of(&patterns);
+    let p = one_of_set(&patterns);
 
     for index in 0..b.len() {
       let r = p.parse(&b[index..]);
@@ -294,7 +306,7 @@ mod tests {
     let patterns = b'a'..=b'f';
     let e = patterns.clone();
     let b = e.enumerate().into_iter().map(|e| e.1).collect::<Vec<_>>();
-    let p = none_of(&patterns);
+    let p = none_of_set(&patterns);
 
     for index in 0..b.len() {
       let r = p.parse(&b[index..]);

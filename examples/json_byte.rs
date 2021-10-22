@@ -16,13 +16,13 @@ pub enum JsonValue {
 }
 
 fn space<'a>() -> Parser<'a, u8, ()> {
-  one_of(b" \t\r\n").repeat(0..).discard()
+  one_of_set(b" \t\r\n").repeat(0..).discard()
 }
 
 fn number<'a>() -> Parser<'a, u8, f64> {
-  let integer = one_of(b"123456789") - one_of(b"0123456789").repeat(0..) | elm(b'0');
-  let frac = elm(b'.') + one_of(b"0123456789").repeat(1..);
-  let exp = one_of(b"eE") + one_of(b"+-").opt() + one_of(b"0123456789").repeat(1..);
+  let integer =  one_of_from_to(b'1', b'9') -  one_of_from_to(b'0', b'9').repeat(0..) | elm(b'0');
+  let frac = elm(b'.') +  one_of_from_to(b'0', b'9').repeat(1..);
+  let exp = one_of_set(b"eE") + one_of_set(b"+-").opt() +  one_of_from_to(b'0', b'9').repeat(1..);
   let number = elm(b'-').opt() + integer + frac.opt() + exp.opt();
   let p1 = number.collect();
   let p2 = p1.convert(std::str::from_utf8);
@@ -40,7 +40,7 @@ fn string<'a>() -> Parser<'a, u8, String> {
     | elm(b'r').map(|_| &b'\r')
     | elm(b't').map(|_| &b'\t');
   let escape_sequence = elm(b'\\') * special_char;
-  let char_string = (none_of(b"\\\"") | escape_sequence)
+  let char_string = (none_of_set(b"\\\"") | escape_sequence)
     .map(|e| *e)
     .repeat(1..)
     .convert(String::from_utf8);
