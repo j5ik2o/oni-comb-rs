@@ -221,32 +221,6 @@ mod tests {
   }
 
   #[test]
-  fn test_space_0() {
-    init();
-
-    let p = space_many0();
-    let r: usize = p.parse(b"").map(|e| e.len()).unwrap();
-    assert_eq!(r, 0);
-
-    let p = space_many0();
-    let r: usize = p.parse(b"     ").map(|e| e.len()).unwrap();
-    assert_eq!(r, 5);
-  }
-
-  #[test]
-  fn test_space_1() {
-    init();
-
-    let p = space_many1();
-    let r = p.parse(b"").map(|e| e.len());
-    assert!(r.is_err());
-
-    let p = space_many1();
-    let r: usize = p.parse(b"     ").map(|e| e.len()).unwrap();
-    assert_eq!(r, 5);
-  }
-
-  #[test]
   fn test_end() {
     init();
     let input1 = b"";
