@@ -587,11 +587,9 @@ mod tests {
   fn test_take() {
     init();
     let input1 = "abcd".chars().collect::<Vec<char>>();
-    let pv1 = 'a';
-    let pv2 = 'b';
-    let p = ((elm(pv1) + elm(pv2)).flat_map(|e| skip(1).map(move |_| e)) + elm_any() + end())
+    let p = ((elm('a') + elm('b')).flat_map(|e| skip(1).map(move |_| e)) + elm_any() + end())
       .collect()
-      .map(|e| e.iter().collect::<String>());
+      .map(|chars| String::from_iter(chars));
 
     let result = p.parse(&input1).unwrap();
     log::debug!("result = {:?}", result);
