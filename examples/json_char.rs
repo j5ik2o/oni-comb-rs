@@ -21,9 +21,9 @@ fn space<'a>() -> Parser<'a, char, ()> {
 }
 
 fn number<'a>() -> Parser<'a, char, f64> {
-  let integer = one_of_from_to('1','9') - one_of_from_to('0', '9').repeat(0..) | elm('0');
-  let frac = elm('.') + one_of_from_to('0', '9').repeat(1..);
-  let exp = one_of_set("eE") + one_of_set("+-").opt() + one_of_from_to('0', '9').repeat(1..);
+  let integer = elm_in('1', '9') - elm_in('0', '9').repeat(0..) | elm('0');
+  let frac = elm('.') + elm_in('0', '9').repeat(1..);
+  let exp = one_of_set("eE") + one_of_set("+-").opt() + elm_in('0', '9').repeat(1..);
   let number = elm('-').opt() + integer + frac.opt() + exp.opt();
   number.collect().map(String::from_iter).convert(|s| f64::from_str(&s))
 }

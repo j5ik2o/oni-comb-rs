@@ -39,7 +39,7 @@ pub trait BasicParsers: CoreParsers {
   where
     I: Element + PartialEq + 'a;
 
-  fn elm_alpha_num<'a, I>() -> Self::P<'a, I, &'a I>
+  fn elm_alpha_digit<'a, I>() -> Self::P<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a;
 
@@ -77,11 +77,11 @@ pub trait BasicParsers: CoreParsers {
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized;
 
-  fn one_of_from_to<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
+  fn elm_in<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Debug + Copy + 'a;
 
-  fn one_of_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
+  fn elm_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Debug + Copy + 'a;
 

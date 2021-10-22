@@ -334,13 +334,13 @@ impl BasicParsers for ParsersImpl {
   fn elm_alpha<'a, I>() -> Self::P<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
-    Self::elm_pred(Element::is_ascii_alphabetic)
+    Self::elm_pred(Element::is_ascii_alpha)
   }
 
-  fn elm_alpha_num<'a, I>() -> Self::P<'a, I, &'a I>
+  fn elm_alpha_digit<'a, I>() -> Self::P<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
-    Self::elm_pred(Element::is_ascii_alphanumeric)
+    Self::elm_pred(Element::is_ascii_alpha_digit)
   }
 
   fn elm_digit<'a, I>() -> Self::P<'a, I, &'a I>
@@ -417,8 +417,8 @@ impl BasicParsers for ParsersImpl {
       let input = Rc::clone(&parse_state).input();
       let mut index = 0;
       for c in tag.chars() {
-        if let Some(&actual) = input.get(index) {
-          if c.to_ascii_lowercase() != actual.to_ascii_lowercase() {
+        if let Some(actual) = input.get(index) {
+          if !c.eq_ignore_ascii_case(actual) {
             let msg = format!("tag {:?} expect: {:?}, found: {}", tag, c, actual);
             let ps = parse_state.add_offset(index);
             let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
@@ -476,7 +476,7 @@ impl BasicParsers for ParsersImpl {
     })
   }
 
-  fn one_of_from_to<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
+  fn elm_in<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
     Parser::new(move |parse_state| {
@@ -497,7 +497,7 @@ impl BasicParsers for ParsersImpl {
     })
   }
 
-  fn one_of_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
+  fn elm_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
     Parser::new(move |parse_state| {
@@ -613,25 +613,25 @@ impl BasicRepeatParsers for ParsersImpl {
     Self::count(Self::elm_multi_space(), n).collect()
   }
 
-  fn alphabet_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
+  fn alpha_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
-    Self::many_0(Self::elm_pred(Element::is_ascii_alphabetic)).collect()
+    Self::many_0(Self::elm_pred(Element::is_ascii_alpha)).collect()
   }
 
-  fn alphabet_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
+  fn alpha_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
     Self::many_1(Self::elm_alpha()).collect()
   }
 
-  fn alphabet_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
+  fn alpha_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
     Self::many_n_m(Self::elm_alpha(), n, m).collect()
   }
 
-  fn alphabet_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, &'a [I]>
+  fn alpha_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a, {
     Self::count(Self::elm_alpha(), n).collect()

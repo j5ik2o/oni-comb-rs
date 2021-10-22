@@ -4,13 +4,16 @@ pub trait Element {
   fn is_ascii_whitespace(&self) -> bool;
 
   fn is_ascii(&self) -> bool;
-  fn is_ascii_alphabetic(&self) -> bool;
   fn is_ascii_uppercase(&self) -> bool;
   fn is_ascii_lowercase(&self) -> bool;
-  fn is_ascii_alphanumeric(&self) -> bool;
+
+  fn is_ascii_alpha(&self) -> bool;
   fn is_ascii_digit(&self) -> bool;
+  fn is_ascii_alpha_digit(&self) -> bool;
+
   fn is_ascii_hex_digit(&self) -> bool;
   fn is_ascii_oct_digit(&self) -> bool;
+
   fn is_ascii_punctuation(&self) -> bool;
   fn is_ascii_graphic(&self) -> bool;
   fn is_ascii_control(&self) -> bool;
@@ -33,10 +36,6 @@ impl Element for u8 {
     u8::is_ascii(self)
   }
 
-  fn is_ascii_alphabetic(&self) -> bool {
-    u8::is_ascii_alphabetic(self)
-  }
-
   fn is_ascii_uppercase(&self) -> bool {
     u8::is_ascii_uppercase(self)
   }
@@ -45,12 +44,16 @@ impl Element for u8 {
     u8::is_ascii_lowercase(self)
   }
 
-  fn is_ascii_alphanumeric(&self) -> bool {
-    u8::is_ascii_alphanumeric(self)
+  fn is_ascii_alpha(&self) -> bool {
+    u8::is_ascii_alphabetic(self)
   }
 
   fn is_ascii_digit(&self) -> bool {
     u8::is_ascii_digit(self)
+  }
+
+  fn is_ascii_alpha_digit(&self) -> bool {
+    u8::is_ascii_alphanumeric(self)
   }
 
   fn is_ascii_hex_digit(&self) -> bool {
@@ -91,10 +94,6 @@ impl Element for char {
     char::is_ascii(self)
   }
 
-  fn is_ascii_alphabetic(&self) -> bool {
-    char::is_ascii_alphabetic(self)
-  }
-
   fn is_ascii_uppercase(&self) -> bool {
     char::is_ascii_uppercase(self)
   }
@@ -103,12 +102,16 @@ impl Element for char {
     char::is_ascii_lowercase(self)
   }
 
-  fn is_ascii_alphanumeric(&self) -> bool {
-    char::is_ascii_alphanumeric(self)
+  fn is_ascii_alpha(&self) -> bool {
+    char::is_ascii_alphabetic(self)
   }
 
   fn is_ascii_digit(&self) -> bool {
     char::is_ascii_digit(self)
+  }
+
+  fn is_ascii_alpha_digit(&self) -> bool {
+    char::is_ascii_alphanumeric(self)
   }
 
   fn is_ascii_hex_digit(&self) -> bool {

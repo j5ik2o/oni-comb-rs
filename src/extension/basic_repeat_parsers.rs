@@ -52,19 +52,19 @@ pub trait BasicRepeatParsers: RepeatCombinators {
   where
     I: Element + PartialEq + Debug + 'a;
 
-  fn alphabet_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
+  fn alpha_seq_0<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a;
 
-  fn alphabet_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
+  fn alpha_seq_1<'a, I>() -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a;
 
-  fn alphabet_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
+  fn alpha_seq_n_m<'a, I>(n: usize, m: usize) -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a;
 
-  fn alphabet_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, &'a [I]>
+  fn alpha_seq_of_n<'a, I>(n: usize) -> Self::P<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Debug + 'a;
 

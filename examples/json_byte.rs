@@ -20,9 +20,9 @@ fn space<'a>() -> Parser<'a, u8, ()> {
 }
 
 fn number<'a>() -> Parser<'a, u8, f64> {
-  let integer =  one_of_from_to(b'1', b'9') -  one_of_from_to(b'0', b'9').repeat(0..) | elm(b'0');
-  let frac = elm(b'.') +  one_of_from_to(b'0', b'9').repeat(1..);
-  let exp = one_of_set(b"eE") + one_of_set(b"+-").opt() +  one_of_from_to(b'0', b'9').repeat(1..);
+  let integer = elm_in(b'1', b'9') - elm_in(b'0', b'9').repeat(0..) | elm(b'0');
+  let frac = elm(b'.') + elm_in(b'0', b'9').repeat(1..);
+  let exp = one_of_set(b"eE") + one_of_set(b"+-").opt() + elm_in(b'0', b'9').repeat(1..);
   let number = elm(b'-').opt() + integer + frac.opt() + exp.opt();
   let p1 = number.collect();
   let p2 = p1.convert(std::str::from_utf8);

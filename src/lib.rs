@@ -97,10 +97,10 @@ where
   ParsersImpl::elm_alpha()
 }
 
-pub fn elm_alpha_num<'a, I>() -> Parser<'a, I, &'a I>
+pub fn elm_alpha_digit<'a, I>() -> Parser<'a, I, &'a I>
 where
   I: Element + PartialEq + 'a, {
-  ParsersImpl::elm_alpha_num()
+  ParsersImpl::elm_alpha_digit()
 }
 
 pub fn elm_digit<'a, I>() -> Parser<'a, I, &'a I>
@@ -155,16 +155,16 @@ where
   ParsersImpl::one_of_set(set)
 }
 
-pub fn one_of_from_to<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
-  where
-      I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
-  ParsersImpl::one_of_from_to(start, end)
+pub fn elm_in<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
+where
+  I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+  ParsersImpl::elm_in(start, end)
 }
 
-pub fn one_of_from_until<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
-  where
-      I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
-  ParsersImpl::one_of_from_until(start, end)
+pub fn elm_from_until<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
+where
+  I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+  ParsersImpl::elm_from_until(start, end)
 }
 
 pub fn none_of_set<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>

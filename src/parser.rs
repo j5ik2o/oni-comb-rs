@@ -1,5 +1,5 @@
 use std::fmt::Debug;
-use std::ops::{Add, BitOr, Mul, Not, Sub};
+use std::ops::{Add, BitOr, Deref, Mul, Not, Sub};
 use std::rc::Rc;
 
 use crate::core::ParseState;
