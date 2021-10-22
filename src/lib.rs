@@ -5,7 +5,7 @@
 use std::fmt::{Debug, Display};
 
 use crate::core::*;
-use crate::extension::LazyCombinators;
+use crate::extension::{LazyCombinators, SkipCombinators};
 use crate::internal::*;
 use crate::utils::*;
 
@@ -204,6 +204,18 @@ where
   I: PartialEq + Display + Debug + 'a,
   S: Set<I> + ?Sized, {
   ParsersImpl::not_elm_of(set)
+}
+
+pub fn surround<'a, I, A, B, C>(
+  lp: Parser<'a, I, A>,
+  parser: Parser<'a, I, B>,
+  rp: Parser<'a, I, C>,
+) -> Parser<'a, I, B>
+where
+  A: Debug + 'a,
+  B: Debug + 'a,
+  C: Debug + 'a, {
+  ParsersImpl::surround(lp, parser, rp)
 }
 
 #[cfg(test)]

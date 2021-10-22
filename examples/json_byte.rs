@@ -52,19 +52,19 @@ fn string<'a>() -> Parser<'a, u8, String> {
       .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
       .collect::<String>()
   });
-  let string = elm(b'"') * (char_string | utf16_string).of_many0() - elm(b'"');
+  let string = surround(elm(b'"'), (char_string | utf16_string).of_many0(), elm(b'"'));
   string.map(|strings| strings.concat())
 }
 
 fn array<'a>() -> Parser<'a, u8, Vec<JsonValue>> {
   let elems = lazy(value).of_many0_sep(elm(b',') * space());
-  elm(b'[') * space() * elems - elm(b']')
+  surround(elm(b'[') + space(), elems, space() + elm(b']'))
 }
 
 fn object<'a>() -> Parser<'a, u8, HashMap<String, JsonValue>> {
   let member = string() - space() - elm(b':') - space() + lazy(value);
   let members = member.of_many0_sep(elm(b',') * space());
-  let obj = elm(b'{') * space() * members - elm(b'}');
+  let obj = surround(elm(b'{') + space(), members, space() + elm(b'}'));
   obj.map(|members| members.into_iter().collect::<HashMap<_, _>>())
 }
 
