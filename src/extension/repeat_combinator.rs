@@ -3,7 +3,7 @@ use crate::utils::RangeArgument;
 use std::fmt::Debug;
 
 pub trait RepeatCombinator<'a>: BasicCombinator<'a> {
-  fn of_repeat<R>(self, range: R) -> Self::P<'a, Self::Input, Vec<Self::Output>>
+  fn repeat<R>(self, range: R) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     R: RangeArgument<usize> + Debug + 'a,
     Self::Output: Debug + 'a,

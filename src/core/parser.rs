@@ -163,7 +163,7 @@ impl<'a, I, A> SkipCombinator<'a> for Parser<'a, I, A> {
 }
 
 impl<'a, I, A> RepeatCombinator<'a> for Parser<'a, I, A> {
-  fn of_repeat<R>(self, range: R) -> Self::P<'a, Self::Input, Vec<Self::Output>>
+  fn repeat<R>(self, range: R) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     R: RangeArgument<usize> + Debug + 'a,
     Self::Output: Debug + 'a,

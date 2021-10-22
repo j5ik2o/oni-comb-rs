@@ -341,7 +341,7 @@ mod tests {
   #[test]
   fn test_rep() {
     init();
-    let p = elm(b'a').of_repeat(..=3).collect();
+    let p = elm(b'a').repeat(..=3).collect();
 
     let r = p.parse(b"");
     assert!(r.is_ok());

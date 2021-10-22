@@ -58,13 +58,13 @@ fn string<'a>() -> Parser<'a, u8, String> {
 }
 
 fn array<'a>() -> Parser<'a, u8, Vec<JsonValue>> {
-  let elems = lazy(value).of_many0_sep(elm(b',') * space());
+  let elems = lazy(value).of_many0_sep(space() + elm(b',') + space());
   surround(elm(b'[') + space(), elems, space() + elm(b']'))
 }
 
 fn object<'a>() -> Parser<'a, u8, HashMap<String, JsonValue>> {
   let member = string() - space() - elm(b':') - space() + lazy(value);
-  let members = member.of_many0_sep(elm(b',') * space());
+  let members = member.of_many0_sep(space() + elm(b',') + space());
   let obj = surround(elm(b'{') + space(), members, space() + elm(b'}'));
   obj.map(|members| members.into_iter().collect::<HashMap<_, _>>())
 }
