@@ -510,8 +510,8 @@ impl BasicParsers for ParsersImpl {
           }
           len += 1;
         }
+        index += 1;
       }
-      index += 1;
       match start {
         Some(s) => {
           let str = &input[s..s + len];
