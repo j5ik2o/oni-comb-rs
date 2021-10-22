@@ -57,7 +57,6 @@ fn string<'a>() -> Parser<'a, u8, String> {
 }
 
 fn array<'a>() -> Parser<'a, u8, Vec<JsonValue>> {
-
   let elems = lazy(value).of_many0_sep(elm(b',') * space());
   elm(b'[') * space() * elems - elm(b']')
 }
