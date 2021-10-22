@@ -303,7 +303,7 @@ mod tests {
   #[test]
   fn test_rep() {
     init();
-    let p = elm(b'a').repeat(..=3).collect();
+    let p = elm(b'a').of_repeat(..=3).collect();
 
     let r = p.parse(b"");
     assert!(r.is_ok());
@@ -321,7 +321,7 @@ mod tests {
   #[test]
   fn test_many_0() {
     init();
-    let p = elm(b'a').many0().collect();
+    let p = elm(b'a').of_many0().collect();
 
     let r = p.parse(b"").unwrap();
     assert_eq!(r, vec![]);
@@ -336,7 +336,7 @@ mod tests {
   #[test]
   fn test_many_1() {
     init();
-    let p = elm(b'a').many1().collect();
+    let p = elm(b'a').of_many1().collect();
 
     let r = p.parse(b"");
     assert!(r.is_err());
@@ -351,7 +351,7 @@ mod tests {
   #[test]
   fn test_many_n_m() {
     init();
-    let p = elm(b'a').many_n_m(1, 2).collect() + end();
+    let p = elm(b'a').of_many_n_m(1, 2).collect() + end();
 
     let r = p.parse(b"");
     assert!(r.is_err());
@@ -371,7 +371,7 @@ mod tests {
     init();
     let p1 = elm(b'a');
     let p2 = elm(b',');
-    let p = p1.map(|e| *e).count_sep(3, p2);
+    let p = p1.map(|e| *e).of_count_sep(3, p2);
 
     let r = p.parse(b"a,a,a").unwrap();
     assert_eq!(r, vec![b'a', b'a', b'a']);

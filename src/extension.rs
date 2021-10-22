@@ -1,6 +1,5 @@
 pub use basic_combinator::*;
 pub use basic_combinators::*;
-pub use basic_repeat_parsers::*;
 pub use conversion_combinator::*;
 pub use conversion_combinators::*;
 pub use lazy_combinators::*;
@@ -13,7 +12,6 @@ pub use skip_combinators::*;
 
 mod basic_combinator;
 mod basic_combinators;
-mod basic_repeat_parsers;
 mod conversion_combinator;
 mod conversion_combinators;
 mod lazy_combinators;

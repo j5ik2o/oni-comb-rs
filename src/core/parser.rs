@@ -160,7 +160,7 @@ impl<'a, I, A> SkipCombinator<'a> for Parser<'a, I, A> {
 }
 
 impl<'a, I, A> RepeatCombinator<'a> for Parser<'a, I, A> {
-  fn repeat<R>(self, range: R) -> Self::P<'a, Self::Input, Vec<Self::Output>>
+  fn of_repeat<R>(self, range: R) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     R: RangeArgument<usize> + Debug + 'a,
     Self::Output: Debug + 'a,
@@ -168,31 +168,31 @@ impl<'a, I, A> RepeatCombinator<'a> for Parser<'a, I, A> {
     ParsersImpl::repeat(self, range)
   }
 
-  fn many0(self) -> Self::P<'a, Self::Input, Vec<Self::Output>>
+  fn of_many0(self) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     Self::Output: Debug + 'a, {
     ParsersImpl::many0(self)
   }
 
-  fn many1(self) -> Self::P<'a, Self::Input, Vec<Self::Output>>
+  fn of_many1(self) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     Self::Output: Debug + 'a, {
     ParsersImpl::many1(self)
   }
 
-  fn many_n_m(self, n: usize, m: usize) -> Self::P<'a, Self::Input, Vec<Self::Output>>
+  fn of_many_n_m(self, n: usize, m: usize) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     Self::Output: Debug + 'a, {
     ParsersImpl::many_n_m(self, n, m)
   }
 
-  fn count(self, n: usize) -> Self::P<'a, Self::Input, Vec<Self::Output>>
+  fn of_count(self, n: usize) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     Self::Output: Debug + 'a, {
     ParsersImpl::count(self, n)
   }
 
-  fn rep_sep<B, R>(
+  fn of_rep_sep<B, R>(
     self,
     range: R,
     separator: Option<Self::P<'a, Self::Input, B>>,
@@ -204,21 +204,21 @@ impl<'a, I, A> RepeatCombinator<'a> for Parser<'a, I, A> {
     ParsersImpl::repeat_sep(self, range, separator)
   }
 
-  fn many0_sep<B>(self, separator: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, Vec<Self::Output>>
+  fn of_many0_sep<B>(self, separator: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     Self::Output: Debug + 'a,
     B: Debug + 'a, {
     ParsersImpl::many0_sep(self, separator)
   }
 
-  fn many1_sep<B>(self, separator: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, Vec<Self::Output>>
+  fn of_many1_sep<B>(self, separator: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     Self::Output: Debug + 'a,
     B: Debug + 'a, {
     ParsersImpl::many1_sep(self, separator)
   }
 
-  fn many_n_m_sep<B>(
+  fn of_many_n_m_sep<B>(
     self,
     n: usize,
     m: usize,
@@ -230,7 +230,7 @@ impl<'a, I, A> RepeatCombinator<'a> for Parser<'a, I, A> {
     ParsersImpl::many_n_m_sep(self, n, m, separator)
   }
 
-  fn count_sep<B>(
+  fn of_count_sep<B>(
     self,
     n: usize,
     separator: Self::P<'a, Self::Input, B>,

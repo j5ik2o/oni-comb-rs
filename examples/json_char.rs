@@ -17,13 +17,13 @@ pub enum JsonValue {
 }
 
 fn space<'a>() -> Parser<'a, char, ()> {
-  elm_of(" \t\r\n").many0().discard()
+  elm_of(" \t\r\n").of_many0().discard()
 }
 
 fn number<'a>() -> Parser<'a, char, f64> {
-  let integer = elm_in('1', '9') - elm_digit().many0() | elm('0');
-  let frac = elm('.') + elm_in('0', '9').many1();
-  let exp = elm_of("eE") + elm_of("+-").opt() + elm_digit().many1();
+  let integer = elm_in('1', '9') - elm_digit().of_many0() | elm('0');
+  let frac = elm('.') + elm_in('0', '9').of_many1();
+  let exp = elm_of("eE") + elm_of("+-").opt() + elm_digit().of_many1();
   let number = elm('-').opt() + integer + frac.opt() + exp.opt();
   number.collect().map(String::from_iter).convert(|s| f64::from_str(&s))
 }
@@ -40,31 +40,31 @@ fn string<'a>() -> Parser<'a, char, String> {
   let escape_sequence = elm('\\') * special_char;
   let char_string = (not_elm_of("\\\"") | escape_sequence)
     .map(|c| *c)
-    .many1()
+    .of_many1()
     .map(String::from_iter);
   let utf16_char: Parser<char, u16> = tag("\\u")
     * elm_pred(|c: &char| c.is_digit(16))
       .map(|c| *c)
-      .count(4)
+      .of_count(4)
       .map(String::from_iter)
       .convert(|digits| u16::from_str_radix(&digits, 16));
-  let utf16_string = utf16_char.many1().map(|chars| {
+  let utf16_string = utf16_char.of_many1().map(|chars| {
     decode_utf16(chars)
       .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
       .collect::<String>()
   });
-  let string = elm('"') * (char_string | utf16_string).many0() - elm('"');
+  let string = elm('"') * (char_string | utf16_string).of_many0() - elm('"');
   string.map(|strings| strings.concat())
 }
 
 fn array<'a>() -> Parser<'a, char, Vec<JsonValue>> {
-  let elems = lazy(value).many0_sep(elm(',') * space());
+  let elems = lazy(value).of_many0_sep(elm(',') * space());
   elm('[') * space() * elems - elm(']')
 }
 
 fn object<'a>() -> Parser<'a, char, HashMap<String, JsonValue>> {
   let member = string() - space() - elm(':') - space() + lazy(value);
-  let members = member.many0_sep(elm(',') * space());
+  let members = member.of_many0_sep(elm(',') * space());
   let obj = elm('{') * space() * members - elm('}');
   obj.map(|members| members.into_iter().collect::<HashMap<_, _>>())
 }
