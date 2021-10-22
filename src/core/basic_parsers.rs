@@ -1,6 +1,7 @@
 use std::fmt::{Debug, Display};
 
-use crate::core::{CoreParsers, Element};
+use crate::core::element::Element;
+use crate::core::CoreParsers;
 use crate::utils::Set;
 
 pub trait BasicParsers: CoreParsers {

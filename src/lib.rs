@@ -4,8 +4,7 @@
 
 use std::fmt::{Debug, Display};
 
-use crate::core::{BasicParsers, ParseError};
-use crate::core::{CoreParsers, Element};
+use crate::core::{BasicParsers, CoreParsers, Element, ParseError};
 use crate::extension::{BasicCombinators, BasicRepeatParsers};
 use crate::internal::ParsersImpl;
 pub use crate::parser::Parser;
@@ -152,16 +151,16 @@ where
 }
 
 pub fn take_while1<'a, I, F>(f: F) -> Parser<'a, I, &'a [I]>
-  where
-      F: Fn(&I) -> bool + 'a,
-      I: Element + Debug + 'a, {
+where
+  F: Fn(&I) -> bool + 'a,
+  I: Element + Debug + 'a, {
   ParsersImpl::take_while1(f)
 }
 
 pub fn take_while_n_m<'a, I, F>(n: usize, m: usize, f: F) -> Parser<'a, I, &'a [I]>
-  where
-      F: Fn(&I) -> bool + 'a,
-      I: Element + Debug + 'a, {
+where
+  F: Fn(&I) -> bool + 'a,
+  I: Element + Debug + 'a, {
   ParsersImpl::take_while_n_m(n, m, f)
 }
 
