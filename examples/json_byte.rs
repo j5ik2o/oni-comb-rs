@@ -21,7 +21,7 @@ fn space<'a>() -> Parser<'a, u8, ()> {
 
 fn number<'a>() -> Parser<'a, u8, f64> {
   let integer = elm_in(b'1', b'9') - elm_digit().many0() | elm(b'0');
-  let frac = elm(b'.') + elm_in(b'0', b'9').many1();
+  let frac = elm(b'.') + elm_digit().many1();
   let exp = elm_of(b"eE") + elm_of(b"+-").opt() + elm_digit().many1();
   let number = elm(b'-').opt() + integer + frac.opt() + exp.opt();
   number.collect().convert(std::str::from_utf8).convert(f64::from_str)
@@ -57,6 +57,7 @@ fn string<'a>() -> Parser<'a, u8, String> {
 }
 
 fn array<'a>() -> Parser<'a, u8, Vec<JsonValue>> {
+
   let elems = lazy(value).many0_sep(elm(b',') * space());
   elm(b'[') * space() * elems - elm(b']')
 }

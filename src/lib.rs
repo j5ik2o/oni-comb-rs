@@ -5,7 +5,7 @@
 use std::fmt::{Debug, Display};
 
 use crate::core::*;
-use crate::extension::{BasicRepeatParsers, LazyCombinators};
+use crate::extension::LazyCombinators;
 use crate::internal::*;
 use crate::utils::*;
 
@@ -204,30 +204,6 @@ where
   I: PartialEq + Display + Debug + 'a,
   S: Set<I> + ?Sized, {
   ParsersImpl::not_elm_of(set)
-}
-
-pub fn space_many0<'a, I>() -> Parser<'a, I, &'a [I]>
-where
-  I: Element + PartialEq + Debug + 'a, {
-  ParsersImpl::space_many0()
-}
-
-pub fn space_many1<'a, I>() -> Parser<'a, I, &'a [I]>
-where
-  I: Element + PartialEq + Debug + 'a, {
-  ParsersImpl::space_many1()
-}
-
-pub fn space_many_n_m<'a, I>(n: usize, m: usize) -> Parser<'a, I, &'a [I]>
-where
-  I: Element + PartialEq + Debug + 'a, {
-  ParsersImpl::space_many_n_m(n, m)
-}
-
-pub fn space_count<'a, I>(n: usize) -> Parser<'a, I, &'a [I]>
-where
-  I: Element + PartialEq + Debug + 'a, {
-  ParsersImpl::space_count(n)
 }
 
 #[cfg(test)]

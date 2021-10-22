@@ -6,10 +6,7 @@ use crate::core::ParseState;
 use crate::core::ParserRunner;
 use crate::core::{CoreParsers, ParseError};
 use crate::core::{ParseResult, ParserFunctor, ParserMonad, ParserPure};
-use crate::extension::{
-  BasicCombinator, ConversionCombinator, ConversionCombinators, OffsetCombinator, OffsetCombinators, SkipCombinator,
-  SkipCombinators,
-};
+use crate::extension::{BasicCombinator, ConversionCombinator, ConversionCombinators, OffsetCombinator, OffsetCombinators, SkipCombinator, SkipCombinators};
 use crate::extension::{BasicCombinators, RepeatCombinator, RepeatCombinators};
 use crate::internal::ParsersImpl;
 use crate::utils::RangeArgument;
