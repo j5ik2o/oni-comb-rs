@@ -1,3 +1,4 @@
+use parsers::*;
 use parsing_rust::core::{Parser, ParserFunctor, ParserRunner};
 use parsing_rust::extension::{BasicCombinator, ConversionCombinator, RepeatCombinator};
 use parsing_rust::*;
