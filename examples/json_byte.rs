@@ -1,4 +1,4 @@
-use parsing_rust::core::{ParserFunctor, ParserRunner};
+use parsing_rust::core::{Parser, ParserFunctor, ParserRunner};
 use parsing_rust::extension::{BasicCombinator, ConversionCombinator, RepeatCombinator};
 use parsing_rust::*;
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
@@ -20,9 +20,9 @@ fn space<'a>() -> Parser<'a, u8, ()> {
 }
 
 fn number<'a>() -> Parser<'a, u8, f64> {
-  let integer = elm_in(b'1', b'9') - elm_in(b'0', b'9').many0() | elm(b'0');
+  let integer = elm_in(b'1', b'9') - elm_digit().many0() | elm(b'0');
   let frac = elm(b'.') + elm_in(b'0', b'9').many1();
-  let exp = elm_of(b"eE") + elm_of(b"+-").opt() + elm_in(b'0', b'9').many1();
+  let exp = elm_of(b"eE") + elm_of(b"+-").opt() + elm_digit().many1();
   let number = elm(b'-').opt() + integer + frac.opt() + exp.opt();
   number.collect().convert(std::str::from_utf8).convert(f64::from_str)
 }
