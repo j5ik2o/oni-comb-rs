@@ -1,3 +1,7 @@
-pub(crate) use parsers_impl::ParsersImpl;
+mod basic_parsers;
+mod basic_repeat_parsers;
+mod conversion_combinators;
+mod core_parsers;
+mod repeat_combinators;
 
-mod parsers_impl;
+pub(crate) struct ParsersImpl;

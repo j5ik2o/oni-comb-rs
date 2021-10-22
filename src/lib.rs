@@ -4,16 +4,14 @@
 
 use std::fmt::{Debug, Display};
 
-use crate::core::{BasicParsers, CoreParsers, Element, ParseError};
-use crate::extension::{BasicCombinators, BasicRepeatParsers};
-use crate::internal::ParsersImpl;
-pub use crate::parser::Parser;
-use crate::utils::Set;
+use crate::core::*;
+use crate::extension::{BasicRepeatParsers, LazyCombinators};
+use crate::internal::*;
+use crate::utils::*;
 
 pub mod core;
 pub mod extension;
 mod internal;
-mod parser;
 pub mod utils;
 
 // https://github.com/com-lihaoyi/fastparse
@@ -208,28 +206,28 @@ where
   ParsersImpl::not_elm_of(set)
 }
 
-pub fn space_seq_0<'a, I>() -> Parser<'a, I, &'a [I]>
+pub fn space_many0<'a, I>() -> Parser<'a, I, &'a [I]>
 where
   I: Element + PartialEq + Debug + 'a, {
-  ParsersImpl::space_seq_0()
+  ParsersImpl::space_many0()
 }
 
-pub fn space_seq_1<'a, I>() -> Parser<'a, I, &'a [I]>
+pub fn space_many1<'a, I>() -> Parser<'a, I, &'a [I]>
 where
   I: Element + PartialEq + Debug + 'a, {
-  ParsersImpl::space_seq_1()
+  ParsersImpl::space_many1()
 }
 
-pub fn space_seq_n_m<'a, I>(n: usize, m: usize) -> Parser<'a, I, &'a [I]>
+pub fn space_many_n_m<'a, I>(n: usize, m: usize) -> Parser<'a, I, &'a [I]>
 where
   I: Element + PartialEq + Debug + 'a, {
-  ParsersImpl::space_seq_n_m(n, m)
+  ParsersImpl::space_many_n_m(n, m)
 }
 
-pub fn space_seq_of_n<'a, I>(n: usize) -> Parser<'a, I, &'a [I]>
+pub fn space_count<'a, I>(n: usize) -> Parser<'a, I, &'a [I]>
 where
   I: Element + PartialEq + Debug + 'a, {
-  ParsersImpl::space_seq_of_n(n)
+  ParsersImpl::space_count(n)
 }
 
 #[cfg(test)]
@@ -250,11 +248,11 @@ mod tests {
   fn test_space_0() {
     init();
 
-    let p = space_seq_0();
+    let p = space_many0();
     let r: usize = p.parse(b"").map(|e| e.len()).unwrap();
     assert_eq!(r, 0);
 
-    let p = space_seq_0();
+    let p = space_many0();
     let r: usize = p.parse(b"     ").map(|e| e.len()).unwrap();
     assert_eq!(r, 5);
   }
@@ -263,11 +261,11 @@ mod tests {
   fn test_space_1() {
     init();
 
-    let p = space_seq_1();
+    let p = space_many1();
     let r = p.parse(b"").map(|e| e.len());
     assert!(r.is_err());
 
-    let p = space_seq_1();
+    let p = space_many1();
     let r: usize = p.parse(b"     ").map(|e| e.len()).unwrap();
     assert_eq!(r, 5);
   }
