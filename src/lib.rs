@@ -144,6 +144,27 @@ pub fn take<'a, I>(n: usize) -> Parser<'a, I, &'a [I]> {
   ParsersImpl::take(n)
 }
 
+pub fn take_while0<'a, I, F>(f: F) -> Parser<'a, I, &'a [I]>
+where
+  F: Fn(&I) -> bool + 'a,
+  I: Element + 'a, {
+  ParsersImpl::take_while0(f)
+}
+
+pub fn take_till0<'a, I, F>(f: F) -> Parser<'a, I, &'a [I]>
+where
+  F: Fn(&I) -> bool + 'a,
+  I: Element + Debug + 'a, {
+  ParsersImpl::take_till0(f)
+}
+
+pub fn take_till1<'a, I, F>(f: F) -> Parser<'a, I, &'a [I]>
+where
+  F: Fn(&I) -> bool + 'a,
+  I: Element + Debug + 'a, {
+  ParsersImpl::take_till1(f)
+}
+
 pub fn skip<'a, I>(n: usize) -> Parser<'a, I, ()> {
   ParsersImpl::skip(n)
 }
@@ -443,6 +464,47 @@ mod tests {
 
     let b = p.parse(b"def").unwrap();
     assert!(b);
+  }
+
+  #[test]
+  fn test_take_while0() {
+    init();
+    let p = take_while0(|c: &u8| c.is_ascii_digit()).convert(std::str::from_utf8);
+
+    let result = p.parse(b"a123b");
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), "123");
+
+    let result = p.parse(b"def");
+    assert!(result.is_ok());
+  }
+
+  #[test]
+  fn test_take_till0() {
+    init();
+    let p = take_till0(|c| *c == b'c').convert(std::str::from_utf8);
+
+    let result = p.parse(b"abcd");
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), "abc");
+
+    let result = p.parse(b"def");
+    assert!(result.is_ok());
+  }
+
+  #[test]
+  fn test_take_till1() {
+    init();
+    let p = take_till1(|c| *c == b'c').convert(std::str::from_utf8);
+
+    log::debug!("parser: abcd");
+    let result = p.parse(b"abcd");
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), "abc");
+
+    log::debug!("parser: def");
+    let result = p.parse(b"def");
+    assert!(result.is_err());
   }
 
   #[test]
