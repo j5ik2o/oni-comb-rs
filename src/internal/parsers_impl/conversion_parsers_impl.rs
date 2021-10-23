@@ -1,7 +1,6 @@
 use crate::extension::parsers::ConversionParsers;
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;
-use std::rc::Rc;
 use crate::core::{ParseError, Parser, ParseResult, ParserRunner};
 
 impl ConversionParsers for ParsersImpl {
@@ -11,7 +10,7 @@ impl ConversionParsers for ParsersImpl {
     E: Debug,
     A: 'a,
     B: 'a, {
-    Parser::new(move |parse_state| match parser.run(Rc::clone(&parse_state)) {
+    Parser::new(move |parse_state| match parser.run(parse_state) {
       ParseResult::Success { get: a, length } => match f(a) {
         Ok(get) => ParseResult::Success { get: get, length },
         Err(err) => {

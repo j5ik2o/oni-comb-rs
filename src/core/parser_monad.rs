@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use crate::core::parse_result::ParseResult;
 use crate::core::parse_state::ParseState;
 use crate::core::ParseError;
@@ -41,5 +39,5 @@ pub trait ParserRunner<'a> {
   where
     'b: 'a;
 
-  fn run(&self, param: Rc<ParseState<'a, Self::Input>>) -> ParseResult<'a, Self::Input, Self::Output>;
+  fn run(&self, param: &ParseState<'a, Self::Input>) -> ParseResult<'a, Self::Input, Self::Output>;
 }

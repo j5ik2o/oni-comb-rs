@@ -1,4 +1,3 @@
-use std::rc::Rc;
 use crate::core::{ParseError, Parser, ParseResult, ParserRunner, ParseState};
 
 impl<'a, I, A> ParserRunner<'a> for Parser<'a, I, A> {
@@ -13,10 +12,10 @@ impl<'a, I, A> ParserRunner<'a> for Parser<'a, I, A> {
   where
     'b: 'a, {
     let parse_state = ParseState::new(input, 0);
-    self.run(Rc::new(parse_state)).extract()
+    self.run(&parse_state).extract()
   }
 
-  fn run(&self, param: Rc<ParseState<'a, Self::Input>>) -> ParseResult<'a, Self::Input, Self::Output> {
+  fn run(&self, param: &ParseState<'a, Self::Input>) -> ParseResult<'a, Self::Input, Self::Output> {
     (self.method)(param)
   }
 }

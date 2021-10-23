@@ -5,7 +5,6 @@ use crate::utils::Set;
 use regex::Regex;
 use std::fmt::{Debug, Display};
 use std::iter::FromIterator;
-use std::rc::Rc;
 
 impl ElementsParsers for ParsersImpl {
   fn seq<'a, 'b, I>(tag: &'b [I]) -> Self::P<'a, I, &'a [I]>
@@ -60,8 +59,8 @@ impl ElementsParsers for ParsersImpl {
   fn tag_no_case<'a, 'b>(tag: &'b str) -> Self::P<'a, char, &'a str>
   where
     'b: 'a, {
-    Parser::new(move |parse_state: Rc<ParseState<char>>| {
-      let input = Rc::clone(&parse_state).input();
+    Parser::new(move |parse_state: &ParseState<char>| {
+      let input = parse_state.input();
       let mut index = 0;
       for c in tag.chars() {
         if let Some(actual) = input.get(index) {

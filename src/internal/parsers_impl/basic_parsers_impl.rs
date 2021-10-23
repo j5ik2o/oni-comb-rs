@@ -1,7 +1,5 @@
 use std::fmt::{Debug, Display};
 
-use std::rc::Rc;
-
 use crate::core::{PrimitiveParsers, ParserRunner};
 use crate::core::ParseError;
 use crate::core::ParseResult;
@@ -15,7 +13,7 @@ impl ExtensionParsers for ParsersImpl {
   fn not<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
   where
     A: 'a, {
-    Parser::new(move |parse_state| match parser.run(Rc::clone(&parse_state)) {
+    Parser::new(move |parse_state| match parser.run(parse_state) {
       ParseResult::Success { .. } => {
         let ps = parse_state.add_offset(0);
         let parser_error = ParseError::of_mismatch(
@@ -33,7 +31,7 @@ impl ExtensionParsers for ParsersImpl {
   where
     A: 'a, {
     Parser::new(move |parse_state| {
-      let result = pa.run(Rc::clone(&parse_state));
+      let result = pa.run(parse_state);
       if let Some(is_committed) = result.is_committed() {
         if !is_committed {
           return pb.run(parse_state);
@@ -47,10 +45,10 @@ impl ExtensionParsers for ParsersImpl {
   where
     A: 'a,
     B: 'a, {
-    Parser::new(move |parse_state| match pa.run(Rc::clone(&parse_state)) {
+    Parser::new(move |parse_state| match pa.run(parse_state) {
       ParseResult::Success { get: r1, length: n1 } => {
-        let ps = Rc::new(parse_state.add_offset(n1));
-        match pb.run(ps) {
+        let ps = parse_state.add_offset(n1);
+        match pb.run(&ps) {
           ParseResult::Success { get: r2, length: n2 } => ParseResult::successful((r1, r2), n1 + n2),
           ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
         }
@@ -62,7 +60,7 @@ impl ExtensionParsers for ParsersImpl {
   fn collect<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, &'a [I]>
   where
     A: 'a, {
-    Parser::new(move |parse_state| match parser.run(Rc::clone(&parse_state)) {
+    Parser::new(move |parse_state| match parser.run(parse_state) {
       ParseResult::Success { length, .. } => {
         let slice = parse_state.slice_with_len(length);
         ParseResult::successful(slice, length)
@@ -74,7 +72,7 @@ impl ExtensionParsers for ParsersImpl {
   fn discard<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, ()>
   where
     A: Debug + 'a, {
-    Parser::new(move |parse_state| match parser.run(Rc::clone(&parse_state)) {
+    Parser::new(move |parse_state| match parser.run(parse_state) {
       ParseResult::Success { length, .. } => ParseResult::successful((), length),
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })
@@ -88,7 +86,7 @@ impl LazyParsers for ParsersImpl {
     A: Debug + 'a, {
     Parser::new(move |parse_state| {
       let parser = f();
-      parser.run(Rc::clone(&parse_state))
+      parser.run(parse_state)
     })
   }
 }
@@ -99,7 +97,7 @@ impl OffsetParsers for ParsersImpl {
   fn last_offset<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>
   where
     A: 'a, {
-    Parser::new(move |parse_state| match parser.run(Rc::clone(&parse_state)) {
+    Parser::new(move |parse_state| match parser.run(parse_state) {
       ParseResult::Success { length, .. } => {
         let ps = parse_state.add_offset(length);
         ParseResult::successful(ps.last_offset().unwrap_or(0), length)
@@ -111,7 +109,7 @@ impl OffsetParsers for ParsersImpl {
   fn next_offset<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>
   where
     A: 'a, {
-    Parser::new(move |parse_state| match parser.run(Rc::clone(&parse_state)) {
+    Parser::new(move |parse_state| match parser.run(parse_state) {
       ParseResult::Success { length, .. } => {
         let ps = parse_state.add_offset(length);
         ParseResult::successful(ps.next_offset(), length)

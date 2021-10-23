@@ -2,7 +2,6 @@ use crate::extension::parsers::RepeatParsers;
 use crate::internal::ParsersImpl;
 use crate::utils::{Bound, RangeArgument};
 use std::fmt::Debug;
-use std::rc::Rc;
 use crate::core::{ParseError, Parser, ParseResult, ParserRunner};
 
 impl RepeatParsers for ParsersImpl {
@@ -16,12 +15,11 @@ impl RepeatParsers for ParsersImpl {
     A: 'a,
     B: 'a, {
     Parser::new(move |parse_state| {
-      let mut ps = Rc::clone(&parse_state);
       let mut all_length = 0;
       let mut items = vec![];
 
-      if let ParseResult::Success { get, length } = parser.run(Rc::clone(&ps)) {
-        ps = Rc::new(ps.add_offset(length));
+      if let ParseResult::Success { get, length } = parser.run(parse_state) {
+        let mut current_parse_state = parse_state.add_offset(length);
         items.push(get);
         all_length += length;
         loop {
@@ -40,15 +38,15 @@ impl RepeatParsers for ParsersImpl {
           }
 
           if let Some(sep) = &separator {
-            if let ParseResult::Success { length, .. } = sep.run(Rc::clone(&ps)) {
-              ps = Rc::new(ps.add_offset(length));
+            if let ParseResult::Success { length, .. } = sep.run(&current_parse_state) {
+              current_parse_state = current_parse_state.add_offset(length);
               all_length += length;
             } else {
               break;
             }
           }
-          if let ParseResult::Success { get, length } = parser.run(Rc::clone(&ps)) {
-            ps = Rc::new(ps.add_offset(length));
+          if let ParseResult::Success { get, length } = parser.run(&current_parse_state) {
+            current_parse_state = current_parse_state.add_offset(length);
             items.push(get);
             all_length += length;
           } else {
@@ -59,7 +57,7 @@ impl RepeatParsers for ParsersImpl {
 
       if let Bound::Included(&min_count) = range.start() {
         if items.len() < min_count {
-          let ps = ps.add_offset(all_length);
+          let ps = parse_state.add_offset(all_length);
           let pe = ParseError::of_mismatch(
             ps.input(),
             ps.last_offset().unwrap_or(0),

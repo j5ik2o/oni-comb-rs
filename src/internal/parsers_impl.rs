@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use crate::core::{ParseError, Parser, ParseResult, ParserRunner, Parsers, ParseState};
 use crate::internal::ParsersImpl;
 
@@ -19,7 +17,7 @@ impl Parsers for ParsersImpl {
   where
     'b: 'a, {
     let parse_state = ParseState::new(input, 0);
-    parser.run(Rc::new(parse_state)).extract()
+    parser.run(&parse_state).extract()
   }
 
   fn successful<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
@@ -48,11 +46,13 @@ impl Parsers for ParsersImpl {
     F: Fn(A) -> Self::P<'a, I, B> + 'a,
     A: 'a,
     B: 'a, {
-    Parser::new(move |parse_state| match parser.run(Rc::clone(&parse_state)) {
-      ParseResult::Success { get: a, length: n } => f(a)
-        .run(Rc::new(parse_state.add_offset(n)))
+    Parser::new(move |parse_state| match parser.run(&parse_state) {
+      ParseResult::Success { get: a, length: n } => {
+        let ps = parse_state.add_offset(n);
+        f(a)
+        .run(&ps)
         .map_err_is_committed_fallback(n != 0)
-        .with_add_length(n),
+        .with_add_length(n)},
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })
   }
@@ -62,7 +62,7 @@ impl Parsers for ParsersImpl {
     F: Fn(A) -> B + 'a,
     A: 'a,
     B: 'a, {
-    Parser::new(move |parse_state| match parser.run(Rc::clone(&parse_state)) {
+    Parser::new(move |parse_state| match parser.run(parse_state) {
       ParseResult::Success { get: a, length } => ParseResult::Success { get: f(a), length },
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })
