@@ -1,5 +1,5 @@
 use crate::core::Parser;
-use crate::extension::parser::SkipCombinator;
+use crate::extension::parser::SkipParser;
 use std::fmt::Debug;
 use std::ops::Mul;
 

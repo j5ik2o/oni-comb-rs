@@ -2,16 +2,16 @@ use std::fmt::{Debug, Display};
 
 use std::rc::Rc;
 
-use crate::core::{BasicParsers, ParserRunner};
+use crate::core::{PrimitiveParsers, ParserRunner};
 use crate::core::ParseError;
 use crate::core::ParseResult;
 
 use crate::core::Parser;
 use crate::core::Parsers;
-use crate::extension::parsers::{BasicCombinators, LazyCombinators, OffsetCombinators, SkipCombinators};
+use crate::extension::parsers::{BasicParsers as ExtensionParsers, LazyParsers, OffsetParsers, SkipParsers};
 use crate::internal::ParsersImpl;
 
-impl BasicCombinators for ParsersImpl {
+impl ExtensionParsers for ParsersImpl {
   fn not<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
   where
     A: 'a, {
@@ -81,7 +81,7 @@ impl BasicCombinators for ParsersImpl {
   }
 }
 
-impl LazyCombinators for ParsersImpl {
+impl LazyParsers for ParsersImpl {
   fn lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> Self::P<'a, I, A> + 'a,
@@ -93,9 +93,9 @@ impl LazyCombinators for ParsersImpl {
   }
 }
 
-impl SkipCombinators for ParsersImpl {}
+impl SkipParsers for ParsersImpl {}
 
-impl OffsetCombinators for ParsersImpl {
+impl OffsetParsers for ParsersImpl {
   fn last_offset<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>
   where
     A: 'a, {
@@ -121,7 +121,7 @@ impl OffsetCombinators for ParsersImpl {
   }
 }
 
-impl BasicParsers for ParsersImpl {
+impl PrimitiveParsers for ParsersImpl {
   fn end<'a, I>() -> Self::P<'a, I, ()>
   where
     I: Debug + Display + 'a, {

@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 
-use crate::extension::parsers::BasicCombinators;
+use crate::extension::parsers::BasicParsers;
 use crate::utils::RangeArgument;
 
-pub trait RepeatCombinators: BasicCombinators {
+pub trait RepeatParsers: BasicParsers {
   /// `rep(5)` repeat p exactly 5 times
   /// `rep(0..)` repeat p zero or more times
   /// `rep(1..)` repeat p one or more times

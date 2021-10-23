@@ -1,13 +1,13 @@
-pub use basic_combinators::*;
-pub use conversion_combinators::*;
-pub use lazy_combinators::*;
-pub use offset_combinators::*;
-pub use repeat_combinators::*;
-pub use skip_combinators::*;
+pub use basic_parsers::*;
+pub use conversion_parsers::*;
+pub use lazy_parsers::*;
+pub use offset_parsers::*;
+pub use repeat_parsers::*;
+pub use skip_parsers::*;
 
-mod basic_combinators;
-mod conversion_combinators;
-mod lazy_combinators;
-mod offset_combinators;
-mod repeat_combinators;
-mod skip_combinators;
+mod basic_parsers;
+mod conversion_parsers;
+mod lazy_parsers;
+mod offset_parsers;
+mod repeat_parsers;
+mod skip_parsers;

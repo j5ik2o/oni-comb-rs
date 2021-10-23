@@ -1,10 +1,10 @@
 use crate::core::Parser;
-use crate::extension::parser::OffsetCombinator;
-use crate::extension::parsers::OffsetCombinators;
+use crate::extension::parser::OffsetParser;
+use crate::extension::parsers::OffsetParsers;
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;
 
-impl<'a, I, A> OffsetCombinator<'a> for Parser<'a, I, A> {
+impl<'a, I, A> OffsetParser<'a> for Parser<'a, I, A> {
   fn last_offset(self) -> Self::P<'a, Self::Input, usize>
   where
     Self::Output: Debug + 'a, {

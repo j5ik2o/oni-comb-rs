@@ -1,10 +1,10 @@
 use crate::core::Parser;
-use crate::extension::parser::SkipCombinator;
-use crate::extension::parsers::SkipCombinators;
+use crate::extension::parser::SkipParser;
+use crate::extension::parsers::SkipParsers;
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;
 
-impl<'a, I, A> SkipCombinator<'a> for Parser<'a, I, A> {
+impl<'a, I, A> SkipParser<'a> for Parser<'a, I, A> {
   fn skip_left<B>(self, pb: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, B>
   where
     Self::Output: Debug + 'a,

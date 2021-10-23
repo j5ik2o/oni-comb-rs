@@ -1,4 +1,4 @@
-use parsing_rust::extension::parser::{BasicCombinator, ConversionCombinator, RepeatCombinator};
+use parsing_rust::extension::parser::{BasicParser, ConversionParser, RepeatParser};
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::collections::HashMap;
 use std::iter::FromIterator;

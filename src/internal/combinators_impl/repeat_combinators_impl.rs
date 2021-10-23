@@ -1,11 +1,11 @@
-use crate::extension::parsers::RepeatCombinators;
+use crate::extension::parsers::RepeatParsers;
 use crate::internal::ParsersImpl;
 use crate::utils::{Bound, RangeArgument};
 use std::fmt::Debug;
 use std::rc::Rc;
 use crate::core::{ParseError, Parser, ParseResult, ParserRunner};
 
-impl RepeatCombinators for ParsersImpl {
+impl RepeatParsers for ParsersImpl {
   fn repeat_sep<'a, I, A, B, R>(
     parser: Self::P<'a, I, A>,
     range: R,

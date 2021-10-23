@@ -1,10 +1,10 @@
 use crate::core::Parser;
-use crate::extension::parser::ConversionCombinator;
-use crate::extension::parsers::ConversionCombinators;
+use crate::extension::parser::ConversionParser;
+use crate::extension::parsers::ConversionParsers;
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;
 
-impl<'a, I, A> ConversionCombinator<'a> for Parser<'a, I, A> {
+impl<'a, I, A> ConversionParser<'a> for Parser<'a, I, A> {
   fn convert<B, E, F>(self, f: F) -> Self::P<'a, Self::Input, B>
   where
     F: Fn(Self::Output) -> Result<B, E> + 'a,

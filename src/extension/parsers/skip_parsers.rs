@@ -1,8 +1,8 @@
 use std::fmt::Debug;
 
-use crate::extension::parsers::BasicCombinators;
+use crate::extension::parsers::BasicParsers;
 
-pub trait SkipCombinators: BasicCombinators {
+pub trait SkipParsers: BasicParsers {
   fn skip_left<'a, I, A, B>(pa: Self::P<'a, I, A>, pb: Self::P<'a, I, B>) -> Self::P<'a, I, B>
   where
     A: Debug + 'a,

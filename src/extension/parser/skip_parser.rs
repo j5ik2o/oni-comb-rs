@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use crate::core::ParserRunner;
 
-pub trait SkipCombinator<'a>: ParserRunner<'a> {
+pub trait SkipParser<'a>: ParserRunner<'a> {
   fn skip_left<B>(self, other: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, B>
   where
     Self::Output: Debug + 'a,

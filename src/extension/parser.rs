@@ -1,11 +1,11 @@
-pub use basic_combinator::*;
-pub use conversion_combinator::*;
+pub use basic_parser::*;
+pub use conversion_parser::*;
 pub use offset_combinator::*;
-pub use repeat_combinator::*;
-pub use skip_combinator::*;
+pub use repeat_parser::*;
+pub use skip_parser::*;
 
-mod basic_combinator;
-mod conversion_combinator;
+mod basic_parser;
+mod conversion_parser;
 mod offset_combinator;
-mod repeat_combinator;
-mod skip_combinator;
+mod repeat_parser;
+mod skip_parser;

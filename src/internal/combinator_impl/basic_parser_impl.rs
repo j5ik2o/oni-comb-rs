@@ -1,10 +1,10 @@
 use crate::core::Parser;
-use crate::extension::parser::BasicCombinator;
-use crate::extension::parsers::BasicCombinators;
+use crate::extension::parser::BasicParser;
+use crate::extension::parsers::BasicParsers;
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;
 
-impl<'a, I, A> BasicCombinator<'a> for Parser<'a, I, A> {
+impl<'a, I, A> BasicParser<'a> for Parser<'a, I, A> {
   fn and_then<B>(self, pb: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, (Self::Output, B)>
   where
     Self::Output: Debug + 'a,
