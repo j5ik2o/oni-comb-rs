@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::core::Parsers;
 
-pub trait BasicParsers: Parsers {
+pub trait OperatorParsers: Parsers {
   fn not<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
   where
     A: Debug + 'a;

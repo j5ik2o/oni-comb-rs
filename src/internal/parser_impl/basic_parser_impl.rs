@@ -1,6 +1,6 @@
 use crate::core::Parser;
 use crate::extension::parser::BasicParser;
-use crate::extension::parsers::BasicParsers;
+use crate::extension::parsers::OperatorParsers;
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;
 

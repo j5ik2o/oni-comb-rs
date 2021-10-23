@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 use std::str::FromStr;
 
-use crate::extension::parsers::BasicParsers;
+use crate::core::Parsers;
 
-pub trait ConversionParsers: BasicParsers {
+pub trait ConversionParsers: Parsers {
   fn convert<'a, I, A, B, E, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> Result<B, E> + 'a,

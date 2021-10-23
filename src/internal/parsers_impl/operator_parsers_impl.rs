@@ -6,10 +6,10 @@ use crate::core::{ParserRunner, PrimitiveParsers};
 
 use crate::core::Parser;
 use crate::core::Parsers;
-use crate::extension::parsers::{BasicParsers as ExtensionParsers, LazyParsers, OffsetParsers, SkipParsers};
+use crate::extension::parsers::{OperatorParsers, LazyParsers, OffsetParsers, SkipParsers};
 use crate::internal::ParsersImpl;
 
-impl ExtensionParsers for ParsersImpl {
+impl OperatorParsers for ParsersImpl {
   fn not<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
   where
     A: 'a, {
@@ -79,64 +79,6 @@ impl ExtensionParsers for ParsersImpl {
   }
 }
 
-impl LazyParsers for ParsersImpl {
-  fn lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
-  where
-    F: Fn() -> Self::P<'a, I, A> + 'a,
-    A: Debug + 'a, {
-    Parser::new(move |parse_state| {
-      let parser = f();
-      parser.run(parse_state)
-    })
-  }
-}
 
-impl SkipParsers for ParsersImpl {}
 
-impl OffsetParsers for ParsersImpl {
-  fn last_offset<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>
-  where
-    A: 'a, {
-    Parser::new(move |parse_state| match parser.run(parse_state) {
-      ParseResult::Success { length, .. } => {
-        let ps = parse_state.add_offset(length);
-        ParseResult::successful(ps.last_offset().unwrap_or(0), length)
-      }
-      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
-    })
-  }
 
-  fn next_offset<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>
-  where
-    A: 'a, {
-    Parser::new(move |parse_state| match parser.run(parse_state) {
-      ParseResult::Success { length, .. } => {
-        let ps = parse_state.add_offset(length);
-        ParseResult::successful(ps.next_offset(), length)
-      }
-      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
-    })
-  }
-}
-
-impl PrimitiveParsers for ParsersImpl {
-  fn end<'a, I>() -> Self::P<'a, I, ()>
-  where
-    I: Debug + Display + 'a, {
-    Parser::new(move |parse_state| {
-      let input = parse_state.input();
-      if let Some(actual) = input.get(0) {
-        let msg = format!("expect end of input, found: {}", actual);
-        let ps = parse_state.add_offset(1);
-        let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
-        ParseResult::failed_with_un_commit(pe)
-      } else {
-        ParseResult::successful((), 0)
-      }
-    })
-  }
-
-  fn empty<'a, I>() -> Self::P<'a, I, ()> {
-    Self::unit()
-  }
-}
