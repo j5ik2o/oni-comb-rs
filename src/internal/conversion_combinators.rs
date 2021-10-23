@@ -17,7 +17,7 @@ impl ConversionCombinators for ParsersImpl {
         Err(err) => {
           let ps = parse_state.add_offset(0);
           let msg = format!("Conversion error: {:?}", err);
-          let parser_error = ParseError::of_mismatch(ps.input(), ps.last_offset().unwrap_or(0), msg);
+          let parser_error = ParseError::of_conversion(ps.input(), ps.last_offset().unwrap_or(0), msg);
           ParseResult::failed_with_un_commit(parser_error)
         }
       },

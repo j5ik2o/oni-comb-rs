@@ -207,7 +207,7 @@ pub mod parsers {
     ParsersImpl::elm_from_until(start, end)
   }
 
-  pub fn not_elm_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
+  pub fn none_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized, {
@@ -326,7 +326,7 @@ mod tests {
     let patterns = b'a'..=b'f';
     let e = patterns.clone();
     let b = e.enumerate().into_iter().map(|e| e.1).collect::<Vec<_>>();
-    let p = not_elm_of(&patterns);
+    let p = none_of(&patterns);
 
     for index in 0..b.len() {
       let r = p.parse(&b[index..]);

@@ -67,7 +67,7 @@ impl BasicCombinators for ParsersImpl {
     A: 'a, {
     Parser::new(move |parse_state| match parser.run(Rc::clone(&parse_state)) {
       ParseResult::Success { length, .. } => {
-        let slice = parse_state.slice(length);
+        let slice = parse_state.slice_with_len(length);
         ParseResult::successful(slice, length)
       }
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
@@ -282,7 +282,7 @@ impl BasicParsers for ParsersImpl {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       if input.len() >= n {
-        ParseResult::successful(parse_state.slice(n), n)
+        ParseResult::successful(parse_state.slice_with_len(n), n)
       } else {
         ParseResult::failed_with_un_commit(ParseError::of_in_complete())
       }
@@ -309,7 +309,7 @@ impl BasicParsers for ParsersImpl {
       }
       match start {
         Some(s) => ParseResult::successful(&input[s..s + len], 0),
-        None => ParseResult::successful(parse_state.slice(0), 0),
+        None => ParseResult::successful(parse_state.slice_with_len(0), 0),
       }
     })
   }
@@ -387,9 +387,9 @@ impl BasicParsers for ParsersImpl {
         index += 1;
       }
       if !b {
-        ParseResult::successful(parse_state.slice(0), 0)
+        ParseResult::successful(parse_state.slice_with_len(0), 0)
       } else {
-        ParseResult::successful(parse_state.slice(index + 1), index + 1)
+        ParseResult::successful(parse_state.slice_with_len(index + 1), index + 1)
       }
     })
   }
@@ -412,7 +412,7 @@ impl BasicParsers for ParsersImpl {
       if !b {
         ParseResult::failed_with_un_commit(ParseError::of_in_complete())
       } else {
-        ParseResult::successful(parse_state.slice(index + 1), index + 1)
+        ParseResult::successful(parse_state.slice_with_len(index + 1), index + 1)
       }
     })
   }

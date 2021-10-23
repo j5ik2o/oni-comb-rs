@@ -35,7 +35,7 @@ impl<'a, I> ParseState<'a, I> {
     &self.input[self.offset..]
   }
 
-  pub fn slice(&self, n: usize) -> &'a [I] {
+  pub fn slice_with_len(&self, n: usize) -> &'a [I] {
     &self.input[self.offset..self.offset + n]
   }
 }

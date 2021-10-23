@@ -38,7 +38,7 @@ fn string<'a>() -> Parser<'a, u8, String> {
     | elm(b'r').map(|_| &b'\r')
     | elm(b't').map(|_| &b'\t');
   let escape_sequence = elm(b'\\') * special_char;
-  let char_string = (not_elm_of(b"\\\"") | escape_sequence)
+  let char_string = (none_of(b"\\\"") | escape_sequence)
     .map(|e| *e)
     .of_many1()
     .convert(String::from_utf8);

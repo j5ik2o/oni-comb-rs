@@ -1,9 +1,7 @@
 use std::fmt::Debug;
 use std::rc::Rc;
 
-use crate::core::CoreParsers;
-use crate::core::ParseState;
-use crate::core::{ParseResult, ParserFunctor, ParserMonad, ParserPure};
+use crate::core::{ParseResult, ParseState};
 use crate::extension::{
   BasicCombinator, ConversionCombinator, ConversionCombinators, OffsetCombinator, OffsetCombinators, SkipCombinator,
   SkipCombinators,
