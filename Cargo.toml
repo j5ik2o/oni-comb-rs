@@ -1,8 +1,16 @@
 [package]
-name = "parsing-rust"
+name = "oni-comb-rs"
 version = "0.1.0"
 edition = "2018"
+description = "A Rust crate for parser combinators"
 license = "MIT OR Apache-2.0"
+keywords = ["parser", "combinator"]
+categories = ["parsing"]
+readme = "./README.md"
+repository = "https://github.com/j5ik2o/oni-comb-rs"
+
+[badges]
+github = { repository = "j5ik2o/oni-comb-rs", workflow = "Rust" }
 
 [dependencies]
 log = "0.4.14"
