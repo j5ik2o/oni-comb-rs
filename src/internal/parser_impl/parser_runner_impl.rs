@@ -8,9 +8,7 @@ impl<'a, I, A> ParserRunner<'a> for Parser<'a, I, A> {
     X: 'm,
   = Parser<'m, X, Y>;
 
-  fn parse<'b>(&self, input: &'b [Self::Input]) -> Result<Self::Output, ParseError<'a, Self::Input>>
-  where
-    'b: 'a, {
+  fn parse(&self, input: &'a [Self::Input]) -> Result<Self::Output, ParseError<'a, Self::Input>> {
     let parse_state = ParseState::new(input, 0);
     self.run(&parse_state).extract()
   }

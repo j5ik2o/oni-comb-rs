@@ -675,4 +675,22 @@ mod tests {
     log::debug!("result = {:?}", result);
     // assert_eq!(s, "aname");
   }
+
+  #[test]
+  fn test_filter() {
+    {
+      let input: Vec<char> = "abc def".chars().collect::<Vec<char>>();
+      let p1: Parser<char, Vec<char>> = tag("abc") * elm(' ').map(|e| *e).of_many1() - tag("def");
+      let p2: Parser<char, Vec<char>> = p1.with_filter(|chars| chars.len() > 1);
+      let result: Result<Vec<char>, ParseError<char>> = p2.parse(&input);
+      assert!(result.is_err());
+    }
+    {
+      let input: Vec<char> = "abc  def".chars().collect::<Vec<char>>();
+      let p1: Parser<char, Vec<char>> = tag("abc") * elm(' ').map(|e| *e).of_many1() - tag("def");
+      let p2: Parser<char, Vec<char>> = p1.with_filter(|chars| chars.len() > 1);
+      let result: Result<Vec<char>, ParseError<char>> = p2.parse(&input);
+      assert!(result.is_ok());
+    }
+  }
 }

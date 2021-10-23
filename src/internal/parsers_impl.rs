@@ -31,10 +31,7 @@ impl Parsers for ParsersImpl {
   where
     F: Fn() -> A + 'a,
     A: 'a, {
-    Parser::new(move |_| ParseResult::Success {
-      get: value(),
-      length: 0,
-    })
+    Parser::new(move |_| ParseResult::successful(value(), 0))
   }
 
   fn failed<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
@@ -42,9 +39,28 @@ impl Parsers for ParsersImpl {
     F: Fn() -> ParseError<'a, I> + 'a,
     I: 'a,
     A: 'a, {
-    Parser::new(move |_| ParseResult::Failure {
-      get: f(),
-      is_committed: false,
+    Parser::new(move |_| ParseResult::failed_with_un_commit(f()))
+  }
+
+  fn filter<'a, I, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
+  where
+    F: Fn(&A) -> bool + 'a,
+    I: 'a,
+    A: 'a, {
+    Parser::new(move |parse_state| match parser.run(parse_state) {
+      ParseResult::Success { get, length } => {
+        if f(&get) {
+          ParseResult::successful(get, length)
+        } else {
+          let input = parse_state.input();
+          let offset = parse_state.last_offset().unwrap_or(0);
+          let msg = format!("no matched to predicate: last offset: {}", offset);
+          let ps = parse_state.add_offset(length);
+          let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
+          ParseResult::failed_with_un_commit(pe)
+        }
+      }
+      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })
   }
 

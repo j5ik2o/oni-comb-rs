@@ -25,6 +25,12 @@ pub trait Parsers {
     I: 'a,
     A: 'a;
 
+  fn filter<'a, I, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
+  where
+    F: Fn(&A) -> bool + 'a,
+    I: 'a,
+    A: 'a;
+
   fn flat_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> Self::P<'a, I, B> + 'a,

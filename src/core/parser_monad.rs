@@ -19,7 +19,15 @@ pub trait ParserFunctor<'a>: ParserPure<'a> {
     B: 'a;
 }
 
-pub trait ParserMonad<'a>: ParserFunctor<'a> {
+pub trait ParserFilter<'a>: ParserRunner<'a> {
+  fn with_filter<F>(self, f: F) -> Self::P<'a, Self::Input, Self::Output>
+  where
+    F: Fn(&Self::Output) -> bool + 'a,
+    Self::Input: 'a,
+    Self::Output: 'a;
+}
+
+pub trait ParserMonad<'a>: ParserFunctor<'a> + ParserFilter<'a> {
   fn flat_map<B, F>(self, f: F) -> Self::P<'a, Self::Input, B>
   where
     F: Fn(Self::Output) -> Self::P<'a, Self::Input, B> + 'a,
@@ -35,9 +43,7 @@ pub trait ParserRunner<'a> {
   where
     X: 'm;
 
-  fn parse<'b>(&self, input: &'b [Self::Input]) -> Result<Self::Output, ParseError<'a, Self::Input>>
-  where
-    'b: 'a;
+  fn parse(&self, input: &'a [Self::Input]) -> Result<Self::Output, ParseError<'a, Self::Input>>;
 
   fn run(&self, param: &ParseState<'a, Self::Input>) -> ParseResult<'a, Self::Input, Self::Output>;
 }
