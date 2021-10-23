@@ -14,6 +14,6 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-parsing-rust = "<<version>>"
+oni-comb-rs = "<<version>>"
 ```
 
