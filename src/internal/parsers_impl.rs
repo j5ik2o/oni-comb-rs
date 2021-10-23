@@ -6,6 +6,8 @@ use crate::internal::ParsersImpl;
 mod basic_parsers_impl;
 mod element_parsers_impl;
 mod elements_parsers;
+mod conversion_parsers_impl;
+mod repeat_parsers_impl;
 
 impl Parsers for ParsersImpl {
   type P<'p, I, A>
