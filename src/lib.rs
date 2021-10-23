@@ -236,7 +236,7 @@ mod tests {
   use crate::extension::*;
   use crate::*;
 
-  use super::parsers::*;
+  use super::prelude::*;
 
   fn init() {
     env::set_var("RUST_LOG", "debug");
