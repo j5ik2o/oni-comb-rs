@@ -236,7 +236,9 @@ mod tests {
 
   use crate::core::{ParserFunctor, ParserMonad, ParserRunner};
 
-  use crate::extension::parser::{CollectParser, ConversionParser, DiscardParser, OffsetParser, OperatorParser, RepeatParser};
+  use crate::extension::parser::{
+    CollectParser, ConversionParser, DiscardParser, OffsetParser, OperatorParser, RepeatParser,
+  };
   use crate::*;
 
   use super::prelude::*;
