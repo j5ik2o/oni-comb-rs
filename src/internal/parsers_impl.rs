@@ -1,15 +1,15 @@
 use crate::core::{ParseError, ParseResult, ParseState, Parser, ParserRunner, Parsers};
 use crate::internal::ParsersImpl;
 
-mod operator_parsers_impl;
 mod conversion_parsers_impl;
 mod element_parsers_impl;
 mod elements_parsers;
-mod repeat_parsers_impl;
-mod skip_parser_impl;
 mod lazy_parsers_impl;
 mod offset_parsers_impl;
+mod operator_parsers_impl;
 mod primitive_parsers_impl;
+mod repeat_parsers_impl;
+mod skip_parser_impl;
 
 impl Parsers for ParsersImpl {
   type P<'p, I, A>

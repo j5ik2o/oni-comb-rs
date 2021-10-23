@@ -1,5 +1,5 @@
 use parsing_rust::core::{Parser, ParserFunctor, ParserRunner};
-use parsing_rust::extension::parser::{OperatorParser, ConversionParser, RepeatParser};
+use parsing_rust::extension::parser::{ConversionParser, OperatorParser, RepeatParser};
 use parsing_rust::prelude::*;
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::collections::HashMap;
