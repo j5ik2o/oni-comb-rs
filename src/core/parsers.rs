@@ -4,10 +4,12 @@ use crate::core::parser_monad::ParserMonad;
 pub use element_parsers::*;
 pub use elements_parsers::*;
 pub use primitive_parsers::*;
+pub use taken_parsers::*;
 
 mod element_parsers;
 mod elements_parsers;
 mod primitive_parsers;
+mod taken_parsers;
 
 pub trait Parsers {
   type P<'p, I, A>: ParserMonad<'p, Input = I, Output = A>

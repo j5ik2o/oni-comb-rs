@@ -1,8 +1,9 @@
+use std::fmt::Debug;
+
 use crate::core::Parser;
 use crate::extension::parser::OperatorParser;
-use crate::extension::parsers::OperatorParsers;
+use crate::extension::parsers::{CollectParsers, DiscardParsers, OperatorParsers};
 use crate::internal::ParsersImpl;
-use std::fmt::Debug;
 
 impl<'a, I, A> OperatorParser<'a> for Parser<'a, I, A> {
   fn and_then<B>(self, pb: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, (Self::Output, B)>

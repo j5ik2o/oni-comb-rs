@@ -1,5 +1,7 @@
+use std::fmt::{Debug, Display};
 use crate::core::{Element, ElementParsers, ParseError, ParseResult, Parser};
 use crate::internal::ParsersImpl;
+use crate::utils::Set;
 
 impl ElementParsers for ParsersImpl {
   fn elm_pred<'a, I, F>(f: F) -> Self::P<'a, I, &'a I>
@@ -61,5 +63,89 @@ impl ElementParsers for ParsersImpl {
   where
     I: Element + PartialEq + 'a, {
     Self::elm_pred(Element::is_ascii_oct_digit)
+  }
+
+  fn elm_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
+    where
+        I: PartialEq + Display + Debug + 'a,
+        S: Set<I> + ?Sized, {
+    Parser::new(move |parse_state| {
+      let input = parse_state.input();
+      if let Some(s) = input.get(0) {
+        if set.contains(s) {
+          ParseResult::successful(s, 1)
+        } else {
+          let msg = format!("expect one of: {}, found: {}", set.to_str(), s);
+          let ps = parse_state.add_offset(1);
+          let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
+          ParseResult::failed_with_un_commit(pe)
+        }
+      } else {
+        ParseResult::failed_with_un_commit(ParseError::of_in_complete())
+      }
+    })
+  }
+
+  fn elm_in<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
+    where
+        I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+    Parser::new(move |parse_state| {
+      let set = start..=end;
+      let input = parse_state.input();
+      if let Some(s) = input.get(0) {
+        if set.contains(s) {
+          ParseResult::successful(s, 1)
+        } else {
+          let msg = format!("expect elm of: {}, found: {}", set.to_str(), s);
+          let ps = parse_state.add_offset(1);
+          let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
+          ParseResult::failed_with_un_commit(pe)
+        }
+      } else {
+        ParseResult::failed_with_un_commit(ParseError::of_in_complete())
+      }
+    })
+  }
+
+  fn elm_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
+    where
+        I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+    Parser::new(move |parse_state| {
+      let set = start..end;
+      let input = parse_state.input();
+      if let Some(s) = input.get(0) {
+        if set.contains(s) {
+          ParseResult::successful(s, 1)
+        } else {
+          let msg = format!("expect elm of: {}, found: {}", set.to_str(), s);
+          let ps = parse_state.add_offset(1);
+          let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
+          ParseResult::failed_with_un_commit(pe)
+        }
+      } else {
+        ParseResult::failed_with_un_commit(ParseError::of_in_complete())
+      }
+    })
+  }
+
+  fn none_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
+    where
+        I: PartialEq + Display + Debug + 'a,
+        S: Set<I> + ?Sized, {
+    Parser::new(move |parse_state| {
+      let input = parse_state.input();
+      if let Some(s) = input.get(0) {
+        if !set.contains(s) {
+          ParseResult::successful(s, 1)
+        } else {
+          let msg = format!("expect none of: {}, found: {}", set.to_str(), s);
+          let ps = parse_state.add_offset(1);
+          let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
+          ParseResult::failed_with_un_commit(pe)
+        }
+      } else {
+        ParseResult::failed_with_un_commit(ParseError::of_in_complete())
+      }
+    })
   }
 }

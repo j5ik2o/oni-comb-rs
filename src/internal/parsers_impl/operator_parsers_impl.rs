@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 use crate::core::ParseError;
 use crate::core::ParseResult;
 use crate::core::ParserRunner;
@@ -56,24 +54,5 @@ impl OperatorParsers for ParsersImpl {
     })
   }
 
-  fn collect<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, &'a [I]>
-  where
-    A: 'a, {
-    Parser::new(move |parse_state| match parser.run(parse_state) {
-      ParseResult::Success { length, .. } => {
-        let slice = parse_state.slice_with_len(length);
-        ParseResult::successful(slice, length)
-      }
-      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
-    })
-  }
 
-  fn discard<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, ()>
-  where
-    A: Debug + 'a, {
-    Parser::new(move |parse_state| match parser.run(parse_state) {
-      ParseResult::Success { length, .. } => ParseResult::successful((), length),
-      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
-    })
-  }
 }

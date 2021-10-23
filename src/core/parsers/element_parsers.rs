@@ -1,4 +1,6 @@
+use std::fmt::{Debug, Display};
 use crate::core::{Element, Parsers};
+use crate::utils::Set;
 
 pub trait ElementParsers: Parsers {
   fn elm_any<'a, I>() -> Self::P<'a, I, &'a I>
@@ -45,4 +47,22 @@ pub trait ElementParsers: Parsers {
   fn elm_oct_digit<'a, I>() -> Self::P<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a;
+
+  fn elm_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
+    where
+        I: PartialEq + Display + Debug + 'a,
+        S: Set<I> + ?Sized;
+
+  fn elm_in<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
+    where
+        I: PartialEq + PartialOrd + Display + Debug + Copy + 'a;
+
+  fn elm_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
+    where
+        I: PartialEq + PartialOrd + Display + Debug + Copy + 'a;
+
+  fn none_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
+    where
+        I: PartialEq + Display + Debug + 'a,
+        S: Set<I> + ?Sized;
 }

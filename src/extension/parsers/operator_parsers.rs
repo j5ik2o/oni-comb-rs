@@ -21,12 +21,4 @@ pub trait OperatorParsers: Parsers {
   where
     A: Debug + 'a,
     B: Debug + 'a;
-
-  fn collect<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, &'a [I]>
-  where
-    A: Debug + 'a;
-
-  fn discard<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, ()>
-  where
-    A: Debug + 'a;
 }
