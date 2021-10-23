@@ -1,5 +1,5 @@
 use crate::core::Parser;
-use crate::extension::parser::BasicParser;
+use crate::extension::parser::OperatorParser;
 use std::fmt::Debug;
 use std::ops::BitOr;
 

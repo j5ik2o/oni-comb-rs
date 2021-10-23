@@ -1,8 +1,8 @@
-use crate::extension::parser::BasicParser;
+use crate::extension::parser::OperatorParser;
 use crate::utils::RangeArgument;
 use std::fmt::Debug;
 
-pub trait RepeatParser<'a>: BasicParser<'a> {
+pub trait RepeatParser<'a>: OperatorParser<'a> {
   fn repeat<R>(self, range: R) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     R: RangeArgument<usize> + Debug + 'a,

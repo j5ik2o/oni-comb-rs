@@ -1,7 +1,7 @@
 use crate::core::ParserRunner;
 use std::fmt::Debug;
 
-pub trait BasicParser<'a>: ParserRunner<'a> {
+pub trait OperatorParser<'a>: ParserRunner<'a> {
   fn and_then<B>(self, other: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, (Self::Output, B)>
   where
     Self::Output: Debug + 'a,
