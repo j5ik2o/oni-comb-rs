@@ -1,7 +1,13 @@
 use crate::core::parse_error::ParseError;
 use crate::core::parser_monad::ParserMonad;
 
-pub mod basic_parsers;
+pub use basic_parsers::*;
+pub use element_parsers::*;
+pub use elements_parsers::*;
+
+mod basic_parsers;
+mod element_parsers;
+mod elements_parsers;
 
 pub trait Parsers {
   type P<'p, I, A>: ParserMonad<'p, Input = I, Output = A>

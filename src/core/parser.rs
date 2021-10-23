@@ -1,6 +1,5 @@
-use std::rc::Rc;
-
 use crate::core::{ParseResult, ParseState};
+use std::rc::Rc;
 
 mod add_parser;
 mod basic_combinator;

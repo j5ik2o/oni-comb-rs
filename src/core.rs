@@ -4,7 +4,6 @@ pub use parse_result::*;
 pub use parse_state::*;
 pub use parser::*;
 pub use parser_monad::*;
-pub use parsers::basic_parsers::*;
 pub use parsers::*;
 
 mod element;
