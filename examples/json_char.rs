@@ -1,6 +1,6 @@
-use parsing_rust::core::{Parser, ParserFunctor, ParserRunner};
-use parsing_rust::extension::parser::{CollectParser, ConversionParser, DiscardParser, OperatorParser, RepeatParser};
-use parsing_rust::prelude::*;
+use oni_comb_rs::core::{Parser, ParserFunctor, ParserRunner};
+use oni_comb_rs::extension::parser::{CollectParser, ConversionParser, DiscardParser, OperatorParser, RepeatParser};
+use oni_comb_rs::prelude::*;
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::collections::HashMap;
 use std::iter::FromIterator;
