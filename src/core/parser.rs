@@ -2,24 +2,20 @@ use std::rc::Rc;
 
 use crate::core::{ParseResult, ParseState};
 
-
-
-
-
 mod add_parser;
+mod basic_combinator;
 mod bitor_parser;
+mod conversion_combinator;
 mod mul_parser;
 mod not_parser;
+mod offset_combinator;
 mod parser_functor;
 mod parser_monad;
 mod parser_pure;
 mod parser_runner;
-mod sub_parser;
-mod basic_combinator;
-mod conversion_combinator;
-mod offset_combinator;
-mod skip_combinator;
 mod repeat_combinator;
+mod skip_combinator;
+mod sub_parser;
 
 type Parse<'a, I, A> = dyn Fn(Rc<ParseState<'a, I>>) -> ParseResult<'a, I, A> + 'a;
 
