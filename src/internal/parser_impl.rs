@@ -1,10 +1,12 @@
 mod add_impl;
-mod basic_parser_impl;
 mod bitor_impl;
+mod collect_parser_impl;
 mod conversion_parser_impl;
+mod discard_parser_impl;
 mod mul_parser_impl;
 mod not_impl;
 mod offset_parser_impl;
+mod operator_parser_impl;
 mod parser_functor_impl;
 mod parser_monad_impl;
 mod parser_pure_impl;

@@ -1,4 +1,5 @@
-use crate::core::{Element, ElementParsers};
+use crate::core::Element;
+use crate::extension::parsers::element_parsers::ElementParsers;
 use std::fmt::Debug;
 
 pub trait TakenParsers: ElementParsers {

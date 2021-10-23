@@ -1,5 +1,5 @@
-use crate::core::PrimitiveParsers;
 use crate::core::{ParseError, ParseResult, Parser, Parsers};
+use crate::extension::parsers::PrimitiveParsers;
 use crate::internal::ParsersImpl;
 use std::fmt::{Debug, Display};
 

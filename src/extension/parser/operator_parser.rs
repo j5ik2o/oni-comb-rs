@@ -18,12 +18,4 @@ pub trait OperatorParser<'a>: ParserRunner<'a> {
   fn opt(self) -> Self::P<'a, Self::Input, Option<Self::Output>>
   where
     Self::Output: Debug + 'a;
-
-  fn collect(self) -> Self::P<'a, Self::Input, &'a [Self::Input]>
-  where
-    Self::Output: Debug + 'a;
-
-  fn discard(self) -> Self::P<'a, Self::Input, ()>
-  where
-    Self::Output: Debug + 'a;
 }

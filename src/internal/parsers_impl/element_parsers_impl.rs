@@ -1,4 +1,5 @@
-use crate::core::{Element, ElementParsers, ParseError, ParseResult, Parser};
+use crate::core::{Element, ParseError, ParseResult, Parser};
+use crate::extension::parsers::ElementParsers;
 use crate::internal::ParsersImpl;
 use crate::utils::Set;
 use std::fmt::{Debug, Display};

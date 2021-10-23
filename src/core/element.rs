@@ -1,4 +1,6 @@
-pub trait Element {
+use std::fmt::Debug;
+
+pub trait Element: Debug {
   fn is_ascii_space(&self) -> bool;
   fn is_ascii_multi_space(&self) -> bool;
   fn is_ascii_whitespace(&self) -> bool;

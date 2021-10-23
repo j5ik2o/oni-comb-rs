@@ -1,6 +1,8 @@
-use crate::core::{Element, ParseError, ParseResult, Parser, TakenParsers};
-use crate::internal::ParsersImpl;
 use std::fmt::Debug;
+
+use crate::core::{Element, ParseError, ParseResult, Parser};
+use crate::extension::parsers::TakenParsers;
+use crate::internal::ParsersImpl;
 
 impl TakenParsers for ParsersImpl {
   fn take<'a, I>(n: usize) -> Self::P<'a, I, &'a [I]> {

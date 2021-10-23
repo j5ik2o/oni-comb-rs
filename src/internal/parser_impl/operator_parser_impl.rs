@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::core::Parser;
 use crate::extension::parser::OperatorParser;
-use crate::extension::parsers::{CollectParsers, DiscardParsers, OperatorParsers};
+use crate::extension::parsers::OperatorParsers;
 use crate::internal::ParsersImpl;
 
 impl<'a, I, A> OperatorParser<'a> for Parser<'a, I, A> {
@@ -29,17 +29,5 @@ impl<'a, I, A> OperatorParser<'a> for Parser<'a, I, A> {
   where
     Self::Output: Debug + 'a, {
     ParsersImpl::opt(self)
-  }
-
-  fn collect(self) -> Self::P<'a, Self::Input, &'a [Self::Input]>
-  where
-    Self::Output: Debug + 'a, {
-    ParsersImpl::collect(self)
-  }
-
-  fn discard(self) -> Self::P<'a, Self::Input, ()>
-  where
-    Self::Output: Debug + 'a, {
-    ParsersImpl::discard(self)
   }
 }

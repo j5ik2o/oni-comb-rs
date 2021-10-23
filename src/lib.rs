@@ -22,7 +22,9 @@ pub mod utils;
 // https://github.com/J-F-Liu/pom
 pub mod prelude {
   use super::*;
-  use crate::extension::parsers::{LazyParsers, SkipParsers};
+  use crate::extension::parsers::{
+    ElementParsers, ElementsParsers, LazyParsers, PrimitiveParsers, SkipParsers, TakenParsers,
+  };
 
   pub fn regex<'a>(regex: Regex) -> Parser<'a, char, String> {
     ParsersImpl::regex(regex)
@@ -234,7 +236,7 @@ mod tests {
 
   use crate::core::{ParserFunctor, ParserMonad, ParserRunner};
 
-  use crate::extension::parser::{ConversionParser, OffsetParser, OperatorParser, RepeatParser};
+  use crate::extension::parser::{CollectParser, ConversionParser, DiscardParser, OffsetParser, OperatorParser, RepeatParser};
   use crate::*;
 
   use super::prelude::*;
