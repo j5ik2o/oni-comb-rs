@@ -1,10 +1,6 @@
 use std::fmt::{Debug, Display};
 
-use regex::Regex;
-
-use crate::core::element::Element;
 use crate::core::Parsers;
-use crate::utils::Set;
 
 pub trait BasicParsers: Parsers {
   fn begin<'a, I>() -> Self::P<'a, I, ()> {

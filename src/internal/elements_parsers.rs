@@ -1,13 +1,13 @@
+use crate::core::ElementsParsers;
 use crate::core::{Element, ParseError, ParseResult, ParseState, Parser, Parsers};
+use crate::internal::ParsersImpl;
 use crate::utils::Set;
 use regex::Regex;
 use std::fmt::{Debug, Display};
 use std::iter::FromIterator;
 use std::rc::Rc;
-use crate::core::ElementsParsers;
-use crate::internal::ParsersImpl;
 
-impl ElementsParsers for  ParsersImpl {
+impl ElementsParsers for ParsersImpl {
   fn seq<'a, 'b, I>(tag: &'b [I]) -> Self::P<'a, I, &'a [I]>
   where
     I: PartialEq + Debug + 'a,

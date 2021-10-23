@@ -1,18 +1,16 @@
-use regex::Regex;
 use std::fmt::{Debug, Display};
-use std::iter::FromIterator;
+
 use std::rc::Rc;
 
 use crate::core::BasicParsers;
 use crate::core::ParseError;
 use crate::core::ParseResult;
-use crate::core::ParseState;
+
 use crate::core::Parser;
 use crate::core::ParserRunner;
-use crate::core::{Element, Parsers};
+use crate::core::Parsers;
 use crate::extension::parsers::{BasicCombinators, LazyCombinators, OffsetCombinators, SkipCombinators};
 use crate::internal::ParsersImpl;
-use crate::utils::Set;
 
 impl BasicCombinators for ParsersImpl {
   fn not<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
