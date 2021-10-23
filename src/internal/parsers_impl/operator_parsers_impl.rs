@@ -5,7 +5,7 @@ use crate::core::ParseResult;
 use crate::core::ParserRunner;
 
 use crate::core::Parser;
-use crate::extension::parsers::{OperatorParsers};
+use crate::extension::parsers::OperatorParsers;
 use crate::internal::ParsersImpl;
 
 impl OperatorParsers for ParsersImpl {
