@@ -1,8 +1,8 @@
 use std::fmt::{Debug, Display};
 
-use crate::core::{PrimitiveParsers, ParserRunner};
 use crate::core::ParseError;
 use crate::core::ParseResult;
+use crate::core::{ParserRunner, PrimitiveParsers};
 
 use crate::core::Parser;
 use crate::core::Parsers;

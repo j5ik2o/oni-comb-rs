@@ -1,10 +1,10 @@
+use parsing_rust::core::{Parser, ParserFunctor, ParserRunner};
 use parsing_rust::extension::parser::{BasicParser, ConversionParser, RepeatParser};
+use parsing_rust::prelude::*;
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::collections::HashMap;
 use std::iter::FromIterator;
 use std::str::FromStr;
-use parsing_rust::core::{Parser, ParserFunctor, ParserRunner};
-use parsing_rust::prelude::*;
 
 #[derive(Debug, PartialEq)]
 pub enum JsonValue {

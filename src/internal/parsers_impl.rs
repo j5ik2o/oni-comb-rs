@@ -1,10 +1,10 @@
-use crate::core::{ParseError, Parser, ParseResult, ParserRunner, Parsers, ParseState};
+use crate::core::{ParseError, ParseResult, ParseState, Parser, ParserRunner, Parsers};
 use crate::internal::ParsersImpl;
 
 mod basic_parsers_impl;
+mod conversion_parsers_impl;
 mod element_parsers_impl;
 mod elements_parsers;
-mod conversion_parsers_impl;
 mod repeat_parsers_impl;
 
 impl Parsers for ParsersImpl {
@@ -49,10 +49,8 @@ impl Parsers for ParsersImpl {
     Parser::new(move |parse_state| match parser.run(&parse_state) {
       ParseResult::Success { get: a, length: n } => {
         let ps = parse_state.add_offset(n);
-        f(a)
-        .run(&ps)
-        .map_err_is_committed_fallback(n != 0)
-        .with_add_length(n)},
+        f(a).run(&ps).map_err_is_committed_fallback(n != 0).with_add_length(n)
+      }
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })
   }
