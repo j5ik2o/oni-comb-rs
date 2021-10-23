@@ -17,4 +17,3 @@ Add this to your `Cargo.toml`:
 parsing-rust = "<<version>>"
 ```
 
-## About ULID
