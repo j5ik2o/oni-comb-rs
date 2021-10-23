@@ -4,10 +4,8 @@ use crate::core::{ParseError, Parser, ParseResult, ParserRunner, Parsers, ParseS
 use crate::internal::ParsersImpl;
 
 mod basic_parsers_impl;
-mod conversion_combinators_impl;
 mod element_parsers_impl;
 mod elements_parsers;
-mod repeat_combinators_impl;
 
 impl Parsers for ParsersImpl {
   type P<'p, I, A>
