@@ -1,8 +1,8 @@
 use crate::core::Parser;
-use crate::extension::BasicCombinators;
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;
 use std::ops::Not;
+use crate::extension::parsers::BasicCombinators;
 
 impl<'a, I, A> Not for Parser<'a, I, A>
 where

@@ -1,7 +1,7 @@
 use crate::core::Parser;
-use crate::extension::BasicCombinator;
 use std::fmt::Debug;
 use std::ops::Add;
+use crate::extension::parser::BasicCombinator;
 
 impl<'a, I, A, B> Add<Parser<'a, I, B>> for Parser<'a, I, A>
 where

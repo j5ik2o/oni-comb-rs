@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::extension::BasicCombinators;
+use crate::extension::parsers::BasicCombinators;
 
 pub trait OffsetCombinators: BasicCombinators {
   fn last_offset<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>

@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::str::FromStr;
 
-use crate::extension::BasicCombinators;
+use crate::extension::parsers::BasicCombinators;
 
 pub trait ConversionCombinators: BasicCombinators {
   fn convert<'a, I, A, B, E, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>

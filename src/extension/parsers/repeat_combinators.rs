@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::extension::BasicCombinators;
+use crate::extension::parsers::BasicCombinators;
 use crate::utils::RangeArgument;
 
 pub trait RepeatCombinators: BasicCombinators {

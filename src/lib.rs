@@ -7,7 +7,6 @@ use std::fmt::{Debug, Display};
 use regex::Regex;
 
 use crate::core::*;
-use crate::extension::{LazyCombinators, SkipCombinators};
 use crate::internal::*;
 use crate::utils::*;
 
@@ -22,6 +21,7 @@ pub mod utils;
 // https://hazm.at/mox/lang/rust/nom/index.html
 // https://github.com/J-F-Liu/pom
 pub mod prelude {
+  use crate::extension::parsers::{LazyCombinators, SkipCombinators};
   use super::*;
 
   pub fn regex<'a>(regex: Regex) -> Parser<'a, char, String> {
@@ -235,6 +235,7 @@ mod tests {
   use crate::core::{ParserFunctor, ParserMonad, ParserRunner};
   use crate::extension::*;
   use crate::*;
+  use crate::extension::parser::{BasicCombinator, ConversionCombinator, OffsetCombinator, RepeatCombinator};
 
   use super::prelude::*;
 

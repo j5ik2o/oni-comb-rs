@@ -1,5 +1,5 @@
 use crate::core::{ParseError, ParseResult, Parser, ParserRunner};
-use crate::extension::RepeatCombinators;
+use crate::extension::parsers::RepeatCombinators;
 use crate::internal::ParsersImpl;
 use crate::utils::{Bound, RangeArgument};
 use std::fmt::Debug;

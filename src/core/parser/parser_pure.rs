@@ -1,4 +1,4 @@
-use crate::core::{CoreParsers, Parser, ParserPure};
+use crate::core::{Parsers, Parser, ParserPure};
 use crate::internal::ParsersImpl;
 
 impl<'a, I, A> ParserPure<'a> for Parser<'a, I, A> {

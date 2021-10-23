@@ -3,12 +3,12 @@ use std::fmt::Debug;
 use crate::core::ParserRunner;
 
 pub trait BasicCombinator<'a>: ParserRunner<'a> {
-  fn and_then<B>(self, pbf: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, (Self::Output, B)>
+  fn and_then<B>(self, other: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, (Self::Output, B)>
   where
     Self::Output: Debug + 'a,
     B: Debug + 'a;
 
-  fn or(self, pb: Self::P<'a, Self::Input, Self::Output>) -> Self::P<'a, Self::Input, Self::Output>
+  fn or(self, other: Self::P<'a, Self::Input, Self::Output>) -> Self::P<'a, Self::Input, Self::Output>
   where
     Self::Output: Debug + 'a;
 

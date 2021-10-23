@@ -1,8 +1,9 @@
 use crate::core::Parser;
-use crate::extension::{RepeatCombinator, RepeatCombinators};
 use crate::internal::ParsersImpl;
 use crate::utils::RangeArgument;
 use std::fmt::Debug;
+use crate::extension::parser::RepeatCombinator;
+use crate::extension::parsers::RepeatCombinators;
 
 impl<'a, I, A> RepeatCombinator<'a> for Parser<'a, I, A> {
   fn repeat<R>(self, range: R) -> Self::P<'a, Self::Input, Vec<Self::Output>>

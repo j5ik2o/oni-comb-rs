@@ -1,8 +1,8 @@
 use std::fmt::Debug;
 
-use crate::core::CoreParsers;
+use crate::core::Parsers;
 
-pub trait BasicCombinators: CoreParsers {
+pub trait BasicCombinators: Parsers {
   fn not<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
   where
     A: Debug + 'a;

@@ -1,23 +1,2 @@
-pub use basic_combinator::*;
-pub use basic_combinators::*;
-pub use conversion_combinator::*;
-pub use conversion_combinators::*;
-pub use lazy_combinators::*;
-pub use offset_combinator::*;
-pub use offset_combinators::*;
-pub use repeat_combinator::*;
-pub use repeat_combinators::*;
-pub use skip_combinator::*;
-pub use skip_combinators::*;
-
-mod basic_combinator;
-mod basic_combinators;
-mod conversion_combinator;
-mod conversion_combinators;
-mod lazy_combinators;
-mod offset_combinator;
-mod offset_combinators;
-mod repeat_combinator;
-mod repeat_combinators;
-mod skip_combinator;
-mod skip_combinators;
+pub mod parser;
+pub mod parsers;

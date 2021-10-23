@@ -2,10 +2,10 @@ use regex::Regex;
 use std::fmt::{Debug, Display};
 
 use crate::core::element::Element;
-use crate::core::CoreParsers;
+use crate::core::Parsers;
 use crate::utils::Set;
 
-pub trait BasicParsers: CoreParsers {
+pub trait BasicParsers: Parsers {
   fn end<'a, I>() -> Self::P<'a, I, ()>
   where
     I: Debug + Display + 'a;

@@ -1,8 +1,8 @@
 use crate::core::{ParseError, ParseResult, Parser, ParserRunner};
-use crate::extension::ConversionCombinators;
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;
 use std::rc::Rc;
+use crate::extension::parsers::ConversionCombinators;
 
 impl ConversionCombinators for ParsersImpl {
   fn convert<'a, I, A, B, E, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
