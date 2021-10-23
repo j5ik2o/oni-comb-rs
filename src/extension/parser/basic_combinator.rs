@@ -1,5 +1,4 @@
 use std::fmt::Debug;
-
 use crate::core::ParserRunner;
 
 pub trait BasicCombinator<'a>: ParserRunner<'a> {

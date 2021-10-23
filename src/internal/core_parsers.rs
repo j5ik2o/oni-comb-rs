@@ -1,6 +1,6 @@
-use crate::core::{ParseError, ParseResult, ParseState, Parser, ParserRunner, Parsers};
 use crate::internal::ParsersImpl;
 use std::rc::Rc;
+use crate::core::{ParseError, Parser, ParseResult, ParserRunner, Parsers, ParseState};
 
 impl Parsers for ParsersImpl {
   type P<'p, I, A>

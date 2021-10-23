@@ -1,5 +1,5 @@
-use crate::core::{ParseError, ParseResult, ParseState, Parser, ParserRunner};
 use std::rc::Rc;
+use crate::core::{ParseError, Parser, ParseResult, ParserRunner, ParseState};
 
 impl<'a, I, A> ParserRunner<'a> for Parser<'a, I, A> {
   type Input = I;

@@ -2,12 +2,11 @@ use std::fmt::{Debug, Display};
 
 use std::rc::Rc;
 
-use crate::core::BasicParsers;
+use crate::core::{BasicParsers, ParserRunner};
 use crate::core::ParseError;
 use crate::core::ParseResult;
 
 use crate::core::Parser;
-use crate::core::ParserRunner;
 use crate::core::Parsers;
 use crate::extension::parsers::{BasicCombinators, LazyCombinators, OffsetCombinators, SkipCombinators};
 use crate::internal::ParsersImpl;

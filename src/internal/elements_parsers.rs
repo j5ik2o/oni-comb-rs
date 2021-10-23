@@ -1,5 +1,5 @@
 use crate::core::ElementsParsers;
-use crate::core::{Element, ParseError, ParseResult, ParseState, Parser, Parsers};
+use crate::core::{Element, ParseError, ParseResult, ParseState, Parser};
 use crate::internal::ParsersImpl;
 use crate::utils::Set;
 use regex::Regex;

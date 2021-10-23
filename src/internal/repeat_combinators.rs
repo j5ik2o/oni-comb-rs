@@ -1,13 +1,13 @@
-use crate::core::{ParseError, ParseResult, Parser, ParserRunner};
 use crate::extension::parsers::RepeatCombinators;
 use crate::internal::ParsersImpl;
 use crate::utils::{Bound, RangeArgument};
 use std::fmt::Debug;
 use std::rc::Rc;
+use crate::core::{ParseError, Parser, ParseResult, ParserRunner};
 
 impl RepeatCombinators for ParsersImpl {
   fn repeat_sep<'a, I, A, B, R>(
-    pa: Self::P<'a, I, A>,
+    parser: Self::P<'a, I, A>,
     range: R,
     separator: Option<Self::P<'a, I, B>>,
   ) -> Self::P<'a, I, Vec<A>>
@@ -20,7 +20,7 @@ impl RepeatCombinators for ParsersImpl {
       let mut all_length = 0;
       let mut items = vec![];
 
-      if let ParseResult::Success { get, length } = pa.run(Rc::clone(&ps)) {
+      if let ParseResult::Success { get, length } = parser.run(Rc::clone(&ps)) {
         ps = Rc::new(ps.add_offset(length));
         items.push(get);
         all_length += length;
@@ -47,7 +47,7 @@ impl RepeatCombinators for ParsersImpl {
               break;
             }
           }
-          if let ParseResult::Success { get, length } = pa.run(Rc::clone(&ps)) {
+          if let ParseResult::Success { get, length } = parser.run(Rc::clone(&ps)) {
             ps = Rc::new(ps.add_offset(length));
             items.push(get);
             all_length += length;
