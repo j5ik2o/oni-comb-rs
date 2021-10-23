@@ -21,7 +21,7 @@ pub mod utils;
 // https://github.com/Geal/nom
 // https://hazm.at/mox/lang/rust/nom/index.html
 // https://github.com/J-F-Liu/pom
-pub mod parsers {
+pub mod prelude {
   use super::*;
 
   pub fn regex<'a>(regex: Regex) -> Parser<'a, char, String> {
