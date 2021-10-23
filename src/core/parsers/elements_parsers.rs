@@ -59,7 +59,7 @@ pub trait ElementsParsers: Parsers {
   where
     I: PartialEq + PartialOrd + Display + Debug + Copy + 'a;
 
-  fn not_elm_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
+  fn none_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized;

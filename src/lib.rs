@@ -211,7 +211,7 @@ pub mod prelude {
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized, {
-    ParsersImpl::not_elm_of(set)
+    ParsersImpl::none_of(set)
   }
 
   pub fn surround<'a, I, A, B, C>(
