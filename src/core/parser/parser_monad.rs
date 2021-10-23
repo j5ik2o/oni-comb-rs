@@ -1,4 +1,4 @@
-use crate::core::{Parsers, Parser, ParserMonad};
+use crate::core::{Parser, ParserMonad, Parsers};
 use crate::internal::ParsersImpl;
 
 impl<'a, I, A> ParserMonad<'a> for Parser<'a, I, A> {

@@ -21,8 +21,8 @@ pub mod utils;
 // https://hazm.at/mox/lang/rust/nom/index.html
 // https://github.com/J-F-Liu/pom
 pub mod prelude {
-  use crate::extension::parsers::{LazyCombinators, SkipCombinators};
   use super::*;
+  use crate::extension::parsers::{LazyCombinators, SkipCombinators};
 
   pub fn regex<'a>(regex: Regex) -> Parser<'a, char, String> {
     ParsersImpl::regex(regex)
@@ -233,9 +233,9 @@ mod tests {
   use std::iter::FromIterator;
 
   use crate::core::{ParserFunctor, ParserMonad, ParserRunner};
-  use crate::extension::*;
-  use crate::*;
+
   use crate::extension::parser::{BasicCombinator, ConversionCombinator, OffsetCombinator, RepeatCombinator};
+  use crate::*;
 
   use super::prelude::*;
 

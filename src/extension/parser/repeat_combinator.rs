@@ -1,6 +1,6 @@
+use crate::extension::parser::BasicCombinator;
 use crate::utils::RangeArgument;
 use std::fmt::Debug;
-use crate::extension::parser::BasicCombinator;
 
 pub trait RepeatCombinator<'a>: BasicCombinator<'a> {
   fn repeat<R>(self, range: R) -> Self::P<'a, Self::Input, Vec<Self::Output>>

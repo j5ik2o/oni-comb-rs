@@ -9,7 +9,7 @@ use crate::core::ParseResult;
 use crate::core::ParseState;
 use crate::core::Parser;
 use crate::core::ParserRunner;
-use crate::core::{Parsers, Element};
+use crate::core::{Element, Parsers};
 use crate::extension::parsers::{BasicCombinators, LazyCombinators, OffsetCombinators, SkipCombinators};
 use crate::internal::ParsersImpl;
 use crate::utils::Set;

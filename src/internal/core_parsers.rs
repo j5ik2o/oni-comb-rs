@@ -1,4 +1,4 @@
-use crate::core::{Parsers, ParseError, ParseResult, ParseState, Parser, ParserRunner};
+use crate::core::{ParseError, ParseResult, ParseState, Parser, ParserRunner, Parsers};
 use crate::internal::ParsersImpl;
 use std::rc::Rc;
 

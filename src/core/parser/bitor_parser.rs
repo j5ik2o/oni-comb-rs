@@ -1,7 +1,7 @@
 use crate::core::Parser;
+use crate::extension::parser::BasicCombinator;
 use std::fmt::Debug;
 use std::ops::BitOr;
-use crate::extension::parser::BasicCombinator;
 
 impl<'a, I, A> BitOr for Parser<'a, I, A>
 where
