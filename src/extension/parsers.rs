@@ -1,11 +1,11 @@
+pub use collect_parsers::*;
 pub use conversion_parsers::*;
+pub use discard_parsers::*;
 pub use lazy_parsers::*;
 pub use offset_parsers::*;
 pub use operator_parsers::*;
 pub use repeat_parsers::*;
 pub use skip_parsers::*;
-pub use discard_parsers::*;
-pub use collect_parsers::*;
 
 mod collect_parsers;
 mod conversion_parsers;

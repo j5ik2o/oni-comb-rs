@@ -16,7 +16,5 @@ pub trait ElementsParsers: Parsers {
   where
     'b: 'a;
 
-
-
   fn regex<'a>(regex: Regex) -> Self::P<'a, char, String>;
 }

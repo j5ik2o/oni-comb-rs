@@ -1,7 +1,7 @@
-use std::fmt::{Debug, Display};
 use crate::core::{Element, ElementParsers, ParseError, ParseResult, Parser};
 use crate::internal::ParsersImpl;
 use crate::utils::Set;
+use std::fmt::{Debug, Display};
 
 impl ElementParsers for ParsersImpl {
   fn elm_pred<'a, I, F>(f: F) -> Self::P<'a, I, &'a I>
@@ -66,9 +66,9 @@ impl ElementParsers for ParsersImpl {
   }
 
   fn elm_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
-    where
-        I: PartialEq + Display + Debug + 'a,
-        S: Set<I> + ?Sized, {
+  where
+    I: PartialEq + Display + Debug + 'a,
+    S: Set<I> + ?Sized, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       if let Some(s) = input.get(0) {
@@ -87,8 +87,8 @@ impl ElementParsers for ParsersImpl {
   }
 
   fn elm_in<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
-    where
-        I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+  where
+    I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
     Parser::new(move |parse_state| {
       let set = start..=end;
       let input = parse_state.input();
@@ -108,8 +108,8 @@ impl ElementParsers for ParsersImpl {
   }
 
   fn elm_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
-    where
-        I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+  where
+    I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
     Parser::new(move |parse_state| {
       let set = start..end;
       let input = parse_state.input();
@@ -129,9 +129,9 @@ impl ElementParsers for ParsersImpl {
   }
 
   fn none_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
-    where
-        I: PartialEq + Display + Debug + 'a,
-        S: Set<I> + ?Sized, {
+  where
+    I: PartialEq + Display + Debug + 'a,
+    S: Set<I> + ?Sized, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       if let Some(s) = input.get(0) {

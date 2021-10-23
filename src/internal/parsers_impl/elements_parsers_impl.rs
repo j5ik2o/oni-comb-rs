@@ -78,8 +78,6 @@ impl ElementsParsers for ParsersImpl {
     })
   }
 
-
-
   fn regex<'a>(regex: Regex) -> Self::P<'a, char, String> {
     Parser::new(move |parse_state| {
       let input: &[char] = parse_state.input();

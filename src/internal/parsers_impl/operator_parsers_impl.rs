@@ -53,6 +53,4 @@ impl OperatorParsers for ParsersImpl {
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })
   }
-
-
 }
