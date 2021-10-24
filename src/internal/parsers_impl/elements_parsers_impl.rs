@@ -4,6 +4,7 @@ use crate::internal::ParsersImpl;
 use regex::Regex;
 use std::fmt::Debug;
 use std::iter::FromIterator;
+use regex::internal::Input;
 
 impl ElementsParsers for ParsersImpl {
   fn seq<'a, 'b, I>(tag: &'b [I]) -> Self::P<'a, I, &'a [I]>
@@ -83,8 +84,9 @@ impl ElementsParsers for ParsersImpl {
       let input: &[char] = parse_state.input();
       let str = String::from_iter(input);
       if let Some(result) = regex.captures(&str).as_ref() {
-        if let Some(sp) = result.at(0) {
-          ParseResult::successful(sp.to_string(), sp.len())
+        if let Some(m) = result.get(0) {
+          let str = m.as_str();
+          ParseResult::successful(str.to_string(), str.len())
         } else {
           let msg = format!("regex {:?} found: {:?}", regex, str);
           let pe = ParseError::of_mismatch(input, parse_state.next_offset(), msg);
