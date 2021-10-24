@@ -1,6 +1,6 @@
-# parsing-rust
+# oni-comb-rs (鬼昆布,おにこんぶ)
 
-A Rust crate for generating ULIDs.
+A Rust crate for parser combinators.
 
 [![Workflow Status](https://github.com/j5ik2o/parsing-rust/workflows/Rust/badge.svg)](https://github.com/j5ik2o/parsing-rust/actions?query=workflow%3A%22Rust%22)
 [![crates.io](https://img.shields.io/crates/v/parsing-rust.svg)](https://crates.io/crates/parsing-rust)
