@@ -118,7 +118,7 @@ pub mod prelude {
   pub fn elm_digit_without_0<'a, I>() -> Parser<'a, I, &'a I>
     where
         I: Element + PartialEq + 'a, {
-    elm_digit().with_filter(|c: &&I| !c.is_ascii_zero())
+    elm_digit().with_filter_not(|c: &&I| c.is_ascii_zero())
   }
 
   pub fn elm_hex_digit<'a, I>() -> Parser<'a, I, &'a I>
@@ -685,15 +685,15 @@ mod tests {
   fn test_filter() {
     {
       let input: Vec<char> = "abc def".chars().collect::<Vec<char>>();
-      let p1: Parser<char, Vec<char>> = tag("abc") * elm(' ').map(|e| *e).of_many1() - tag("def");
-      let p2: Parser<char, Vec<char>> = p1.with_filter(|chars| chars.len() > 1);
+      let p1 = tag("abc") * elm(' ').map(|e| *e).of_many1() - tag("def");
+      let p2 = p1.with_filter(|chars| chars.len() > 1);
       let result: Result<Vec<char>, ParseError<char>> = p2.parse(&input);
       assert!(result.is_err());
     }
     {
       let input: Vec<char> = "abc  def".chars().collect::<Vec<char>>();
-      let p1: Parser<char, Vec<char>> = tag("abc") * elm(' ').map(|e| *e).of_many1() - tag("def");
-      let p2: Parser<char, Vec<char>> = p1.with_filter(|chars| chars.len() > 1);
+      let p1 = tag("abc") * elm(' ').map(|e| *e).of_many1() - tag("def");
+      let p2 = p1.with_filter(|chars| chars.len() > 1);
       let result: Result<Vec<char>, ParseError<char>> = p2.parse(&input);
       assert!(result.is_ok());
     }
@@ -703,15 +703,15 @@ mod tests {
   fn test_filter_not() {
     {
       let input: Vec<char> = "abc def".chars().collect::<Vec<char>>();
-      let p1: Parser<char, Vec<char>> = tag("abc") * elm(' ').map(|e| *e).of_many1() - tag("def");
-      let p2: Parser<char, Vec<char>> = p1.with_filter_not(|chars| chars.len() > 1);
+      let p1 = tag("abc") * elm(' ').map(|e| *e).of_many1() - tag("def");
+      let p2 = p1.with_filter_not(|chars| chars.len() > 1);
       let result: Result<Vec<char>, ParseError<char>> = p2.parse(&input);
       assert!(result.is_ok());
     }
     {
       let input: Vec<char> = "abc  def".chars().collect::<Vec<char>>();
-      let p1: Parser<char, Vec<char>> = tag("abc") * elm(' ').map(|e| *e).of_many1() - tag("def");
-      let p2: Parser<char, Vec<char>> = p1.with_filter_not(|chars| chars.len() > 1);
+      let p1 = tag("abc") * elm(' ').map(|e| *e).of_many1() - tag("def");
+      let p2 = p1.with_filter_not(|chars| chars.len() > 1);
       let result: Result<Vec<char>, ParseError<char>> = p2.parse(&input);
       assert!(result.is_err());
     }
