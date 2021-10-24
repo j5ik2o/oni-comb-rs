@@ -20,7 +20,7 @@ pub trait ParserFunctor<'a>: ParserPure<'a> {
 }
 
 pub trait ParserFilter<'a>: ParserRunner<'a> {
-  fn with_filter<F>(self, f: F) -> Self::P<'a, Self::Input, Self::Output>
+  fn with_filter<F>(self, f: F) -> Self
   where
     F: Fn(&Self::Output) -> bool + 'a,
     Self::Input: 'a,

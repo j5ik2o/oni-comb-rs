@@ -112,8 +112,13 @@ pub mod prelude {
 
   pub fn elm_digit<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a, {
-    ParsersImpl::elm_digit()
+    I: Element + PartialEq + 'a, { ParsersImpl::elm_digit()
+  }
+
+  pub fn elm_digit_without_0<'a, I>() -> Parser<'a, I, &'a I>
+    where
+        I: Element + PartialEq + 'a, {
+    elm_digit().with_filter(|c: &&I| !c.is_ascii_zero())
   }
 
   pub fn elm_hex_digit<'a, I>() -> Parser<'a, I, &'a I>
