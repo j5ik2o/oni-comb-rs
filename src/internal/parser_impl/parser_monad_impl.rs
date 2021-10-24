@@ -7,8 +7,9 @@ impl<'a, I, A> ParserFilter<'a> for Parser<'a, I, A> {
     F: Fn(&Self::Output) -> bool + 'a,
     Self::Input: 'a,
     Self::Output: 'a, {
-    ParsersImpl::filter(self, f)
+    ParsersImpl::filter(self, move |e|  f(e))
   }
+
 }
 
 impl<'a, I, A> ParserMonad<'a> for Parser<'a, I, A> {
