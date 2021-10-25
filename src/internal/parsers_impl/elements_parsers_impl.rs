@@ -1,9 +1,9 @@
 use crate::core::{ParseError, ParseResult, ParseState, Parser};
 use crate::extension::parsers::ElementsParsers;
 use crate::internal::ParsersImpl;
-use regex::Regex;
 use std::fmt::Debug;
 use std::iter::FromIterator;
+use regex::Regex;
 
 impl ElementsParsers for ParsersImpl {
   fn seq<'a, 'b, I>(tag: &'b [I]) -> Self::P<'a, I, &'a [I]>

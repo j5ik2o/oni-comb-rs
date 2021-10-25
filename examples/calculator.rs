@@ -98,13 +98,17 @@ fn eval(expr: Rc<Expr>) -> Decimal {
   }
 }
 
+fn calculator<'a>() -> Parser<'a, char, Rc<Expr>> {
+  expr() - end()
+}
+
 fn main() {
   // use std::env;
   // env::set_var("RUST_LOG", "debug");
   // let _ = env_logger::builder().is_test(true).try_init();
   let s = "(((0.1 + -1.2) * -3.3) / 4.3) + 5.9";
   let input = s.chars().into_iter().collect::<Vec<_>>();
-  let result = expr().parse(&input).unwrap();
+  let result = calculator().parse(&input).unwrap();
   println!("expr = {:?}", result);
   let n = eval(result.clone());
   println!("{} = {}", s, n);
