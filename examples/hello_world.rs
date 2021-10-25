@@ -5,7 +5,7 @@ use oni_comb_rs::prelude::*;
 fn main() {
   let input: &[u8; 14] = b"'hello world';";
 
-  let parser: Parser<I, &str> = surround(
+  let parser: Parser<u8, &str> = surround(
     elm(b'\''),
     (seq(b"hello") + elm_space() + seq(b"world")).collect(),
     elm(b'\'') + elm(b';'),
