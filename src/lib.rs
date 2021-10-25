@@ -257,11 +257,21 @@ mod tests {
   #[test]
   fn test_attempt() {
     init();
-    let input1 = b"b";
-    let p: Parser<u8, &u8> = failed(|| ParseError::of_in_complete()).attempt().or(elm(b'b'));
+    {
+      let input1 = b"b";
+      let p: Parser<u8, &u8> = failed(|| ParseError::of_in_complete()).attempt().or(elm(b'b'));
 
-    let r = p.parse(input1);
-    assert!(r.is_ok());
+      let r = p.parse(input1);
+      assert!(r.is_ok());
+    }
+
+    {
+      let input1 = "abra cadabra!".chars().collect::<Vec<char>>();
+      let p = (tag("abra") + elm_space() + tag("abra")).attempt() | (tag("abra") + elm_space() + tag("cadabra!"));
+      let r = p.parse(&input1);
+      println!("result = {:?}", r);
+      assert!(r.is_ok());
+    }
   }
 
   #[test]

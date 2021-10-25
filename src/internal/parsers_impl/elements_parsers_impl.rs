@@ -22,7 +22,7 @@ impl ElementsParsers for ParsersImpl {
             let msg = format!("seq {:?} expect: {:?}, found: {:?}", tag, tag[index], str);
             let ps = parse_state.add_offset(index);
             let pe = ParseError::of_mismatch(input, ps.next_offset(), index, msg);
-            return ParseResult::failed_with_un_commit(pe);
+            return ParseResult::failed(pe, index != 0);
           }
         } else {
           return ParseResult::failed_with_un_commit(ParseError::of_in_complete());
@@ -38,13 +38,13 @@ impl ElementsParsers for ParsersImpl {
     Parser::new(move |parse_state| {
       let input: &[char] = parse_state.input();
       let mut index = 0;
-      for c in tag.chars() {
+      for (i, c) in tag.chars().enumerate() {
         if let Some(&actual) = input.get(index) {
           if c != actual {
             let msg = format!("tag {:?} expect: {:?}, found: {}", tag, c, actual);
             let ps = parse_state.add_offset(index);
             let pe = ParseError::of_mismatch(input, ps.next_offset(), index, msg);
-            return ParseResult::failed_with_un_commit(pe);
+            return ParseResult::failed(pe, i != 0);
           }
         } else {
           return ParseResult::failed_with_un_commit(ParseError::of_in_complete());
