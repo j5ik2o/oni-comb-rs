@@ -82,8 +82,9 @@ impl ElementsParsers for ParsersImpl {
     Parser::new(move |parse_state| {
       let input: &[char] = parse_state.input();
       let str = String::from_iter(input);
-      if let Some(result) = regex.captures(&str).as_ref() {
-        if let Some(m) = result.get(0) {
+      if let Some(captures) = regex.captures(&str).as_ref() {
+        let l = captures.len();
+        if let Some(m) = captures.get(0) {
           let str = m.as_str();
           ParseResult::successful(str.to_string(), str.len())
         } else {
@@ -92,6 +93,7 @@ impl ElementsParsers for ParsersImpl {
           return ParseResult::failed_with_un_commit(pe);
         }
       } else {
+        log::debug!("regex: failed");
         return ParseResult::failed_with_un_commit(ParseError::of_in_complete());
       }
     })

@@ -1,3 +1,4 @@
+use std::env;
 use oni_comb_rs::core::{Parser, ParserFunctor, ParserMonad, ParserRunner};
 use oni_comb_rs::extension::parser::{ConversionParser, DiscardParser, RepeatParser};
 use oni_comb_rs::prelude::*;
@@ -5,6 +6,7 @@ use rust_decimal::prelude::FromStr;
 use rust_decimal::Decimal;
 use std::iter::FromIterator;
 use std::rc::Rc;
+use regex::Regex;
 
 #[derive(Debug, Clone)]
 enum Expr {
@@ -73,9 +75,7 @@ fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn value<'a>() -> Parser<'a, char, Rc<Expr>> {
-  elm_of("01234567890.") // FIXME: Regex...
-    .of_many1()
-    .map(String::from_iter)
+  regex(Regex::new(r#"([0-9])+([.]([0-9])+)?"#).unwrap())
     .convert(|s| Decimal::from_str(&s))
     .map(|s| Expr::Value(s))
     .map(|v| Rc::new(v))
@@ -95,6 +95,8 @@ fn eval(expr: Rc<Expr>) -> Decimal {
 }
 
 fn main() {
+  env::set_var("RUST_LOG", "debug");
+  let _ = env_logger::builder().is_test(true).try_init();
   let s = "(((0.1 + -1.2) * -3.3)/ 4.3) + 5.9";
   let input = s.chars().into_iter().collect::<Vec<_>>();
   let result = expr().parse(&input).unwrap();
