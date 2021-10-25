@@ -83,7 +83,7 @@ impl ElementsParsers for ParsersImpl {
       let input: &[char] = parse_state.input();
       let str = String::from_iter(input);
       if let Some(captures) = regex.captures(&str).as_ref() {
-        let l = captures.len();
+        let _l = captures.len();
         if let Some(m) = captures.get(0) {
           let str = m.as_str();
           ParseResult::successful(str.to_string(), str.len())

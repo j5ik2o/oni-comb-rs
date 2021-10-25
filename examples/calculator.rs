@@ -1,12 +1,12 @@
-use std::env;
 use oni_comb_rs::core::{Parser, ParserFunctor, ParserMonad, ParserRunner};
 use oni_comb_rs::extension::parser::{ConversionParser, DiscardParser, RepeatParser};
 use oni_comb_rs::prelude::*;
 use rust_decimal::prelude::FromStr;
 use rust_decimal::Decimal;
-use std::iter::FromIterator;
-use std::rc::Rc;
+use std::env;
+
 use regex::Regex;
+use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 enum Expr {
@@ -51,10 +51,14 @@ fn mul_div_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
   let v1 = a.clone();
   let v2 = a.clone();
   let v3 = a.clone();
-  let mul_parser =
-    space() * elm('*') * space() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Multiply(v1.clone(), b.clone()))));
-  let div_parser =
-    space() * elm('/') * space() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Divide(v2.clone(), b.clone()))));
+  let mul_parser = space()
+    * elm('*')
+    * space()
+    * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Multiply(v1.clone(), b.clone()))));
+  let div_parser = space()
+    * elm('/')
+    * space()
+    * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Divide(v2.clone(), b.clone()))));
   mul_parser | div_parser | empty().map(move |_| v3.clone())
 }
 
