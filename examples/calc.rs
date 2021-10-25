@@ -94,7 +94,10 @@ fn eval(expr: Rc<Expr>) -> Decimal {
 }
 
 fn main() {
-  let input = "(((0.1 + -1.2) * -3.3)/ 4.3) + 5.9".chars().into_iter().collect::<Vec<_>>();
+  let input = "(((0.1 + -1.2) * -3.3)/ 4.3) + 5.9"
+    .chars()
+    .into_iter()
+    .collect::<Vec<_>>();
   let result = expr().parse(&input).unwrap();
   println!("{:?}", result);
   let n = eval(result.clone());
