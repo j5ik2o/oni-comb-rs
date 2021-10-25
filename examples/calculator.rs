@@ -23,36 +23,36 @@ fn space<'a>() -> Parser<'a, char, ()> {
 }
 
 fn expr<'a>() -> Parser<'a, char, Rc<Expr>> {
-  add_expr()
+  add_sub_expr()
 }
 
-fn add_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
-  mul_expr().flat_map(|a| add_rest(a))
+fn add_sub_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
+  mul_div_expr().flat_map(|a| add_sub_rest(a))
 }
 
-fn add_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
+fn add_sub_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
   let v1 = a.clone();
   let v2 = a.clone();
   let v3 = a.clone();
   let add_parser =
-    space() * elm('+') * space() * unary().flat_map(move |b| mul_rest(Rc::new(Expr::Add(v1.clone(), b.clone()))));
+    space() * elm('+') * space() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Add(v1.clone(), b.clone()))));
   let sub_parser =
-    space() * elm('-') * space() * unary().flat_map(move |b| mul_rest(Rc::new(Expr::Sub(v2.clone(), b.clone()))));
+    space() * elm('-') * space() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Sub(v2.clone(), b.clone()))));
   add_parser | sub_parser | empty().map(move |_| v3.clone())
 }
 
-fn mul_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
-  unary().flat_map(|a| mul_rest(a))
+fn mul_div_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
+  unary().flat_map(|a| mul_div_rest(a))
 }
 
-fn mul_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
+fn mul_div_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
   let v1 = a.clone();
   let v2 = a.clone();
   let v3 = a.clone();
   let mul_parser =
-    space() * elm('*') * space() * unary().flat_map(move |b| mul_rest(Rc::new(Expr::Multiply(v1.clone(), b.clone()))));
+    space() * elm('*') * space() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Multiply(v1.clone(), b.clone()))));
   let div_parser =
-    space() * elm('/') * space() * unary().flat_map(move |b| mul_rest(Rc::new(Expr::Divide(v2.clone(), b.clone()))));
+    space() * elm('/') * space() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Divide(v2.clone(), b.clone()))));
   mul_parser | div_parser | empty().map(move |_| v3.clone())
 }
 
