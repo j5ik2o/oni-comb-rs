@@ -1,5 +1,5 @@
 use oni_comb_rs::core::{Parser, ParserFunctor, ParserMonad, ParserRunner};
-use oni_comb_rs::extension::parser::{DiscardParser, RepeatParser};
+use oni_comb_rs::extension::parser::{ConversionParser, DiscardParser, RepeatParser};
 use oni_comb_rs::prelude::*;
 use rust_decimal::prelude::FromStr;
 use rust_decimal::Decimal;
@@ -73,10 +73,11 @@ fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn value<'a>() -> Parser<'a, char, Rc<Expr>> {
-  elm_of("01234567890.")
+  elm_of("01234567890.") // FIXME: Regex...
     .of_many1()
     .map(String::from_iter)
-    .map(|s| Expr::Value(Decimal::from_str(&s).unwrap()))
+    .convert(|s| Decimal::from_str(&s))
+    .map(|s| Expr::Value(s))
     .map(|v| Rc::new(v))
 }
 
