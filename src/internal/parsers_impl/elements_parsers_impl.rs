@@ -21,7 +21,7 @@ impl ElementsParsers for ParsersImpl {
           if tag[index] != *str {
             let msg = format!("seq {:?} expect: {:?}, found: {:?}", tag, tag[index], str);
             let ps = parse_state.add_offset(index);
-            let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
+            let pe = ParseError::of_mismatch(input, ps.next_offset(), index, msg);
             return ParseResult::failed_with_un_commit(pe);
           }
         } else {
@@ -43,7 +43,7 @@ impl ElementsParsers for ParsersImpl {
           if c != actual {
             let msg = format!("tag {:?} expect: {:?}, found: {}", tag, c, actual);
             let ps = parse_state.add_offset(index);
-            let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
+            let pe = ParseError::of_mismatch(input, ps.next_offset(), index, msg);
             return ParseResult::failed_with_un_commit(pe);
           }
         } else {
@@ -66,7 +66,7 @@ impl ElementsParsers for ParsersImpl {
           if !c.eq_ignore_ascii_case(actual) {
             let msg = format!("tag {:?} expect: {:?}, found: {}", tag, c, actual);
             let ps = parse_state.add_offset(index);
-            let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
+            let pe = ParseError::of_mismatch(input, ps.next_offset(), index, msg);
             return ParseResult::failed_with_un_commit(pe);
           }
         } else {
@@ -83,13 +83,12 @@ impl ElementsParsers for ParsersImpl {
       let input: &[char] = parse_state.input();
       let str = String::from_iter(input);
       if let Some(captures) = regex.captures(&str).as_ref() {
-        let _l = captures.len();
         if let Some(m) = captures.get(0) {
           let str = m.as_str();
           ParseResult::successful(str.to_string(), str.len())
         } else {
           let msg = format!("regex {:?} found: {:?}", regex, str);
-          let pe = ParseError::of_mismatch(input, parse_state.next_offset(), msg);
+          let pe = ParseError::of_mismatch(input, parse_state.next_offset(), str.len(), msg);
           return ParseResult::failed_with_un_commit(pe);
         }
       } else {

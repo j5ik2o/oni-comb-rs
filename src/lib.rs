@@ -255,6 +255,16 @@ mod tests {
   }
 
   #[test]
+  fn test_attempt() {
+    init();
+    let input1 = b"b";
+    let p: Parser<u8, &u8> = failed(|| ParseError::of_in_complete()).attempt().or(elm(b'b'));
+
+    let r = p.parse(input1);
+    assert!(r.is_ok());
+  }
+
+  #[test]
   fn test_end() {
     init();
     let input1 = b"";

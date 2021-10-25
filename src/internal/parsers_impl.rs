@@ -39,7 +39,7 @@ impl Parsers for ParsersImpl {
     F: Fn() -> ParseError<'a, I> + 'a,
     I: 'a,
     A: 'a, {
-    Parser::new(move |_| ParseResult::failed_with_un_commit(f()))
+    Parser::new(move |_| ParseResult::failed_with_commit(f()))
   }
 
   fn filter<'a, I, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
@@ -56,7 +56,7 @@ impl Parsers for ParsersImpl {
           let offset = parse_state.last_offset().unwrap_or(0);
           let msg = format!("no matched to predicate: last offset: {}", offset);
           let ps = parse_state.add_offset(length);
-          let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
+          let pe = ParseError::of_mismatch(input, ps.next_offset(), length, msg);
           ParseResult::failed_with_un_commit(pe)
         }
       }

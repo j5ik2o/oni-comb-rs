@@ -30,4 +30,10 @@ impl<'a, I, A> OperatorParser<'a> for Parser<'a, I, A> {
     Self::Output: Debug + 'a, {
     ParsersImpl::opt(self)
   }
+
+  fn attempt(self) -> Self::P<'a, Self::Input, Self::Output>
+  where
+    Self::Output: Debug + 'a, {
+    ParsersImpl::attempt(self)
+  }
 }

@@ -19,7 +19,7 @@ impl ElementParsers for ParsersImpl {
       let offset = parse_state.next_offset();
       let msg = format!("offset: {}", offset);
       let ps = parse_state.add_offset(1);
-      let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
+      let pe = ParseError::of_mismatch(input, ps.next_offset(), 1, msg);
       ParseResult::failed_with_un_commit(pe)
     })
   }
@@ -78,7 +78,7 @@ impl ElementParsers for ParsersImpl {
         } else {
           let msg = format!("expect one of: {}, found: {}", set.to_str(), s);
           let ps = parse_state.add_offset(1);
-          let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
+          let pe = ParseError::of_mismatch(input, ps.next_offset(), 1, msg);
           ParseResult::failed_with_un_commit(pe)
         }
       } else {
@@ -99,7 +99,7 @@ impl ElementParsers for ParsersImpl {
         } else {
           let msg = format!("expect elm of: {}, found: {}", set.to_str(), s);
           let ps = parse_state.add_offset(1);
-          let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
+          let pe = ParseError::of_mismatch(input, ps.next_offset(), 1, msg);
           ParseResult::failed_with_un_commit(pe)
         }
       } else {
@@ -120,7 +120,7 @@ impl ElementParsers for ParsersImpl {
         } else {
           let msg = format!("expect elm of: {}, found: {}", set.to_str(), s);
           let ps = parse_state.add_offset(1);
-          let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
+          let pe = ParseError::of_mismatch(input, ps.next_offset(), 1, msg);
           ParseResult::failed_with_un_commit(pe)
         }
       } else {
@@ -141,7 +141,7 @@ impl ElementParsers for ParsersImpl {
         } else {
           let msg = format!("expect none of: {}, found: {}", set.to_str(), s);
           let ps = parse_state.add_offset(1);
-          let pe = ParseError::of_mismatch(input, ps.next_offset(), msg);
+          let pe = ParseError::of_mismatch(input, ps.next_offset(), 1, msg);
           ParseResult::failed_with_un_commit(pe)
         }
       } else {

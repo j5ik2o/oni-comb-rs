@@ -61,6 +61,7 @@ impl RepeatParsers for ParsersImpl {
           let pe = ParseError::of_mismatch(
             ps.input(),
             ps.last_offset().unwrap_or(0),
+            all_length,
             format!(
               "expect repeat at least {} times, found {} times",
               min_count,

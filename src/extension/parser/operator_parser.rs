@@ -1,5 +1,5 @@
-use std::fmt::Debug;
 use crate::core::ParserRunner;
+use std::fmt::Debug;
 
 pub trait OperatorParser<'a>: ParserRunner<'a> {
   fn and_then<B>(self, other: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, (Self::Output, B)>
@@ -16,6 +16,10 @@ pub trait OperatorParser<'a>: ParserRunner<'a> {
     Self::Output: Debug + 'a;
 
   fn opt(self) -> Self::P<'a, Self::Input, Option<Self::Output>>
+  where
+    Self::Output: Debug + 'a;
+
+  fn attempt(self) -> Self::P<'a, Self::Input, Self::Output>
   where
     Self::Output: Debug + 'a;
 }

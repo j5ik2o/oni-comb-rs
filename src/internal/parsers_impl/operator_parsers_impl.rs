@@ -1,6 +1,7 @@
-use crate::core::ParseError;
+use crate::core::{ParseError, ParserFunctor, ParserMonad, Parsers};
 use crate::core::ParseResult;
 use crate::core::ParserRunner;
+use std::fmt::Debug;
 
 use crate::core::Parser;
 use crate::extension::parsers::OperatorParsers;
@@ -16,6 +17,7 @@ impl OperatorParsers for ParsersImpl {
         let parser_error = ParseError::of_mismatch(
           ps.input(),
           ps.last_offset().unwrap_or(0),
+          0,
           "not predicate failed".to_string(),
         );
         ParseResult::failed_with_un_commit(parser_error)
@@ -24,33 +26,39 @@ impl OperatorParsers for ParsersImpl {
     })
   }
 
-  fn or<'a, I, A>(pa: Self::P<'a, I, A>, pb: Self::P<'a, I, A>) -> Self::P<'a, I, A>
+  fn or<'a, I, A>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, A>) -> Self::P<'a, I, A>
   where
     A: 'a, {
     Parser::new(move |parse_state| {
-      let result = pa.run(parse_state);
+      let result = parser1.run(parse_state);
       if let Some(is_committed) = result.is_committed() {
-        if !is_committed {
-          return pb.run(parse_state);
+        if is_committed == false {
+          return parser2.run(parse_state);
         }
       }
       result
     })
   }
 
-  fn and_then<'a, I, A, B>(pa: Self::P<'a, I, A>, pb: Self::P<'a, I, B>) -> Self::P<'a, I, (A, B)>
+  fn and_then<'a, I, A, B>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, B>) -> Self::P<'a, I, (A, B)>
   where
     A: 'a,
     B: 'a, {
-    Parser::new(move |parse_state| match pa.run(parse_state) {
+    Parser::new(move |parse_state| match parser1.run(parse_state) {
       ParseResult::Success { get: r1, length: n1 } => {
         let ps = parse_state.add_offset(n1);
-        match pb.run(&ps) {
+        (match parser2.run(&ps) {
           ParseResult::Success { get: r2, length: n2 } => ParseResult::successful((r1, r2), n1 + n2),
           ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
-        }
+        }).map_err_is_committed_fallback(n1 != 0)
       }
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })
+  }
+
+  fn attempt<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
+  where
+    A: Debug + 'a, {
+    Parser::new(move |parse_state| parser.run(parse_state).with_un_commit())
   }
 }
