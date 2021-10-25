@@ -25,16 +25,16 @@ use oni_comb_rs::extension::parser::{CollectParser, ConversionParser};
 use oni_comb_rs::prelude::*;
 
 fn main() {
-    let input: &[u8; 14] = b"'hello world';";
+  let input: &[u8; 14] = b"'hello world';";
 
-    let parser: Parser<u8, &str> = surround(
-        elm(b'\''),
-        (seq(b"hello") + elm_space() + seq(b"world")).collect(),
-        elm(b'\'') + elm(b';'),
-    )
-        .convert(std::str::from_utf8);
-    let result: &str = parser.parse(input).unwrap();
+  let parser: Parser<u8, &str> = surround(
+    elm(b'\''),
+    (seq(b"hello") + elm_space() + seq(b"world")).collect(),
+    elm(b'\'') + elm(b';'),
+  )
+  .convert(std::str::from_utf8);
+  let result: &str = parser.parse(input).unwrap();
 
-    println!("{}", result); // hello world
+  println!("{}", result); // hello world
 }
 ```
