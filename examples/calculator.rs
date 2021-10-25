@@ -29,7 +29,7 @@ fn expr<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn add_sub_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
-  mul_div_expr().flat_map( add_sub_rest)
+  mul_div_expr().flat_map(add_sub_rest)
 }
 
 fn add_sub_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
@@ -63,12 +63,11 @@ fn mul_div_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn unary<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let unary_parser =
-    ((elm('+') | elm('-')) + lazy(unary)).map(|(c, expr): (&char, Rc<Expr>)| match c {
-      '-' => Rc::new(Expr::Plus(Rc::clone(&expr))),
-      '+' => Rc::new(Expr::Minus(Rc::clone(&expr))),
-      _ => panic!(),
-    });
+  let unary_parser = ((elm('+') | elm('-')) + lazy(unary)).map(|(c, expr): (&char, Rc<Expr>)| match c {
+    '-' => Rc::new(Expr::Plus(Rc::clone(&expr))),
+    '+' => Rc::new(Expr::Minus(Rc::clone(&expr))),
+    _ => panic!(),
+  });
   unary_parser | primary()
 }
 
