@@ -1,12 +1,12 @@
+use std::rc::Rc;
+
+use regex::Regex;
+use rust_decimal::Decimal;
+use rust_decimal::prelude::FromStr;
+
 use oni_comb_rs::core::{Parser, ParserFunctor, ParserMonad, ParserRunner};
 use oni_comb_rs::extension::parser::{ConversionParser, DiscardParser, RepeatParser};
 use oni_comb_rs::prelude::*;
-use rust_decimal::prelude::FromStr;
-use rust_decimal::Decimal;
-use std::env;
-
-use regex::Regex;
-use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 enum Expr {
@@ -99,9 +99,10 @@ fn eval(expr: Rc<Expr>) -> Decimal {
 }
 
 fn main() {
-  env::set_var("RUST_LOG", "debug");
-  let _ = env_logger::builder().is_test(true).try_init();
-  let s = "(((0.1 + -1.2) * -3.3)/ 4.3) + 5.9";
+  // use std::env;
+  // env::set_var("RUST_LOG", "debug");
+  // let _ = env_logger::builder().is_test(true).try_init();
+  let s = "(((0.1 + -1.2) * -3.3) / 4.3) + 5.9";
   let input = s.chars().into_iter().collect::<Vec<_>>();
   let result = expr().parse(&input).unwrap();
   println!("expr = {:?}", result);
