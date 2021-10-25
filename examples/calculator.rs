@@ -29,7 +29,7 @@ fn expr<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn add_sub_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
-  mul_div_expr().flat_map(|a| add_sub_rest(a))
+  mul_div_expr().flat_map( add_sub_rest)
 }
 
 fn add_sub_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
@@ -44,7 +44,7 @@ fn add_sub_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn mul_div_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
-  unary().flat_map(|a| mul_div_rest(a))
+  unary().flat_map(mul_div_rest)
 }
 
 fn mul_div_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
@@ -63,13 +63,13 @@ fn mul_div_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn unary<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let p: Parser<char, Rc<Expr>> =
+  let unary_parser =
     ((elm('+') | elm('-')) + lazy(unary)).map(|(c, expr): (&char, Rc<Expr>)| match c {
       '-' => Rc::new(Expr::Plus(Rc::clone(&expr))),
       '+' => Rc::new(Expr::Minus(Rc::clone(&expr))),
       _ => panic!(),
     });
-  p | primary()
+  unary_parser | primary()
 }
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -81,8 +81,8 @@ fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
 fn value<'a>() -> Parser<'a, char, Rc<Expr>> {
   regex(Regex::new(r#"([0-9])+([.]([0-9])+)?"#).unwrap())
     .convert(|s| Decimal::from_str(&s))
-    .map(|s| Expr::Value(s))
-    .map(|v| Rc::new(v))
+    .map(Expr::Value)
+    .map(Rc::new)
 }
 
 fn eval(expr: Rc<Expr>) -> Decimal {
