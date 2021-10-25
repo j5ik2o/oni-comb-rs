@@ -64,7 +64,7 @@ fn mul_div_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
 
 fn unary<'a>() -> Parser<'a, char, Rc<Expr>> {
   let p: Parser<char, Rc<Expr>> =
-    ((elm('+') | elm('-')).map(|e| *e) + lazy(unary)).map(|(c, expr): (char, Rc<Expr>)| match c {
+    ((elm('+') | elm('-')) + lazy(unary)).map(|(c, expr): (&char, Rc<Expr>)| match c {
       '-' => Rc::new(Expr::Plus(Rc::clone(&expr))),
       '+' => Rc::new(Expr::Minus(Rc::clone(&expr))),
       _ => panic!(),
