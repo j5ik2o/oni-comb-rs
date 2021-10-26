@@ -32,14 +32,28 @@ fn add_sub_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
   mul_div_expr().flat_map(add_sub_rest)
 }
 
+fn add<'a>() -> Parser<'a, char, &'a char> {
+  space() * elm('+') - space()
+}
+
+fn sub<'a>() -> Parser<'a, char, &'a char> {
+  space() * elm('-') - space()
+}
+
+fn mul<'a>() -> Parser<'a, char, &'a char> {
+  space() * elm('*') - space()
+}
+
+fn div<'a>() -> Parser<'a, char, &'a char> {
+  space() * elm('/') - space()
+}
+
 fn add_sub_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
   let v1 = a.clone();
   let v2 = a.clone();
   let v3 = a.clone();
-  let add_parser =
-    space() * elm('+') * space() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Add(v1.clone(), b.clone()))));
-  let sub_parser =
-    space() * elm('-') * space() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Sub(v2.clone(), b.clone()))));
+  let add_parser = add() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Add(v1.clone(), b.clone()))));
+  let sub_parser = sub() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Sub(v2.clone(), b.clone()))));
   add_parser.attempt() | sub_parser.attempt() | empty().map(move |_| v3.clone())
 }
 
@@ -51,14 +65,8 @@ fn mul_div_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
   let v1 = a.clone();
   let v2 = a.clone();
   let v3 = a.clone();
-  let mul_parser = space()
-    * elm('*')
-    * space()
-    * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Multiply(v1.clone(), b.clone()))));
-  let div_parser = space()
-    * elm('/')
-    * space()
-    * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Divide(v2.clone(), b.clone()))));
+  let mul_parser = mul() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Multiply(v1.clone(), b.clone()))));
+  let div_parser = div() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Divide(v2.clone(), b.clone()))));
   mul_parser.attempt() | div_parser.attempt() | empty().map(move |_| v3.clone())
 }
 
@@ -75,7 +83,8 @@ fn unary<'a>() -> Parser<'a, char, Rc<Expr>> {
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
   surround(space() + elm('(') + space(), lazy(expr), space() + elm(')') + space())
-    .map(Expr::Parenthesized).map(Rc::new)
+    .map(Expr::Parenthesized)
+    .map(Rc::new)
     | value()
 }
 
