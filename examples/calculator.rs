@@ -80,7 +80,7 @@ fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn value<'a>() -> Parser<'a, char, Rc<Expr>> {
-  regex(Regex::new(r#"([0-9])+([.]([0-9])+)?"#).unwrap())
+  regex(Regex::new(r#"\d+([.]\d+)?"#).unwrap())
     .convert(|s| Decimal::from_str(&s))
     .map(Expr::Value)
     .map(Rc::new)
