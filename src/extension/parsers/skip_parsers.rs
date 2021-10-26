@@ -20,14 +20,14 @@ pub trait SkipParsers: OperatorParsers {
   }
 
   fn surround<'a, I, A, B, C>(
-    lp: Self::P<'a, I, A>,
+    left_parser: Self::P<'a, I, A>,
     parser: Self::P<'a, I, B>,
-    rp: Self::P<'a, I, C>,
+    right_parser: Self::P<'a, I, C>,
   ) -> Self::P<'a, I, B>
   where
     A: Debug + 'a,
     B: Debug + 'a,
     C: Debug + 'a, {
-    Self::skip_left(lp, Self::skip_right(parser, rp))
+    Self::skip_left(left_parser, Self::skip_right(parser, right_parser))
   }
 }

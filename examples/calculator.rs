@@ -63,17 +63,19 @@ fn mul_div_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn unary<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let unary_parser = ((elm('+') | elm('-')) + lazy(unary)).map(|(c, expr): (&char, Rc<Expr>)| match c {
-    '-' => Rc::new(Expr::Plus(Rc::clone(&expr))),
-    '+' => Rc::new(Expr::Minus(Rc::clone(&expr))),
-    _ => panic!(),
-  });
+  let unary_parser = ((elm('+') | elm('-')) + lazy(unary))
+    .map(|(c, expr): (&char, Rc<Expr>)| match c {
+      '-' => Expr::Minus(Rc::clone(&expr)),
+      '+' => Expr::Plus(Rc::clone(&expr)),
+      _ => panic!(),
+    })
+    .map(Rc::new);
   unary_parser | primary()
 }
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
   surround(space() + elm('(') + space(), lazy(expr), space() + elm(')') + space())
-    .map(|v| Rc::new(Expr::Parenthesized(v)))
+    .map(Expr::Parenthesized).map(Rc::new)
     | value()
 }
 
