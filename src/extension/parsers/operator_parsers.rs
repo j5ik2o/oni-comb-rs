@@ -23,10 +23,10 @@ pub trait OperatorParsers: Parsers {
     A: Debug + 'a,
     B: Debug + 'a;
 
-  fn and_then_ref<'a, I, A, B, APF, BPF>(parser1: APF, parser2: BPF) -> Self::P<'a, I, (Rc<A>, Rc<B>)>
+  fn and_then_ref<'a, I, A, B, APF, BPF>(parser1: APF, parser2: BPF) -> Self::P<'a, I, (&'a A, &'a B)>
   where
-    APF: Fn() -> Self::P<'a, I, A> + 'a,
-    BPF: Fn() -> Self::P<'a, I, B> + 'a,
+    APF: Fn() -> Self::PR<'a, I, A> + 'a,
+    BPF: Fn() -> Self::PR<'a, I, B> + 'a,
     A: Debug + 'a,
     B: Debug + 'a;
 
@@ -34,10 +34,10 @@ pub trait OperatorParsers: Parsers {
   where
     A: Debug + 'a;
 
-  fn restl1<'a, I, A, PF, PBF, BF>(parser: PF, op: PBF, x: Rc<A>) -> Self::P<'a, I, Rc<A>>
+  fn restl1<'a, I, A, PF, PBF, BF>(parser: PF, op: PBF, x: A) -> Self::P<'a, I, A>
   where
-    PF: Fn() -> Self::P<'a, I, A> + Copy + 'a,
-    PBF: Fn() -> Self::P<'a, I, BF> + Copy + 'a,
-    BF: Fn(&A, &A) -> A + 'a,
-    A: Debug + 'a;
+    PF: Fn() -> Self::PR<'a, I, A> + Copy + 'a,
+    PBF: Fn() -> Self::PR<'a, I, BF> + Copy + 'a,
+    BF: Fn(&A, &'a A) -> A + 'a,
+    A: Debug + Clone + 'a;
 }
