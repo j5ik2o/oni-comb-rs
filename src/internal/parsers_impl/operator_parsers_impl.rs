@@ -76,12 +76,12 @@ impl OperatorParsers for ParsersImpl {
         (match parser().run(&ps) {
           ParseResult::Success { get: y, length: n2 } => {
             let r = f(&vx, &y);
-            Self::restl1(parser, op, r).run(&ps)
+            Self::restl1(parser, op, r).run(&ps).with_add_length(n2)
           }
           ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
         })
         .map_err_is_committed_fallback(n1 != 0)
-        .with_add_length(n1 + n2)
+        .with_add_length(n1)
       }
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     }) | Self::successful(move || x.clone())
