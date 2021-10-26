@@ -5,7 +5,7 @@ use rust_decimal::prelude::FromStr;
 use rust_decimal::Decimal;
 
 use oni_comb_rs::core::{Parser, ParserFunctor, ParserMonad, ParserRunner};
-use oni_comb_rs::extension::parser::{ConversionParser, DiscardParser, RepeatParser};
+use oni_comb_rs::extension::parser::{ConversionParser, DiscardParser, OperatorParser, RepeatParser};
 use oni_comb_rs::prelude::*;
 
 #[derive(Debug, Clone)]
@@ -40,7 +40,7 @@ fn add_sub_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
     space() * elm('+') * space() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Add(v1.clone(), b.clone()))));
   let sub_parser =
     space() * elm('-') * space() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Sub(v2.clone(), b.clone()))));
-  add_parser | sub_parser | empty().map(move |_| v3.clone())
+  add_parser.attempt() | sub_parser.attempt() | empty().map(move |_| v3.clone())
 }
 
 fn mul_div_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -59,7 +59,7 @@ fn mul_div_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
     * elm('/')
     * space()
     * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Divide(v2.clone(), b.clone()))));
-  mul_parser | div_parser | empty().map(move |_| v3.clone())
+  mul_parser.attempt() | div_parser.attempt() | empty().map(move |_| v3.clone())
 }
 
 fn unary<'a>() -> Parser<'a, char, Rc<Expr>> {
