@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use std::rc::Rc;
 
 use crate::core::Parsers;
 
@@ -26,10 +27,10 @@ pub trait OperatorParsers: Parsers {
   where
     A: Debug + 'a;
 
-  fn restl1<'a, I, A, PF, PBF, BF>(parser: PF, op: PBF, x: A) -> Self::P<'a, I, A>
+  fn restl1<'a, I, A, PF, PBF, BF>(parser: PF, op: PBF, x: Rc<A>) -> Self::P<'a, I, Rc<A>>
   where
     PF: Fn() -> Self::P<'a, I, A> + Copy + 'a,
     PBF: Fn() -> Self::P<'a, I, BF> + Copy + 'a,
     BF: Fn(&A, &A) -> A + 'a,
-    A: Debug + Clone + 'a;
+    A: Debug + 'a;
 }

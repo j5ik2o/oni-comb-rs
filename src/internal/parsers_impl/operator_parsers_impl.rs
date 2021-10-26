@@ -1,7 +1,8 @@
-use crate::core::ParseResult;
+use crate::core::{ParseResult, ParserMonad};
 use crate::core::ParserRunner;
 use crate::core::{ParseError, Parsers};
 use std::fmt::Debug;
+use std::rc::Rc;
 
 use crate::core::Parser;
 use crate::extension::parsers::OperatorParsers;
@@ -63,20 +64,24 @@ impl OperatorParsers for ParsersImpl {
     Parser::new(move |parse_state| parser.run(parse_state).with_un_commit())
   }
 
-  fn restl1<'a, I, A, PF, PBF, BF>(parser: PF, op: PBF, x: A) -> Self::P<'a, I, A>
+  fn restl1<'a, I, A, PF, PBF, BF>(parser: PF, op: PBF, x: Rc<A>) -> Self::P<'a, I, Rc<A>>
   where
     PF: Fn() -> Self::P<'a, I, A> + Copy + 'a,
     PBF: Fn() -> Self::P<'a, I, BF> + Copy + 'a,
     BF: Fn(&A, &A) -> A + 'a,
-    A: Debug + Clone + 'a, {
+    A: Debug + 'a, {
     let vx = x.clone();
     Parser::new(move |parse_state| match op().run(parse_state) {
       ParseResult::Success { get: f, length: n1 } => {
         let ps = parse_state.add_offset(n1);
         (match parser().run(&ps) {
           ParseResult::Success { get: y, length: n2 } => {
-            let r = f(&vx, &y);
-            Self::restl1(parser, op, r).run(&ps).with_add_length(n2)
+            let ps = ps.add_offset(n2);
+            let r = f(&*vx, &y);
+            Self::restl1(parser, op, Rc::new(r))
+              .run(&ps)
+              .map_err_is_committed_fallback(n2 != 0)
+              .with_add_length(n2)
           }
           ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
         })
