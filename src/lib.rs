@@ -246,6 +246,7 @@ mod tests {
     CollectParser, ConversionParser, DiscardParser, OffsetParser, OperatorParser, RepeatParser,
   };
   use crate::*;
+  use crate::extension::parsers::OperatorParsers;
 
   use super::prelude::*;
 
@@ -596,6 +597,11 @@ mod tests {
     let (a, b) = result;
     assert_eq!(*a, pv1);
     assert_eq!(*b, pv2);
+
+    let p2 = ParsersImpl::and_then_ref(|| elm(pv1).map(|e| *e), || elm(pv2).map(|e| *e));
+    let result = p2.parse(b"ab").unwrap();
+    log::debug!("result = {:?}", result);
+    let (a, b) = result;
   }
 
   #[test]
