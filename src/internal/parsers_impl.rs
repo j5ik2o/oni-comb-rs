@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use crate::core::{ParseError, ParseResult, ParseState, Parser, ParserRunner, Parsers};
 use crate::internal::ParsersImpl;
 
@@ -73,6 +74,16 @@ impl Parsers for ParsersImpl {
       ParseResult::Success { get: a, length: n } => {
         let ps = parse_state.add_offset(n);
         f(a).run(&ps).map_err_is_committed_fallback(n != 0).with_add_length(n)
+      }
+      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+    })
+  }
+
+  fn flat_map_ref<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B> where F: Fn(Rc<A>) -> Self::P<'a, I, B> + 'a, A: 'a, B: 'a {
+    Parser::new(move |parse_state| match parser.run(&parse_state) {
+      ParseResult::Success { get: a, length: n } => {
+        let ps = parse_state.add_offset(n);
+        f(Rc::new(a)).run(&ps).map_err_is_committed_fallback(n != 0).with_add_length(n)
       }
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })

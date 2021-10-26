@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use crate::core::parse_error::ParseError;
 use crate::core::parser_monad::ParserMonad;
 
@@ -36,6 +37,12 @@ pub trait Parsers {
     F: Fn(A) -> Self::P<'a, I, B> + 'a,
     A: 'a,
     B: 'a;
+
+  fn flat_map_ref<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
+    where
+        F: Fn(Rc<A>) -> Self::P<'a, I, B> + 'a,
+        A: 'a,
+        B: 'a;
 
   fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where

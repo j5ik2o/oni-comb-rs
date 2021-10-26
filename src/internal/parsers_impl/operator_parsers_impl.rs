@@ -58,6 +58,10 @@ impl OperatorParsers for ParsersImpl {
     })
   }
 
+  fn and_then2<'a, I, A, B>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, B>) -> Self::P<'a, I, (Rc<A>, Rc<B>)> where A: Debug + 'a, B: Debug + 'a {
+    Self::flat_map_ref(parser1, |e| Self::map(parser2, move |e2| (e.clone(), Rc::new(e2))))
+  }
+
   fn attempt<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
   where
     A: Debug + 'a, {
