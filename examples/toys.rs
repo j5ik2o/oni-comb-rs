@@ -103,6 +103,7 @@ fn minus<'a>() -> Parser<'a, char, &'a str> {
 
 fn multitive<'a>() -> Parser<'a, char, &'a str> {
   let mul = aster().map(|e| Expr::of_multiply);
+  todo!()
 }
 
 fn println<'a>() -> Parser<'a, char, Rc<Expr>> {
