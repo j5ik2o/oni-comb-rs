@@ -56,7 +56,7 @@ impl<'a, I, A> ParseResult<'a, I, A> {
     }
   }
 
-  pub fn map_err_is_committed_fallback(self, is_committed: bool) -> Self {
+  pub fn with_committed_fallback(self, is_committed: bool) -> Self {
     match self {
       ParseResult::Failure {
         get: e,

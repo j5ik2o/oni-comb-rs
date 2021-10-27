@@ -22,10 +22,8 @@ pub trait OperatorParsers: Parsers {
     A: Debug + 'a,
     B: Debug + 'a;
 
-  fn and_then_ref<'a, I, A, B, APF, BPF>(parser1: APF, parser2: BPF) -> Self::P<'a, I, (&'a A, &'a B)>
+  fn and_then_ref<'a, I, A, B>(parser1: Self::PR<'a, I, A>, parser2: Self::PR<'a, I, B>) -> Self::P<'a, I, (&'a A, &'a B)>
   where
-    APF: Fn() -> Self::PR<'a, I, A> + 'a,
-    BPF: Fn() -> Self::PR<'a, I, B> + 'a,
     A: Debug + 'a,
     B: Debug + 'a;
 

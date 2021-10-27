@@ -598,7 +598,7 @@ mod tests {
     assert_eq!(*a, pv1);
     assert_eq!(*b, pv2);
 
-    let p2 = ParsersImpl::and_then_ref(|| elm(pv1), || elm(pv2));
+    let p2 = ParsersImpl::and_then_ref(elm(pv1), elm(pv2));
     let result = p2.parse(b"ab").unwrap();
     log::debug!("result = {:?}", result);
     let (a, b) = result;

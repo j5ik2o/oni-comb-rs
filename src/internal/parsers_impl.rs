@@ -101,7 +101,7 @@ impl Parsers for ParsersImpl {
     Parser::new(move |parse_state| match parser.run(&parse_state) {
       ParseResult::Success { get: a, length: n } => {
         let ps = parse_state.add_offset(n);
-        f(a).run(&ps).map_err_is_committed_fallback(n != 0).with_add_length(n)
+        f(a).run(&ps).with_committed_fallback(n != 0).with_add_length(n)
       }
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })
@@ -115,7 +115,7 @@ impl Parsers for ParsersImpl {
     Parser::new(move |parse_state| match parser.run(&parse_state) {
       ParseResult::Success { get: a, length: n } => {
         let ps = parse_state.add_offset(n);
-        f(a).run(&ps).map_err_is_committed_fallback(n != 0).with_add_length(n)
+        f(a).run(&ps).with_committed_fallback(n != 0).with_add_length(n)
       }
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })

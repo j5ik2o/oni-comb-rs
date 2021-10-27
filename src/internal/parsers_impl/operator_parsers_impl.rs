@@ -51,20 +51,29 @@ impl OperatorParsers for ParsersImpl {
           ParseResult::Success { get: r2, length: n2 } => ParseResult::successful((r1, r2), n2),
           ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
         })
-        .map_err_is_committed_fallback(n1 != 0)
+        .with_committed_fallback(n1 != 0)
         .with_add_length(n1)
       }
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })
   }
 
-  fn and_then_ref<'a, I, A, B, APF, BPF>(parser1: APF, parser2: BPF) -> Self::P<'a, I, (&'a A, &'a B)>
+  fn and_then_ref<'a, I, A, B>(parser1: Self::PR<'a, I, A>, parser2: Self::PR<'a, I, B>) -> Self::P<'a, I, (&'a A, &'a B)>
   where
-    APF: Fn() -> Self::PR<'a, I, A> + 'a,
-    BPF: Fn() -> Self::PR<'a, I, B> + 'a,
     A: Debug + 'a,
     B: Debug + 'a, {
-    Self::flat_map_ref(parser1(), move |e1| Self::map_ref(parser2(), move |e2| (e1, e2)))
+    Parser::new(move |parse_state| match parser1.run(parse_state) {
+      ParseResult::Success { get: r1, length: n1 } => {
+        let ps = parse_state.add_offset(n1);
+        (match parser2.run(&ps) {
+          ParseResult::Success { get: r2, length: n2 } => ParseResult::successful((r1, r2), n2),
+          ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+        })
+            .with_committed_fallback(n1 != 0)
+            .with_add_length(n1)
+      }
+      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+    })
   }
 
   fn attempt<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
@@ -89,12 +98,12 @@ impl OperatorParsers for ParsersImpl {
             let r = f(&lx, y);
             Self::restl1(parser, op, r)
               .run(&ps)
-              .map_err_is_committed_fallback(n2 != 0)
+              .with_committed_fallback(n2 != 0)
               .with_add_length(n2)
           }
           ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
         })
-        .map_err_is_committed_fallback(n1 != 0)
+        .with_committed_fallback(n1 != 0)
         .with_add_length(n1)
       }
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
