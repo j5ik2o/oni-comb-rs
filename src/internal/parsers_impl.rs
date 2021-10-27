@@ -1,6 +1,5 @@
 use crate::core::{ParseError, ParseResult, ParseState, Parser, ParserRunner, Parsers};
 use crate::internal::ParsersImpl;
-use std::rc::Rc;
 
 mod collect_parsers_impl;
 mod conversion_parsers_impl;

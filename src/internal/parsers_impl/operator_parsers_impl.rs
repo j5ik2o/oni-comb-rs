@@ -2,7 +2,6 @@ use crate::core::ParseResult;
 use crate::core::ParserRunner;
 use crate::core::{ParseError, Parsers};
 use std::fmt::Debug;
-use std::rc::Rc;
 
 use crate::core::Parser;
 use crate::extension::parsers::OperatorParsers;
@@ -49,10 +48,11 @@ impl OperatorParsers for ParsersImpl {
       ParseResult::Success { get: r1, length: n1 } => {
         let ps = parse_state.add_offset(n1);
         (match parser2.run(&ps) {
-          ParseResult::Success { get: r2, length: n2 } => ParseResult::successful((r1, r2), n1 + n2),
+          ParseResult::Success { get: r2, length: n2 } => ParseResult::successful((r1, r2), n2),
           ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
         })
         .map_err_is_committed_fallback(n1 != 0)
+        .with_add_length(n1)
       }
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })
