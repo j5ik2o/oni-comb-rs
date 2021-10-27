@@ -20,11 +20,6 @@ impl Parsers for ParsersImpl {
     I: 'p,
     A: 'p,
   = Parser<'p, I, A>;
-  type PR<'p, I, A>
-  where
-    I: 'p,
-    A: 'p,
-  = Parser<'p, I, &'p A>;
 
   fn parse<'a, 'b, I, A>(parser: &Self::P<'a, I, A>, input: &'b [I]) -> Result<A, ParseError<'a, I>>
   where
@@ -71,7 +66,7 @@ impl Parsers for ParsersImpl {
     })
   }
 
-  fn filter_ref<'a, I, A, F>(parser: Self::PR<'a, I, A>, f: F) -> Self::P<'a, I, &'a A>
+  fn filter_ref<'a, I, A, F>(parser: Self::P<'a, I, &'a A>, f: F) -> Self::P<'a, I, &'a A>
   where
     F: Fn(&'a A) -> bool + 'a,
     I: 'a,
@@ -107,7 +102,7 @@ impl Parsers for ParsersImpl {
     })
   }
 
-  fn flat_map_ref<'a, I, A, B, F>(parser: Self::PR<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  fn flat_map_ref<'a, I, A, B, F>(parser: Self::P<'a, I, &'a A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(&'a A) -> Self::P<'a, I, B> + 'a,
     A: 'a,
@@ -132,7 +127,7 @@ impl Parsers for ParsersImpl {
     })
   }
 
-  fn map_ref<'a, I, A, B, F>(parser: Self::PR<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  fn map_ref<'a, I, A, B, F>(parser: Self::P<'a, I, &'a A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(&'a A) -> B + 'a,
     A: 'a,

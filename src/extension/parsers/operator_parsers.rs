@@ -24,19 +24,12 @@ pub trait OperatorParsers: Parsers {
 
   fn and_then_ref<'a, I, A, B, APF, BPF>(parser1: APF, parser2: BPF) -> Self::P<'a, I, (&'a A, &'a B)>
   where
-    APF: Fn() -> Self::PR<'a, I, A> + 'a,
-    BPF: Fn() -> Self::PR<'a, I, B> + 'a,
+    APF: Fn() -> Self::P<'a, I, &'a A> + 'a,
+    BPF: Fn() -> Self::P<'a, I, &'a B> + 'a,
     A: Debug + 'a,
     B: Debug + 'a;
 
   fn attempt<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
   where
     A: Debug + 'a;
-
-  fn restl1<'a, I, A, PF, PBF, BF>(parser: PF, op: PBF, x: A) -> Self::P<'a, I, A>
-  where
-    PF: Fn() -> Self::PR<'a, I, A> + Copy + 'a,
-    PBF: Fn() -> Self::PR<'a, I, BF> + Copy + 'a,
-    BF: Fn(&A, &'a A) -> A + 'a,
-    A: Debug + Clone + 'a;
 }
