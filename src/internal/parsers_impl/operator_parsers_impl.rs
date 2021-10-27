@@ -58,7 +58,7 @@ impl OperatorParsers for ParsersImpl {
     })
   }
 
-  fn and_then_ref<'a, I, A, B>(parser1: Self::PR<'a, I, A>, parser2: Self::PR<'a, I, B>) -> Self::P<'a, I, (&'a A, &'a B)>
+  fn and_then_ref<'a, I, A, B>(parser1: Self::P<'a, I, &'a A>, parser2: Self::P<'a, I,&'a B>) -> Self::P<'a, I, (&'a A, &'a B)>
   where
     A: Debug + 'a,
     B: Debug + 'a, {
@@ -82,31 +82,4 @@ impl OperatorParsers for ParsersImpl {
     Parser::new(move |parse_state| parser.run(parse_state).with_un_commit())
   }
 
-  fn restl1<'a, I, A, PF, PBF, BF>(parser: PF, op: PBF, x: A) -> Self::P<'a, I, A>
-  where
-    PF: Fn() -> Self::PR<'a, I, A> + Copy + 'a,
-    PBF: Fn() -> Self::PR<'a, I, BF> + Copy + 'a,
-    BF: Fn(&A, &'a A) -> A + 'a,
-    A: Debug + Clone + 'a, {
-    let lx = x.clone();
-    Parser::new(move |parse_state| match op().run(parse_state) {
-      ParseResult::Success { get: f, length: n1 } => {
-        let ps = parse_state.add_offset(n1);
-        (match parser().run(&ps) {
-          ParseResult::Success { get: y, length: n2 } => {
-            let ps = ps.add_offset(n2);
-            let r = f(&lx, y);
-            Self::restl1(parser, op, r)
-              .run(&ps)
-              .with_committed_fallback(n2 != 0)
-              .with_add_length(n2)
-          }
-          ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
-        })
-        .with_committed_fallback(n1 != 0)
-        .with_add_length(n1)
-      }
-      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
-    }) | Self::successful(move || x.clone())
-  }
 }
