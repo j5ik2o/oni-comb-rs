@@ -18,10 +18,12 @@ impl Parsers for ParsersImpl {
   type P<'p, I, A>
   where
     I: 'p,
+    A: 'p,
   = Parser<'p, I, A>;
 
   fn parse<'a, 'b, I, A>(parser: &Self::P<'a, I, A>, input: &'b [I]) -> Result<A, ParseError<'a, I>>
   where
+    A: 'a,
     'b: 'a, {
     let parse_state = ParseState::new(input, 0);
     parser.run(&parse_state).extract()
@@ -64,6 +66,28 @@ impl Parsers for ParsersImpl {
     })
   }
 
+  fn filter_ref<'a, I, A, F>(parser: Self::P<'a, I, &'a A>, f: F) -> Self::P<'a, I, &'a A>
+  where
+    F: Fn(&'a A) -> bool + 'a,
+    I: 'a,
+    A: 'a, {
+    Parser::new(move |parse_state| match parser.run(parse_state) {
+      ParseResult::Success { get, length } => {
+        if f(get) {
+          ParseResult::successful(get, length)
+        } else {
+          let input = parse_state.input();
+          let offset = parse_state.last_offset().unwrap_or(0);
+          let msg = format!("no matched to predicate: last offset: {}", offset);
+          let ps = parse_state.add_offset(length);
+          let pe = ParseError::of_mismatch(input, ps.next_offset(), length, msg);
+          ParseResult::failed_with_un_commit(pe)
+        }
+      }
+      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+    })
+  }
+
   fn flat_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> Self::P<'a, I, B> + 'a,
@@ -72,7 +96,21 @@ impl Parsers for ParsersImpl {
     Parser::new(move |parse_state| match parser.run(&parse_state) {
       ParseResult::Success { get: a, length: n } => {
         let ps = parse_state.add_offset(n);
-        f(a).run(&ps).map_err_is_committed_fallback(n != 0).with_add_length(n)
+        f(a).run(&ps).with_committed_fallback(n != 0).with_add_length(n)
+      }
+      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+    })
+  }
+
+  fn flat_map_ref<'a, I, A, B, F>(parser: Self::P<'a, I, &'a A>, f: F) -> Self::P<'a, I, B>
+  where
+    F: Fn(&'a A) -> Self::P<'a, I, B> + 'a,
+    A: 'a,
+    B: 'a, {
+    Parser::new(move |parse_state| match parser.run(&parse_state) {
+      ParseResult::Success { get: a, length: n } => {
+        let ps = parse_state.add_offset(n);
+        f(a).run(&ps).with_committed_fallback(n != 0).with_add_length(n)
       }
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })
@@ -81,6 +119,17 @@ impl Parsers for ParsersImpl {
   fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> B + 'a,
+    A: 'a,
+    B: 'a, {
+    Parser::new(move |parse_state| match parser.run(parse_state) {
+      ParseResult::Success { get: a, length } => ParseResult::Success { get: f(a), length },
+      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+    })
+  }
+
+  fn map_ref<'a, I, A, B, F>(parser: Self::P<'a, I, &'a A>, f: F) -> Self::P<'a, I, B>
+  where
+    F: Fn(&'a A) -> B + 'a,
     A: 'a,
     B: 'a, {
     Parser::new(move |parse_state| match parser.run(parse_state) {

@@ -13,4 +13,5 @@ impl<'a, I, A> ConversionParser<'a> for Parser<'a, I, A> {
     B: Debug + 'a, {
     ParsersImpl::convert(self, f)
   }
+
 }
