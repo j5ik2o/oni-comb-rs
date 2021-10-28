@@ -120,19 +120,19 @@ fn integer<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn add<'a>() -> Parser<'a, char, &'a char> {
-  space() * elm('+') - space()
+  space() * elm_ref('+') - space()
 }
 
 fn sub<'a>() -> Parser<'a, char, &'a char> {
-  space() * elm('-') - space()
+  space() * elm_ref('-') - space()
 }
 
 fn mul<'a>() -> Parser<'a, char, &'a char> {
-  space() * elm('*') - space()
+  space() * elm_ref('*') - space()
 }
 
 fn div<'a>() -> Parser<'a, char, &'a char> {
-  space() * elm('/') - space()
+  space() * elm_ref('/') - space()
 }
 
 fn add_sub_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -162,7 +162,7 @@ fn mul_div_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn unary<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let unary_parser = ((elm('+') | elm('-')) + lazy(unary))
+  let unary_parser = ((elm_ref('+') | elm_ref('-')) + lazy(unary))
     .map(|(c, expr): (&char, Rc<Expr>)| match c {
       '-' => Expr::Minus(Rc::clone(&expr)),
       '+' => Expr::Plus(Rc::clone(&expr)),
@@ -185,7 +185,7 @@ fn function_call<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn labelled_call<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let param = (ident() - elm('=') + expression()).map(|(label, param)| LabelledParameter::new(label, param));
+  let param = (ident() - elm_ref('=') + expression()).map(|(label, param)| LabelledParameter::new(label, param));
   (ident() + param.of_many1_sep(comma()))
     .map(|(name, params)| Expr::LabelledCall(name.to_string(), params))
     .map(Rc::new)

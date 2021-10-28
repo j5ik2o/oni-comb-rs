@@ -5,7 +5,7 @@ use crate::utils::Set;
 use std::fmt::{Debug, Display};
 
 impl ElementParsers for ParsersImpl {
-  fn elm_pred<'a, I, F>(f: F) -> Self::P<'a, I, &'a I>
+  fn elm_pred_ref<'a, I, F>(f: F) -> Self::P<'a, I, &'a I>
   where
     F: Fn(&I) -> bool + 'a,
     I: Element + PartialEq + 'a, {
@@ -24,49 +24,49 @@ impl ElementParsers for ParsersImpl {
     })
   }
 
-  fn elm_space<'a, I>() -> Self::P<'a, I, &'a I>
+  fn elm_space_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
-    Self::elm_pred(Element::is_ascii_space)
+    Self::elm_pred_ref(Element::is_ascii_space)
   }
 
-  fn elm_multi_space<'a, I>() -> Self::P<'a, I, &'a I>
+  fn elm_multi_space_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
-    Self::elm_pred(Element::is_ascii_multi_space)
+    Self::elm_pred_ref(Element::is_ascii_multi_space)
   }
 
-  fn elm_alpha<'a, I>() -> Self::P<'a, I, &'a I>
+  fn elm_alpha_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
-    Self::elm_pred(Element::is_ascii_alpha)
+    Self::elm_pred_ref(Element::is_ascii_alpha)
   }
 
-  fn elm_alpha_digit<'a, I>() -> Self::P<'a, I, &'a I>
+  fn elm_alpha_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
-    Self::elm_pred(Element::is_ascii_alpha_digit)
+    Self::elm_pred_ref(Element::is_ascii_alpha_digit)
   }
 
-  fn elm_digit<'a, I>() -> Self::P<'a, I, &'a I>
+  fn elm_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
-    Self::elm_pred(Element::is_ascii_digit)
+    Self::elm_pred_ref(Element::is_ascii_digit)
   }
 
-  fn elm_hex_digit<'a, I>() -> Self::P<'a, I, &'a I>
+  fn elm_hex_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
-    Self::elm_pred(Element::is_ascii_hex_digit)
+    Self::elm_pred_ref(Element::is_ascii_hex_digit)
   }
 
-  fn elm_oct_digit<'a, I>() -> Self::P<'a, I, &'a I>
+  fn elm_oct_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
-    Self::elm_pred(Element::is_ascii_oct_digit)
+    Self::elm_pred_ref(Element::is_ascii_oct_digit)
   }
 
-  fn elm_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
+  fn elm_of_ref<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized, {
@@ -87,7 +87,7 @@ impl ElementParsers for ParsersImpl {
     })
   }
 
-  fn elm_in<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
+  fn elm_in_ref<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
     Parser::new(move |parse_state| {
@@ -108,7 +108,7 @@ impl ElementParsers for ParsersImpl {
     })
   }
 
-  fn elm_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
+  fn elm_from_until_ref<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
     Parser::new(move |parse_state| {
@@ -129,7 +129,7 @@ impl ElementParsers for ParsersImpl {
     })
   }
 
-  fn none_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
+  fn none_of_ref<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized, {

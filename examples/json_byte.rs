@@ -21,23 +21,23 @@ fn space<'a>() -> Parser<'a, u8, ()> {
 }
 
 fn number<'a>() -> Parser<'a, u8, f64> {
-  let integer = elm_digit_1_9() - elm_digit_0_9().of_many0() | elm(b'0');
-  let frac = elm(b'.') + elm_digit_0_9().of_many1();
+  let integer = elm_digit_1_9() - elm_digit_0_9().of_many0() | elm_ref(b'0');
+  let frac = elm_ref(b'.') + elm_digit_0_9().of_many1();
   let exp = elm_of(b"eE") + elm_of(b"+-").opt() + elm_digit_0_9().of_many1();
-  let number = elm(b'-').opt() + integer + frac.opt() + exp.opt();
+  let number = elm_ref(b'-').opt() + integer + frac.opt() + exp.opt();
   number.collect().convert(std::str::from_utf8).convert(f64::from_str)
 }
 
 fn string<'a>() -> Parser<'a, u8, String> {
-  let special_char = elm(b'\\')
-    | elm(b'/')
-    | elm(b'"')
-    | elm(b'b').map(|_| &b'\x08')
-    | elm(b'f').map(|_| &b'\x0C')
-    | elm(b'n').map(|_| &b'\n')
-    | elm(b'r').map(|_| &b'\r')
-    | elm(b't').map(|_| &b'\t');
-  let escape_sequence = elm(b'\\') * special_char;
+  let special_char = elm_ref(b'\\')
+    | elm_ref(b'/')
+    | elm_ref(b'"')
+    | elm_ref(b'b').map(|_| &b'\x08')
+    | elm_ref(b'f').map(|_| &b'\x0C')
+    | elm_ref(b'n').map(|_| &b'\n')
+    | elm_ref(b'r').map(|_| &b'\r')
+    | elm_ref(b't').map(|_| &b'\t');
+  let escape_sequence = elm_ref(b'\\') * special_char;
   let char_string = (none_of(b"\\\"") | escape_sequence)
     .map(Clone::clone)
     .of_many1()
@@ -53,19 +53,19 @@ fn string<'a>() -> Parser<'a, u8, String> {
       .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
       .collect::<String>()
   });
-  let string = surround(elm(b'"'), (char_string | utf16_string).of_many0(), elm(b'"'));
+  let string = surround(elm_ref(b'"'), (char_string | utf16_string).of_many0(), elm_ref(b'"'));
   string.map(|strings| strings.concat())
 }
 
 fn array<'a>() -> Parser<'a, u8, Vec<JsonValue>> {
-  let elems = lazy(value).of_many0_sep(space() + elm(b',') + space());
-  surround(elm(b'[') + space(), elems, space() + elm(b']'))
+  let elems = lazy(value).of_many0_sep(space() + elm_ref(b',') + space());
+  surround(elm_ref(b'[') + space(), elems, space() + elm_ref(b']'))
 }
 
 fn object<'a>() -> Parser<'a, u8, HashMap<String, JsonValue>> {
-  let member = string() - space() - elm(b':') - space() + lazy(value);
-  let members = member.of_many0_sep(space() + elm(b',') + space());
-  let obj = surround(elm(b'{') + space(), members, space() + elm(b'}'));
+  let member = string() - space() - elm_ref(b':') - space() + lazy(value);
+  let members = member.of_many0_sep(space() + elm_ref(b',') + space());
+  let obj = surround(elm_ref(b'{') + space(), members, space() + elm_ref(b'}'));
   obj.map(|members| members.into_iter().collect::<HashMap<_, _>>())
 }
 

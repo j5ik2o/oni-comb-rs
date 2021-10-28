@@ -67,70 +67,130 @@ pub mod prelude {
     ParsersImpl::empty()
   }
 
-  pub fn elm_any<'a, I>() -> Parser<'a, I, &'a I>
+  pub fn elm_any_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
+    ParsersImpl::elm_any_ref()
+  }
+
+  pub fn elm_any<'a, I>() -> Parser<'a, I, I>
+    where
+        I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_any()
   }
 
-  pub fn elm<'a, I>(c: I) -> Parser<'a, I, &'a I>
+  pub fn elm_ref<'a, I>(c: I) -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
+    ParsersImpl::elm_ref(c)
+  }
+
+  pub fn elm<'a, I>(c: I) -> Parser<'a, I, I>
+    where
+        I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm(c)
   }
 
-  pub fn elm_pred<'a, I, F>(f: F) -> Parser<'a, I, &'a I>
+  pub fn elm_pred_ref<'a, I, F>(f: F) -> Parser<'a, I, &'a I>
   where
     F: Fn(&I) -> bool + 'a,
     I: Element + PartialEq + 'a, {
-    ParsersImpl::elm_pred(f)
+    ParsersImpl::elm_pred_ref(f)
   }
 
-  pub fn elm_space<'a, I>() -> Parser<'a, I, &'a I>
+  pub fn elm_space_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
+    ParsersImpl::elm_space_ref()
+  }
+
+  pub fn elm_space<'a, I>() -> Parser<'a, I, I>
+    where
+        I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_space()
   }
 
-  pub fn elm_multi_space<'a, I>() -> Parser<'a, I, &'a I>
+  pub fn elm_multi_space_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
+    ParsersImpl::elm_multi_space_ref()
+  }
+
+  pub fn elm_multi_space<'a, I>() -> Parser<'a, I, I>
+    where
+        I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_multi_space()
   }
 
-  pub fn elm_alpha<'a, I>() -> Parser<'a, I, &'a I>
+  pub fn elm_alpha_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
+    ParsersImpl::elm_alpha_ref()
+  }
+
+  pub fn elm_alpha<'a, I>() -> Parser<'a, I, I>
+    where
+        I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_alpha()
   }
 
-  pub fn elm_alpha_digit<'a, I>() -> Parser<'a, I, &'a I>
+  pub fn elm_alpha_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
+    ParsersImpl::elm_alpha_digit_ref()
+  }
+
+  pub fn elm_alpha_digit<'a, I>() -> Parser<'a, I, I>
+    where
+        I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_alpha_digit()
   }
 
-  pub fn elm_digit_0_9<'a, I>() -> Parser<'a, I, &'a I>
+  pub fn elm_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
+    ParsersImpl::elm_digit_ref()
+  }
+
+  pub fn elm_digit<'a, I>() -> Parser<'a, I, I>
+    where
+        I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_digit()
   }
 
-  pub fn elm_digit_1_9<'a, I>() -> Parser<'a, I, &'a I>
+  pub fn elm_digit_1_9_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
-    elm_digit_0_9().with_filter_not(|c: &&I| c.is_ascii_zero())
+    elm_digit_ref().with_filter_not(|c: &&I| c.is_ascii_zero())
   }
 
-  pub fn elm_hex_digit<'a, I>() -> Parser<'a, I, &'a I>
+  pub fn elm_digit_1_9<'a, I>() -> Parser<'a, I, I>
+    where
+        I: Element + Clone + PartialEq + 'a, {
+    elm_digit_1_9_ref().map(Clone::clone)
+  }
+
+  pub fn elm_hex_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
+    ParsersImpl::elm_hex_digit_ref()
+  }
+
+  pub fn elm_hex_digit<'a, I>() -> Parser<'a, I, I>
+    where
+        I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_hex_digit()
   }
 
-  pub fn elm_oct_digit<'a, I>() -> Parser<'a, I, &'a I>
+  pub fn elm_oct_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
+    ParsersImpl::elm_oct_digit_ref()
+  }
+
+  pub fn elm_oct_digit<'a, I>() -> Parser<'a, I, I>
+    where
+        I: Element + PartialEq + Clone + 'a, {
     ParsersImpl::elm_oct_digit()
   }
 
@@ -196,29 +256,55 @@ pub mod prelude {
     ParsersImpl::skip(n)
   }
 
-  pub fn elm_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
+  pub fn elm_of_ref<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized, {
+    ParsersImpl::elm_of_ref(set)
+  }
+
+  pub fn elm_of<'a, I, S>(set: &'a S) -> Parser<'a, I, I>
+    where
+        I: PartialEq + Display + Clone + Debug + 'a,
+        S: Set<I> + ?Sized, {
     ParsersImpl::elm_of(set)
   }
 
-  pub fn elm_in<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
+  pub fn elm_in_ref<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+    ParsersImpl::elm_in_ref(start, end)
+  }
+
+  pub fn elm_in<'a, I>(start: I, end: I) -> Parser<'a, I, I>
+    where
+        I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
     ParsersImpl::elm_in(start, end)
   }
 
-  pub fn elm_from_until<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
+  pub fn elm_from_until_ref<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+    ParsersImpl::elm_from_until_ref(start, end)
+  }
+
+  pub fn elm_from_until<'a, I>(start: I, end: I) -> Parser<'a, I, I>
+    where
+        I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
     ParsersImpl::elm_from_until(start, end)
   }
 
-  pub fn none_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
+  pub fn none_of_ref<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized, {
+    ParsersImpl::none_of_ref(set)
+  }
+
+  pub fn none_of<'a, I, S>(set: &'a S) -> Parser<'a, I, I>
+    where
+        I: PartialEq + Display + Clone + Debug + 'a,
+        S: Set<I> + ?Sized, {
     ParsersImpl::none_of(set)
   }
 
@@ -260,7 +346,7 @@ mod tests {
     init();
     {
       let input1 = b"b";
-      let p: Parser<u8, &u8> = failed(|| ParseError::of_in_complete()).attempt().or(elm(b'b'));
+      let p: Parser<u8, &u8> = failed(|| ParseError::of_in_complete()).attempt().or(elm_ref(b'b'));
 
       let r = p.parse(input1);
       assert!(r.is_ok());
@@ -313,7 +399,7 @@ mod tests {
   #[test]
   fn test_elem() {
     init();
-    let p = elm(b'a');
+    let p = elm_ref(b'a');
 
     let r = p.parse(b"a").unwrap();
     assert_eq!(*r, b'a');
@@ -373,7 +459,7 @@ mod tests {
   #[test]
   fn test_rep() {
     init();
-    let p = elm(b'a').repeat(..=3).collect();
+    let p = elm_ref(b'a').repeat(..=3).collect();
 
     let r = p.parse(b"");
     assert!(r.is_ok());
@@ -391,7 +477,7 @@ mod tests {
   #[test]
   fn test_many_0() {
     init();
-    let p = elm(b'a').of_many0().collect();
+    let p = elm_ref(b'a').of_many0().collect();
 
     // let r = p.parse(b"").unwrap();
     // assert_eq!(r, vec![]);
@@ -406,7 +492,7 @@ mod tests {
   #[test]
   fn test_many_1() {
     init();
-    let p = elm(b'a').of_many1().collect();
+    let p = elm_ref(b'a').of_many1().collect();
 
     let r = p.parse(b"");
     assert!(r.is_err());
@@ -421,7 +507,7 @@ mod tests {
   #[test]
   fn test_many_n_m() {
     init();
-    let p = elm(b'a').of_many_n_m(1, 2).collect() + end();
+    let p = elm_ref(b'a').of_many_n_m(1, 2).collect() + end();
 
     let r = p.parse(b"");
     assert!(r.is_err());
@@ -439,8 +525,8 @@ mod tests {
   #[test]
   fn test_count_sep() {
     init();
-    let p1 = elm(b'a');
-    let p2 = elm(b',');
+    let p1 = elm_ref(b'a');
+    let p2 = elm_ref(b',');
     let p = p1.map(|e| *e).of_count_sep(3, p2);
 
     let r = p.parse(b"a,a,a").unwrap();
@@ -590,7 +676,7 @@ mod tests {
     init();
     let pv1 = b'a';
     let pv2 = b'b';
-    let p = elm(pv1) + elm(pv2);
+    let p = elm_ref(pv1) + elm_ref(pv2);
 
     let result = p.parse(b"ab").unwrap();
     log::debug!("result = {:?}", result);
@@ -598,7 +684,7 @@ mod tests {
     assert_eq!(*a, pv1);
     assert_eq!(*b, pv2);
 
-    let p2 = ParsersImpl::and_then_ref(elm(pv1), elm(pv2));
+    let p2 = ParsersImpl::and_then_ref(elm_ref(pv1), elm_ref(pv2));
     let result = p2.parse(b"ab").unwrap();
     log::debug!("result = {:?}", result);
     let (a, b) = result;
@@ -609,8 +695,8 @@ mod tests {
     init();
     let pv1 = b'a';
     let pv2 = b'b';
-    let p1 = elm(pv1);
-    let p2 = elm(pv2);
+    let p1 = elm_ref(pv1);
+    let p2 = elm_ref(pv2);
     let p = (p1 + p2).last_offset();
 
     let result = p.parse(b"ab").unwrap();
@@ -624,7 +710,7 @@ mod tests {
   fn test_take() {
     init();
     let input1 = "abcd".chars().collect::<Vec<char>>();
-    let p = ((elm('a') + elm('b')).flat_map(|e| skip(1).map(move |_| e)) + elm_any() + end())
+    let p = ((elm_ref('a') + elm_ref('b')).flat_map(|e| skip(1).map(move |_| e)) + elm_any_ref() + end())
       .collect()
       .map(|chars| String::from_iter(chars));
 
@@ -637,7 +723,7 @@ mod tests {
     init();
     let pv1 = b'a';
     let pv2 = b'b';
-    let p = elm(pv1) | elm(pv2);
+    let p = elm_ref(pv1) | elm_ref(pv2);
 
     let result = p.parse(b"ab").unwrap();
     log::debug!("result = {:?}", result);
@@ -653,7 +739,7 @@ mod tests {
     init();
     let pv1 = b'a';
     let pv2 = b'b';
-    let p = elm(pv1) * elm(pv2);
+    let p = elm_ref(pv1) * elm_ref(pv2);
 
     let result = p.parse(b"ab").unwrap();
     log::debug!("result = {:?}", result);
@@ -665,8 +751,8 @@ mod tests {
     init();
     let pv1 = b'a';
     let pv2 = b'b';
-    let p1 = elm(pv1);
-    let p2 = elm(pv2);
+    let p1 = elm_ref(pv1);
+    let p2 = elm_ref(pv2);
     let p = p1 - p2;
 
     let result = p.parse(b"ab").unwrap();
@@ -680,10 +766,10 @@ mod tests {
     let input1 = "abc".chars().collect::<Vec<char>>();
     let input2 = "abd".chars().collect::<Vec<char>>();
 
-    let pa = elm('a');
-    let pb = elm('b');
-    let pc = elm('c');
-    let pd = elm('d');
+    let pa = elm_ref('a');
+    let pb = elm_ref('b');
+    let pc = elm_ref('c');
+    let pd = elm_ref('d');
     let p = (pa + pb + (pc | pd)).collect().map(String::from_iter);
 
     let result = p.parse(&input1).unwrap();
@@ -700,7 +786,7 @@ mod tests {
     init();
 
     let input = "aname".chars().collect::<Vec<char>>();
-    let p = (elm('a') + tag("name")).collect().map(String::from_iter);
+    let p = (elm_ref('a') + tag("name")).collect().map(String::from_iter);
 
     let result = p.parse(&input).unwrap();
     // let s: String = result.iter().collect();
@@ -712,14 +798,14 @@ mod tests {
   fn test_filter() {
     {
       let input: Vec<char> = "abc def".chars().collect::<Vec<char>>();
-      let p1 = tag("abc") * elm(' ').map(|e| *e).of_many1() - tag("def");
+      let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");
       let p2 = p1.with_filter(|chars| chars.len() > 1);
       let result: Result<Vec<char>, ParseError<char>> = p2.parse(&input);
       assert!(result.is_err());
     }
     {
       let input: Vec<char> = "abc  def".chars().collect::<Vec<char>>();
-      let p1 = tag("abc") * elm(' ').map(|e| *e).of_many1() - tag("def");
+      let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");
       let p2 = p1.with_filter(|chars| chars.len() > 1);
       let result: Result<Vec<char>, ParseError<char>> = p2.parse(&input);
       assert!(result.is_ok());
@@ -730,14 +816,14 @@ mod tests {
   fn test_filter_not() {
     {
       let input: Vec<char> = "abc def".chars().collect::<Vec<char>>();
-      let p1 = tag("abc") * elm(' ').map(|e| *e).of_many1() - tag("def");
+      let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");
       let p2 = p1.with_filter_not(|chars| chars.len() > 1);
       let result: Result<Vec<char>, ParseError<char>> = p2.parse(&input);
       assert!(result.is_ok());
     }
     {
       let input: Vec<char> = "abc  def".chars().collect::<Vec<char>>();
-      let p1 = tag("abc") * elm(' ').map(|e| *e).of_many1() - tag("def");
+      let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");
       let p2 = p1.with_filter_not(|chars| chars.len() > 1);
       let result: Result<Vec<char>, ParseError<char>> = p2.parse(&input);
       assert!(result.is_err());

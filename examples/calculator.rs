@@ -33,19 +33,19 @@ fn add_sub_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn add<'a>() -> Parser<'a, char, &'a char> {
-  space() * elm('+') - space()
+  space() * elm_ref('+') - space()
 }
 
 fn sub<'a>() -> Parser<'a, char, &'a char> {
-  space() * elm('-') - space()
+  space() * elm_ref('-') - space()
 }
 
 fn mul<'a>() -> Parser<'a, char, &'a char> {
-  space() * elm('*') - space()
+  space() * elm_ref('*') - space()
 }
 
 fn div<'a>() -> Parser<'a, char, &'a char> {
-  space() * elm('/') - space()
+  space() * elm_ref('/') - space()
 }
 
 fn add_sub_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
@@ -71,7 +71,7 @@ fn mul_div_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn unary<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let unary_parser = ((elm('+') | elm('-')) + lazy(unary))
+  let unary_parser = ((elm_ref('+') | elm_ref('-')) + lazy(unary))
     .map(|(c, expr): (&char, Rc<Expr>)| match c {
       '-' => Expr::Minus(Rc::clone(&expr)),
       '+' => Expr::Plus(Rc::clone(&expr)),
@@ -82,7 +82,7 @@ fn unary<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
-  surround(space() + elm('(') + space(), lazy(expr), space() + elm(')') + space())
+  surround(space() + elm_ref('(') + space(), lazy(expr), space() + elm_ref(')') + space())
     .map(Expr::Parenthesized)
     .map(Rc::new)
     | value()
