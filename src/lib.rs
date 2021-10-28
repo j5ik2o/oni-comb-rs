@@ -110,16 +110,16 @@ pub mod prelude {
     ParsersImpl::elm_alpha_digit()
   }
 
-  pub fn elm_digit<'a, I>() -> Parser<'a, I, &'a I>
+  pub fn elm_digit_0_9<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
     ParsersImpl::elm_digit()
   }
 
-  pub fn elm_digit_without_0<'a, I>() -> Parser<'a, I, &'a I>
+  pub fn elm_digit_1_9<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
-    elm_digit().with_filter_not(|c: &&I| c.is_ascii_zero())
+    elm_digit_0_9().with_filter_not(|c: &&I| c.is_ascii_zero())
   }
 
   pub fn elm_hex_digit<'a, I>() -> Parser<'a, I, &'a I>

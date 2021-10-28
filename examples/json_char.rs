@@ -21,9 +21,9 @@ fn space<'a>() -> Parser<'a, char, ()> {
 }
 
 fn number<'a>() -> Parser<'a, char, f64> {
-  let integer = elm_digit_without_0() - elm_digit().of_many0() | elm('0');
-  let frac = elm('.') + elm_digit().of_many1();
-  let exp = elm_of("eE") + elm_of("+-").opt() + elm_digit().of_many1();
+  let integer = elm_digit_1_9() - elm_digit_0_9().of_many0() | elm('0');
+  let frac = elm('.') + elm_digit_0_9().of_many1();
+  let exp = elm_of("eE") + elm_of("+-").opt() + elm_digit_0_9().of_many1();
   let number = elm('-').opt() + integer + frac.opt() + exp.opt();
   number.collect().map(String::from_iter).convert(|s| f64::from_str(&s))
 }
@@ -58,8 +58,8 @@ fn string<'a>() -> Parser<'a, char, String> {
 }
 
 fn array<'a>() -> Parser<'a, char, Vec<JsonValue>> {
-  let elems = lazy(value).of_many0_sep(space() + elm(',') + space());
-  surround(elm('[') + space(), elems, space() + elm(']'))
+  let elems = lazy(value).of_many0_sep(space() * elm(',') - space());
+  surround(elm('[') - space(), elems, space() * elm(']'))
 }
 
 fn object<'a>() -> Parser<'a, char, HashMap<String, JsonValue>> {

@@ -21,9 +21,9 @@ fn space<'a>() -> Parser<'a, u8, ()> {
 }
 
 fn number<'a>() -> Parser<'a, u8, f64> {
-  let integer = elm_digit_without_0() - elm_digit().of_many0() | elm(b'0');
-  let frac = elm(b'.') + elm_digit().of_many1();
-  let exp = elm_of(b"eE") + elm_of(b"+-").opt() + elm_digit().of_many1();
+  let integer = elm_digit_1_9() - elm_digit_0_9().of_many0() | elm(b'0');
+  let frac = elm(b'.') + elm_digit_0_9().of_many1();
+  let exp = elm_of(b"eE") + elm_of(b"+-").opt() + elm_digit_0_9().of_many1();
   let number = elm(b'-').opt() + integer + frac.opt() + exp.opt();
   number.collect().convert(std::str::from_utf8).convert(f64::from_str)
 }
