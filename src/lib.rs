@@ -263,11 +263,11 @@ pub mod prelude {
     ParsersImpl::skip(n)
   }
 
-  pub fn elm_of_ref<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
+  pub fn elm_ref_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized, {
-    ParsersImpl::elm_of_ref(set)
+    ParsersImpl::elm_ref_of(set)
   }
 
   pub fn elm_of<'a, I, S>(set: &'a S) -> Parser<'a, I, I>
@@ -280,7 +280,7 @@ pub mod prelude {
   pub fn elm_in_ref<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
-    ParsersImpl::elm_in_ref(start, end)
+    ParsersImpl::elm_ref_in(start, end)
   }
 
   pub fn elm_in<'a, I>(start: I, end: I) -> Parser<'a, I, I>
@@ -292,7 +292,7 @@ pub mod prelude {
   pub fn elm_from_until_ref<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
-    ParsersImpl::elm_from_until_ref(start, end)
+    ParsersImpl::elm_ref_from_until(start, end)
   }
 
   pub fn elm_from_until<'a, I>(start: I, end: I) -> Parser<'a, I, I>
@@ -301,11 +301,11 @@ pub mod prelude {
     ParsersImpl::elm_from_until(start, end)
   }
 
-  pub fn none_of_ref<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
+  pub fn none_ref_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized, {
-    ParsersImpl::none_of_ref(set)
+    ParsersImpl::none_ref_of(set)
   }
 
   pub fn none_of<'a, I, S>(set: &'a S) -> Parser<'a, I, I>
@@ -428,7 +428,7 @@ mod tests {
   }
 
   #[test]
-  fn test_one_of() {
+  fn test_elm_of() {
     init();
     let patterns = b'a'..=b'f';
     let e = patterns.clone();
@@ -586,7 +586,7 @@ mod tests {
     init();
     let p = !seq(b"abc");
 
-    let b = p.parse(b"def").unwrap();
+    let b = p.parse(b"def").unwrap()
     assert!(b);
   }
 

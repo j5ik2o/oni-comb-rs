@@ -66,7 +66,7 @@ impl ElementParsers for ParsersImpl {
     Self::elm_pred_ref(Element::is_ascii_oct_digit)
   }
 
-  fn elm_of_ref<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
+  fn elm_ref_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized, {
@@ -87,7 +87,7 @@ impl ElementParsers for ParsersImpl {
     })
   }
 
-  fn elm_in_ref<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
+  fn elm_ref_in<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
     Parser::new(move |parse_state| {
@@ -108,7 +108,7 @@ impl ElementParsers for ParsersImpl {
     })
   }
 
-  fn elm_from_until_ref<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
+  fn elm_ref_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
     Parser::new(move |parse_state| {
@@ -129,7 +129,7 @@ impl ElementParsers for ParsersImpl {
     })
   }
 
-  fn none_of_ref<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
+  fn none_ref_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized, {

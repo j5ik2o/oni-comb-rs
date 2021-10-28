@@ -109,7 +109,7 @@ pub trait ElementParsers: Parsers {
     Self::map(Self::elm_oct_digit_ref(), Clone::clone)
   }
 
-  fn elm_of_ref<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
+  fn elm_ref_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized;
@@ -118,30 +118,30 @@ pub trait ElementParsers: Parsers {
     where
         I: PartialEq + Clone + Display + Debug + 'a,
         S: Set<I> + ?Sized {
-    Self::map(Self::elm_of_ref(set), Clone::clone)
+    Self::map(Self::elm_ref_of(set), Clone::clone)
   }
 
-  fn elm_in_ref<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
+  fn elm_ref_in<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Debug + Copy + 'a;
 
   fn elm_in<'a, I>(start: I, end: I) -> Self::P<'a, I, I>
     where
         I: PartialEq + PartialOrd + Display + Debug + Copy + Clone + 'a {
-    Self::map(Self::elm_in_ref(start, end), Clone::clone)
+    Self::map(Self::elm_ref_in(start, end), Clone::clone)
   }
 
-  fn elm_from_until_ref<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
+  fn elm_ref_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Debug + Copy + 'a;
 
   fn elm_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, I>
     where
         I: PartialEq + PartialOrd + Display + Debug + Copy + Clone + 'a {
-    Self::map(Self::elm_from_until_ref(start, end), Clone::clone)
+    Self::map(Self::elm_ref_from_until(start, end), Clone::clone)
   }
 
-  fn none_of_ref<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
+  fn none_ref_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
     S: Set<I> + ?Sized;
@@ -150,6 +150,6 @@ pub trait ElementParsers: Parsers {
     where
         I: PartialEq + Display + Clone + Debug + 'a,
         S: Set<I> + ?Sized {
-    Self::map(Self::none_of_ref(set), Clone::clone)
+    Self::map(Self::none_ref_of(set), Clone::clone)
   }
 }

@@ -38,7 +38,7 @@ fn string<'a>() -> Parser<'a, char, String> {
     | elm_ref('r').map(|_| &'\r')
     | elm_ref('t').map(|_| &'\t');
   let escape_sequence = elm_ref('\\') * special_char;
-  let char_string = (none_of_ref("\\\"") | escape_sequence)
+  let char_string = (none_ref_of("\\\"") | escape_sequence)
     .map(Clone::clone)
     .of_many1()
     .map(String::from_iter);
