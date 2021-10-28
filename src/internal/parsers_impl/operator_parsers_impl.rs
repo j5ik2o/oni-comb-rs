@@ -1,6 +1,6 @@
+use crate::core::ParseError;
 use crate::core::ParseResult;
 use crate::core::ParserRunner;
-use crate::core::{ParseError, Parsers};
 use std::fmt::Debug;
 
 use crate::core::Parser;
@@ -58,7 +58,10 @@ impl OperatorParsers for ParsersImpl {
     })
   }
 
-  fn and_then_ref<'a, I, A, B>(parser1: Self::P<'a, I, &'a A>, parser2: Self::P<'a, I,&'a B>) -> Self::P<'a, I, (&'a A, &'a B)>
+  fn and_then_ref<'a, I, A, B>(
+    parser1: Self::P<'a, I, &'a A>,
+    parser2: Self::P<'a, I, &'a B>,
+  ) -> Self::P<'a, I, (&'a A, &'a B)>
   where
     A: Debug + 'a,
     B: Debug + 'a, {
@@ -69,8 +72,8 @@ impl OperatorParsers for ParsersImpl {
           ParseResult::Success { get: r2, length: n2 } => ParseResult::successful((r1, r2), n2),
           ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
         })
-            .with_committed_fallback(n1 != 0)
-            .with_add_length(n1)
+        .with_committed_fallback(n1 != 0)
+        .with_add_length(n1)
       }
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })
@@ -81,5 +84,4 @@ impl OperatorParsers for ParsersImpl {
     A: Debug + 'a, {
     Parser::new(move |parse_state| parser.run(parse_state).with_un_commit())
   }
-
 }

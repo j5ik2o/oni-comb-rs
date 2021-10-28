@@ -39,12 +39,12 @@ fn string<'a>() -> Parser<'a, char, String> {
     | elm('t').map(|_| &'\t');
   let escape_sequence = elm('\\') * special_char;
   let char_string = (none_of("\\\"") | escape_sequence)
-    .map(|c| *c)
+    .map(Clone::clone)
     .of_many1()
     .map(String::from_iter);
   let utf16_char: Parser<char, u16> = tag("\\u")
     * elm_pred(|c: &char| c.is_digit(16))
-      .map(|c| *c)
+      .map(Clone::clone)
       .of_count(4)
       .map(String::from_iter)
       .convert(|digits| u16::from_str_radix(&digits, 16));
