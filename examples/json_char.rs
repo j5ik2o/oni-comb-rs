@@ -43,8 +43,7 @@ fn string<'a>() -> Parser<'a, char, String> {
     .of_many1()
     .map(String::from_iter);
   let utf16_char: Parser<char, u16> = tag("\\u")
-    * elm_pred_ref(|c: &char| c.is_digit(16))
-      .map(Clone::clone)
+    * elm_pred(|c: &char| c.is_digit(16))
       .of_count(4)
       .map(String::from_iter)
       .convert(|digits| u16::from_str_radix(&digits, 16));

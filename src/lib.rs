@@ -98,6 +98,13 @@ pub mod prelude {
     ParsersImpl::elm_pred_ref(f)
   }
 
+  pub fn elm_pred<'a, I, F>(f: F) -> Parser<'a, I, I>
+    where
+        F: Fn(&I) -> bool + 'a,
+        I: Element + Clone + PartialEq + 'a, {
+    ParsersImpl::elm_pred(f)
+  }
+
   pub fn elm_space_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
@@ -399,10 +406,10 @@ mod tests {
   #[test]
   fn test_elem() {
     init();
-    let p = elm_ref(b'a');
+    let p = elm(b'a');
 
     let r = p.parse(b"a").unwrap();
-    assert_eq!(*r, b'a');
+    assert_eq!(r, b'a');
   }
 
   #[test]
@@ -431,7 +438,7 @@ mod tests {
     for index in 0..b.len() {
       let r = p.parse(&b[index..]);
       assert!(r.is_ok());
-      assert_eq!(r.unwrap(), &b[index]);
+      assert_eq!(r.unwrap(), b[index]);
     }
 
     let r = p.parse(b"g");
@@ -453,7 +460,7 @@ mod tests {
 
     let r = p.parse(b"g");
     assert!(r.is_ok());
-    assert_eq!(*r.unwrap(), b'g');
+    assert_eq!(r.unwrap(), b'g');
   }
 
   #[test]

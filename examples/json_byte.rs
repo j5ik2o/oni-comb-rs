@@ -1,4 +1,4 @@
-use oni_comb_rs::core::{Element, Parser, ParserFunctor, ParserRunner};
+use oni_comb_rs::core::{Parser, ParserFunctor, ParserRunner};
 use oni_comb_rs::extension::parser::{CollectParser, ConversionParser, DiscardParser, OperatorParser, RepeatParser};
 use oni_comb_rs::*;
 use prelude::*;
@@ -21,9 +21,9 @@ fn space<'a>() -> Parser<'a, u8, ()> {
 }
 
 fn number<'a>() -> Parser<'a, u8, f64> {
-  let integer = elm_digit_1_9() - elm_digit_0_9().of_many0() | elm_ref(b'0');
-  let frac = elm_ref(b'.') + elm_digit_0_9().of_many1();
-  let exp = elm_of(b"eE") + elm_of(b"+-").opt() + elm_digit_0_9().of_many1();
+  let integer = elm_digit_1_9_ref() - elm_digit_ref().of_many0() | elm_ref(b'0');
+  let frac = elm_ref(b'.') + elm_digit_ref().of_many1();
+  let exp = elm_of(b"eE") + elm_of(b"+-").opt() + elm_digit_ref().of_many1();
   let number = elm_ref(b'-').opt() + integer + frac.opt() + exp.opt();
   number.collect().convert(std::str::from_utf8).convert(f64::from_str)
 }
@@ -38,13 +38,12 @@ fn string<'a>() -> Parser<'a, u8, String> {
     | elm_ref(b'r').map(|_| &b'\r')
     | elm_ref(b't').map(|_| &b'\t');
   let escape_sequence = elm_ref(b'\\') * special_char;
-  let char_string = (none_of(b"\\\"") | escape_sequence)
+  let char_string = (none_of_ref(b"\\\"") | escape_sequence)
     .map(Clone::clone)
     .of_many1()
     .convert(String::from_utf8);
   let utf16_char = seq(b"\\u")
     * elm_hex_digit()
-      .map(Clone::clone)
       .of_count(4)
       .convert(String::from_utf8)
       .convert(|digits| u16::from_str_radix(&digits, 16));
