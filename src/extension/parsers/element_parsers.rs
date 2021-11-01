@@ -104,8 +104,8 @@ pub trait ElementParsers: Parsers {
     I: Element + PartialEq + 'a;
 
   fn elm_oct_digit<'a, I>() -> Self::P<'a, I, I>
-    where
-        I: Element + Clone + PartialEq + 'a {
+  where
+    I: Element + Clone + PartialEq + 'a, {
     Self::map(Self::elm_oct_digit_ref(), Clone::clone)
   }
 
@@ -115,9 +115,9 @@ pub trait ElementParsers: Parsers {
     S: Set<I> + ?Sized;
 
   fn elm_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, I>
-    where
-        I: PartialEq + Clone + Display + Debug + 'a,
-        S: Set<I> + ?Sized {
+  where
+    I: PartialEq + Clone + Display + Debug + 'a,
+    S: Set<I> + ?Sized, {
     Self::map(Self::elm_ref_of(set), Clone::clone)
   }
 
@@ -126,8 +126,8 @@ pub trait ElementParsers: Parsers {
     I: PartialEq + PartialOrd + Display + Debug + Copy + 'a;
 
   fn elm_in<'a, I>(start: I, end: I) -> Self::P<'a, I, I>
-    where
-        I: PartialEq + PartialOrd + Display + Debug + Copy + Clone + 'a {
+  where
+    I: PartialEq + PartialOrd + Display + Debug + Copy + Clone + 'a, {
     Self::map(Self::elm_ref_in(start, end), Clone::clone)
   }
 
@@ -136,8 +136,8 @@ pub trait ElementParsers: Parsers {
     I: PartialEq + PartialOrd + Display + Debug + Copy + 'a;
 
   fn elm_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, I>
-    where
-        I: PartialEq + PartialOrd + Display + Debug + Copy + Clone + 'a {
+  where
+    I: PartialEq + PartialOrd + Display + Debug + Copy + Clone + 'a, {
     Self::map(Self::elm_ref_from_until(start, end), Clone::clone)
   }
 
@@ -147,9 +147,9 @@ pub trait ElementParsers: Parsers {
     S: Set<I> + ?Sized;
 
   fn none_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, I>
-    where
-        I: PartialEq + Display + Clone + Debug + 'a,
-        S: Set<I> + ?Sized {
+  where
+    I: PartialEq + Display + Clone + Debug + 'a,
+    S: Set<I> + ?Sized, {
     Self::map(Self::none_ref_of(set), Clone::clone)
   }
 }

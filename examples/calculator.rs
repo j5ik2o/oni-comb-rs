@@ -82,9 +82,13 @@ fn unary<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
-  surround(space() + elm_ref('(') + space(), lazy(expr), space() + elm_ref(')') + space())
-    .map(Expr::Parenthesized)
-    .map(Rc::new)
+  surround(
+    space() + elm_ref('(') + space(),
+    lazy(expr),
+    space() + elm_ref(')') + space(),
+  )
+  .map(Expr::Parenthesized)
+  .map(Rc::new)
     | value()
 }
 

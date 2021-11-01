@@ -74,8 +74,8 @@ pub mod prelude {
   }
 
   pub fn elm_any<'a, I>() -> Parser<'a, I, I>
-    where
-        I: Element + Clone + PartialEq + 'a, {
+  where
+    I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_any()
   }
 
@@ -86,8 +86,8 @@ pub mod prelude {
   }
 
   pub fn elm<'a, I>(c: I) -> Parser<'a, I, I>
-    where
-        I: Element + Clone + PartialEq + 'a, {
+  where
+    I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm(c)
   }
 
@@ -99,9 +99,9 @@ pub mod prelude {
   }
 
   pub fn elm_pred<'a, I, F>(f: F) -> Parser<'a, I, I>
-    where
-        F: Fn(&I) -> bool + 'a,
-        I: Element + Clone + PartialEq + 'a, {
+  where
+    F: Fn(&I) -> bool + 'a,
+    I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_pred(f)
   }
 
@@ -112,8 +112,8 @@ pub mod prelude {
   }
 
   pub fn elm_space<'a, I>() -> Parser<'a, I, I>
-    where
-        I: Element + Clone + PartialEq + 'a, {
+  where
+    I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_space()
   }
 
@@ -124,8 +124,8 @@ pub mod prelude {
   }
 
   pub fn elm_multi_space<'a, I>() -> Parser<'a, I, I>
-    where
-        I: Element + Clone + PartialEq + 'a, {
+  where
+    I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_multi_space()
   }
 
@@ -136,8 +136,8 @@ pub mod prelude {
   }
 
   pub fn elm_alpha<'a, I>() -> Parser<'a, I, I>
-    where
-        I: Element + Clone + PartialEq + 'a, {
+  where
+    I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_alpha()
   }
 
@@ -148,8 +148,8 @@ pub mod prelude {
   }
 
   pub fn elm_alpha_digit<'a, I>() -> Parser<'a, I, I>
-    where
-        I: Element + Clone + PartialEq + 'a, {
+  where
+    I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_alpha_digit()
   }
 
@@ -160,8 +160,8 @@ pub mod prelude {
   }
 
   pub fn elm_digit<'a, I>() -> Parser<'a, I, I>
-    where
-        I: Element + Clone + PartialEq + 'a, {
+  where
+    I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_digit()
   }
 
@@ -172,8 +172,8 @@ pub mod prelude {
   }
 
   pub fn elm_digit_1_9<'a, I>() -> Parser<'a, I, I>
-    where
-        I: Element + Clone + PartialEq + 'a, {
+  where
+    I: Element + Clone + PartialEq + 'a, {
     elm_digit_1_9_ref().map(Clone::clone)
   }
 
@@ -184,8 +184,8 @@ pub mod prelude {
   }
 
   pub fn elm_hex_digit<'a, I>() -> Parser<'a, I, I>
-    where
-        I: Element + Clone + PartialEq + 'a, {
+  where
+    I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_hex_digit()
   }
 
@@ -196,8 +196,8 @@ pub mod prelude {
   }
 
   pub fn elm_oct_digit<'a, I>() -> Parser<'a, I, I>
-    where
-        I: Element + PartialEq + Clone + 'a, {
+  where
+    I: Element + PartialEq + Clone + 'a, {
     ParsersImpl::elm_oct_digit()
   }
 
@@ -271,9 +271,9 @@ pub mod prelude {
   }
 
   pub fn elm_of<'a, I, S>(set: &'a S) -> Parser<'a, I, I>
-    where
-        I: PartialEq + Display + Clone + Debug + 'a,
-        S: Set<I> + ?Sized, {
+  where
+    I: PartialEq + Display + Clone + Debug + 'a,
+    S: Set<I> + ?Sized, {
     ParsersImpl::elm_of(set)
   }
 
@@ -284,8 +284,8 @@ pub mod prelude {
   }
 
   pub fn elm_in<'a, I>(start: I, end: I) -> Parser<'a, I, I>
-    where
-        I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
+  where
+    I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
     ParsersImpl::elm_in(start, end)
   }
 
@@ -296,8 +296,8 @@ pub mod prelude {
   }
 
   pub fn elm_from_until<'a, I>(start: I, end: I) -> Parser<'a, I, I>
-    where
-        I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
+  where
+    I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
     ParsersImpl::elm_from_until(start, end)
   }
 
@@ -309,9 +309,9 @@ pub mod prelude {
   }
 
   pub fn none_of<'a, I, S>(set: &'a S) -> Parser<'a, I, I>
-    where
-        I: PartialEq + Display + Clone + Debug + 'a,
-        S: Set<I> + ?Sized, {
+  where
+    I: PartialEq + Display + Clone + Debug + 'a,
+    S: Set<I> + ?Sized, {
     ParsersImpl::none_of(set)
   }
 
@@ -586,7 +586,7 @@ mod tests {
     init();
     let p = !seq(b"abc");
 
-    let b = p.parse(b"def").unwrap()
+    let b = p.parse(b"def").unwrap();
     assert!(b);
   }
 
