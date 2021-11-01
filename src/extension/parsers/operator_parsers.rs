@@ -34,20 +34,20 @@ pub trait OperatorParsers: Parsers {
   where
     A: Debug + 'a;
 
-  fn chanl1<'a, I, P1, P2, A, AF, XF1>(p: P1, op: P2) -> Self::P<'a, I, A>
+  fn chanl1<'a, I, P1, P2, A, BOP, XF1>(p: P1, op: P2) -> Self::P<'a, I, A>
   where
     P1: Fn() -> Self::P<'a, I, XF1> + Copy + 'a,
-    P2: Fn() -> Self::P<'a, I, AF> + Copy + 'a,
-    A: Debug + 'a,
-    AF: Fn(A, A) -> A + Copy + 'a,
-    XF1: Fn() -> A + Copy + 'a;
-
-  fn restl1<'a, I, P1, P2, A, AF, XF1, XF2>(p: P1, op: P2, x: XF2) -> Self::P<'a, I, A>
-  where
-    P1: Fn() -> Self::P<'a, I, XF1> + Copy + 'a,
-    P2: Fn() -> Self::P<'a, I, AF> + Copy + 'a,
-    A: Debug + 'a,
-    AF: Fn(A, A) -> A + Copy + 'a,
+    P2: Fn() -> Self::P<'a, I, BOP> + Copy + 'a,
+    BOP: Fn(A, A) -> A + Copy + 'a,
     XF1: Fn() -> A + Copy + 'a,
-    XF2: Fn() -> A + Copy + 'a;
+    A: Debug + 'a;
+
+  fn restl1<'a, I, P1, P2, A, BOP, XF1, XF2>(p: P1, op: P2, x: XF2) -> Self::P<'a, I, A>
+  where
+    P1: Fn() -> Self::P<'a, I, XF1> + Copy + 'a,
+    P2: Fn() -> Self::P<'a, I, BOP> + Copy + 'a,
+    BOP: Fn(A, A) -> A + Copy + 'a,
+    XF1: Fn() -> A + Copy + 'a,
+    XF2: Fn() -> A + Copy + 'a,
+    A: Debug + 'a;
 }
