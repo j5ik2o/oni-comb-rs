@@ -113,7 +113,7 @@ impl OperatorParsers for ParsersImpl {
       ParseResult::Success { get: f, length: n1 } => {
         let ps = parse_state.add_offset(n1);
         (match p().run(&ps) {
-          ParseResult::Success { get: y, length: n2 } => {
+          ParseResult::Success { get: y, length: _n2 } => {
             let np = Self::restl1(p, op, move || f(x(), y()));
             np.run(&ps)
           }

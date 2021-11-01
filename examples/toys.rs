@@ -1,4 +1,4 @@
-use oni_comb_rs::core::{Parser, ParserFunctor, ParserMonad};
+use oni_comb_rs::core::{Parser, ParserFunctor};
 use oni_comb_rs::extension::parser::{ConversionParser, DiscardParser, OperatorParser, RepeatParser, SkipParser};
 use oni_comb_rs::prelude::*;
 use regex::Regex;

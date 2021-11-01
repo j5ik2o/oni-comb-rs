@@ -694,7 +694,7 @@ mod tests {
     let p2 = ParsersImpl::and_then_ref(elm_ref(pv1), elm_ref(pv2));
     let result = p2.parse(b"ab").unwrap();
     log::debug!("result = {:?}", result);
-    let (a, b) = result;
+    let (_a, _b) = result;
   }
 
   #[test]
