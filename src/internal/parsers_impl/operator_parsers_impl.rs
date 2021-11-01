@@ -1,6 +1,6 @@
-use crate::core::ParseError;
 use crate::core::ParseResult;
 use crate::core::ParserRunner;
+use crate::core::{ParseError, Parsers};
 use std::fmt::Debug;
 
 use crate::core::Parser;
@@ -83,5 +83,47 @@ impl OperatorParsers for ParsersImpl {
   where
     A: Debug + 'a, {
     Parser::new(move |parse_state| parser.run(parse_state).with_un_commit())
+  }
+
+  fn chanl1<'a, I, P1, P2, A, AF, XF1>(p: P1, op: P2) -> Self::P<'a, I, A>
+  where
+    P1: Fn() -> Self::P<'a, I, XF1> + Copy + 'a,
+    P2: Fn() -> Self::P<'a, I, AF> + Copy + 'a,
+    A: Debug + 'a,
+    AF: Fn(A, A) -> A + Copy + 'a,
+    XF1: Fn() -> A + Copy + 'a, {
+    Parser::new(move |parse_state| match p().run(parse_state) {
+      ParseResult::Success { get: x, length: n1 } => {
+        let ps = parse_state.add_offset(n1);
+        Self::restl1(p, op, x).run(&ps)
+      }
+      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+    })
+  }
+
+  fn restl1<'a, I, P1, P2, A, AF, XF1, XF2>(p: P1, op: P2, x: XF2) -> Self::P<'a, I, A>
+  where
+    P1: Fn() -> Self::P<'a, I, XF1> + Copy + 'a,
+    P2: Fn() -> Self::P<'a, I, AF> + Copy + 'a,
+    A: Debug + 'a,
+    AF: Fn(A, A) -> A + Copy + 'a,
+    XF1: Fn() -> A + Copy + 'a,
+    XF2: Fn() -> A + Copy + 'a, {
+    let p = Parser::new(move |parse_state| match op().run(parse_state) {
+      ParseResult::Success { get: f, length: n1 } => {
+        let ps = parse_state.add_offset(n1);
+        (match p().run(&ps) {
+          ParseResult::Success { get: y, length: n2 } => {
+            let np = Self::restl1(p, op, move || f(x(), y()));
+            np.run(&ps)
+          }
+          ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+        })
+        .with_committed_fallback(n1 != 0)
+        .with_add_length(n1)
+      }
+      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+    });
+    Self::or(p, Self::successful(x))
   }
 }

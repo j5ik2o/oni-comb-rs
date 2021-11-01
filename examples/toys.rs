@@ -85,27 +85,6 @@ fn semi_colon<'a>() -> Parser<'a, char, &'a str> {
   space() * tag(";") - space()
 }
 
-fn aster<'a>() -> Parser<'a, char, &'a str> {
-  space() * tag("*") - space()
-}
-
-fn slash<'a>() -> Parser<'a, char, &'a str> {
-  space() * tag("/") - space()
-}
-
-fn plus<'a>() -> Parser<'a, char, &'a str> {
-  space() * tag("+") - space()
-}
-
-fn minus<'a>() -> Parser<'a, char, &'a str> {
-  space() * tag("-") - space()
-}
-
-fn multitive<'a>() -> Parser<'a, char, &'a str> {
-  let _mul = aster().map(|_e| Expr::of_multiply);
-  todo!()
-}
-
 fn println<'a>() -> Parser<'a, char, Rc<Expr>> {
   (tag("println") * expression().surround(lparen(), rparen()) - semi_colon())
     .map(Expr::Println)
@@ -119,57 +98,24 @@ fn integer<'a>() -> Parser<'a, char, Rc<Expr>> {
     .map(Rc::new)
 }
 
-fn add<'a>() -> Parser<'a, char, &'a char> {
+fn plus<'a>() -> Parser<'a, char, &'a char> {
   space() * elm_ref('+') - space()
 }
 
-fn sub<'a>() -> Parser<'a, char, &'a char> {
+fn minus<'a>() -> Parser<'a, char, &'a char> {
   space() * elm_ref('-') - space()
 }
 
-fn mul<'a>() -> Parser<'a, char, &'a char> {
+fn aster<'a>() -> Parser<'a, char, &'a char> {
   space() * elm_ref('*') - space()
 }
 
-fn div<'a>() -> Parser<'a, char, &'a char> {
+fn slash<'a>() -> Parser<'a, char, &'a char> {
   space() * elm_ref('/') - space()
 }
 
-fn add_sub_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
-  mul_div_expr().flat_map(add_sub_rest)
-}
-
-fn add_sub_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
-  let v1 = a.clone();
-  let v2 = a.clone();
-  let v3 = a.clone();
-  let add_parser = add() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Add(v1.clone(), b.clone()))));
-  let sub_parser = sub() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Sub(v2.clone(), b.clone()))));
-  add_parser.attempt() | sub_parser.attempt() | empty().map(move |_| v3.clone())
-}
-
-fn mul_div_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
-  unary().flat_map(mul_div_rest)
-}
-
-fn mul_div_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
-  let v1 = a.clone();
-  let v2 = a.clone();
-  let v3 = a.clone();
-  let mul_parser = mul() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Multiply(v1.clone(), b.clone()))));
-  let div_parser = div() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Divide(v2.clone(), b.clone()))));
-  mul_parser.attempt() | div_parser.attempt() | empty().map(move |_| v3.clone())
-}
-
-fn unary<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let unary_parser = ((elm_ref('+') | elm_ref('-')) + lazy(unary))
-    .map(|(c, expr): (&char, Rc<Expr>)| match c {
-      '-' => Expr::Minus(Rc::clone(&expr)),
-      '+' => Expr::Plus(Rc::clone(&expr)),
-      _ => panic!(),
-    })
-    .map(Rc::new);
-  unary_parser | primary()
+fn multitive<'a>() {
+  todo!()
 }
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
