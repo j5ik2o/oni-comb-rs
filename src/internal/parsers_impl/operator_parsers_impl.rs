@@ -85,7 +85,7 @@ impl OperatorParsers for ParsersImpl {
     Parser::new(move |parse_state| parser.run(parse_state).with_un_commit())
   }
 
-  fn chanl1<'a, I, P1, P2, A, BOP, XF1>(p: P1, op: P2) -> Self::P<'a, I, A>
+  fn chain_left1<'a, I, P1, P2, A, BOP, XF1>(p: P1, op: P2) -> Self::P<'a, I, A>
   where
     P1: Fn() -> Self::P<'a, I, XF1> + Copy + 'a,
     P2: Fn() -> Self::P<'a, I, BOP> + Copy + 'a,
@@ -95,7 +95,7 @@ impl OperatorParsers for ParsersImpl {
     Parser::new(move |parse_state| match p().run(parse_state) {
       ParseResult::Success { get: x, length: n1 } => {
         let ps = parse_state.add_offset(n);
-        Self::restl1(p, op, x)
+        Self::rest_left1(p, op, x)
           .run(&ps)
           .with_committed_fallback(n != 0)
           .with_add_length(n)
@@ -104,7 +104,7 @@ impl OperatorParsers for ParsersImpl {
     })
   }
 
-  fn restl1<'a, I, P1, P2, A, BOP, XF1, XF2>(p: P1, op: P2, x: XF2) -> Self::P<'a, I, A>
+  fn rest_left1<'a, I, P1, P2, A, BOP, XF1, XF2>(p: P1, op: P2, x: XF2) -> Self::P<'a, I, A>
   where
     P1: Fn() -> Self::P<'a, I, XF1> + Copy + 'a,
     P2: Fn() -> Self::P<'a, I, BOP> + Copy + 'a,
@@ -118,7 +118,7 @@ impl OperatorParsers for ParsersImpl {
         (match p().run(&ps) {
           ParseResult::Success { get: y, length: n2 } => {
             let ps = parse_state.add_offset(n2);
-            Self::restl1(p, op, move || f(x(), y()))
+            Self::rest_left1(p, op, move || f(x(), y()))
               .run(&ps)
               .with_committed_fallback(n2 != 0)
               .with_add_length(n2)
