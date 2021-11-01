@@ -85,15 +85,13 @@ impl OperatorParsers for ParsersImpl {
     Parser::new(move |parse_state| parser.run(parse_state).with_un_commit())
   }
 
-  fn chain_left1<'a, I, P1, P2, A, BOP, XF1>(p: P1, op: P2) -> Self::P<'a, I, A>
+  fn chain_left1<'a, I, P2, A, BOP, XF1>(p: &'a Self::P<'a, I, XF1>, op: &'a Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
-    P1: Fn() -> Self::P<'a, I, XF1> + Copy + 'a,
-    P2: Fn() -> Self::P<'a, I, BOP> + Copy + 'a,
     BOP: Fn(A, A) -> A + Copy + 'a,
     XF1: Fn() -> A + Copy + 'a,
     A: Debug + 'a, {
-    Parser::new(move |parse_state| match p().run(parse_state) {
-      ParseResult::Success { get: x, length: n1 } => {
+    Parser::new(move |parse_state| match p.run(parse_state) {
+      ParseResult::Success { get: x, length: n } => {
         let ps = parse_state.add_offset(n);
         Self::rest_left1(p, op, x)
           .run(&ps)
@@ -104,20 +102,18 @@ impl OperatorParsers for ParsersImpl {
     })
   }
 
-  fn rest_left1<'a, I, P1, P2, A, BOP, XF1, XF2>(p: P1, op: P2, x: XF2) -> Self::P<'a, I, A>
+  fn rest_left1<'a, I, A, BOP, XF1, XF2>(p: &'a Self::P<'a, I, XF1>, op: &'a Self::P<'a, I, BOP>, x: XF2) -> Self::P<'a, I, A>
   where
-    P1: Fn() -> Self::P<'a, I, XF1> + Copy + 'a,
-    P2: Fn() -> Self::P<'a, I, BOP> + Copy + 'a,
     BOP: Fn(A, A) -> A + Copy + 'a,
     XF1: Fn() -> A + Copy + 'a,
     XF2: Fn() -> A + Copy + 'a,
     A: Debug + 'a, {
-    let p = Parser::new(move |parse_state| match op().run(parse_state) {
+    let result = Parser::new(move |parse_state| match op.run(parse_state) {
       ParseResult::Success { get: f, length: n1 } => {
         let ps = parse_state.add_offset(n1);
-        (match p().run(&ps) {
+        (match p.run(&ps) {
           ParseResult::Success { get: y, length: n2 } => {
-            let ps = parse_state.add_offset(n2);
+            let ps = ps.add_offset(n2);
             Self::rest_left1(p, op, move || f(x(), y()))
               .run(&ps)
               .with_committed_fallback(n2 != 0)
@@ -130,6 +126,6 @@ impl OperatorParsers for ParsersImpl {
       }
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     });
-    Self::or(p, Self::successful(x))
+    Self::or(result, Self::successful(x))
   }
 }

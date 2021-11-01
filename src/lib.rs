@@ -22,9 +22,7 @@ pub mod utils;
 // https://github.com/J-F-Liu/pom
 pub mod prelude {
   use super::*;
-  use crate::extension::parsers::{
-    ElementParsers, ElementsParsers, LazyParsers, PrimitiveParsers, SkipParsers, TakenParsers,
-  };
+  use crate::extension::parsers::{ElementParsers, ElementsParsers, LazyParsers, OperatorParsers, PrimitiveParsers, SkipParsers, TakenParsers};
 
   pub fn regex<'a>(regex: Regex) -> Parser<'a, char, String> {
     ParsersImpl::regex(regex)
@@ -326,6 +324,16 @@ pub mod prelude {
     C: Debug + 'a, {
     ParsersImpl::surround(lp, parser, rp)
   }
+
+
+  // pub fn chain_left1<'a, I, P2, A, BOP, XF1>(p: &Parser<'a, I, XF1>, op: &Parser<'a, I, BOP>) -> Parser<'a, I, A>
+  //   where
+  //       BOP: Fn(A, A) -> A + Copy + 'a,
+  //       XF1: Fn() -> A + Copy + 'a,
+  //       A: Debug + 'a {
+  //   ParsersImpl::chain_left1(p, op)
+  // }
+
 }
 
 #[cfg(test)]

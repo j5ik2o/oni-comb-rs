@@ -36,8 +36,17 @@ enum Expr {
 }
 
 impl Expr {
-  pub fn of_multiply(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Expr {
-    Expr::Binary(Operator::Multiply, lhs, rhs)
+  pub fn of_add(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
+    Rc::new(Expr::Binary(Operator::Add, lhs, rhs))
+  }
+  pub fn of_subtract(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
+    Rc::new(Expr::Binary(Operator::Subtract, lhs, rhs))
+  }
+  pub fn of_multiply(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
+    Rc::new(Expr::Binary(Operator::Multiply, lhs, rhs))
+  }
+  pub fn of_divide(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
+    Rc::new(Expr::Binary(Operator::Divide, lhs, rhs))
   }
 }
 
@@ -115,6 +124,14 @@ fn slash<'a>() -> Parser<'a, char, &'a char> {
 }
 
 fn multitive<'a>() {
+  // let p = (aster() | slash()).map(|e| {
+  //   match *e  {
+  //     '+' => Expr::of_multiply,
+  //     '-' => Expr::of_divide,
+  //   }
+  // });
+
+  // let p3 = chain_left1(|| primary().map(|e| || e.clone()), || p);
   todo!()
 }
 

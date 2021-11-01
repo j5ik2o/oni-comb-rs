@@ -34,18 +34,14 @@ pub trait OperatorParsers: Parsers {
   where
     A: Debug + 'a;
 
-  fn chain_left1<'a, I, P1, P2, A, BOP, XF1>(p: P1, op: P2) -> Self::P<'a, I, A>
+  fn chain_left1<'a, I, P2, A, BOP, XF1>(p: &'a Self::P<'a, I, XF1>, op: &'a Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
-    P1: Fn() -> Self::P<'a, I, XF1> + Copy + 'a,
-    P2: Fn() -> Self::P<'a, I, BOP> + Copy + 'a,
     BOP: Fn(A, A) -> A + Copy + 'a,
     XF1: Fn() -> A + Copy + 'a,
     A: Debug + 'a;
 
-  fn rest_left1<'a, I, P1, P2, A, BOP, XF1, XF2>(p: P1, op: P2, x: XF2) -> Self::P<'a, I, A>
+  fn rest_left1<'a, I, A, BOP, XF1, XF2>(p: &'a Self::P<'a, I, XF1>, op: &'a Self::P<'a, I, BOP>, x: XF2) -> Self::P<'a, I, A>
   where
-    P1: Fn() -> Self::P<'a, I, XF1> + Copy + 'a,
-    P2: Fn() -> Self::P<'a, I, BOP> + Copy + 'a,
     BOP: Fn(A, A) -> A + Copy + 'a,
     XF1: Fn() -> A + Copy + 'a,
     XF2: Fn() -> A + Copy + 'a,
