@@ -313,7 +313,7 @@ fn comparative<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn function_call<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let p = (ident() + lazy(expression).of_many1_sep(comma()).surround(lparen(), rparen()))
+  let p = (ident() + lazy(expression).of_many0_sep(comma()).surround(lparen(), rparen()))
     .map(|(name, params)| Expr::of_function_call(name.to_string(), params));
   space() * p - space()
 }
@@ -370,6 +370,23 @@ mod test {
   use super::*;
 
   #[test]
+  fn test_if() {
+    let source = r#"
+    if (1==2) { 1; }
+    "#;
+    let input = source.chars().into_iter().collect::<Vec<_>>();
+    let result = line().parse(&input).unwrap();
+    println!("{:?}", result);
+    if let Expr::If(cond, body, ..) = &*result {
+      if let Expr::Binary(op, a, b) = &*(*cond) {
+        assert_eq!(*op, Operator::EqualEqual);
+      }
+    } else {
+      panic!("unexpected result");
+    }
+  }
+
+  #[test]
   fn test_assignment() {
     let source = r#"
     i = 1;
@@ -398,6 +415,69 @@ mod test {
     if let &Expr::Println(ref expr) = &*result {
       if let &Expr::IntegerLiteral(i) = &*(*expr) {
         assert_eq!(i, 10);
+      } else {
+        panic!("unexpected result");
+      }
+    } else {
+      panic!("unexpected result");
+    }
+  }
+
+  #[test]
+  fn test_primary_function_call_args_0() {
+    let source = r#"
+    abc();
+    "#;
+    let input = source.chars().into_iter().collect::<Vec<_>>();
+    let result = primary().parse(&input).unwrap();
+    println!("{:?}", result);
+    if let Expr::FunctionCall(func_name, args) = &*result {
+      assert_eq!(func_name, "abc");
+      assert!(args.is_empty());
+    } else {
+      panic!("unexpected result");
+    }
+  }
+
+  #[test]
+  fn test_primary_function_call_args_1() {
+    let source = r#"
+    abc(1);
+    "#;
+    let input = source.chars().into_iter().collect::<Vec<_>>();
+    let result = primary().parse(&input).unwrap();
+    println!("{:?}", result);
+    if let Expr::FunctionCall(func_name, args) = &*result {
+      assert_eq!(func_name, "abc");
+      if let &Expr::IntegerLiteral(i) = &*(args[0]) {
+        assert_eq!(i, 1);
+      } else {
+        panic!("unexpected result");
+      }
+    } else {
+      panic!("unexpected result");
+    }
+  }
+
+  #[test]
+  fn test_primary_function_call_args_2() {
+    let source = r#"
+    abc(1, 2);
+    "#;
+    let input = source.chars().into_iter().collect::<Vec<_>>();
+    let result = primary().parse(&input).unwrap();
+    println!("{:?}", result);
+    if let Expr::FunctionCall(func_name, args) = &*result {
+      assert_eq!(func_name, "abc");
+      if let &Expr::IntegerLiteral(i) = &*(args[0]) {
+        assert_eq!(i, 1);
+      } else {
+        panic!("unexpected result");
+      }
+      if let &Expr::IntegerLiteral(i) = &*(args[1]) {
+        assert_eq!(i, 2);
+      } else {
+        panic!("unexpected result");
       }
     } else {
       panic!("unexpected result");
@@ -461,6 +541,8 @@ mod test {
       assert!(!v.is_empty());
       if let &Expr::IntegerLiteral(i) = &*v[0] {
         assert_eq!(i, 1);
+      } else {
+        panic!("unexpected result");
       }
     } else {
       panic!("unexpected result");
@@ -525,9 +607,13 @@ mod test {
       assert_eq!(*op, Operator::Divide);
       if let Expr::IntegerLiteral(l) = &**lhs {
         assert_eq!(*l, 1);
+      } else {
+        panic!("unexpected result");
       }
       if let Expr::IntegerLiteral(r) = &**rhs {
         assert_eq!(*r, 2);
+      } else {
+        panic!("unexpected result");
       }
     } else {
       panic!("unexpected result");
@@ -546,9 +632,13 @@ mod test {
       assert_eq!(*op, Operator::Add);
       if let Expr::IntegerLiteral(l) = &**lhs {
         assert_eq!(*l, 1);
+      } else {
+        panic!("unexpected result");
       }
       if let Expr::IntegerLiteral(r) = &**rhs {
         assert_eq!(*r, 2);
+      } else {
+        panic!("unexpected result");
       }
     } else {
       panic!("unexpected result");
@@ -567,9 +657,13 @@ mod test {
       assert_eq!(*op, Operator::GreaterThan);
       if let Expr::IntegerLiteral(l) = &**lhs {
         assert_eq!(*l, 1);
+      } else {
+        panic!("unexpected result");
       }
       if let Expr::IntegerLiteral(r) = &**rhs {
         assert_eq!(*r, 2);
+      } else {
+        panic!("unexpected result");
       }
     } else {
       panic!("unexpected result");
@@ -588,9 +682,13 @@ mod test {
       assert_eq!(*op, Operator::GreaterThan);
       if let Expr::Symbol(l) = &**lhs {
         assert_eq!(*l, "a");
+      } else {
+        panic!("unexpected result");
       }
       if let Expr::IntegerLiteral(r) = &**rhs {
         assert_eq!(*r, 2);
+      } else {
+        panic!("unexpected result");
       }
     } else {
       panic!("unexpected result");
