@@ -97,7 +97,7 @@ impl OperatorParsers for ParsersImpl {
               ParseResult::Success { get: y, length: n2 } => {
                 ps = ps.add_offset(n2);
                 cur_x = f(x.clone(), y);
-                len = n1 + n2;
+                len += n1 + n2;
                 continue;
               }
               ParseResult::Failure { .. } => return ParseResult::successful(cur_x.clone(), len),
