@@ -333,8 +333,8 @@ fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
     | labelled_call().attempt()
     | array_literal().attempt()
     | bool_literal().attempt()
+    | identifier().attempt()
     | integer()
-    | identifier()
 }
 
 #[cfg(test)]
@@ -368,7 +368,7 @@ mod test {
   fn test_multitive() {
     let source = r#"1/2"#;
     let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = multitive().parse(&input).unwrap();
+    let result = expression().parse(&input).unwrap();
     println!("{:?}", result);
     if let Expr::Binary(op, lhs, rhs) = &*result {
       assert_eq!(*op, Operator::Divide);
@@ -385,14 +385,52 @@ mod test {
 
   #[test]
   fn test_additive() {
-    let source = r#"1+2"#;
+    let source = r#"1 + 2"#;
     let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = additive().parse(&input).unwrap();
+    let result = expression().parse(&input).unwrap();
     println!("{:?}", result);
     if let Expr::Binary(op, lhs, rhs) = &*result {
       assert_eq!(*op, Operator::Add);
       if let Expr::IntegerLiteral(l) = &**lhs {
         assert_eq!(*l, 1);
+      }
+      if let Expr::IntegerLiteral(r) = &**rhs {
+        assert_eq!(*r, 2);
+      }
+    } else {
+      panic!()
+    }
+  }
+
+  #[test]
+  fn test_comparative() {
+    let source = r#"1>2"#;
+    let input = source.chars().into_iter().collect::<Vec<_>>();
+    let result = expression().parse(&input).unwrap();
+    println!("{:?}", result);
+    if let Expr::Binary(op, lhs, rhs) = &*result {
+      assert_eq!(*op, Operator::GreaterThan);
+      if let Expr::IntegerLiteral(l) = &**lhs {
+        assert_eq!(*l, 1);
+      }
+      if let Expr::IntegerLiteral(r) = &**rhs {
+        assert_eq!(*r, 2);
+      }
+    } else {
+      panic!()
+    }
+  }
+
+  #[test]
+  fn test_comparative_2() {
+    let source = r#"a>2"#;
+    let input = source.chars().into_iter().collect::<Vec<_>>();
+    let result = expression().parse(&input).unwrap();
+    println!("{:?}", result);
+    if let Expr::Binary(op, lhs, rhs) = &*result {
+      assert_eq!(*op, Operator::GreaterThan);
+      if let Expr::Symbol(l) = &**lhs {
+        assert_eq!(*l, "a");
       }
       if let Expr::IntegerLiteral(r) = &**rhs {
         assert_eq!(*r, 2);
