@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use crate::core::ParseResult;
 use crate::core::ParserRunner;
 use crate::core::{ParseError, Parsers};
@@ -92,7 +93,7 @@ impl OperatorParsers for ParsersImpl {
     Parser::new(move |parse_state| match p.run(parse_state) {
       ParseResult::Success { get: x, length: n } => {
         let ps = parse_state.add_offset(n);
-        Self::rest_left2(p.clone(), op.clone(), x)
+        Self::rest_left1(p.clone(), op.clone(), x)
           .run(&ps)
           .with_committed_fallback(n != 0)
           .with_add_length(n)
@@ -101,26 +102,27 @@ impl OperatorParsers for ParsersImpl {
     })
   }
 
-  fn rest_left2<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
+  fn rest_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + Copy + 'a,
     A: Clone + Debug + 'a, {
     Parser::new(move |parse_state| {
+      let mut ps = parse_state.add_offset(0);
       let mut cur_x = x.clone();
       let mut len = 0;
       loop {
-        match op.run(parse_state) {
+        match op.run(&ps) {
           ParseResult::Success { get: f, length: n1 } => {
-            let ps = parse_state.add_offset(n1);
-            (match p.run(&ps) {
+            ps = parse_state.add_offset(n1);
+            match p.run(&ps) {
               ParseResult::Success { get: y, length: n2 } => {
-                let ps = ps.add_offset(n2);
+                ps = ps.add_offset(n2);
                 cur_x = f(x.clone(), y);
                 len = n1 + n2;
                 continue;
               }
               ParseResult::Failure { .. } => return ParseResult::successful(cur_x.clone(), len),
-            })
+            }
           }
           ParseResult::Failure { .. } => return ParseResult::successful(cur_x.clone(), len),
         }
@@ -128,34 +130,4 @@ impl OperatorParsers for ParsersImpl {
     })
   }
 
-  fn rest_left1<'a, I, A, BOP, XF1, XF2>(
-    p: &'a Self::P<'a, I, XF1>,
-    op: &'a Self::P<'a, I, BOP>,
-    x: XF2,
-  ) -> Self::P<'a, I, A>
-  where
-    BOP: Fn(A, A) -> A + Copy + 'a,
-    XF1: Fn() -> A + Copy + 'a,
-    XF2: Fn() -> A + Copy + 'a,
-    A: Debug + 'a, {
-    let result = Parser::new(move |parse_state| match op.run(parse_state) {
-      ParseResult::Success { get: f, length: n1 } => {
-        let ps = parse_state.add_offset(n1);
-        (match p.run(&ps) {
-          ParseResult::Success { get: y, length: n2 } => {
-            let ps = ps.add_offset(n2);
-            Self::rest_left1(p, op, move || f(x(), y()))
-              .run(&ps)
-              .with_committed_fallback(n2 != 0)
-              .with_add_length(n2)
-          }
-          ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
-        })
-        .with_committed_fallback(n1 != 0)
-        .with_add_length(n1)
-      }
-      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
-    });
-    Self::or(result, Self::successful(x))
-  }
 }
