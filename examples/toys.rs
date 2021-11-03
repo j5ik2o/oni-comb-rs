@@ -39,12 +39,15 @@ impl Expr {
   pub fn of_add(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
     Rc::new(Expr::Binary(Operator::Add, lhs, rhs))
   }
+
   pub fn of_subtract(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
     Rc::new(Expr::Binary(Operator::Subtract, lhs, rhs))
   }
+
   pub fn of_multiply(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
     Rc::new(Expr::Binary(Operator::Multiply, lhs, rhs))
   }
+
   pub fn of_divide(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
     Rc::new(Expr::Binary(Operator::Divide, lhs, rhs))
   }

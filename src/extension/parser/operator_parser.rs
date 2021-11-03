@@ -22,5 +22,4 @@ pub trait OperatorParser<'a>: ParserRunner<'a> {
   fn attempt(self) -> Self::P<'a, Self::Input, Self::Output>
   where
     Self::Output: Debug + 'a;
-
 }

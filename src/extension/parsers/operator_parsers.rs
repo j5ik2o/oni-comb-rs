@@ -34,13 +34,21 @@ pub trait OperatorParsers: Parsers {
   where
     A: Debug + 'a;
 
-  fn chain_left1<'a, I, P2, A, BOP, XF1>(p: &'a Self::P<'a, I, XF1>, op: &'a Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
+  fn chain_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + Copy + 'a,
-    XF1: Fn() -> A + Copy + 'a,
-    A: Debug + 'a;
+    A: Clone + Debug + 'a;
 
-  fn rest_left1<'a, I, A, BOP, XF1, XF2>(p: &'a Self::P<'a, I, XF1>, op: &'a Self::P<'a, I, BOP>, x: XF2) -> Self::P<'a, I, A>
+  fn rest_left2<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
+  where
+    BOP: Fn(A, A) -> A + Copy + 'a,
+    A: Clone + Debug + 'a;
+
+  fn rest_left1<'a, I, A, BOP, XF1, XF2>(
+    p: &'a Self::P<'a, I, XF1>,
+    op: &'a Self::P<'a, I, BOP>,
+    x: XF2,
+  ) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + Copy + 'a,
     XF1: Fn() -> A + Copy + 'a,

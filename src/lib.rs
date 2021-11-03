@@ -22,7 +22,9 @@ pub mod utils;
 // https://github.com/J-F-Liu/pom
 pub mod prelude {
   use super::*;
-  use crate::extension::parsers::{ElementParsers, ElementsParsers, LazyParsers, OperatorParsers, PrimitiveParsers, SkipParsers, TakenParsers};
+  use crate::extension::parsers::{
+    ElementParsers, ElementsParsers, LazyParsers, OperatorParsers, PrimitiveParsers, SkipParsers, TakenParsers,
+  };
 
   pub fn regex<'a>(regex: Regex) -> Parser<'a, char, String> {
     ParsersImpl::regex(regex)
@@ -325,15 +327,12 @@ pub mod prelude {
     ParsersImpl::surround(lp, parser, rp)
   }
 
-
-  // pub fn chain_left1<'a, I, P2, A, BOP, XF1>(p: &Parser<'a, I, XF1>, op: &Parser<'a, I, BOP>) -> Parser<'a, I, A>
-  //   where
-  //       BOP: Fn(A, A) -> A + Copy + 'a,
-  //       XF1: Fn() -> A + Copy + 'a,
-  //       A: Debug + 'a {
-  //   ParsersImpl::chain_left1(p, op)
-  // }
-
+  pub fn chain_left1<'a, I, A, BOP>(p: Parser<'a, I, A>, op: Parser<'a, I, BOP>) -> Parser<'a, I, A>
+  where
+    BOP: Fn(A, A) -> A + Copy + 'a,
+    A: Clone + Debug + 'a, {
+    ParsersImpl::chain_left1(p, op)
+  }
 }
 
 #[cfg(test)]
@@ -354,6 +353,18 @@ mod tests {
   fn init() {
     env::set_var("RUST_LOG", "debug");
     let _ = env_logger::builder().is_test(true).try_init();
+  }
+
+  #[test]
+  fn test_chain_left1() {
+    let input1 = "abc".chars().collect::<Vec<char>>();
+
+    let p1 = tag("abc").collect().map(String::from_iter);
+    let p2 = successful(|| |a: String, b: String| format!("{}{}", a, b));
+    let p3 = chain_left1(p1, p2);
+    let r = p3.parse(&input1).unwrap();
+
+    println!("{:?}", r);
   }
 
   #[test]
