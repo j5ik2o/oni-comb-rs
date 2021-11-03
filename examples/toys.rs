@@ -45,7 +45,6 @@ enum Expr {
 }
 
 impl Expr {
-
   pub fn of_global_variable_definition(name: String, value: Rc<Expr>) -> Rc<Expr> {
     Rc::new(Expr::GlobalVariableDefinition(name, value))
   }
@@ -171,7 +170,8 @@ fn global_variable_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
   let global_p = space() * tag("global") - space();
   let global_indent_p = global_p * ident();
   let eq = space() * tag("=") - space();
-  let p = (global_indent_p - eq + expression() - semi_colon()).map(|(name, e)| Expr::of_global_variable_definition(name, e));
+  let p =
+    (global_indent_p - eq + expression() - semi_colon()).map(|(name, e)| Expr::of_global_variable_definition(name, e));
   space() * p - space()
 }
 
@@ -193,8 +193,7 @@ fn line<'a>() -> Parser<'a, char, Rc<Expr>> {
 fn while_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
   let while_p = space() * tag("while") - space();
   let condition = while_p * lazy(expression).surround(lparen(), rparen());
-  let p = (condition + lazy(line))
-    .map(|(c, body)| Expr::of_while(c, body));
+  let p = (condition + lazy(line)).map(|(c, body)| Expr::of_while(c, body));
   space() * p - space()
 }
 
@@ -202,24 +201,23 @@ fn for_in_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
   let for_p = space() * tag("for") - space();
   let in_p = space() * tag("in") - space();
   let to_p = space() * tag("to") - space();
-  let p = (for_p - lparen() * ident() - in_p + lazy(expression) - to_p + lazy(expression) - rparen() + lazy(line)).map(|(((name, from), to), body)| {
-    Expr::of_block(vec![
-      Expr::of_assignment(name.to_string(), from),
-      Expr::of_while(
-        Expr::of_less_than(Expr::of_symbol(name.to_string()), to),
-        Expr::of_block(vec![
-          body,
-          Expr::of_assignment(
-            name.to_string(),
-            Expr::of_add(
-              Expr::of_symbol(name.to_string()),
-              Expr::of_integer_literal(1),
+  let p = (for_p - lparen() * ident() - in_p + lazy(expression) - to_p + lazy(expression) - rparen() + lazy(line)).map(
+    |(((name, from), to), body)| {
+      Expr::of_block(vec![
+        Expr::of_assignment(name.to_string(), from),
+        Expr::of_while(
+          Expr::of_less_than(Expr::of_symbol(name.to_string()), to),
+          Expr::of_block(vec![
+            body,
+            Expr::of_assignment(
+              name.to_string(),
+              Expr::of_add(Expr::of_symbol(name.to_string()), Expr::of_integer_literal(1)),
             ),
-          ),
-        ]),
-      ),
-    ])
-  });
+          ]),
+        ),
+      ])
+    },
+  );
   space() * p - space()
 }
 
@@ -230,17 +228,13 @@ fn if_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn block_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let p = lazy(line)
-    .of_many0()
-    .surround(lbrace(), rbrace())
-    .map(Expr::of_block);
+  let p = lazy(line).of_many0().surround(lbrace(), rbrace()).map(Expr::of_block);
   space() * p - space()
 }
 
 fn assignment<'a>() -> Parser<'a, char, Rc<Expr>> {
   let eq = space() * tag("=") - space();
-  let p = (ident() - eq + expression() - semi_colon())
-    .map(|(name, expr)| Expr::of_assignment(name, expr));
+  let p = (ident() - eq + expression() - semi_colon()).map(|(name, expr)| Expr::of_assignment(name, expr));
   space() * p - space()
 }
 
@@ -254,11 +248,9 @@ fn expression<'a>() -> Parser<'a, char, Rc<Expr>> {
 
 fn println<'a>() -> Parser<'a, char, Rc<Expr>> {
   let println_p = space() * tag("println") - space();
-  let p = (println_p * lazy(expression).surround(lparen(), rparen()) - semi_colon())
-    .map(Expr::of_println);
+  let p = (println_p * lazy(expression).surround(lparen(), rparen()) - semi_colon()).map(Expr::of_println);
   space() * p - space()
 }
-
 
 fn integer<'a>() -> Parser<'a, char, Rc<Expr>> {
   let p = regex(Regex::new(r#"-?\d+"#).unwrap())
@@ -321,15 +313,15 @@ fn comparative<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn function_call<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let p = (ident() +  lazy(expression).of_many1_sep(comma()).surround(lparen(), rparen()))
+  let p = (ident() + lazy(expression).of_many1_sep(comma()).surround(lparen(), rparen()))
     .map(|(name, params)| Expr::of_function_call(name.to_string(), params));
   space() * p - space()
 }
 
 fn labelled_call<'a>() -> Parser<'a, char, Rc<Expr>> {
   let param = (ident() - elm_ref('=') + lazy(expression)).map(|(label, param)| LabelledParameter::new(label, param));
-  let p = (ident() + param.of_many1_sep(comma()))
-    .map(|(name, params)| Expr::of_labelled_call(name.to_string(), params));
+  let p =
+    (ident() + param.of_many1_sep(comma())).map(|(name, params)| Expr::of_labelled_call(name.to_string(), params));
   space() * p - space()
 }
 
@@ -350,7 +342,7 @@ fn array_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn bool_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
-  (true_literal().map(|_| Expr::of_bool_literal(true)) | false_literal().map(|_| Expr::of_bool_literal(false)))
+  true_literal().map(|_| Expr::of_bool_literal(true)) | false_literal().map(|_| Expr::of_bool_literal(false))
 }
 
 fn ident<'a>() -> Parser<'a, char, String> {
@@ -364,12 +356,12 @@ fn identifier<'a>() -> Parser<'a, char, Rc<Expr>> {
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
   let p = (lparen() * lazy(expression) - rparen())
-      | function_call().attempt()
-      | labelled_call().attempt()
-      | array_literal().attempt()
-      | bool_literal().attempt()
-      | identifier().attempt()
-      | integer();
+    | function_call().attempt()
+    | labelled_call().attempt()
+    | array_literal().attempt()
+    | bool_literal().attempt()
+    | identifier().attempt()
+    | integer();
   space() * p - space()
 }
 
@@ -437,7 +429,7 @@ mod test {
     println!("{:?}", result);
     if let &Expr::BoolLiteral(b) = &*result {
       assert!(!b);
-    }else {
+    } else {
       panic!("unexpected result");
     }
   }
@@ -452,7 +444,7 @@ mod test {
     println!("{:?}", result);
     if let Expr::ArrayLiteral(v) = &*result {
       assert!(v.is_empty());
-    }else {
+    } else {
       panic!("unexpected result");
     }
   }
@@ -470,7 +462,7 @@ mod test {
       if let &Expr::IntegerLiteral(i) = &*v[0] {
         assert_eq!(i, 1);
       }
-    }else {
+    } else {
       panic!("unexpected result");
     }
   }
@@ -488,7 +480,7 @@ mod test {
       if let &Expr::IntegerLiteral(i) = &*v[0] {
         assert_eq!(i, 1);
       }
-    }else {
+    } else {
       panic!("unexpected result");
     }
   }
@@ -503,7 +495,7 @@ mod test {
     println!("{:?}", result);
     if let &Expr::IntegerLiteral(i) = &*result {
       assert_eq!(i, 10);
-    }else {
+    } else {
       panic!("unexpected result");
     }
   }
