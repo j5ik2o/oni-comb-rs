@@ -188,18 +188,7 @@ fn assignment<'a>() -> Parser<'a, char, Rc<Expr>> {
     .map(Rc::new)
 }
 
-#[test]
-fn test_assignment() {
-  let source = r#"i = 1;"#;
-  let input = source.chars().into_iter().collect::<Vec<_>>();
-  let result = assignment().parse(&input).unwrap();
-  if let &Expr::Assignment(ref name, ref expr) = &*result {
-    assert_eq!(name, "i");
-    if let &Expr::IntegerLiteral(i) = &*(*expr) {
-      assert_eq!(i, 1);
-    }
-  }
-}
+
 
 fn expression_line<'a>() -> Parser<'a, char, Rc<Expr>> {
   (expression() - semi_colon()).attempt()
@@ -216,17 +205,6 @@ fn println<'a>() -> Parser<'a, char, Rc<Expr>> {
     .map(Rc::new)
 }
 
-#[test]
-fn test_println() {
-  let source = r#"println(10);"#;
-  let input = source.chars().into_iter().collect::<Vec<_>>();
-  let result = println().parse(&input).unwrap();
-  if let &Expr::Println(ref expr) = &*result {
-    if let &Expr::IntegerLiteral(i) = &*(*expr) {
-      assert_eq!(i, 10);
-    }
-  }
-}
 
 fn integer<'a>() -> Parser<'a, char, Rc<Expr>> {
   (space() * regex(Regex::new(r#"-?\d+"#).unwrap()) - space())
@@ -340,6 +318,31 @@ fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
 #[cfg(test)]
 mod test {
   use super::*;
+
+  #[test]
+  fn test_assignment() {
+    let source = r#"i = 1;"#;
+    let input = source.chars().into_iter().collect::<Vec<_>>();
+    let result = line().parse(&input).unwrap();
+    if let &Expr::Assignment(ref name, ref expr) = &*result {
+      assert_eq!(name, "i");
+      if let &Expr::IntegerLiteral(i) = &*(*expr) {
+        assert_eq!(i, 1);
+      }
+    }
+  }
+
+  #[test]
+  fn test_println() {
+    let source = r#"println(10);"#;
+    let input = source.chars().into_iter().collect::<Vec<_>>();
+    let result = line().parse(&input).unwrap();
+    if let &Expr::Println(ref expr) = &*result {
+      if let &Expr::IntegerLiteral(i) = &*(*expr) {
+        assert_eq!(i, 10);
+      }
+    }
+  }
 
   #[test]
   fn test_primary_integer() {
