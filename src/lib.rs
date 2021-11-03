@@ -321,9 +321,9 @@ pub mod prelude {
     rp: Parser<'a, I, C>,
   ) -> Parser<'a, I, B>
   where
-    A: Debug + 'a,
-    B: Debug + 'a,
-    C: Debug + 'a, {
+    A: Clone + Debug + 'a,
+    B: Clone + Debug + 'a,
+    C: Clone + Debug + 'a, {
     ParsersImpl::surround(lp, parser, rp)
   }
 
@@ -345,7 +345,6 @@ mod tests {
   use crate::extension::parser::{
     CollectParser, ConversionParser, DiscardParser, OffsetParser, OperatorParser, RepeatParser,
   };
-  use crate::extension::parsers::OperatorParsers;
   use crate::*;
 
   use super::prelude::*;
@@ -710,10 +709,6 @@ mod tests {
     assert_eq!(*a, pv1);
     assert_eq!(*b, pv2);
 
-    let p2 = ParsersImpl::and_then_ref(elm_ref(pv1), elm_ref(pv2));
-    let result = p2.parse(b"ab").unwrap();
-    log::debug!("result = {:?}", result);
-    let (_a, _b) = result;
   }
 
   #[test]

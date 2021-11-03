@@ -8,8 +8,8 @@ use crate::internal::ParsersImpl;
 impl<'a, I, A> OperatorParser<'a> for Parser<'a, I, A> {
   fn and_then<B>(self, pb: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, (Self::Output, B)>
   where
-    Self::Output: Debug + 'a,
-    B: Debug + 'a, {
+    Self::Output: Clone + Debug + 'a,
+    B: Clone + Debug + 'a, {
     ParsersImpl::and_then(self, pb)
   }
 

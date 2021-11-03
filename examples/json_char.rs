@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::iter::FromIterator;
 use std::str::FromStr;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum JsonValue {
   Null,
   Bool(bool),

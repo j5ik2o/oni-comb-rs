@@ -4,7 +4,7 @@ use oni_comb_rs::prelude::*;
 use regex::Regex;
 use std::rc::Rc;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 enum Operator {
   Add,            // +
   Subtract,       // -
@@ -18,7 +18,7 @@ enum Operator {
   NotEqual,       // !=
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 enum Expr {
   Binary(Operator, Rc<Expr>, Rc<Expr>),
   IntegerLiteral(i64),
@@ -53,7 +53,7 @@ impl Expr {
   }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct LabelledParameter {
   name: String,
   parameter: Rc<Expr>,

@@ -6,7 +6,7 @@ use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::collections::HashMap;
 use std::str::FromStr;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum JsonValue {
   Null,
   Bool(bool),

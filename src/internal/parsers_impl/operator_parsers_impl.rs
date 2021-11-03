@@ -1,7 +1,6 @@
-use std::cell::RefCell;
-use crate::core::ParseResult;
+use crate::core::{ParseResult, Parsers};
 use crate::core::ParserRunner;
-use crate::core::{ParseError, Parsers};
+use crate::core::{ParseError, };
 use std::fmt::Debug;
 
 use crate::core::Parser;
@@ -43,41 +42,21 @@ impl OperatorParsers for ParsersImpl {
 
   fn and_then<'a, I, A, B>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, B>) -> Self::P<'a, I, (A, B)>
   where
-    A: 'a,
-    B: 'a, {
-    Parser::new(move |parse_state| match parser1.run(parse_state) {
-      ParseResult::Success { get: r1, length: n1 } => {
-        let ps = parse_state.add_offset(n1);
-        (match parser2.run(&ps) {
-          ParseResult::Success { get: r2, length: n2 } => ParseResult::successful((r1, r2), n2),
-          ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
-        })
-        .with_committed_fallback(n1 != 0)
-        .with_add_length(n1)
-      }
-      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
-    })
-  }
-
-  fn and_then_ref<'a, I, A, B>(
-    parser1: Self::P<'a, I, &'a A>,
-    parser2: Self::P<'a, I, &'a B>,
-  ) -> Self::P<'a, I, (&'a A, &'a B)>
-  where
-    A: Debug + 'a,
-    B: Debug + 'a, {
-    Parser::new(move |parse_state| match parser1.run(parse_state) {
-      ParseResult::Success { get: r1, length: n1 } => {
-        let ps = parse_state.add_offset(n1);
-        (match parser2.run(&ps) {
-          ParseResult::Success { get: r2, length: n2 } => ParseResult::successful((r1, r2), n2),
-          ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
-        })
-        .with_committed_fallback(n1 != 0)
-        .with_add_length(n1)
-      }
-      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
-    })
+    A: Clone + 'a,
+    B: Clone + 'a, {
+    Self::flat_map(parser1, move |a| Self::map(parser2.clone(), move |b| (a.clone(), b)))
+    // Parser::new(move |parse_state| match parser1.run(parse_state) {
+    //   ParseResult::Success { get: r1, length: n1 } => {
+    //     let ps = parse_state.add_offset(n1);
+    //     (match parser2.run(&ps) {
+    //       ParseResult::Success { get: r2, length: n2 } => ParseResult::successful((r1, r2), n2),
+    //       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+    //     })
+    //     .with_committed_fallback(n1 != 0)
+    //     .with_add_length(n1)
+    //   }
+    //   ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+    // })
   }
 
   fn attempt<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>

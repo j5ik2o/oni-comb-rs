@@ -4,13 +4,13 @@ use std::fmt::Debug;
 pub trait SkipParser<'a>: ParserRunner<'a> {
   fn skip_left<B>(self, other: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, B>
   where
-    Self::Output: Debug + 'a,
-    B: Debug + 'a;
+    Self::Output: Clone + Debug + 'a,
+    B: Clone + Debug + 'a;
 
   fn skip_right<B>(self, other: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, Self::Output>
   where
-    Self::Output: Debug + 'a,
-    B: Debug + 'a;
+    Self::Output: Clone + Debug + 'a,
+    B: Clone + Debug + 'a;
 
   fn surround<B, C>(
     self,
@@ -18,7 +18,7 @@ pub trait SkipParser<'a>: ParserRunner<'a> {
     right_parser: Self::P<'a, Self::Input, C>,
   ) -> Self::P<'a, Self::Input, Self::Output>
   where
-    Self::Output: Debug + 'a,
-    B: Debug + 'a,
-    C: Debug + 'a;
+    Self::Output: Clone + Debug + 'a,
+    B: Clone + Debug + 'a,
+    C: Clone + Debug + 'a;
 }
