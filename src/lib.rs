@@ -708,7 +708,6 @@ mod tests {
     let (a, b) = result;
     assert_eq!(*a, pv1);
     assert_eq!(*b, pv2);
-
   }
 
   #[test]

@@ -1,6 +1,6 @@
-use crate::core::{ParseResult, Parsers};
+use crate::core::ParseError;
 use crate::core::ParserRunner;
-use crate::core::{ParseError, };
+use crate::core::{ParseResult, Parsers};
 use std::fmt::Debug;
 
 use crate::core::Parser;
@@ -108,5 +108,4 @@ impl OperatorParsers for ParsersImpl {
       }
     })
   }
-
 }

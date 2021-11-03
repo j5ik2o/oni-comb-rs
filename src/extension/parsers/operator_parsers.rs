@@ -35,5 +35,4 @@ pub trait OperatorParsers: Parsers {
   where
     BOP: Fn(A, A) -> A + Copy + 'a,
     A: Clone + Debug + 'a;
-
 }
