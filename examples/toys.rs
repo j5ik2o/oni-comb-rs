@@ -353,12 +353,12 @@ mod test {
 
   #[test]
   fn test_primary_identifier() {
-    let source = r#"a"#;
+    let source = r#"abc"#;
     let input = source.chars().into_iter().collect::<Vec<_>>();
     let result = primary().parse(&input).unwrap();
     println!("{:?}", result);
     if let Expr::Symbol(name) = &*result {
-      assert_eq!(name, "a");
+      assert_eq!(name, "abc");
     } else {
       panic!()
     }
