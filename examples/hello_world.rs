@@ -11,7 +11,7 @@ fn main() {
     elm_ref(b'\'') + elm_ref(b';'),
   )
   .convert(std::str::from_utf8);
-  let result: &str = parser.parse(input).unwrap();
+  let result: &str = parser.parse(input).to_result().unwrap();
 
   println!("{}", result);
 }
