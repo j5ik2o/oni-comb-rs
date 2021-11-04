@@ -8,14 +8,14 @@ pub trait SkipParsers: OperatorParsers {
   fn skip_left<'a, I, A, B>(pa: Self::P<'a, I, A>, pb: Self::P<'a, I, B>) -> Self::P<'a, I, B>
   where
     A: Clone + Debug + 'a,
-    B: Clone + Debug + 'a, {
+    B: Debug + 'a, {
     Self::map(Self::and_then(pa, pb), |(_, b)| b)
   }
 
   fn skip_right<'a, I, A, B>(pa: Self::P<'a, I, A>, pb: Self::P<'a, I, B>) -> Self::P<'a, I, A>
   where
     A: Clone + Debug + 'a,
-    B: Clone + Debug + 'a, {
+    B: Debug + 'a, {
     Self::map(Self::and_then(pa, pb), |(a, _)| a)
   }
 
@@ -27,7 +27,7 @@ pub trait SkipParsers: OperatorParsers {
   where
     A: Clone + Debug + 'a,
     B: Clone + Debug + 'a,
-    C: Clone + Debug + 'a, {
+    C: Debug + 'a, {
     Self::skip_left(left_parser, Self::skip_right(parser, right_parser))
   }
 }

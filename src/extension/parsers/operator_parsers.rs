@@ -32,7 +32,7 @@ pub trait OperatorParsers: Parsers {
   fn and_then<'a, I, A, B>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, B>) -> Self::P<'a, I, (A, B)>
   where
     A: Clone + Debug + 'a,
-    B: Clone + Debug + 'a;
+    B: Debug + 'a;
 
   fn attempt<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
   where
