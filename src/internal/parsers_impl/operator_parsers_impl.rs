@@ -59,12 +59,12 @@ impl OperatorParsers for ParsersImpl {
     Parser::new(move |parse_state| match parser1.run(parse_state) {
       ParseResult::Success { get: r1, length: n1 } => {
         let ps = parse_state.add_offset(n1);
-        (match parser2.run(&ps) {
+        match parser2.run(&ps) {
           ParseResult::Success { get: r2, length: n2 } => ParseResult::successful((r1, r2), n1 + n2),
           ParseResult::Failure { get, is_committed } => {
             ParseResult::failed(get, is_committed).with_committed_fallback(n1 != 0)
           }
-        })
+        }
       }
       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
     })

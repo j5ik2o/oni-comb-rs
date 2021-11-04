@@ -26,7 +26,7 @@ impl Parsers for ParsersImpl {
     A: 'a,
     'b: 'a, {
     let parse_state = ParseState::new(input, 0);
-    parser.run(&parse_state).extract()
+    parser.run(&parse_state).to_result()
   }
 
   fn successful<'a, I, A, F>(value: F) -> Self::P<'a, I, A>

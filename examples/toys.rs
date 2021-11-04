@@ -374,7 +374,7 @@ mod test {
     println(c);
     "#;
     let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = lines().parse(&input).unwrap();
+    let result = lines().parse_as_result(&input).unwrap();
     println!("{:?}", result);
   }
 
@@ -384,7 +384,7 @@ mod test {
     while (1==2) { 1; }
     "#;
     let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = line().parse(&input).unwrap();
+    let result = line().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let Expr::While(cond, body) = &*result {
       if let Expr::Binary(op, a, b) = &*(*cond) {
@@ -412,7 +412,7 @@ mod test {
     init();
     let source = r"for(i in 1 to 10) a=1;";
     let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = for_in_expr().parse(&input).unwrap();
+    let result = for_in_expr().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     // if let Expr::While(cond, body) = &*result {
     //   if let Expr::Binary(op, a, b) = &*(*cond) {
@@ -441,7 +441,7 @@ mod test {
     if (1==2) { 1; }
     "#;
     let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = if_expr().parse(&input).unwrap();
+    let result = if_expr().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let Expr::If(cond, body, ..) = &*result {
       if let Expr::Binary(op, a, b) = &*(*cond) {
@@ -499,7 +499,7 @@ mod test {
     i = 1;
     "#;
     let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = line().parse(&input).unwrap();
+    let result = line().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let &Expr::Assignment(ref name, ref expr) = &*result {
       assert_eq!(name, "i");
@@ -519,7 +519,7 @@ mod test {
     println(10);
     "#;
     let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = line().parse(&input).unwrap();
+    let result = line().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let &Expr::Println(ref expr) = &*result {
       if let &Expr::IntegerLiteral(i) = &*(*expr) {
@@ -538,7 +538,7 @@ mod test {
     abc[n=5]
     "#;
     let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = labelled_call().parse(&input).unwrap();
+    let result = labelled_call().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let Expr::LabelledCall(func_name, args) = &*result {
       assert_eq!(func_name, "abc");
@@ -563,7 +563,7 @@ mod test {
     abc();
     "#;
     let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = function_call().parse(&input).unwrap();
+    let result = function_call().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let Expr::FunctionCall(func_name, args) = &*result {
       assert_eq!(func_name, "abc");
@@ -579,7 +579,7 @@ mod test {
     abc(1);
     "#;
     let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = function_call().parse(&input).unwrap();
+    let result = function_call().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let Expr::FunctionCall(func_name, args) = &*result {
       assert_eq!(func_name, "abc");
@@ -599,7 +599,7 @@ mod test {
     abc(1,2);
     "#;
     let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = function_call().parse(&input).unwrap();
+    let result = function_call().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let Expr::FunctionCall(func_name, args) = &*result {
       assert_eq!(func_name, "abc");
@@ -623,8 +623,8 @@ mod test {
     let source = r#"
     true
     "#;
-    let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = bool_literal().parse(&input).unwrap();
+    let input = source.chars().collect::<Vec<_>>();
+    let result = bool_literal().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let &Expr::BoolLiteral(b) = &*result {
       assert!(b);
@@ -638,8 +638,8 @@ mod test {
     let source = r#"
     false
     "#;
-    let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = bool_literal().parse(&input).unwrap();
+    let input = source.chars().collect::<Vec<_>>();
+    let result = bool_literal().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let &Expr::BoolLiteral(b) = &*result {
       assert!(!b);
@@ -653,8 +653,8 @@ mod test {
     let source = r#"
     []
     "#;
-    let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = array_literal().parse(&input).unwrap();
+    let input = source.chars().collect::<Vec<_>>();
+    let result = array_literal().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let Expr::ArrayLiteral(v) = &*result {
       assert!(v.is_empty());
@@ -668,8 +668,8 @@ mod test {
     let source = r#"
     [1]
     "#;
-    let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = array_literal().parse(&input).unwrap();
+    let input = source.chars().collect::<Vec<_>>();
+    let result = array_literal().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let Expr::ArrayLiteral(v) = &*result {
       assert!(!v.is_empty());
@@ -688,8 +688,8 @@ mod test {
     let source = r#"
     [1, 2]
     "#;
-    let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = array_literal().parse(&input).unwrap();
+    let input = source.chars().collect::<Vec<_>>();
+    let result = array_literal().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let Expr::ArrayLiteral(v) = &*result {
       assert!(!v.is_empty());
@@ -706,8 +706,8 @@ mod test {
     let source = r#"
     10
     "#;
-    let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = integer().parse(&input).unwrap();
+    let input = source.chars().collect::<Vec<_>>();
+    let result = integer().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let &Expr::IntegerLiteral(i) = &*result {
       assert_eq!(i, 10);
@@ -721,8 +721,8 @@ mod test {
     let source = r#"
     abc
     "#;
-    let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = identifier().parse(&input).unwrap();
+    let input = source.chars().collect::<Vec<_>>();
+    let result = identifier().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let Expr::Symbol(name) = &*result {
       assert_eq!(name, "abc");
@@ -734,8 +734,8 @@ mod test {
   #[test]
   fn test_multitive() {
     let source = r#"1/2"#;
-    let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = expression().parse(&input).unwrap();
+    let input = source.chars().collect::<Vec<_>>();
+    let result = expression().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let Expr::Binary(op, lhs, rhs) = &*result {
       assert_eq!(*op, Operator::Divide);
@@ -759,8 +759,8 @@ mod test {
     let source = r#"
     1 + 2
     "#;
-    let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = expression().parse(&input).unwrap();
+    let input = source.chars().collect::<Vec<_>>();
+    let result = expression().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let Expr::Binary(op, lhs, rhs) = &*result {
       assert_eq!(*op, Operator::Add);
@@ -784,8 +784,8 @@ mod test {
     let source = r#"
     1>2
     "#;
-    let input = source.chars().into_iter().collect::<Vec<_>>();
-    let result = expression().parse(&input).unwrap();
+    let input = source.chars().collect::<Vec<_>>();
+    let result = expression().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let Expr::Binary(op, lhs, rhs) = &*result {
       assert_eq!(*op, Operator::GreaterThan);
@@ -810,7 +810,7 @@ mod test {
     a>2
     "#;
     let input = source.chars().collect::<Vec<_>>();
-    let result = comparative().parse(&input).unwrap();
+    let result = comparative().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let Expr::Binary(op, lhs, rhs) = &*result {
       assert_eq!(*op, Operator::GreaterThan);

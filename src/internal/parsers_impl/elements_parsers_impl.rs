@@ -38,7 +38,7 @@ impl ElementsParsers for ParsersImpl {
     Parser::new(move |parse_state| {
       let input: &[char] = parse_state.input();
       let mut index = 0;
-      for (i, c) in tag.chars().enumerate() {
+      for c in tag.chars() {
         if let Some(&actual) = input.get(index) {
           if c != actual {
             let msg = format!("tag {:?} expect: {:?}, found: {}", tag, c, actual);
@@ -64,7 +64,7 @@ impl ElementsParsers for ParsersImpl {
       for c in tag.chars() {
         if let Some(actual) = input.get(index) {
           if !c.eq_ignore_ascii_case(actual) {
-            let msg = format!("tag {:?} expect: {:?}, found: {}", tag, c, actual);
+            let msg = format!("tag_no_case {:?} expect: {:?}, found: {}", tag, c, actual);
             let ps = parse_state.add_offset(index);
             let pe = ParseError::of_mismatch(input, ps.next_offset(), index, msg);
             return ParseResult::failed(pe, index != 0);
@@ -89,7 +89,7 @@ impl ElementsParsers for ParsersImpl {
         } else {
           let msg = format!("regex {:?} found: {:?}", regex, str);
           let pe = ParseError::of_mismatch(input, parse_state.next_offset(), str.len(), msg);
-          return ParseResult::failed_with_un_commit(pe);
+          return ParseResult::failed(pe, captures.len() != 0);
         }
       } else {
         // log::debug!("regex: failed, '{}'", str);

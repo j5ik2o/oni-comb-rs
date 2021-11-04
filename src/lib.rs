@@ -361,7 +361,7 @@ mod tests {
     let p1 = tag("abc").collect().map(String::from_iter);
     let p2 = successful(|| |a: String, b: String| format!("{}{}", a, b));
     let p3 = chain_left1(p1, p2);
-    let r = p3.parse(&input1).unwrap();
+    let r = p3.parse_as_result(&input1).unwrap();
 
     println!("{:?}", r);
   }
@@ -373,14 +373,14 @@ mod tests {
       let input1 = b"b";
       let p: Parser<u8, &u8> = failed(|| ParseError::of_in_complete()).attempt().or(elm_ref(b'b'));
 
-      let r = p.parse(input1);
+      let r = p.parse_as_result(input1);
       assert!(r.is_ok());
     }
 
     {
       let input1 = "abra cadabra!".chars().collect::<Vec<char>>();
       let p = (tag("abra") + elm_space() + tag("abra")).attempt() | (tag("abra") + elm_space() + tag("cadabra!"));
-      let r = p.parse(&input1);
+      let r = p.parse_as_result(&input1);
       println!("result = {:?}", r);
       assert!(r.is_ok());
     }
@@ -394,10 +394,10 @@ mod tests {
 
     let p = end();
 
-    let r = p.parse(input1);
+    let r = p.parse_as_result(input1);
     assert!(r.is_ok());
 
-    let r = p.parse(input2);
+    let r = p.parse_as_result(input2);
     assert!(r.is_err());
   }
 
@@ -407,7 +407,7 @@ mod tests {
     let input = b"a";
     let p = unit();
 
-    let r = p.parse(input);
+    let r = p.parse_as_result(input);
     assert_eq!(r.unwrap(), ());
   }
 
@@ -417,7 +417,7 @@ mod tests {
     let input = b"a";
     let p = successful(|| 'a');
 
-    let r = p.parse(input).unwrap();
+    let r = p.parse_as_result(input).unwrap();
     assert_eq!(r, 'a');
   }
 
@@ -426,7 +426,7 @@ mod tests {
     init();
     let p = elm(b'a');
 
-    let r = p.parse(b"a").unwrap();
+    let r = p.parse_as_result(b"a").unwrap();
     assert_eq!(r, b'a');
   }
 
@@ -437,17 +437,17 @@ mod tests {
     let input2 = "xbc".chars().collect::<Vec<char>>();
     let p = regex(Regex::new(r"a.*c$").unwrap());
 
-    let r = p.parse(&input1);
+    let r = p.parse_as_result(&input1);
     assert!(r.is_ok());
     assert_eq!(r.unwrap(), "abc");
 
-    let r = p.parse(&input2);
+    let r = p.parse_as_result(&input2);
     assert!(r.is_err());
 
     {
       let input3 = "12345 to".chars().collect::<Vec<_>>();
       let p = regex(Regex::new(r"\d+").unwrap());
-      let r = p.parse(&input3);
+      let r = p.parse_as_result(&input3);
       println!("{:?}", r);
       assert!(r.is_ok());
       // assert_eq!(r.unwrap(), "abc");
@@ -463,12 +463,12 @@ mod tests {
     let p = elm_of(&patterns);
 
     for index in 0..b.len() {
-      let r = p.parse(&b[index..]);
+      let r = p.parse_as_result(&b[index..]);
       assert!(r.is_ok());
       assert_eq!(r.unwrap(), b[index]);
     }
 
-    let r = p.parse(b"g");
+    let r = p.parse_as_result(b"g");
     assert!(r.is_err());
   }
 
@@ -481,11 +481,11 @@ mod tests {
     let p = none_of(&patterns);
 
     for index in 0..b.len() {
-      let r = p.parse(&b[index..]);
+      let r = p.parse_as_result(&b[index..]);
       assert!(r.is_err());
     }
 
-    let r = p.parse(b"g");
+    let r = p.parse_as_result(b"g");
     assert!(r.is_ok());
     assert_eq!(r.unwrap(), b'g');
   }
@@ -495,16 +495,16 @@ mod tests {
     init();
     let p = elm_ref(b'a').repeat(..=3).collect();
 
-    let r = p.parse(b"");
+    let r = p.parse_as_result(b"");
     assert!(r.is_ok());
 
-    let r = p.parse(b"a").unwrap();
+    let r = p.parse_as_result(b"a").unwrap();
     assert_eq!(r, vec![b'a']);
 
-    let r = p.parse(b"aa").unwrap();
+    let r = p.parse_as_result(b"aa").unwrap();
     assert_eq!(r, vec![b'a', b'a']);
 
-    let r = p.parse(b"aaa").unwrap();
+    let r = p.parse_as_result(b"aaa").unwrap();
     assert_eq!(r, vec![b'a', b'a', b'a']);
   }
 
@@ -516,10 +516,10 @@ mod tests {
     // let r = p.parse(b"").unwrap();
     // assert_eq!(r, vec![]);
 
-    let r = p.parse(b"a").unwrap();
+    let r = p.parse_as_result(b"a").unwrap();
     assert_eq!(r, vec![b'a']);
 
-    let r = p.parse(b"aa").unwrap();
+    let r = p.parse_as_result(b"aa").unwrap();
     assert_eq!(r, vec![b'a', b'a']);
   }
 
@@ -528,13 +528,13 @@ mod tests {
     init();
     let p = elm_ref(b'a').of_many1().collect();
 
-    let r = p.parse(b"");
+    let r = p.parse_as_result(b"");
     assert!(r.is_err());
 
-    let r = p.parse(b"a").unwrap();
+    let r = p.parse_as_result(b"a").unwrap();
     assert_eq!(r, vec![b'a']);
 
-    let r = p.parse(b"aa").unwrap();
+    let r = p.parse_as_result(b"aa").unwrap();
     assert_eq!(r, vec![b'a', b'a']);
   }
 
@@ -543,16 +543,16 @@ mod tests {
     init();
     let p = elm_ref(b'a').of_many_n_m(1, 2).collect() + end();
 
-    let r = p.parse(b"");
+    let r = p.parse_as_result(b"");
     assert!(r.is_err());
 
-    let (a, _) = p.parse(b"a").unwrap();
+    let (a, _) = p.parse_as_result(b"a").unwrap();
     assert_eq!(a, vec![b'a']);
 
-    let (a, _) = p.parse(b"aa").unwrap();
+    let (a, _) = p.parse_as_result(b"aa").unwrap();
     assert_eq!(a, vec![b'a', b'a']);
 
-    let r = p.parse(b"aaa");
+    let r = p.parse_as_result(b"aaa");
     assert!(r.is_err());
   }
 
@@ -563,7 +563,7 @@ mod tests {
     let p2 = elm_ref(b',');
     let p = p1.map(|e| *e).of_count_sep(3, p2);
 
-    let r = p.parse(b"a,a,a").unwrap();
+    let r = p.parse_as_result(b"a,a,a").unwrap();
     assert_eq!(r, vec![b'a', b'a', b'a']);
   }
 
@@ -572,18 +572,19 @@ mod tests {
     init();
     let p = seq(b"abc");
 
-    let r = p.parse(b"abc").unwrap();
+    let r = p.parse_as_result(b"abc").unwrap();
     assert_eq!(r, b"abc");
   }
 
   #[test]
   fn test_tag() {
     init();
-    let input = "abc".chars().collect::<Vec<char>>();
-    let p = tag("abc");
+    let input = "abe".chars().collect::<Vec<char>>();
+    let p = tag("abc").attempt() | tag("abe");
 
-    let r = p.parse(&input).unwrap();
-    assert_eq!(r, "abc");
+    let r = p.parse(&input);
+    println!("{:?}", r);
+    assert_eq!(r.to_result().unwrap(), "abe");
   }
 
   #[test]
@@ -592,7 +593,7 @@ mod tests {
     let input = "AbC".chars().collect::<Vec<char>>();
     let p = tag_no_case("abc");
 
-    let r = p.parse(&input).unwrap();
+    let r = p.parse_as_result(&input).unwrap();
     assert_eq!(r, "abc");
   }
 
@@ -601,7 +602,7 @@ mod tests {
     init();
     let p = seq(b"abc").opt();
 
-    if let Some(b) = p.parse(b"abc").unwrap() {
+    if let Some(b) = p.parse_as_result(b"abc").unwrap() {
       assert_eq!(b, b"abc");
     } else {
       panic!()
@@ -613,7 +614,7 @@ mod tests {
     init();
     let p = !seq(b"abc");
 
-    let b = p.parse(b"def").unwrap();
+    let b = p.parse_as_result(b"def").unwrap();
     assert!(b);
   }
 
@@ -622,11 +623,11 @@ mod tests {
     init();
     let p = take_while0(|c: &u8| c.is_ascii_digit()).convert(std::str::from_utf8);
 
-    let result = p.parse(b"a123b");
+    let result = p.parse_as_result(b"a123b");
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), "123");
 
-    let result = p.parse(b"def");
+    let result = p.parse_as_result(b"def");
     assert!(result.is_ok());
   }
 
@@ -635,11 +636,11 @@ mod tests {
     init();
     let p = take_while1(|c: &u8| c.is_ascii_digit()).convert(std::str::from_utf8);
 
-    let result = p.parse(b"a123b");
+    let result = p.parse_as_result(b"a123b");
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), "123");
 
-    let result = p.parse(b"def");
+    let result = p.parse_as_result(b"def");
     assert!(result.is_err());
   }
 
@@ -648,22 +649,22 @@ mod tests {
     init();
     let p = take_while_n_m(1, 3, |c: &u8| c.is_ascii_digit()).convert(std::str::from_utf8);
 
-    let result = p.parse(b"a1b");
+    let result = p.parse_as_result(b"a1b");
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), "1");
 
-    let result = p.parse(b"a12b");
+    let result = p.parse_as_result(b"a12b");
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), "12");
 
-    let result = p.parse(b"a123b");
+    let result = p.parse_as_result(b"a123b");
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), "123");
 
-    let result = p.parse(b"a1234b");
+    let result = p.parse_as_result(b"a1234b");
     assert!(result.is_err());
 
-    let result = p.parse(b"def");
+    let result = p.parse_as_result(b"def");
     assert!(result.is_err());
   }
 
@@ -672,11 +673,11 @@ mod tests {
     init();
     let p = take_till0(|c| *c == b'c').convert(std::str::from_utf8);
 
-    let result = p.parse(b"abcd");
+    let result = p.parse_as_result(b"abcd");
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), "abc");
 
-    let result = p.parse(b"def");
+    let result = p.parse_as_result(b"def");
     assert!(result.is_ok());
   }
 
@@ -685,11 +686,11 @@ mod tests {
     init();
     let p = take_till1(|c| *c == b'c').convert(std::str::from_utf8);
 
-    let result = p.parse(b"abcd");
+    let result = p.parse_as_result(b"abcd");
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), "abc");
 
-    let result = p.parse(b"def");
+    let result = p.parse_as_result(b"def");
     assert!(result.is_err());
   }
 
@@ -698,10 +699,10 @@ mod tests {
     init();
     let p = seq(b"abc").discard();
 
-    let result = p.parse(b"abc");
+    let result = p.parse_as_result(b"abc");
     assert!(result.is_ok());
 
-    let result = p.parse(b"def");
+    let result = p.parse_as_result(b"def");
     assert!(result.is_err());
   }
 
@@ -712,7 +713,7 @@ mod tests {
     let pv2 = b'b';
     let p = elm_ref(pv1) + elm_ref(pv2);
 
-    let result = p.parse(b"ab").unwrap();
+    let result = p.parse_as_result(b"ab").unwrap();
     log::debug!("result = {:?}", result);
     let (a, b) = result;
     assert_eq!(*a, pv1);
@@ -728,7 +729,7 @@ mod tests {
     let p2 = elm_ref(pv2);
     let p = (p1 + p2).last_offset();
 
-    let result = p.parse(b"ab").unwrap();
+    let result = p.parse_as_result(b"ab").unwrap();
     log::debug!("result = {:?}", result);
     //  let (a, b) = result;
     //  assert_eq!(a, pv1);
@@ -743,7 +744,7 @@ mod tests {
       .collect()
       .map(|chars| String::from_iter(chars));
 
-    let result = p.parse(&input1).unwrap();
+    let result = p.parse_as_result(&input1).unwrap();
     log::debug!("result = {:?}", result);
   }
 
@@ -754,11 +755,11 @@ mod tests {
     let pv2 = b'b';
     let p = elm_ref(pv1) | elm_ref(pv2);
 
-    let result = p.parse(b"ab").unwrap();
+    let result = p.parse_as_result(b"ab").unwrap();
     log::debug!("result = {:?}", result);
     assert_eq!(*result, pv1);
 
-    let result = p.parse(b"ba").unwrap();
+    let result = p.parse_as_result(b"ba").unwrap();
     log::debug!("result = {:?}", result);
     assert_eq!(*result, pv2);
   }
@@ -770,7 +771,7 @@ mod tests {
     let pv2 = b'b';
     let p = elm_ref(pv1) * elm_ref(pv2);
 
-    let result = p.parse(b"ab").unwrap();
+    let result = p.parse_as_result(b"ab").unwrap();
     log::debug!("result = {:?}", result);
     assert_eq!(*result, pv2);
   }
@@ -784,7 +785,7 @@ mod tests {
     let p2 = elm_ref(pv2);
     let p = p1 - p2;
 
-    let result = p.parse(b"ab").unwrap();
+    let result = p.parse_as_result(b"ab").unwrap();
     log::debug!("result = {:?}", result);
     assert_eq!(*result, pv1);
   }
@@ -801,11 +802,11 @@ mod tests {
     let pd = elm_ref('d');
     let p = (pa + pb + (pc | pd)).collect().map(String::from_iter);
 
-    let result = p.parse(&input1).unwrap();
+    let result = p.parse_as_result(&input1).unwrap();
     log::debug!("result = {}", result);
     assert_eq!(result, "abc");
 
-    let result = p.parse(&input2).unwrap();
+    let result = p.parse_as_result(&input2).unwrap();
     log::debug!("result = {}", result);
     assert_eq!(result, "abd");
   }
@@ -817,7 +818,7 @@ mod tests {
     let input = "aname".chars().collect::<Vec<char>>();
     let p = (elm_ref('a') + tag("name")).collect().map(String::from_iter);
 
-    let result = p.parse(&input).unwrap();
+    let result = p.parse_as_result(&input).unwrap();
     // let s: String = result.iter().collect();
     log::debug!("result = {:?}", result);
     // assert_eq!(s, "aname");
@@ -829,14 +830,14 @@ mod tests {
       let input: Vec<char> = "abc def".chars().collect::<Vec<char>>();
       let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");
       let p2 = p1.with_filter(|chars| chars.len() > 1);
-      let result: Result<Vec<char>, ParseError<char>> = p2.parse(&input);
+      let result: Result<Vec<char>, ParseError<char>> = p2.parse_as_result(&input);
       assert!(result.is_err());
     }
     {
       let input: Vec<char> = "abc  def".chars().collect::<Vec<char>>();
       let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");
       let p2 = p1.with_filter(|chars| chars.len() > 1);
-      let result: Result<Vec<char>, ParseError<char>> = p2.parse(&input);
+      let result: Result<Vec<char>, ParseError<char>> = p2.parse_as_result(&input);
       assert!(result.is_ok());
     }
   }
@@ -847,14 +848,14 @@ mod tests {
       let input: Vec<char> = "abc def".chars().collect::<Vec<char>>();
       let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");
       let p2 = p1.with_filter_not(|chars| chars.len() > 1);
-      let result: Result<Vec<char>, ParseError<char>> = p2.parse(&input);
+      let result: Result<Vec<char>, ParseError<char>> = p2.parse_as_result(&input);
       assert!(result.is_ok());
     }
     {
       let input: Vec<char> = "abc  def".chars().collect::<Vec<char>>();
       let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");
       let p2 = p1.with_filter_not(|chars| chars.len() > 1);
-      let result: Result<Vec<char>, ParseError<char>> = p2.parse(&input);
+      let result: Result<Vec<char>, ParseError<char>> = p2.parse_as_result(&input);
       assert!(result.is_err());
     }
   }

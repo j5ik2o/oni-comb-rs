@@ -1,4 +1,4 @@
-use crate::core::{ParseError, ParseResult, ParseState, Parser, ParserRunner};
+use crate::core::{ParseResult, ParseState, Parser, ParserRunner};
 
 impl<'a, I, A> ParserRunner<'a> for Parser<'a, I, A> {
   type Input = I;
@@ -8,9 +8,9 @@ impl<'a, I, A> ParserRunner<'a> for Parser<'a, I, A> {
     X: 'm,
   = Parser<'m, X, Y>;
 
-  fn parse(&self, input: &'a [Self::Input]) -> Result<Self::Output, ParseError<'a, Self::Input>> {
+  fn parse(&self, input: &'a [Self::Input]) -> ParseResult<'a, Self::Input, Self::Output> {
     let parse_state = ParseState::new(input, 0);
-    self.run(&parse_state).extract()
+    self.run(&parse_state)
   }
 
   fn run(&self, param: &ParseState<'a, Self::Input>) -> ParseResult<'a, Self::Input, Self::Output> {

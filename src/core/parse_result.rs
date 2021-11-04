@@ -29,10 +29,17 @@ impl<'a, I, A> ParseResult<'a, I, A> {
     }
   }
 
-  pub fn extract(self) -> Result<A, ParseError<'a, I>> {
+  pub fn to_result(self) -> Result<A, ParseError<'a, I>> {
     match self {
       ParseResult::Failure { get: e, .. } => Err(e),
       ParseResult::Success { get: a, .. } => Ok(a),
+    }
+  }
+
+  pub fn to_option(self) -> Option<A> {
+    match self {
+      ParseResult::Failure { .. } => None,
+      ParseResult::Success { get: a, .. } => Some(a),
     }
   }
 
