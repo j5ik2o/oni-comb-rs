@@ -356,12 +356,13 @@ fn identifier<'a>() -> Parser<'a, char, Rc<Expr>> {
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
   let p = (lparen() * lazy(expression) - rparen())
-    | integer()
     | function_call()
     | labelled_call()
     | array_literal()
     | bool_literal()
-    | identifier();
+      | identifier()
+      | integer()
+      ;
   space() * p - space()
 }
 

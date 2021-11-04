@@ -44,7 +44,7 @@ impl ElementsParsers for ParsersImpl {
             let msg = format!("tag {:?} expect: {:?}, found: {}", tag, c, actual);
             let ps = parse_state.add_offset(index);
             let pe = ParseError::of_mismatch(input, ps.next_offset(), index, msg);
-            return ParseResult::failed(pe, i != 0);
+            return ParseResult::failed(pe, index != 0);
           }
         } else {
           return ParseResult::failed_with_un_commit(ParseError::of_in_complete());
@@ -67,7 +67,7 @@ impl ElementsParsers for ParsersImpl {
             let msg = format!("tag {:?} expect: {:?}, found: {}", tag, c, actual);
             let ps = parse_state.add_offset(index);
             let pe = ParseError::of_mismatch(input, ps.next_offset(), index, msg);
-            return ParseResult::failed_with_un_commit(pe);
+            return ParseResult::failed(pe, index != 0);
           }
         } else {
           return ParseResult::failed_with_un_commit(ParseError::of_in_complete());
