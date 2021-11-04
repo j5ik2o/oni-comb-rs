@@ -7,7 +7,7 @@ pub struct Parser<'a, I, A> {
   pub(crate) method: Rc<Parse<'a, I, A>>,
 }
 
-impl<'a, I, A: Clone> Clone for Parser<'a, I, A> {
+impl<'a, I, A> Clone for Parser<'a, I, A> {
   fn clone(&self) -> Self {
     Self {
       method: self.method.clone(),

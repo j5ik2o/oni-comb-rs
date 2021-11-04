@@ -121,7 +121,7 @@ fn main() {
   // env::set_var("RUST_LOG", "debug");
   // let _ = env_logger::builder().is_test(true).try_init();
   let s = "(((0.1 + -1.2) * -3.3) / 4.3) + 5.9";
-  let input = s.chars().into_iter().collect::<Vec<_>>();
+  let input = s.chars().collect::<Vec<_>>();
   let result = calculator().parse(&input).to_result().unwrap();
   println!("expr = {:?}", result);
   let n = eval(result.clone());
