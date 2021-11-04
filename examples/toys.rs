@@ -180,13 +180,8 @@ fn lines<'a>() -> Parser<'a, char, Vec<Rc<Expr>>> {
 }
 
 fn line<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let p = println().attempt()
-    | lazy(while_expr).attempt()
-    | lazy(if_expr).attempt()
-    | lazy(for_in_expr).attempt()
-    | assignment().attempt()
-    | expression_line().attempt()
-    | block_expr();
+  let p =
+    println() | lazy(while_expr) | lazy(if_expr) | lazy(for_in_expr) | assignment() | expression_line() | block_expr();
   space() * p - space()
 }
 
@@ -194,37 +189,42 @@ fn while_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
   let while_p = space() * tag("while") - space();
   let condition = while_p * lazy(expression).surround(lparen(), rparen());
   let p = (condition + lazy(line)).map(|(c, body)| Expr::of_while(c, body));
-  space() * p - space()
+  (space() * p - space()).attempt()
 }
 
 fn for_in_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let for_p = space() * tag("for") - space();
-  let in_p = space() * tag("in") - space();
-  let to_p = space() * tag("to") - space();
-  let p = (for_p - lparen() * ident() - in_p + lazy(expression) - to_p + lazy(expression) - rparen() + lazy(line)).map(
-    |(((name, from), to), body)| {
-      Expr::of_block(vec![
-        Expr::of_assignment(name.to_string(), from),
-        Expr::of_while(
-          Expr::of_less_than(Expr::of_symbol(name.to_string()), to),
-          Expr::of_block(vec![
-            body,
-            Expr::of_assignment(
-              name.to_string(),
-              Expr::of_add(Expr::of_symbol(name.to_string()), Expr::of_integer_literal(1)),
-            ),
-          ]),
-        ),
-      ])
-    },
-  );
-  space() * p - space()
+  let for_p = tag("for");
+  let in_p = tag("in");
+  let to_p = tag("to");
+
+  let params_p = (lparen().logging("lparen") * ident().logging("ident"))
+    + (in_p.logging("in") * expression().logging("in_expr ="))
+    + (to_p * expression())
+    - rparen();
+  let p0 = for_p.logging("for_p") * params_p.logging("params") + lazy(line);
+  let p = p0.logging("for_in").map(|(((name, from), to), body)| {
+    Expr::of_block(vec![
+      Expr::of_assignment(name.to_string(), from),
+      Expr::of_while(
+        Expr::of_less_than(Expr::of_symbol(name.to_string()), to),
+        Expr::of_block(vec![
+          body,
+          Expr::of_assignment(
+            name.to_string(),
+            Expr::of_add(Expr::of_symbol(name.to_string()), Expr::of_integer_literal(1)),
+          ),
+        ]),
+      ),
+    ])
+  });
+  (space() * p - space()).attempt()
 }
 
 fn if_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
   let condition = (space() * tag("if") - space()) * lparen() * expression() - rparen();
   let else_p = space() * tag("else") - space();
-  (condition + line() + (else_p * line()).opt()).map(|((p1, p2), p3)| Expr::of_if(p1, p2, p3))
+  let p = (condition + line() + (else_p * line()).opt()).map(|((p1, p2), p3)| Expr::of_if(p1, p2, p3));
+  (space() * p - space()).attempt()
 }
 
 fn block_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -235,11 +235,11 @@ fn block_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
 fn assignment<'a>() -> Parser<'a, char, Rc<Expr>> {
   let eq = space() * tag("=") - space();
   let p = (ident() - eq + expression() - semi_colon()).map(|(name, expr)| Expr::of_assignment(name, expr));
-  space() * p - space()
+  (space() * p - space()).attempt()
 }
 
 fn expression_line<'a>() -> Parser<'a, char, Rc<Expr>> {
-  space() * expression() - semi_colon() - space()
+  (space() * expression() - semi_colon() - space()).attempt()
 }
 
 fn expression<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -249,7 +249,7 @@ fn expression<'a>() -> Parser<'a, char, Rc<Expr>> {
 fn println<'a>() -> Parser<'a, char, Rc<Expr>> {
   let println_p = space() * tag("println") - space();
   let p = (println_p * lazy(expression).surround(lparen(), rparen()) - semi_colon()).map(Expr::of_println);
-  space() * p - space()
+  (space() * p - space()).attempt()
 }
 
 fn integer<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -315,14 +315,14 @@ fn comparative<'a>() -> Parser<'a, char, Rc<Expr>> {
 fn function_call<'a>() -> Parser<'a, char, Rc<Expr>> {
   let p = (ident() + lazy(expression).of_many0_sep(comma()).surround(lparen(), rparen()))
     .map(|(name, params)| Expr::of_function_call(name.to_string(), params));
-  space() * p - space()
+  (space() * p - space()).attempt()
 }
 
 fn labelled_call<'a>() -> Parser<'a, char, Rc<Expr>> {
   let param = (ident() - elm_ref('=') + lazy(expression)).map(|(label, param)| LabelledParameter::new(label, param));
-  let p =
-    (ident() + param.of_many1_sep(comma())).map(|(name, params)| Expr::of_labelled_call(name.to_string(), params));
-  space() * p - space()
+  let p = (ident() + param.of_many1_sep(comma()).surround(lbracket(), rbracket()))
+    .map(|(name, params)| Expr::of_labelled_call(name.to_string(), params));
+  (space() * p - space()).attempt()
 }
 
 fn true_literal<'a>() -> Parser<'a, char, &'a str> {
@@ -356,18 +356,97 @@ fn identifier<'a>() -> Parser<'a, char, Rc<Expr>> {
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
   let p = (lparen() * lazy(expression) - rparen())
-    | function_call().attempt()
-    | labelled_call().attempt()
-    | array_literal().attempt()
-    | bool_literal().attempt()
-    | identifier().attempt()
-    | integer();
+    | integer()
+    | function_call()
+    | labelled_call()
+    | array_literal()
+    | bool_literal()
+    | identifier();
   space() * p - space()
 }
 
 #[cfg(test)]
 mod test {
   use super::*;
+  use crate::LabelledParameter;
+  use std::env;
+
+  fn init() {
+    env::set_var("RUST_LOG", "debug");
+    let _ = env_logger::builder().is_test(true).try_init();
+  }
+
+  #[test]
+  fn test_example() {
+    let source = r#"
+    a = 1;
+    b = 2;
+    c = a + b;
+    println(c);
+    "#;
+    let input = source.chars().into_iter().collect::<Vec<_>>();
+    let result = lines().parse(&input).unwrap();
+    println!("{:?}", result);
+  }
+
+  #[test]
+  fn test_while() {
+    let source = r#"
+    while (1==2) { 1; }
+    "#;
+    let input = source.chars().into_iter().collect::<Vec<_>>();
+    let result = line().parse(&input).unwrap();
+    println!("{:?}", result);
+    if let Expr::While(cond, body) = &*result {
+      if let Expr::Binary(op, a, b) = &*(*cond) {
+        assert_eq!(*op, Operator::EqualEqual);
+        if let &Expr::IntegerLiteral(ai) = &*(*a) {
+          assert_eq!(ai, 1);
+        } else {
+          panic!("unexpected result");
+        }
+        if let &Expr::IntegerLiteral(bi) = &*(*b) {
+          assert_eq!(bi, 2);
+        } else {
+          panic!("unexpected result");
+        }
+      } else {
+        panic!("unexpected result");
+      }
+    } else {
+      panic!("unexpected result");
+    }
+  }
+
+  #[test]
+  fn test_for() {
+    init();
+    let source = r#"
+    for(i in 20 to 30) { 1; }
+    "#;
+    let input = source.chars().into_iter().collect::<Vec<_>>();
+    let result = for_in_expr().parse(&input).unwrap();
+    println!("{:?}", result);
+    // if let Expr::While(cond, body) = &*result {
+    //   if let Expr::Binary(op, a, b) = &*(*cond) {
+    //     assert_eq!(*op, Operator::EqualEqual);
+    //     if let &Expr::IntegerLiteral(ai) = &*(*a) {
+    //       assert_eq!(ai, 1);
+    //     } else {
+    //       panic!("unexpected result");
+    //     }
+    //     if let &Expr::IntegerLiteral(bi) = &*(*b) {
+    //       assert_eq!(bi, 2);
+    //     } else {
+    //       panic!("unexpected result");
+    //     }
+    //   } else {
+    //     panic!("unexpected result");
+    //   }
+    // } else {
+    //   panic!("unexpected result");
+    // }
+  }
 
   #[test]
   fn test_if() {
@@ -380,6 +459,47 @@ mod test {
     if let Expr::If(cond, body, ..) = &*result {
       if let Expr::Binary(op, a, b) = &*(*cond) {
         assert_eq!(*op, Operator::EqualEqual);
+        if let &Expr::IntegerLiteral(ai) = &*(*a) {
+          assert_eq!(ai, 1);
+        } else {
+          panic!("unexpected result");
+        }
+        if let &Expr::IntegerLiteral(bi) = &*(*b) {
+          assert_eq!(bi, 2);
+        } else {
+          panic!("unexpected result");
+        }
+      } else {
+        panic!("unexpected result");
+      }
+    } else {
+      panic!("unexpected result");
+    }
+  }
+
+  #[test]
+  fn test_if_2() {
+    let source = r#"
+    if (a==2) { 1; }
+    "#;
+    let input = source.chars().into_iter().collect::<Vec<_>>();
+    let result = line().parse(&input).unwrap();
+    println!("{:?}", result);
+    if let Expr::If(cond, body, ..) = &*result {
+      if let Expr::Binary(op, a, b) = &*(*cond) {
+        assert_eq!(*op, Operator::EqualEqual);
+        if let Expr::Symbol(a) = &*(*a) {
+          assert_eq!(a, "a");
+        } else {
+          panic!("unexpected result");
+        }
+        if let &Expr::IntegerLiteral(bi) = &*(*b) {
+          assert_eq!(bi, 2);
+        } else {
+          panic!("unexpected result");
+        }
+      } else {
+        panic!("unexpected result");
       }
     } else {
       panic!("unexpected result");
@@ -398,6 +518,8 @@ mod test {
       assert_eq!(name, "i");
       if let &Expr::IntegerLiteral(i) = &*(*expr) {
         assert_eq!(i, 1);
+      } else {
+        panic!("unexpected result");
       }
     } else {
       panic!("unexpected result");
@@ -415,6 +537,31 @@ mod test {
     if let &Expr::Println(ref expr) = &*result {
       if let &Expr::IntegerLiteral(i) = &*(*expr) {
         assert_eq!(i, 10);
+      } else {
+        panic!("unexpected result");
+      }
+    } else {
+      panic!("unexpected result");
+    }
+  }
+
+  #[test]
+  fn test_primary_labelled_call_args_1() {
+    let source = r#"
+    abc[n = 5]
+    "#;
+    let input = source.chars().into_iter().collect::<Vec<_>>();
+    let result = primary().parse(&input).unwrap();
+    println!("{:?}", result);
+    if let Expr::LabelledCall(func_name, args) = &*result {
+      assert_eq!(func_name, "abc");
+      if let LabelledParameter { name, parameter } = &args[0] {
+        assert_eq!(name, "n");
+        if let &Expr::IntegerLiteral(i) = &*(*parameter) {
+          assert_eq!(i, 5);
+        } else {
+          panic!("unexpected result");
+        }
       } else {
         panic!("unexpected result");
       }

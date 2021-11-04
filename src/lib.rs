@@ -443,6 +443,15 @@ mod tests {
 
     let r = p.parse(&input2);
     assert!(r.is_err());
+
+    {
+      let input3 = "12345 to".chars().collect::<Vec<_>>();
+      let p = regex(Regex::new(r"\d+").unwrap());
+      let r = p.parse(&input3);
+      println!("{:?}", r);
+      assert!(r.is_ok());
+      // assert_eq!(r.unwrap(), "abc");
+    }
   }
 
   #[test]

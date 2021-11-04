@@ -1,8 +1,20 @@
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 use crate::core::Parsers;
 
 pub trait OperatorParsers: Parsers {
+  fn logging<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str) -> Self::P<'a, I, A>
+  where
+    A: Debug + 'a, {
+    Self::logging_map(parser, name, move |a| format!("{:?}", a))
+  }
+
+  fn logging_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, name: &'a str, f: F) -> Self::P<'a, I, A>
+  where
+    F: Fn(&A) -> B + 'a,
+    A: Debug + 'a,
+    B: Display + 'a;
+
   fn not<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
   where
     A: Debug + 'a;

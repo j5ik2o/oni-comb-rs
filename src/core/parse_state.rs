@@ -22,12 +22,12 @@ impl<'a, I> ParseState<'a, I> {
   }
 
   pub fn add_offset(&self, num_chars: usize) -> ParseState<'a, I> {
-    log::debug!(
-      "len = {}, offset = {}, num_chars = {}",
-      self.input.len(),
-      self.offset,
-      num_chars
-    );
+    // log::debug!(
+    //   "len = {}, offset = {}, num_chars = {}",
+    //   self.input.len(),
+    //   self.offset,
+    //   num_chars
+    // );
     Self::new(self.input, self.offset + num_chars)
   }
 

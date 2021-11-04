@@ -92,7 +92,7 @@ impl ElementsParsers for ParsersImpl {
           return ParseResult::failed_with_un_commit(pe);
         }
       } else {
-        log::debug!("regex: failed");
+        // log::debug!("regex: failed, '{}'", str);
         return ParseResult::failed_with_un_commit(ParseError::of_in_complete());
       }
     })

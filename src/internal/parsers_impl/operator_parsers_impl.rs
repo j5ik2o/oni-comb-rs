@@ -1,13 +1,24 @@
 use crate::core::ParseError;
 use crate::core::ParserRunner;
 use crate::core::{ParseResult, Parsers};
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 use crate::core::Parser;
 use crate::extension::parsers::OperatorParsers;
 use crate::internal::ParsersImpl;
 
 impl OperatorParsers for ParsersImpl {
+  fn logging_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, name: &'a str, f: F) -> Self::P<'a, I, A>
+  where
+    F: Fn(&A) -> B + 'a,
+    A: Debug + 'a,
+    B: Display + 'a, {
+    Self::map(parser, move |a| {
+      log::debug!("{} = {}", name, f(&a));
+      a
+    })
+  }
+
   fn not<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
   where
     A: 'a, {
@@ -44,19 +55,19 @@ impl OperatorParsers for ParsersImpl {
   where
     A: Clone + 'a,
     B: Clone + 'a, {
-    Self::flat_map(parser1, move |a| Self::map(parser2.clone(), move |b| (a.clone(), b)))
-    // Parser::new(move |parse_state| match parser1.run(parse_state) {
-    //   ParseResult::Success { get: r1, length: n1 } => {
-    //     let ps = parse_state.add_offset(n1);
-    //     (match parser2.run(&ps) {
-    //       ParseResult::Success { get: r2, length: n2 } => ParseResult::successful((r1, r2), n2),
-    //       ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
-    //     })
-    //     .with_committed_fallback(n1 != 0)
-    //     .with_add_length(n1)
-    //   }
-    //   ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
-    // })
+    // Self::flat_map(parser1, move |a| Self::map(parser2.clone(), move |b| (a.clone(), b)))
+    Parser::new(move |parse_state| match parser1.run(parse_state) {
+      ParseResult::Success { get: r1, length: n1 } => {
+        let ps = parse_state.add_offset(n1);
+        (match parser2.run(&ps) {
+          ParseResult::Success { get: r2, length: n2 } => ParseResult::successful((r1, r2), n2),
+          ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+        })
+        .with_committed_fallback(n1 != 0)
+        .with_add_length(n1)
+      }
+      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+    })
   }
 
   fn attempt<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
