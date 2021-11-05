@@ -1,8 +1,45 @@
+use env_logger::Env;
 use oni_comb_rs::core::{Parser, ParserFunctor, ParserRunner};
 use oni_comb_rs::extension::parser::{ConversionParser, DiscardParser, OperatorParser, RepeatParser, SkipParser};
 use oni_comb_rs::prelude::*;
 use regex::Regex;
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::iter::Map;
 use std::rc::Rc;
+
+#[derive(Debug, Clone)]
+pub struct Environment {
+  bindings: HashMap<String, i64>,
+  next: Option<Rc<Environment>>,
+}
+
+impl Environment {
+  pub fn as_bindings_mut(&mut self) -> &HashMap<String, i64> {
+    &mut self.bindings
+  }
+
+  pub fn as_bindings(&self) -> &HashMap<String, i64> {
+    &self.bindings
+  }
+
+  pub fn find_binding(&self, name: &str) -> Option<&HashMap<String, i64>> {
+    match self.bindings.get(name) {
+      Some(_) => Some(&self.bindings),
+      None => match &self.next {
+        Some(n) => {
+          let r = (*n).find_binding(name);
+          r
+        }
+        None => None,
+      },
+    }
+  }
+
+  pub fn new(bindings: HashMap<String, i64>, next: Option<Rc<Environment>>) -> Environment {
+    Self { bindings, next }
+  }
+}
 
 #[derive(Clone, Debug, PartialEq)]
 enum Operator {
@@ -197,7 +234,7 @@ fn for_in_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
     + expression()
     - space()
     - rparen();
-  let p0 = tag("for") * params_p.logging("params") + lazy(line);
+  let p0 = (tag("for") - space()) * params_p.logging("params") + lazy(line);
   let p = p0.map(|(((name, from), to), body)| {
     Expr::of_block(vec![
       Expr::of_assignment(name.to_string(), from),
@@ -231,7 +268,7 @@ fn block_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
 fn assignment<'a>() -> Parser<'a, char, Rc<Expr>> {
   let eq = space() * tag("=") - space();
   let p = (ident() - eq + expression() - semi_colon()).map(|(name, expr)| Expr::of_assignment(name, expr));
-  p.attempt()
+  (space() * p - space()).attempt()
 }
 
 fn expression_line<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -245,14 +282,14 @@ fn expression<'a>() -> Parser<'a, char, Rc<Expr>> {
 fn println<'a>() -> Parser<'a, char, Rc<Expr>> {
   let println_p = tag("println");
   let p = (println_p * lazy(expression).surround(lparen(), rparen()) - semi_colon()).map(Expr::of_println);
-  p.attempt()
+  (space() * p - space()).attempt()
 }
 
 fn integer<'a>() -> Parser<'a, char, Rc<Expr>> {
   let p = regex(Regex::new(r#"^-?\d+"#).unwrap())
     .convert(|s| s.parse::<i64>())
     .map(Expr::of_integer_literal);
-  p
+  space() * p - space()
 }
 
 fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -260,8 +297,8 @@ fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
   let slash = elm_ref('/');
 
   let p = chain_left1(
-    primary(),
-    (space() * (aster | slash) - space()).map(|e| match e {
+    primary().logging("primary"),
+    (space() * (aster | slash) - space()).logging("operator").map(|e| match e {
       '*' => Expr::of_multiply,
       '/' => Expr::of_divide,
       _ => panic!("unexpected operator"),
@@ -311,16 +348,16 @@ fn comparative<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn function_call<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let p = (space() * ident() + lazy(expression).of_many0_sep(comma()).surround(lparen(), rparen()) - space())
+  let p = (ident() + lazy(expression).of_many0_sep(comma()).surround(lparen(), rparen()))
     .map(|(name, params)| Expr::of_function_call(name.to_string(), params));
-  p.attempt()
+  (space() * p - space()).attempt()
 }
 
 fn labelled_call<'a>() -> Parser<'a, char, Rc<Expr>> {
   let param = (ident() - elm_ref('=') + lazy(expression)).map(|(label, param)| LabelledParameter::new(label, param));
-  let p = (space() * ident() + param.of_many1_sep(comma()).surround(lbracket(), rbracket()) - space())
+  let p = (ident() + param.of_many1_sep(comma()).surround(lbracket(), rbracket()))
     .map(|(name, params)| Expr::of_labelled_call(name.to_string(), params));
-  p.attempt()
+  (space() * p - space()).attempt()
 }
 
 fn array_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -332,11 +369,12 @@ fn array_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn bool_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
-  (space() * (tag("true").attempt() | tag("false")) - space()).map(|e| match e {
+  let p = (tag("true").attempt() | tag("false")).map(|e| match e {
     "true" => Expr::of_bool_literal(true),
     "false" => Expr::of_bool_literal(false),
     _ => panic!("unexpected token"),
-  })
+  });
+  space() * p - space()
 }
 
 fn ident<'a>() -> Parser<'a, char, String> {
@@ -350,12 +388,7 @@ fn identifier<'a>() -> Parser<'a, char, Rc<Expr>> {
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
   let expr = (lparen() * lazy(expression) - rparen());
-  let p = expr.attempt().logging("expr")
-    | integer().logging("integer")
-    | (function_call().logging("function_call") | labelled_call().logging("labelled_call"))
-    | array_literal().logging("array_literal")
-    | bool_literal().logging("bool_literal")
-    | identifier().logging("identifier");
+  let p = expr.logging("expr") | integer() | function_call() | labelled_call() | array_literal() | bool_literal() | identifier();
   p
 }
 
@@ -375,7 +408,6 @@ mod test {
     let source = r"a=1;b=2;c=a+b;println(c);";
     let input = source.chars().collect::<Vec<_>>();
     let result = lines().parse_as_result(&input).unwrap();
-    println!("{:?}", result);
   }
 
   #[test]
@@ -491,10 +523,12 @@ mod test {
 
   #[test]
   fn test_println() {
-    let source = r"println(10);";
+    let source = r"println((1+2)+3);";
     let input = source.chars().collect::<Vec<_>>();
     let result = line().parse_as_result(&input).unwrap();
-    assert_eq!(Expr::Println(Rc::new(Expr::IntegerLiteral(10))), *result);
+    println!("{:?}", result);
+    // assert_eq!(Expr::Println(Rc::new(Expr::IntegerLiteral(10))), *result);
+    Interpreter::new().interpret(result);
   }
 
   #[test]
@@ -504,7 +538,6 @@ mod test {
     "#;
     let input = source.chars().collect::<Vec<_>>();
     let result = labelled_call().parse_as_result(&input).unwrap();
-    println!("{:?}", result);
     assert_eq!(
       Expr::LabelledCall(
         "abc".to_string(),
@@ -519,10 +552,11 @@ mod test {
 
   #[test]
   fn test_primary_function_call_args_0() {
-    let source = r"abc();";
+    let source = r#"
+    abc();
+    "#;
     let input = source.chars().collect::<Vec<_>>();
     let result = function_call().parse_as_result(&input).unwrap();
-    println!("{:?}", result);
     assert_eq!(Expr::FunctionCall("abc".to_string(), vec![]), *result);
   }
 
@@ -533,7 +567,6 @@ mod test {
     "#;
     let input = source.chars().collect::<Vec<_>>();
     let result = function_call().parse_as_result(&input).unwrap();
-    println!("{:?}", result);
     assert_eq!(
       Expr::FunctionCall("abc".to_string(), vec![Rc::new(Expr::IntegerLiteral(1))]),
       *result
@@ -542,10 +575,11 @@ mod test {
 
   #[test]
   fn test_primary_function_call_args_2() {
-    let source = r"abc(1,2);";
+    let source = r#"
+    abc(1,2);
+    "#;
     let input = source.chars().collect::<Vec<_>>();
     let result = function_call().parse_as_result(&input).unwrap();
-    println!("{:?}", result);
     assert_eq!(
       Expr::FunctionCall(
         "abc".to_string(),
@@ -560,7 +594,6 @@ mod test {
     let source = r"true";
     let input = source.chars().collect::<Vec<_>>();
     let result = bool_literal().parse_as_result(&input).unwrap();
-    println!("{:?}", result);
     assert_eq!(Expr::BoolLiteral(true), *result);
   }
 
@@ -569,7 +602,6 @@ mod test {
     let source = r"false";
     let input = source.chars().collect::<Vec<_>>();
     let result = bool_literal().parse_as_result(&input).unwrap();
-    println!("{:?}", result);
     assert_eq!(Expr::BoolLiteral(false), *result);
   }
 
@@ -578,7 +610,6 @@ mod test {
     let source = r"[]";
     let input = source.chars().collect::<Vec<_>>();
     let result = array_literal().parse_as_result(&input).unwrap();
-    println!("{:?}", result);
     assert_eq!(Expr::ArrayLiteral(vec![]), *result);
   }
 
@@ -587,13 +618,14 @@ mod test {
     let source = r"[1]";
     let input = source.chars().collect::<Vec<_>>();
     let result = array_literal().parse_as_result(&input).unwrap();
-    println!("{:?}", result);
     assert_eq!(Expr::ArrayLiteral(vec![Rc::new(Expr::IntegerLiteral(1))]), *result);
   }
 
   #[test]
   fn test_primary_bool_array_2() {
-    let source = r"[1,2]";
+    let source = r#"
+    [1,2]
+    "#;
     let input = source.chars().collect::<Vec<_>>();
     let result = array_literal().parse_as_result(&input).unwrap();
     assert_eq!(
@@ -604,7 +636,9 @@ mod test {
 
   #[test]
   fn test_primary_integer() {
-    let source = r"10";
+    let source = r#"
+    10
+    "#;
     let input = source.chars().collect::<Vec<_>>();
     let result = integer().parse_as_result(&input).unwrap();
     assert_eq!(Expr::IntegerLiteral(10), *result);
@@ -622,9 +656,11 @@ mod test {
   #[test]
   fn test_multitive() {
     init();
-    let source = r"1/2";
+    let source = r"(1/2)/1";
     let input = source.chars().collect::<Vec<_>>();
-    let result = multitive().parse_as_result(&input).unwrap();
+    println!("start");
+
+    let result = expression().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     assert_eq!(
       Expr::Binary(
@@ -719,6 +755,159 @@ fn semi_colon<'a>() -> Parser<'a, char, &'a str> {
 
 fn space<'a>() -> Parser<'a, char, ()> {
   elm_of(" \t\r\n").of_many0().discard()
+}
+
+struct Interpreter {
+  variable_environment: Environment,
+  function_environment: HashMap<String, Rc<Expr>>,
+}
+
+impl Interpreter {
+  pub fn new() -> Self {
+    Self {
+      variable_environment: Environment::new(HashMap::new(), None),
+      function_environment: HashMap::new(),
+    }
+  }
+
+  pub fn reset(&mut self) {
+    self.variable_environment = Environment::new(HashMap::new(), None);
+    self.function_environment.clear();
+  }
+
+  pub fn get_value(&self, name: &str) -> &i64 {
+    self.variable_environment.as_bindings().get(name).unwrap()
+  }
+
+  pub fn interpret(&mut self, expr: Rc<Expr>) -> i64 {
+    match &*expr {
+      Expr::Binary(op, lhs, rhs) => {
+        let lhs = self.interpret(lhs.clone());
+        let rhs = self.interpret(rhs.clone());
+        match op {
+          Operator::Add => lhs + rhs,
+          Operator::Subtract => lhs - rhs,
+          Operator::Multiply => lhs * rhs,
+          Operator::Divide => lhs / rhs,
+          Operator::LessThan => {
+            if lhs < rhs {
+              1
+            } else {
+              0
+            }
+          }
+          Operator::LessOrEqual => {
+            if lhs <= rhs {
+              1
+            } else {
+              0
+            }
+          }
+          Operator::GreaterThan => {
+            if lhs > rhs {
+              1
+            } else {
+              0
+            }
+          }
+          Operator::GreaterOrEqual => {
+            if lhs >= rhs {
+              1
+            } else {
+              0
+            }
+          }
+          Operator::EqualEqual => {
+            if lhs == rhs {
+              1
+            } else {
+              0
+            }
+          }
+          Operator::NotEqual => {
+            if lhs != rhs {
+              1
+            } else {
+              0
+            }
+          }
+        }
+      }
+      Expr::IntegerLiteral(value) => *value,
+      Expr::Symbol(name) => {
+        let bindings_opt = self.variable_environment.find_binding(name);
+        let v = bindings_opt.unwrap().get(name).unwrap();
+        *v
+      }
+      Expr::FunctionCall(name, actual_params) => {
+        if let Expr::FunctionDefinition(def_name, formal_parmas, body) = &*self.function_environment.get(name).unwrap().clone() {
+          let values = actual_params.iter().map(|actual_param| self.interpret(actual_param.clone())).collect::<Vec<_>>();
+          let backup = self.variable_environment.clone();
+          self.variable_environment = Environment::new(HashMap::new(), Some(Rc::new(backup.clone())));
+          let mut i = 0;
+          for formal_param_name in formal_parmas {
+            let mut bindings = self.variable_environment.as_bindings().clone();
+            bindings.insert(formal_param_name.clone(), values[i]);
+            i += 1;
+          }
+          let result = self.interpret(body.clone());
+          self.variable_environment = backup.clone();
+          result
+        } else {
+          panic!("Function {} not defined", name);
+        }
+      }
+      Expr::Assignment(name, expr) => {
+        let bindings_opt = self.variable_environment.find_binding(name);
+        if bindings_opt.is_some() {
+          let value = self.interpret(expr.clone());
+          let mut bindings = self.variable_environment.as_bindings().clone();
+          let r = bindings.get_mut(name).unwrap();
+          *r = value;
+          self.variable_environment = Environment::new(bindings, self.variable_environment.next.clone());
+          value
+        } else {
+          let value = self.interpret(expr.clone());
+          let mut bindings = self.variable_environment.as_bindings().clone();
+          bindings.insert(name.clone(), value);
+          self.variable_environment = Environment::new(bindings, self.variable_environment.next.clone());
+          value
+        }
+      }
+      Expr::Block(exprs) => {
+        let mut value = 0;
+        for expr in exprs {
+          value = self.interpret(expr.clone());
+        }
+        value
+      }
+      Expr::Println(args) => {
+        let value = self.interpret(args.clone());
+        println!("{}", value);
+        value
+      },
+      Expr::If(condition, body, else_body) => {
+        let cond = self.interpret(condition.clone());
+        if cond != 0 {
+          self.interpret(body.clone())
+        } else {
+          else_body.as_ref().map(|e| self.interpret(e.clone())).unwrap_or(1)
+        }
+      }
+      Expr::While(cond, body) => {
+        loop {
+          let condition = self.interpret(cond.clone());
+          if condition != 0 {
+            self.interpret(body.clone());
+          } else {
+            break;
+          }
+        }
+        1
+      }
+      _ => panic!("must not reach here"),
+    }
+  }
 }
 
 fn main() {}

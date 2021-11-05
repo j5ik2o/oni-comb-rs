@@ -102,17 +102,23 @@ impl OperatorParsers for ParsersImpl {
       let mut cur_x = x.clone();
       let mut len = 0;
       loop {
+        log::debug!("curr: x = {:?}", x);
         match op.run(&ps) {
           ParseResult::Success { get: f, length: n1 } => {
             ps = parse_state.add_offset(n1);
             match p.run(&ps) {
               ParseResult::Success { get: y, length: n2 } => {
                 ps = ps.add_offset(n2);
-                cur_x = f(x.clone(), y);
+                let new_x = x.clone();
+                log::debug!("next: x = {:?}, y = {:?}", new_x, y);
+                cur_x = f(new_x, y);
                 len += n1 + n2;
                 continue;
               }
-              ParseResult::Failure { .. } => return ParseResult::successful(cur_x.clone(), len),
+              ParseResult::Failure { .. } => {
+                log::debug!("failure");
+                return ParseResult::successful(cur_x.clone(), len)
+              },
             }
           }
           ParseResult::Failure { .. } => return ParseResult::successful(cur_x.clone(), len),
