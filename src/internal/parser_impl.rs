@@ -3,6 +3,7 @@ mod bitor_impl;
 mod collect_parser_impl;
 mod conversion_parser_impl;
 mod discard_parser_impl;
+mod logging_parser_impl;
 mod mul_parser_impl;
 mod not_impl;
 mod offset_parser_impl;

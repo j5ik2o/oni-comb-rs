@@ -2,11 +2,6 @@ use crate::core::ParserRunner;
 use std::fmt::Debug;
 
 pub trait OperatorParser<'a>: ParserRunner<'a> {
-  fn logging(self, name: &'a str) -> Self::P<'a, Self::Input, Self::Output>
-  where
-    Self::Input: Debug,
-    Self::Output: Debug + 'a;
-
   fn and_then<B>(self, other: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, (Self::Output, B)>
   where
     Self::Output: Clone + Debug + 'a,
