@@ -26,8 +26,8 @@ pub mod prelude {
     ElementParsers, ElementsParsers, LazyParsers, OperatorParsers, PrimitiveParsers, SkipParsers, TakenParsers,
   };
 
-  pub fn regex<'a>(regex: Regex) -> Parser<'a, char, String> {
-    ParsersImpl::regex(regex)
+  pub fn regex<'a>(pattern: &str) -> Parser<'a, char, String> {
+    ParsersImpl::regex(pattern)
   }
 
   pub fn lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>

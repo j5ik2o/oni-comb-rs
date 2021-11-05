@@ -4,6 +4,7 @@ use crate::internal::ParsersImpl;
 use regex::Regex;
 use std::fmt::Debug;
 use std::iter::FromIterator;
+use crate::utils::Set;
 
 impl ElementsParsers for ParsersImpl {
   fn seq<'a, 'b, I>(tag: &'b [I]) -> Self::P<'a, I, &'a [I]>
@@ -78,7 +79,14 @@ impl ElementsParsers for ParsersImpl {
     })
   }
 
-  fn regex<'a>(regex: Regex) -> Self::P<'a, char, String> {
+  fn regex<'a>(pattern: &str) -> Self::P<'a, char, String> {
+    let pattern = if !pattern.starts_with("^") {
+      log::debug!("append: ^");
+      format!("^{}", pattern)
+    } else {
+      pattern.to_string()
+    };
+    let regex = Regex::new(&pattern).unwrap();
     Parser::new(move |parse_state| {
       let input: &[char] = parse_state.input();
       log::debug!("regex: input = {:?}", input);

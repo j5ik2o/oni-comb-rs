@@ -283,7 +283,7 @@ fn println<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn integer<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let p = regex(Regex::new(r#"^-?\d+"#).unwrap())
+  let p = regex(r#"^-?\d+"#)
     .convert(|s| s.parse::<i64>())
     .map(Expr::of_integer_literal);
   space() * p - space()
@@ -414,7 +414,7 @@ fn bool_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn ident<'a>() -> Parser<'a, char, String> {
-  regex(Regex::new(r"[a-zA-Z_][a-zA-Z0-9_]*").unwrap())
+  regex(r"[a-zA-Z_][a-zA-Z0-9_]*")
 }
 
 fn identifier<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -447,6 +447,7 @@ mod test {
 
   #[test]
   fn test_example() {
+    init();
     let source = r"a=1;b=2;c=a+b;println(c);";
     let input = source.chars().collect::<Vec<_>>();
     let result = lines().parse_as_result(&input).unwrap();
