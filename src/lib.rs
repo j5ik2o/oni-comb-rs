@@ -55,9 +55,9 @@ pub mod prelude {
   }
 
   pub fn failed<'a, I, A>(value: ParseError<'a, I>) -> Parser<'a, I, A>
-    where
-        I: Clone + 'a,
-        A: 'a, {
+  where
+    I: Clone + 'a,
+    A: 'a, {
     ParsersImpl::failed(value)
   }
 
