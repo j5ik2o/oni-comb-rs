@@ -7,6 +7,7 @@ mod discard_parsers_impl;
 mod element_parsers_impl;
 mod elements_parsers_impl;
 mod lazy_parsers_impl;
+mod logging_parsers_impl;
 mod offset_parsers_impl;
 mod operator_parsers_impl;
 mod primitive_parsers_impl;

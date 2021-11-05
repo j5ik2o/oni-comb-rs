@@ -776,7 +776,7 @@ impl Interpreter {
       Expr::Program(definitions) => {
         for top_level in definitions {
           match &**top_level {
-            Expr::GlobalVariableDefinition(name , expr) => {
+            Expr::GlobalVariableDefinition(name, expr) => {
               let mut bindings = self.variable_environment.as_bindings().clone();
               bindings.insert(name.clone(), self.interpret(expr.clone()));
             }
@@ -788,12 +788,10 @@ impl Interpreter {
         }
         let main_function = self.function_environment.get("main");
         match main_function {
-          Some(mf) =>
-            match &**mf {
-              Expr::FunctionDefinition(_, _, body) =>
-                self.interpret(body.clone()),
-              _ => panic!("unexpected main function expression"),
-            }
+          Some(mf) => match &**mf {
+            Expr::FunctionDefinition(_, _, body) => self.interpret(body.clone()),
+            _ => panic!("unexpected main function expression"),
+          },
           None => panic!("No main function found"),
         }
       }
