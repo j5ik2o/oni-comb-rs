@@ -940,10 +940,15 @@ impl Interpreter {
 
 fn main() {
   let source = r#"
-    define aaaa() {
-      x = 1;
+    define sub(i) {
+      if (i > 3) {
+        println(i);
+      }
     }
     define main() {
+      for(i in 1 to 10) {
+        sub(i);
+      }
       a = 1;
       b = 2;
       c = a + b;
