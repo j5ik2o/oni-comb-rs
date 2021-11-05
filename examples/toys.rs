@@ -191,7 +191,7 @@ fn top_level_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn function_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let define_p = space() * tag("define") - space();
+  let define_p = space() * tag("define") * space() * ident() - space();
   let def_args_p = ident().of_many0_sep(comma()).surround(lparen(), rparen());
   let p = (define_p + def_args_p + block_expr())
     .map(|((name, args), body)| Expr::of_function_definition(name.to_string(), args, body));
@@ -287,43 +287,6 @@ fn integer<'a>() -> Parser<'a, char, Rc<Expr>> {
   space() * p - space()
 }
 
-// fn additive<'a>() -> Parser<'a, char, Rc<Expr>> {
-//   multitive().flat_map(additive_rest)
-// }
-//
-// fn additive_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
-//   let v1 = a.clone();
-//   let v2 = a.clone();
-//   let v3 = a.clone();
-//   let add_parser = add() * unary().flat_map(move |b| additive_rest(Expr::of_add(v1.clone(), b.clone())));
-//   let sub_parser = sub() * unary().flat_map(move |b| additive_rest(Expr::of_subtract(v2.clone(), b.clone())));
-//   add_parser.attempt() | sub_parser.attempt() | empty().map(move |_| v3.clone())
-// }
-//
-// fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
-//   unary().flat_map(multitive_rest)
-// }
-//
-// fn multitive_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
-//   let v1 = a.clone();
-//   let v2 = a.clone();
-//   let v3 = a.clone();
-//   let mul_parser = mul() * unary().flat_map(move |b| multitive_rest(Expr::of_multiply(v1.clone(), b.clone())));
-//   let div_parser = div() * unary().flat_map(move |b| multitive_rest(Expr::of_divide(v2.clone(), b.clone())));
-//   mul_parser.attempt() | div_parser.attempt() | empty().map(move |_| v3.clone())
-// }
-//
-// fn unary<'a>() -> Parser<'a, char, Rc<Expr>> {
-//   let unary_parser = ((elm_ref('+') | elm_ref('-')) + lazy(unary))
-//     .map(|(c, expr): (&char, Rc<Expr>)| match c {
-//       '-' => Expr::Minus(Rc::clone(&expr)),
-//       '+' => Expr::Plus(Rc::clone(&expr)),
-//       _ => panic!(),
-//     })
-//     .map(Rc::new);
-//   unary_parser | primary()
-// }
-
 fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
   let aster = elm_ref('*');
   let slash = elm_ref('/');
@@ -412,7 +375,7 @@ fn bool_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn ident<'a>() -> Parser<'a, char, String> {
-  regex(r"[a-zA-Z_][a-zA-Z0-9_]*")
+  space() * regex(r"[a-zA-Z_][a-zA-Z0-9_]*") - space()
 }
 
 fn identifier<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -440,9 +403,18 @@ mod test {
   #[test]
   fn test_example() {
     init();
-    let source = r"a=1;b=2;c=a+b;println(c);";
+    let source = r#"
+    {
+      a = 1;
+      b = 2;
+      c = a + b;
+      println(c);
+    }
+    "#;
     let input = source.chars().collect::<Vec<_>>();
-    let result = lines().parse_as_result(&input).unwrap();
+    let result = line().parse_as_result(&input).unwrap();
+    println!("{:?}", result);
+    Interpreter::new().interpret(result);
   }
 
   #[test]
@@ -514,35 +486,6 @@ mod test {
       *result
     );
   }
-
-  // #[test]
-  // fn test_if_2() {
-  //   let source = r#"
-  //   if (a==2) { 1; }
-  //   "#;
-  //   let input = source.chars().collect::<Vec<_>>();
-  //   let result = if_expr().parse(&input).unwrap();
-  //   println!("{:?}", result);
-  //   if let Expr::If(cond, body, ..) = &*result {
-  //     if let Expr::Binary(op, a, b) = &*(*cond) {
-  //       assert_eq!(*op, Operator::EqualEqual);
-  //       if let Expr::Symbol(a) = &*(*a) {
-  //         assert_eq!(a, "a");
-  //       } else {
-  //         panic!("unexpected result");
-  //       }
-  //       if let &Expr::IntegerLiteral(bi) = &*(*b) {
-  //         assert_eq!(bi, 2);
-  //       } else {
-  //         panic!("unexpected result");
-  //       }
-  //     } else {
-  //       panic!("unexpected result");
-  //     }
-  //   } else {
-  //     panic!("unexpected result");
-  //   }
-  // }
 
   #[test]
   fn test_assignment() {
@@ -828,6 +771,36 @@ impl Interpreter {
     self.variable_environment.as_bindings().get(name).unwrap()
   }
 
+  pub fn call_main(&mut self, expr: Rc<Expr>) -> i64 {
+    match &*expr {
+      Expr::Program(definitions) => {
+        for top_level in definitions {
+          match &**top_level {
+            Expr::GlobalVariableDefinition(name , expr) => {
+              let mut bindings = self.variable_environment.as_bindings().clone();
+              bindings.insert(name.clone(), self.interpret(expr.clone()));
+            }
+            Expr::FunctionDefinition(name, ..) => {
+              self.function_environment.insert(name.clone(), top_level.clone());
+            }
+            _ => panic!("unexpected top level expression"),
+          }
+        }
+        let main_function = self.function_environment.get("main");
+        match main_function {
+          Some(mf) =>
+            match &**mf {
+              Expr::FunctionDefinition(_, _, body) =>
+                self.interpret(body.clone()),
+              _ => panic!("unexpected main function expression"),
+            }
+          None => panic!("No main function found"),
+        }
+      }
+      _ => panic!("main is not a function"),
+    }
+  }
+
   pub fn interpret(&mut self, expr: Rc<Expr>) -> i64 {
     match &*expr {
       Expr::Binary(op, lhs, rhs) => {
@@ -965,4 +938,17 @@ impl Interpreter {
   }
 }
 
-fn main() {}
+fn main() {
+  let source = r#"
+    define main() {
+      a = 1;
+      b = 2;
+      c = a + b;
+      println(c);
+    }
+    "#;
+  let input = source.chars().collect::<Vec<_>>();
+  let result = program().parse_as_result(&input).unwrap();
+  println!("{:?}", result);
+  Interpreter::new().call_main(result);
+}

@@ -80,7 +80,6 @@ impl ElementsParsers for ParsersImpl {
 
   fn regex<'a>(pattern: &str) -> Self::P<'a, char, String> {
     let pattern = if !pattern.starts_with("^") {
-      log::debug!("append: ^");
       format!("^{}", pattern)
     } else {
       pattern.to_string()
