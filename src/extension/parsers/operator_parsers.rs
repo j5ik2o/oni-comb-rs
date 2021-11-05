@@ -13,7 +13,7 @@ pub trait OperatorParsers: Parsers {
   fn logging_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, name: &'a str, f: F) -> Self::P<'a, I, A>
   where
     F: Fn(&ParseResult<'a, I, A>) -> B + 'a,
-  I: Debug,
+    I: Debug,
     A: Debug + 'a,
     B: Display + 'a;
 

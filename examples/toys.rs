@@ -18,7 +18,7 @@ enum Operator {
   NotEqual,       // !=
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 enum Expr {
   Binary(Operator, Rc<Expr>, Rc<Expr>),
   IntegerLiteral(i64),
@@ -138,7 +138,7 @@ impl Expr {
   }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 struct LabelledParameter {
   name: String,
   parameter: Rc<Expr>,
@@ -332,7 +332,7 @@ fn array_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn bool_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
-  (space() * (tag("true") | tag("false")) - space()).map(|e| match e {
+  (space() * (tag("true").attempt() | tag("false")) - space()).map(|e| match e {
     "true" => Expr::of_bool_literal(true),
     "false" => Expr::of_bool_literal(false),
     _ => panic!("unexpected token"),
@@ -350,7 +350,12 @@ fn identifier<'a>() -> Parser<'a, char, Rc<Expr>> {
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
   let expr = (lparen() * lazy(expression) - rparen());
-  let p = expr.attempt().logging("expr") | integer().logging("integer") | (function_call().logging("function_call") | labelled_call().logging("labelled_call")) | array_literal().logging("array_literal") | bool_literal().logging("bool_literal") | identifier().logging("identifier");
+  let p = expr.attempt().logging("expr")
+    | integer().logging("integer")
+    | (function_call().logging("function_call") | labelled_call().logging("labelled_call"))
+    | array_literal().logging("array_literal")
+    | bool_literal().logging("bool_literal")
+    | identifier().logging("identifier");
   p
 }
 
@@ -378,26 +383,17 @@ mod test {
     let source = r"while(1==2){1;}";
     let input = source.chars().collect::<Vec<_>>();
     let result = line().parse_as_result(&input).unwrap();
-    println!("{:?}", result);
-    if let Expr::While(cond, body) = &*result {
-      if let Expr::Binary(op, a, b) = &*(*cond) {
-        assert_eq!(*op, Operator::EqualEqual);
-        if let &Expr::IntegerLiteral(ai) = &*(*a) {
-          assert_eq!(ai, 1);
-        } else {
-          panic!("unexpected result");
-        }
-        if let &Expr::IntegerLiteral(bi) = &*(*b) {
-          assert_eq!(bi, 2);
-        } else {
-          panic!("unexpected result");
-        }
-      } else {
-        panic!("unexpected result");
-      }
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(
+      Expr::While(
+        Rc::new(Expr::Binary(
+          Operator::EqualEqual,
+          Rc::new(Expr::IntegerLiteral(1)),
+          Rc::new(Expr::IntegerLiteral(2))
+        )),
+        Rc::new(Expr::Block(vec![Rc::new(Expr::IntegerLiteral(1))]))
+      ),
+      *result,
+    );
   }
 
   #[test]
@@ -406,26 +402,30 @@ mod test {
     let source = r"for(i in 1 to 10) a=1;";
     let input = source.chars().collect::<Vec<_>>();
     let result = for_in_expr().parse_as_result(&input).unwrap();
-    println!("{:?}", result);
-    // if let Expr::While(cond, body) = &*result {
-    //   if let Expr::Binary(op, a, b) = &*(*cond) {
-    //     assert_eq!(*op, Operator::EqualEqual);
-    //     if let &Expr::IntegerLiteral(ai) = &*(*a) {
-    //       assert_eq!(ai, 1);
-    //     } else {
-    //       panic!("unexpected result");
-    //     }
-    //     if let &Expr::IntegerLiteral(bi) = &*(*b) {
-    //       assert_eq!(bi, 2);
-    //     } else {
-    //       panic!("unexpected result");
-    //     }
-    //   } else {
-    //     panic!("unexpected result");
-    //   }
-    // } else {
-    //   panic!("unexpected result");
-    // }
+    assert_eq!(
+      Expr::Block(vec![
+        Rc::new(Expr::Assignment("i".to_string(), Rc::new(Expr::IntegerLiteral(1)))),
+        Rc::new(Expr::While(
+          Rc::new(Expr::Binary(
+            Operator::LessThan,
+            Rc::new(Expr::Symbol("i".to_string())),
+            Rc::new(Expr::IntegerLiteral(10)),
+          )),
+          Rc::new(Expr::Block(vec![
+            Rc::new(Expr::Assignment("a".to_string(), Rc::new(Expr::IntegerLiteral(1)),)),
+            Rc::new(Expr::Assignment(
+              "i".to_string(),
+              Rc::new(Expr::Binary(
+                Operator::Add,
+                Rc::new(Expr::Symbol("i".to_string())),
+                Rc::new(Expr::IntegerLiteral(1))
+              ))
+            ))
+          ])),
+        )),
+      ]),
+      *result,
+    );
   }
 
   #[test]
@@ -434,25 +434,18 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = if_expr().parse_as_result(&input).unwrap();
     println!("{:?}", result);
-    if let Expr::If(cond, body, ..) = &*result {
-      if let Expr::Binary(op, a, b) = &*(*cond) {
-        assert_eq!(*op, Operator::EqualEqual);
-        if let &Expr::IntegerLiteral(ai) = &*(*a) {
-          assert_eq!(ai, 1);
-        } else {
-          panic!("unexpected result");
-        }
-        if let &Expr::IntegerLiteral(bi) = &*(*b) {
-          assert_eq!(bi, 2);
-        } else {
-          panic!("unexpected result");
-        }
-      } else {
-        panic!("unexpected result");
-      }
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(
+      Expr::If(
+        Rc::new(Expr::Binary(
+          Operator::EqualEqual,
+          Rc::new(Expr::IntegerLiteral(1)),
+          Rc::new(Expr::IntegerLiteral(2))
+        )),
+        Rc::new(Expr::Block(vec![Rc::new(Expr::IntegerLiteral(1))])),
+        None
+      ),
+      *result
+    );
   }
 
   // #[test]
@@ -490,16 +483,10 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = line().parse_as_result(&input).unwrap();
     println!("{:?}", result);
-    if let &Expr::Assignment(ref name, ref expr) = &*result {
-      assert_eq!(name, "i");
-      if let &Expr::IntegerLiteral(i) = &*(*expr) {
-        assert_eq!(i, 1);
-      } else {
-        panic!("unexpected result");
-      }
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(
+      Expr::Assignment("1".to_string(), Rc::new(Expr::IntegerLiteral(1))),
+      *result
+    );
   }
 
   #[test]
@@ -507,16 +494,7 @@ mod test {
     let source = r"println(10);";
     let input = source.chars().collect::<Vec<_>>();
     let result = line().parse_as_result(&input).unwrap();
-    println!("{:?}", result);
-    if let &Expr::Println(ref expr) = &*result {
-      if let &Expr::IntegerLiteral(i) = &*(*expr) {
-        assert_eq!(i, 10);
-      } else {
-        panic!("unexpected result");
-      }
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(Expr::Println(Rc::new(Expr::IntegerLiteral(10))), *result);
   }
 
   #[test]
@@ -527,21 +505,16 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = labelled_call().parse_as_result(&input).unwrap();
     println!("{:?}", result);
-    if let Expr::LabelledCall(func_name, args) = &*result {
-      assert_eq!(func_name, "abc");
-      if let LabelledParameter { name, parameter } = &args[0] {
-        assert_eq!(name, "n");
-        if let &Expr::IntegerLiteral(i) = &*(*parameter) {
-          assert_eq!(i, 5);
-        } else {
-          panic!("unexpected result");
-        }
-      } else {
-        panic!("unexpected result");
-      }
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(
+      Expr::LabelledCall(
+        "abc".to_string(),
+        vec![LabelledParameter::new(
+          "n".to_string(),
+          Rc::new(Expr::IntegerLiteral(5))
+        )]
+      ),
+      *result
+    );
   }
 
   #[test]
@@ -550,12 +523,7 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = function_call().parse_as_result(&input).unwrap();
     println!("{:?}", result);
-    if let Expr::FunctionCall(func_name, args) = &*result {
-      assert_eq!(func_name, "abc");
-      assert!(args.is_empty());
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(Expr::FunctionCall("abc".to_string(), vec![]), *result);
   }
 
   #[test]
@@ -566,16 +534,10 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = function_call().parse_as_result(&input).unwrap();
     println!("{:?}", result);
-    if let Expr::FunctionCall(func_name, args) = &*result {
-      assert_eq!(func_name, "abc");
-      if let &Expr::IntegerLiteral(i) = &*(args[0]) {
-        assert_eq!(i, 1);
-      } else {
-        panic!("unexpected result");
-      }
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(
+      Expr::FunctionCall("abc".to_string(), vec![Rc::new(Expr::IntegerLiteral(1))]),
+      *result
+    );
   }
 
   #[test]
@@ -584,21 +546,13 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = function_call().parse_as_result(&input).unwrap();
     println!("{:?}", result);
-    if let Expr::FunctionCall(func_name, args) = &*result {
-      assert_eq!(func_name, "abc");
-      if let &Expr::IntegerLiteral(i) = &*(args[0]) {
-        assert_eq!(i, 1);
-      } else {
-        panic!("unexpected result");
-      }
-      if let &Expr::IntegerLiteral(i) = &*(args[1]) {
-        assert_eq!(i, 2);
-      } else {
-        panic!("unexpected result");
-      }
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(
+      Expr::FunctionCall(
+        "abc".to_string(),
+        vec![Rc::new(Expr::IntegerLiteral(1)), Rc::new(Expr::IntegerLiteral(2))]
+      ),
+      *result
+    );
   }
 
   #[test]
@@ -607,11 +561,7 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = bool_literal().parse_as_result(&input).unwrap();
     println!("{:?}", result);
-    if let &Expr::BoolLiteral(b) = &*result {
-      assert!(b);
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(Expr::BoolLiteral(true), *result);
   }
 
   #[test]
@@ -620,11 +570,7 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = bool_literal().parse_as_result(&input).unwrap();
     println!("{:?}", result);
-    if let &Expr::BoolLiteral(b) = &*result {
-      assert!(!b);
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(Expr::BoolLiteral(false), *result);
   }
 
   #[test]
@@ -633,11 +579,7 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = array_literal().parse_as_result(&input).unwrap();
     println!("{:?}", result);
-    if let Expr::ArrayLiteral(v) = &*result {
-      assert!(v.is_empty());
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(Expr::ArrayLiteral(vec![]), *result);
   }
 
   #[test]
@@ -646,16 +588,7 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = array_literal().parse_as_result(&input).unwrap();
     println!("{:?}", result);
-    if let Expr::ArrayLiteral(v) = &*result {
-      assert!(!v.is_empty());
-      if let &Expr::IntegerLiteral(i) = &*v[0] {
-        assert_eq!(i, 1);
-      } else {
-        panic!("unexpected result");
-      }
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(Expr::ArrayLiteral(vec![Rc::new(Expr::IntegerLiteral(1))]), *result);
   }
 
   #[test]
@@ -663,15 +596,10 @@ mod test {
     let source = r"[1,2]";
     let input = source.chars().collect::<Vec<_>>();
     let result = array_literal().parse_as_result(&input).unwrap();
-    println!("{:?}", result);
-    if let Expr::ArrayLiteral(v) = &*result {
-      assert!(!v.is_empty());
-      if let &Expr::IntegerLiteral(i) = &*v[0] {
-        assert_eq!(i, 1);
-      }
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(
+      Expr::ArrayLiteral(vec![Rc::new(Expr::IntegerLiteral(1)), Rc::new(Expr::IntegerLiteral(2))]),
+      *result
+    );
   }
 
   #[test]
@@ -679,12 +607,7 @@ mod test {
     let source = r"10";
     let input = source.chars().collect::<Vec<_>>();
     let result = integer().parse_as_result(&input).unwrap();
-    println!("{:?}", result);
-    if let &Expr::IntegerLiteral(i) = &*result {
-      assert_eq!(i, 10);
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(Expr::IntegerLiteral(10), *result);
   }
 
   #[test]
@@ -693,11 +616,7 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = identifier().parse_as_result(&input).unwrap();
     println!("{:?}", result);
-    if let Expr::Symbol(name) = &*result {
-      assert_eq!(name, "abc");
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(Expr::Symbol("abc".to_string()), *result);
   }
 
   #[test]
@@ -707,21 +626,14 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = multitive().parse_as_result(&input).unwrap();
     println!("{:?}", result);
-    if let Expr::Binary(op, lhs, rhs) = &*result {
-      assert_eq!(*op, Operator::Divide);
-      if let Expr::IntegerLiteral(l) = &**lhs {
-        assert_eq!(*l, 1);
-      } else {
-        panic!("unexpected result");
-      }
-      if let Expr::IntegerLiteral(r) = &**rhs {
-        assert_eq!(*r, 2);
-      } else {
-        panic!("unexpected result");
-      }
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(
+      Expr::Binary(
+        Operator::Divide,
+        Rc::new(Expr::IntegerLiteral(1)),
+        Rc::new(Expr::IntegerLiteral(2))
+      ),
+      *result
+    );
   }
 
   #[test]
@@ -730,21 +642,14 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = additive().parse_as_result(&input).unwrap();
     println!("{:?}", result);
-    if let Expr::Binary(op, lhs, rhs) = &*result {
-      assert_eq!(*op, Operator::Add);
-      if let Expr::IntegerLiteral(l) = &**lhs {
-        assert_eq!(*l, 1);
-      } else {
-        panic!("unexpected result");
-      }
-      if let Expr::IntegerLiteral(r) = &**rhs {
-        assert_eq!(*r, 2);
-      } else {
-        panic!("unexpected result");
-      }
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(
+      Expr::Binary(
+        Operator::Add,
+        Rc::new(Expr::IntegerLiteral(1)),
+        Rc::new(Expr::IntegerLiteral(2))
+      ),
+      *result
+    );
   }
 
   #[test]
@@ -753,21 +658,14 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = expression().parse_as_result(&input).unwrap();
     println!("{:?}", result);
-    if let Expr::Binary(op, lhs, rhs) = &*result {
-      assert_eq!(*op, Operator::GreaterThan);
-      if let Expr::IntegerLiteral(l) = &**lhs {
-        assert_eq!(*l, 1);
-      } else {
-        panic!("unexpected result");
-      }
-      if let Expr::IntegerLiteral(r) = &**rhs {
-        assert_eq!(*r, 2);
-      } else {
-        panic!("unexpected result");
-      }
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(
+      Expr::Binary(
+        Operator::GreaterThan,
+        Rc::new(Expr::IntegerLiteral(1)),
+        Rc::new(Expr::IntegerLiteral(2))
+      ),
+      *result
+    );
   }
 
   #[test]
@@ -776,21 +674,14 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = comparative().parse_as_result(&input).unwrap();
     println!("{:?}", result);
-    if let Expr::Binary(op, lhs, rhs) = &*result {
-      assert_eq!(*op, Operator::GreaterThan);
-      if let Expr::Symbol(l) = &**lhs {
-        assert_eq!(*l, "a");
-      } else {
-        panic!("unexpected result");
-      }
-      if let Expr::IntegerLiteral(r) = &**rhs {
-        assert_eq!(*r, 2);
-      } else {
-        panic!("unexpected result");
-      }
-    } else {
-      panic!("unexpected result");
-    }
+    assert_eq!(
+      Expr::Binary(
+        Operator::GreaterThan,
+        Rc::new(Expr::Symbol("a".to_string())),
+        Rc::new(Expr::IntegerLiteral(2))
+      ),
+      *result
+    );
   }
 }
 
