@@ -1,7 +1,7 @@
 use crate::core::ParseError;
 use crate::core::ParserRunner;
 use crate::core::{ParseResult, Parsers};
-use std::fmt::{Debug, Display};
+use std::fmt::Debug;
 
 use crate::core::Parser;
 use crate::extension::parsers::OperatorParsers;

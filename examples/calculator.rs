@@ -5,7 +5,7 @@ use rust_decimal::prelude::FromStr;
 use rust_decimal::Decimal;
 
 use oni_comb_rs::core::{Parser, ParserFunctor, ParserRunner};
-use oni_comb_rs::extension::parser::{ConversionParser, DiscardParser, OperatorParser, RepeatParser};
+use oni_comb_rs::extension::parser::{ConversionParser, DiscardParser, RepeatParser};
 use oni_comb_rs::prelude::*;
 
 #[derive(Debug, Clone, PartialEq)]

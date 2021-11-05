@@ -1,6 +1,6 @@
-use std::fmt::{Debug, Display};
+use std::fmt::Debug;
 
-use crate::core::{ParseResult, Parsers};
+use crate::core::Parsers;
 
 pub trait OperatorParsers: Parsers {
   fn exists<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>

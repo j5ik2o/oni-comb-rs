@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::core::Parser;
 use crate::extension::parser::OperatorParser;
-use crate::extension::parsers::{LoggingParsers, OperatorParsers};
+use crate::extension::parsers::OperatorParsers;
 use crate::internal::ParsersImpl;
 
 impl<'a, I, A> OperatorParser<'a> for Parser<'a, I, A> {
