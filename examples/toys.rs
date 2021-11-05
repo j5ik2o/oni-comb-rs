@@ -944,6 +944,11 @@ fn main() {
       a = 1;
       b = 2;
       c = a + b;
+      if (a == 2) {
+        println(a);
+      } else {
+        println(b);
+      }
       println(c);
     }
     "#;
