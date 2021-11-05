@@ -551,7 +551,7 @@ mod test {
     let result = line().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     assert_eq!(
-      Expr::Assignment("1".to_string(), Rc::new(Expr::IntegerLiteral(1))),
+      Expr::Assignment("i".to_string(), Rc::new(Expr::IntegerLiteral(1))),
       *result
     );
   }

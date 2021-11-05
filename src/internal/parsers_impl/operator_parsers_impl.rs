@@ -106,36 +106,29 @@ impl OperatorParsers for ParsersImpl {
   where
     BOP: Fn(A, A) -> A + 'a,
     A: Clone + Debug + 'a, {
-    Parser::new(move |parse_state| {
-      let mut ps = parse_state.add_offset(0);
-      let mut cur_x = x.clone();
-      let mut len = 0;
-      loop {
-        log::debug!("curr: x = {:?}", x);
+    let n_x = x.clone();
+    Self::or(
+      Parser::new(move |parse_state| {
+        let mut ps = parse_state.add_offset(0);
         match op.run(&ps) {
           ParseResult::Success { get: f, length: n1 } => {
             ps = parse_state.add_offset(n1);
-            match p.run(&ps) {
+            (match p.run(&ps) {
               ParseResult::Success { get: y, length: n2 } => {
                 ps = ps.add_offset(n2);
-                let new_x = x.clone();
-                log::debug!("next: x = {:?}, y = {:?}", new_x, y);
-                cur_x = f(new_x, y);
-                len += n1 + n2;
-                continue;
+                Self::rest_left1(p.clone(), op.clone(), f(n_x.clone(), y))
+                  .run(&ps)
+                  .with_add_length(n2)
               }
-              ParseResult::Failure { .. } => {
-                log::debug!("failure-1");
-                return ParseResult::successful(cur_x.clone(), len);
-              }
-            }
+              ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+            })
+            .with_committed_fallback(n1 != 0)
+            .with_add_length(n1)
           }
-          ParseResult::Failure { .. } => {
-            log::debug!("failure-2");
-            return ParseResult::successful(cur_x.clone(), len);
-          }
+          ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
         }
-      }
-    })
+      }),
+      Self::successful(x.clone()),
+    )
   }
 }

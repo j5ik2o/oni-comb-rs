@@ -8,7 +8,7 @@ use oni_comb_rs::core::{Parser, ParserFunctor, ParserRunner};
 use oni_comb_rs::extension::parser::{ConversionParser, DiscardParser, OperatorParser, RepeatParser};
 use oni_comb_rs::prelude::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 enum Expr {
   Value(Decimal),
   Add(Rc<Expr>, Rc<Expr>),
@@ -102,13 +102,11 @@ fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
 
   let p = chain_left1(
     primary(),
-    (space() * (aster | slash) - space())
-      .logging("operator")
-      .map(|e| match e {
-        '*' => Expr::of_multiply,
-        '/' => Expr::of_divide,
-        _ => panic!("unexpected operator"),
-      }),
+    (space() * (aster | slash) - space()).map(|e| match e {
+      '*' => Expr::of_multiply,
+      '/' => Expr::of_divide,
+      _ => panic!("unexpected operator"),
+    }),
   );
   p
 }
@@ -177,6 +175,41 @@ fn init() {
   env::set_var("RUST_LOG", "debug");
   let _ = env_logger::builder().is_test(true).try_init();
 }
+
+#[test]
+fn test_multitive() {
+  init();
+  let source = r"1/2";
+  let input = source.chars().collect::<Vec<_>>();
+  println!("start");
+
+  let result = multitive().parse_as_result(&input).unwrap();
+  println!("{:?}", result);
+  assert_eq!(
+    Expr::Divide(
+      Rc::new(Expr::Value(Decimal::from(1))),
+      Rc::new(Expr::Value(Decimal::from(2)))
+    ),
+    *result
+  );
+}
+
+#[test]
+fn test_additive() {
+  init();
+  let source = r"1+2*3+1";
+  let input = source.chars().collect::<Vec<_>>();
+  let result = additive().parse_as_result(&input).unwrap();
+  println!("{:?}", result);
+  assert_eq!(
+    Expr::Add(
+      Rc::new(Expr::Value(Decimal::from(1))),
+      Rc::new(Expr::Value(Decimal::from(2)))
+    ),
+    *result
+  );
+}
+
 fn main() {
   init();
   // use std::env;
@@ -187,6 +220,6 @@ fn main() {
   let input = s.chars().collect::<Vec<_>>();
   let result = calculator().parse(&input).to_result().unwrap();
   println!("expr = {:?}", result);
-  // let n = eval(result.clone());
-  // println!("{} = {}", s, n);
+  let n = eval(result.clone());
+  println!("{} = {}", s, n);
 }
