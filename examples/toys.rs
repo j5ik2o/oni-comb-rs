@@ -76,6 +76,7 @@ enum Expr {
   Assignment(String, Rc<Expr>),
   ArrayLiteral(Vec<Rc<Expr>>),
   BoolLiteral(bool),
+  Parenthesized(Rc<Expr>),
   GlobalVariableDefinition(String, Rc<Expr>),
   FunctionDefinition(String, Vec<String>, Rc<Expr>),
   Program(Vec<Rc<Expr>>),
@@ -387,7 +388,7 @@ fn identifier<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let expr = (lparen() * lazy(expression) - rparen());
+  let expr = (lparen() * lazy(expression) - rparen()).map(|e| Rc::new(Expr::Parenthesized(e)));
   let p = expr.logging("expr") | integer() | function_call() | labelled_call() | array_literal() | bool_literal() | identifier();
   p
 }
@@ -523,7 +524,9 @@ mod test {
 
   #[test]
   fn test_println() {
-    let source = r"println((1+2)+3);";
+    let source = r#"
+    println(1+(2+3));
+    "#;
     let input = source.chars().collect::<Vec<_>>();
     let result = line().parse_as_result(&input).unwrap();
     println!("{:?}", result);
@@ -656,7 +659,7 @@ mod test {
   #[test]
   fn test_multitive() {
     init();
-    let source = r"(1/2)/1";
+    let source = r"1/2";
     let input = source.chars().collect::<Vec<_>>();
     println!("start");
 
@@ -834,6 +837,7 @@ impl Interpreter {
         }
       }
       Expr::IntegerLiteral(value) => *value,
+      Expr::Parenthesized(expr) => self.interpret(expr.clone()),
       Expr::Symbol(name) => {
         let bindings_opt = self.variable_environment.find_binding(name);
         let v = bindings_opt.unwrap().get(name).unwrap();
