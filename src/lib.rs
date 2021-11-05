@@ -4,8 +4,6 @@
 
 use std::fmt::{Debug, Display};
 
-use regex::Regex;
-
 use crate::core::*;
 use crate::internal::*;
 use crate::utils::*;
@@ -48,20 +46,27 @@ pub mod prelude {
     ParsersImpl::successful(value)
   }
 
-  pub fn successful_in_closure<'a, I, A, F>(f: F) -> Parser<'a, I, A>
+  pub fn successful_lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
   where
     I: 'a,
     F: Fn() -> A + 'a,
     A: 'a, {
-    ParsersImpl::successful_in_closure(f)
+    ParsersImpl::successful_lazy(f)
   }
 
-  pub fn failed<'a, I, A, F>(f: F) -> Parser<'a, I, A>
+  pub fn failed<'a, I, A>(value: ParseError<'a, I>) -> Parser<'a, I, A>
+    where
+        I: Clone + 'a,
+        A: 'a, {
+    ParsersImpl::failed(value)
+  }
+
+  pub fn failed_lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
   where
     F: Fn() -> ParseError<'a, I> + 'a,
     I: 'a,
     A: 'a, {
-    ParsersImpl::failed(f)
+    ParsersImpl::failed_lazy(f)
   }
 
   pub fn end<'a, I>() -> Parser<'a, I, ()>
@@ -366,7 +371,7 @@ mod tests {
     let input1 = "abc".chars().collect::<Vec<char>>();
 
     let p1 = tag("abc").collect().map(String::from_iter);
-    let p2 = successful_in_closure(|| |a: String, b: String| format!("{}{}", a, b));
+    let p2 = successful(|a: String, b: String| format!("{}{}", a, b));
     let p3 = chain_left1(p1, p2);
     let r = p3.parse_as_result(&input1).unwrap();
 
@@ -378,7 +383,7 @@ mod tests {
     init();
     {
       let input1 = b"b";
-      let p: Parser<u8, &u8> = failed(|| ParseError::of_in_complete()).attempt().or(elm_ref(b'b'));
+      let p: Parser<u8, &u8> = failed(ParseError::of_in_complete()).attempt().or(elm_ref(b'b'));
 
       let r = p.parse_as_result(input1);
       assert!(r.is_ok());
@@ -422,7 +427,7 @@ mod tests {
   fn test_successful_in_closure() {
     init();
     let input = b"a";
-    let p = successful_in_closure(|| 'a');
+    let p = successful_lazy(|| 'a');
 
     let r = p.parse_as_result(input).unwrap();
     assert_eq!(r, 'a');
@@ -442,7 +447,7 @@ mod tests {
     init();
     let input1 = "abc".chars().collect::<Vec<char>>();
     let input2 = "xbc".chars().collect::<Vec<char>>();
-    let p = regex(Regex::new(r"a.*c$").unwrap());
+    let p = regex(r"a.*c$");
 
     let r = p.parse_as_result(&input1);
     assert!(r.is_ok());
@@ -453,7 +458,7 @@ mod tests {
 
     {
       let input3 = "12345 to".chars().collect::<Vec<_>>();
-      let p = regex(Regex::new(r"\d+").unwrap());
+      let p = regex(r"\d+");
       let r = p.parse_as_result(&input3);
       println!("{:?}", r);
       assert!(r.is_ok());
@@ -621,7 +626,7 @@ mod tests {
     init();
     let p = seq(b"abc").not();
 
-    let b = p.parse_as_result(b"def").unwrap();
+    let _ = p.parse_as_result(b"def").unwrap();
   }
 
   #[test]
@@ -832,6 +837,7 @@ mod tests {
 
   #[test]
   fn test_filter() {
+    init();
     {
       let input: Vec<char> = "abc def".chars().collect::<Vec<char>>();
       let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");
@@ -850,6 +856,7 @@ mod tests {
 
   #[test]
   fn test_filter_not() {
+    init();
     {
       let input: Vec<char> = "abc def".chars().collect::<Vec<char>>();
       let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");

@@ -133,8 +133,7 @@ impl OperatorParsers for ParsersImpl {
           ParseResult::Failure { .. } => {
             log::debug!("failure-2");
             return ParseResult::successful(cur_x.clone(), len);
-          },
-
+          }
         }
       }
     })

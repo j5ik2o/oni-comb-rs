@@ -13,19 +13,24 @@ pub trait Parsers {
     'b: 'a;
 
   fn unit<'a, I>() -> Self::P<'a, I, ()> {
-    Self::successful_in_closure(|| ())
+    Self::successful_lazy(|| ())
   }
 
   fn successful<'a, I, A>(value: A) -> Self::P<'a, I, A>
   where
     A: Clone + 'a;
 
-  fn successful_in_closure<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
+  fn successful_lazy<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> A + 'a,
     A: 'a;
 
-  fn failed<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
+  fn failed<'a, I, A>(value: ParseError<'a, I>) -> Self::P<'a, I, A>
+  where
+    I: Clone + 'a,
+    A: 'a;
+
+  fn failed_lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> ParseError<'a, I> + 'a,
     I: 'a,

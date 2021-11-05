@@ -35,14 +35,21 @@ impl Parsers for ParsersImpl {
     Parser::new(move |_| ParseResult::successful(value.clone(), 0))
   }
 
-  fn successful_in_closure<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
+  fn successful_lazy<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> A + 'a,
     A: 'a, {
     Parser::new(move |_| ParseResult::successful(value(), 0))
   }
 
-  fn failed<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
+  fn failed<'a, I, A>(value: ParseError<'a, I>) -> Self::P<'a, I, A>
+  where
+    I: Clone + 'a,
+    A: 'a, {
+    Parser::new(move |_| ParseResult::failed_with_commit(value.clone()))
+  }
+
+  fn failed_lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> ParseError<'a, I> + 'a,
     I: 'a,

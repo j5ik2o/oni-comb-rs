@@ -1,5 +1,4 @@
 use crate::core::Parsers;
-use regex::Regex;
 use std::fmt::Debug;
 
 pub trait ElementsParsers: Parsers {

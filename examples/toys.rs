@@ -424,13 +424,7 @@ fn identifier<'a>() -> Parser<'a, char, Rc<Expr>> {
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
   let expr = (lparen() * lazy(expression) - rparen()).map(|e| Rc::new(Expr::Parenthesized(e)));
-  let p = expr
-    | integer()
-    | function_call()
-    | labelled_call()
-    | array_literal()
-    | bool_literal()
-    | identifier();
+  let p = expr | integer() | function_call() | labelled_call() | array_literal() | bool_literal() | identifier();
   p
 }
 
