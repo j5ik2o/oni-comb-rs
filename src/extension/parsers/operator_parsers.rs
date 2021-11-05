@@ -40,11 +40,11 @@ pub trait OperatorParsers: Parsers {
 
   fn chain_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
-    BOP: Fn(A, A) -> A + Copy + 'a,
+    BOP: Fn(A, A) -> A + 'a,
     A: Clone + Debug + 'a;
 
   fn rest_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
-    BOP: Fn(A, A) -> A + Copy + 'a,
+    BOP: Fn(A, A) -> A + 'a,
     A: Clone + Debug + 'a;
 }
