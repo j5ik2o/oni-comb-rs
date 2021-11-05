@@ -1,11 +1,11 @@
-use env_logger::Env;
-use oni_comb_rs::core::{Parser, ParserFunctor, ParserMonad, ParserRunner};
+
+use oni_comb_rs::core::{Parser, ParserFunctor, ParserRunner};
 use oni_comb_rs::extension::parser::{ConversionParser, DiscardParser, OperatorParser, RepeatParser, SkipParser};
 use oni_comb_rs::prelude::*;
-use regex::Regex;
-use std::cell::RefCell;
+
+
 use std::collections::HashMap;
-use std::iter::Map;
+
 use std::rc::Rc;
 
 #[derive(Debug, Clone)]
@@ -892,7 +892,7 @@ impl Interpreter {
         *v
       }
       Expr::FunctionCall(name, actual_params) => {
-        if let Expr::FunctionDefinition(def_name, formal_parmas, body) =
+        if let Expr::FunctionDefinition(_def_name, formal_parmas, body) =
           &*self.function_environment.get(name).unwrap().clone()
         {
           let values = actual_params
