@@ -81,6 +81,7 @@ impl ElementsParsers for ParsersImpl {
   fn regex<'a>(regex: Regex) -> Self::P<'a, char, String> {
     Parser::new(move |parse_state| {
       let input: &[char] = parse_state.input();
+      log::debug!("regex: input = {:?}", input);
       let str = String::from_iter(input);
       if let Some(captures) = regex.captures(&str).as_ref() {
         if let Some(m) = captures.get(0) {

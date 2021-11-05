@@ -217,7 +217,7 @@ fn for_in_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn if_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let condition = (space() * tag("if") - space()) * lparen() * expression() - rparen();
+  let condition = (tag("if") - space()) * lparen() * expression() - rparen();
   let else_p = space() * tag("else") - space();
   let p = (condition + line() + (else_p * line()).opt()).map(|((p1, p2), p3)| Expr::of_if(p1, p2, p3));
   (space() * p - space()).attempt()
@@ -249,7 +249,7 @@ fn println<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn integer<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let p = regex(Regex::new(r#"-?\d+"#).unwrap())
+  let p = regex(Regex::new(r#"^-?\d+"#).unwrap())
     .convert(|s| s.parse::<i64>())
     .map(Expr::of_integer_literal);
   p
@@ -295,15 +295,17 @@ fn comparative<'a>() -> Parser<'a, char, Rc<Expr>> {
 
   let p = chain_left1(
     additive(),
-    (space() * (lte.attempt() | gte.attempt() | neq.attempt() | lt.attempt() | gt.attempt() | eqeq) - space()).map(|e| match e {
-      "<" => Expr::of_less_than,
-      "<=" => Expr::of_less_or_equal,
-      ">" => Expr::of_greater_than,
-      ">=" => Expr::of_greater_or_equal,
-      "==" => Expr::of_equal_equal,
-      "!=" => Expr::of_not_equal,
-      _ => panic!("unexpected operator"),
-    }),
+    (space() * (lte.attempt() | gte.attempt() | lt.attempt() | gt.attempt() | neq.attempt() | eqeq) - space()).map(
+      |e| match e {
+        "<=" => Expr::of_less_or_equal,
+        ">=" => Expr::of_greater_or_equal,
+        "<" => Expr::of_less_than,
+        ">" => Expr::of_greater_than,
+        "==" => Expr::of_equal_equal,
+        "!=" => Expr::of_not_equal,
+        _ => panic!("unexpected operator"),
+      },
+    ),
   );
   p
 }
@@ -330,12 +332,11 @@ fn array_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn bool_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
-  (space() * (tag("true") | tag("false")) - space())
-      .map(|e| match e {
-        "true" => Expr::of_bool_literal(true),
-        "false" => Expr::of_bool_literal(false),
-        _ => panic!("unexpected token"),
-      })
+  (space() * (tag("true") | tag("false")) - space()).map(|e| match e {
+    "true" => Expr::of_bool_literal(true),
+    "false" => Expr::of_bool_literal(false),
+    _ => panic!("unexpected token"),
+  })
 }
 
 fn ident<'a>() -> Parser<'a, char, String> {
@@ -349,8 +350,7 @@ fn identifier<'a>() -> Parser<'a, char, Rc<Expr>> {
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
   let expr = (lparen() * lazy(expression) - rparen());
-  let p =
-    expr | (function_call() | labelled_call()) | array_literal() | bool_literal() | (integer().attempt() | identifier());
+  let p = expr.attempt().logging("expr") | integer().logging("integer") | (function_call().logging("function_call") | labelled_call().logging("labelled_call")) | array_literal().logging("array_literal") | bool_literal().logging("bool_literal") | identifier().logging("identifier");
   p
 }
 
@@ -702,9 +702,10 @@ mod test {
 
   #[test]
   fn test_multitive() {
+    init();
     let source = r"1/2";
     let input = source.chars().collect::<Vec<_>>();
-    let result = expression().parse_as_result(&input).unwrap();
+    let result = multitive().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let Expr::Binary(op, lhs, rhs) = &*result {
       assert_eq!(*op, Operator::Divide);
@@ -727,7 +728,7 @@ mod test {
   fn test_additive() {
     let source = r"1+2";
     let input = source.chars().collect::<Vec<_>>();
-    let result = expression().parse_as_result(&input).unwrap();
+    let result = additive().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     if let Expr::Binary(op, lhs, rhs) = &*result {
       assert_eq!(*op, Operator::Add);
@@ -770,7 +771,7 @@ mod test {
   }
 
   #[test]
-  fn test_comparative_2() {
+  fn test_comparative_symbol_number() {
     let source = r"a>2";
     let input = source.chars().collect::<Vec<_>>();
     let result = comparative().parse_as_result(&input).unwrap();

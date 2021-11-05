@@ -10,12 +10,13 @@ use crate::internal::ParsersImpl;
 impl OperatorParsers for ParsersImpl {
   fn logging_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, name: &'a str, f: F) -> Self::P<'a, I, A>
   where
-    F: Fn(&A) -> B + 'a,
+    F: Fn(&ParseResult<'a, I, A>) -> B + 'a,
     A: Debug + 'a,
     B: Display + 'a, {
-    Self::map(parser, move |a| {
-      log::debug!("{} = {}", name, f(&a));
-      a
+    Parser::new(move |parse_state| {
+      let ps = parser.run(parse_state);
+      log::debug!("{} = {}", name, f(&ps));
+      ps
     })
   }
 
