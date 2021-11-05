@@ -41,12 +41,19 @@ pub mod prelude {
     ParsersImpl::unit()
   }
 
-  pub fn successful<'a, I, A, F>(f: F) -> Parser<'a, I, A>
+  pub fn successful<'a, I, A>(value: A) -> Parser<'a, I, A>
+  where
+    I: 'a,
+    A: Clone + 'a, {
+    ParsersImpl::successful(value)
+  }
+
+  pub fn successful_in_closure<'a, I, A, F>(f: F) -> Parser<'a, I, A>
   where
     I: 'a,
     F: Fn() -> A + 'a,
     A: 'a, {
-    ParsersImpl::successful(f)
+    ParsersImpl::successful_in_closure(f)
   }
 
   pub fn failed<'a, I, A, F>(f: F) -> Parser<'a, I, A>
@@ -359,7 +366,7 @@ mod tests {
     let input1 = "abc".chars().collect::<Vec<char>>();
 
     let p1 = tag("abc").collect().map(String::from_iter);
-    let p2 = successful(|| |a: String, b: String| format!("{}{}", a, b));
+    let p2 = successful_in_closure(|| |a: String, b: String| format!("{}{}", a, b));
     let p3 = chain_left1(p1, p2);
     let r = p3.parse_as_result(&input1).unwrap();
 
@@ -412,10 +419,10 @@ mod tests {
   }
 
   #[test]
-  fn test_successful() {
+  fn test_successful_in_closure() {
     init();
     let input = b"a";
-    let p = successful(|| 'a');
+    let p = successful_in_closure(|| 'a');
 
     let r = p.parse_as_result(input).unwrap();
     assert_eq!(r, 'a');
@@ -612,10 +619,9 @@ mod tests {
   #[test]
   fn test_not() {
     init();
-    let p = !seq(b"abc");
+    let p = seq(b"abc").not();
 
     let b = p.parse_as_result(b"def").unwrap();
-    assert!(b);
   }
 
   #[test]

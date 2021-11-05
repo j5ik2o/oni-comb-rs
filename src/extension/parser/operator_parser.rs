@@ -16,7 +16,11 @@ pub trait OperatorParser<'a>: ParserRunner<'a> {
   where
     Self::Output: Debug + 'a;
 
-  fn not(self) -> Self::P<'a, Self::Input, bool>
+  fn exists(self) -> Self::P<'a, Self::Input, bool>
+  where
+    Self::Output: Debug + 'a;
+
+  fn not(self) -> Self::P<'a, Self::Input, ()>
   where
     Self::Output: Debug + 'a;
 

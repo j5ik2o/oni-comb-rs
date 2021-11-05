@@ -29,7 +29,13 @@ impl Parsers for ParsersImpl {
     parser.run(&parse_state).to_result()
   }
 
-  fn successful<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
+  fn successful<'a, I, A>(value: A) -> Self::P<'a, I, A>
+  where
+    A: Clone + 'a, {
+    Parser::new(move |_| ParseResult::successful(value.clone(), 0))
+  }
+
+  fn successful_in_closure<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> A + 'a,
     A: 'a, {

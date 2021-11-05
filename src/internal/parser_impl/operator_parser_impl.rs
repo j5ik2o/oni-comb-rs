@@ -26,7 +26,13 @@ impl<'a, I, A> OperatorParser<'a> for Parser<'a, I, A> {
     ParsersImpl::or(self, pb)
   }
 
-  fn not(self) -> Self::P<'a, Self::Input, bool>
+  fn exists(self) -> Self::P<'a, Self::Input, bool>
+  where
+    Self::Output: Debug + 'a, {
+    ParsersImpl::exists(self)
+  }
+
+  fn not(self) -> Self::P<'a, Self::Input, ()>
   where
     Self::Output: Debug + 'a, {
     ParsersImpl::not(self)

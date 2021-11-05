@@ -20,7 +20,16 @@ impl OperatorParsers for ParsersImpl {
     })
   }
 
-  fn not<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
+  fn exists<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
+  where
+    A: Debug + 'a, {
+    Parser::new(move |parse_state| match parser.run(parse_state) {
+      ParseResult::Success { .. } => ParseResult::successful(true, 0),
+      ParseResult::Failure { .. } => ParseResult::successful(false, 0),
+    })
+  }
+
+  fn not<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, ()>
   where
     A: 'a, {
     Parser::new(move |parse_state| match parser.run(parse_state) {
@@ -34,7 +43,7 @@ impl OperatorParsers for ParsersImpl {
         );
         ParseResult::failed_with_un_commit(parser_error)
       }
-      ParseResult::Failure { .. } => ParseResult::successful(true, 0),
+      ParseResult::Failure { .. } => ParseResult::successful((), 0),
     })
   }
 
@@ -116,12 +125,16 @@ impl OperatorParsers for ParsersImpl {
                 continue;
               }
               ParseResult::Failure { .. } => {
-                log::debug!("failure");
-                return ParseResult::successful(cur_x.clone(), len)
-              },
+                log::debug!("failure-1");
+                return ParseResult::successful(cur_x.clone(), len);
+              }
             }
           }
-          ParseResult::Failure { .. } => return ParseResult::successful(cur_x.clone(), len),
+          ParseResult::Failure { .. } => {
+            log::debug!("failure-2");
+            return ParseResult::successful(cur_x.clone(), len);
+          },
+
         }
       }
     })

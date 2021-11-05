@@ -7,6 +7,6 @@ impl<'a, I, A> ParserPure<'a> for Parser<'a, I, A> {
     F: Fn() -> Self::Output + 'a,
     Self::Input: 'a,
     Self::Output: 'a, {
-    ParsersImpl::successful(value)
+    ParsersImpl::successful_in_closure(value)
   }
 }

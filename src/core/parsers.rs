@@ -13,10 +13,14 @@ pub trait Parsers {
     'b: 'a;
 
   fn unit<'a, I>() -> Self::P<'a, I, ()> {
-    Self::successful(|| ())
+    Self::successful_in_closure(|| ())
   }
 
-  fn successful<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
+  fn successful<'a, I, A>(value: A) -> Self::P<'a, I, A>
+  where
+    A: Clone + 'a;
+
+  fn successful_in_closure<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> A + 'a,
     A: 'a;

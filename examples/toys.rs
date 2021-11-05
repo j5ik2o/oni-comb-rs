@@ -1,5 +1,5 @@
 use env_logger::Env;
-use oni_comb_rs::core::{Parser, ParserFunctor, ParserRunner};
+use oni_comb_rs::core::{Parser, ParserFunctor, ParserMonad, ParserRunner};
 use oni_comb_rs::extension::parser::{ConversionParser, DiscardParser, OperatorParser, RepeatParser, SkipParser};
 use oni_comb_rs::prelude::*;
 use regex::Regex;
@@ -65,10 +65,6 @@ enum Expr {
   Identifier(String),
   Plus(Rc<Expr>),
   Minus(Rc<Expr>),
-  Add(Rc<Expr>, Rc<Expr>),
-  Sub(Rc<Expr>, Rc<Expr>),
-  Multiply(Rc<Expr>, Rc<Expr>),
-  Divide(Rc<Expr>, Rc<Expr>),
   Println(Rc<Expr>),
   While(Rc<Expr>, Rc<Expr>),
   If(Rc<Expr>, Rc<Expr>, Option<Rc<Expr>>),
@@ -293,17 +289,56 @@ fn integer<'a>() -> Parser<'a, char, Rc<Expr>> {
   space() * p - space()
 }
 
+// fn additive<'a>() -> Parser<'a, char, Rc<Expr>> {
+//   multitive().flat_map(additive_rest)
+// }
+//
+// fn additive_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
+//   let v1 = a.clone();
+//   let v2 = a.clone();
+//   let v3 = a.clone();
+//   let add_parser = add() * unary().flat_map(move |b| additive_rest(Expr::of_add(v1.clone(), b.clone())));
+//   let sub_parser = sub() * unary().flat_map(move |b| additive_rest(Expr::of_subtract(v2.clone(), b.clone())));
+//   add_parser.attempt() | sub_parser.attempt() | empty().map(move |_| v3.clone())
+// }
+//
+// fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
+//   unary().flat_map(multitive_rest)
+// }
+//
+// fn multitive_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
+//   let v1 = a.clone();
+//   let v2 = a.clone();
+//   let v3 = a.clone();
+//   let mul_parser = mul() * unary().flat_map(move |b| multitive_rest(Expr::of_multiply(v1.clone(), b.clone())));
+//   let div_parser = div() * unary().flat_map(move |b| multitive_rest(Expr::of_divide(v2.clone(), b.clone())));
+//   mul_parser.attempt() | div_parser.attempt() | empty().map(move |_| v3.clone())
+// }
+//
+// fn unary<'a>() -> Parser<'a, char, Rc<Expr>> {
+//   let unary_parser = ((elm_ref('+') | elm_ref('-')) + lazy(unary))
+//     .map(|(c, expr): (&char, Rc<Expr>)| match c {
+//       '-' => Expr::Minus(Rc::clone(&expr)),
+//       '+' => Expr::Plus(Rc::clone(&expr)),
+//       _ => panic!(),
+//     })
+//     .map(Rc::new);
+//   unary_parser | primary()
+// }
+
 fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
   let aster = elm_ref('*');
   let slash = elm_ref('/');
 
   let p = chain_left1(
-    primary().logging("primary"),
-    (space() * (aster | slash) - space()).logging("operator").map(|e| match e {
-      '*' => Expr::of_multiply,
-      '/' => Expr::of_divide,
-      _ => panic!("unexpected operator"),
-    }),
+    primary(),
+    (space() * (aster | slash) - space())
+      .logging("operator")
+      .map(|e| match e {
+        '*' => Expr::of_multiply,
+        '/' => Expr::of_divide,
+        _ => panic!("unexpected operator"),
+      }),
   );
   p
 }
@@ -389,7 +424,13 @@ fn identifier<'a>() -> Parser<'a, char, Rc<Expr>> {
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
   let expr = (lparen() * lazy(expression) - rparen()).map(|e| Rc::new(Expr::Parenthesized(e)));
-  let p = expr.logging("expr") | integer() | function_call() | labelled_call() | array_literal() | bool_literal() | identifier();
+  let p = expr
+    | integer()
+    | function_call()
+    | labelled_call()
+    | array_literal()
+    | bool_literal()
+    | identifier();
   p
 }
 
@@ -524,9 +565,7 @@ mod test {
 
   #[test]
   fn test_println() {
-    let source = r#"
-    println(1+(2+3));
-    "#;
+    let source = r#"println(1+2*3);"#;
     let input = source.chars().collect::<Vec<_>>();
     let result = line().parse_as_result(&input).unwrap();
     println!("{:?}", result);
@@ -723,7 +762,21 @@ mod test {
     );
   }
 }
+fn add<'a>() -> Parser<'a, char, &'a char> {
+  space() * elm_ref('+') - space()
+}
 
+fn sub<'a>() -> Parser<'a, char, &'a char> {
+  space() * elm_ref('-') - space()
+}
+
+fn mul<'a>() -> Parser<'a, char, &'a char> {
+  space() * elm_ref('*') - space()
+}
+
+fn div<'a>() -> Parser<'a, char, &'a char> {
+  space() * elm_ref('/') - space()
+}
 fn lbracket<'a>() -> Parser<'a, char, &'a str> {
   space() * tag("[") - space()
 }
@@ -844,8 +897,13 @@ impl Interpreter {
         *v
       }
       Expr::FunctionCall(name, actual_params) => {
-        if let Expr::FunctionDefinition(def_name, formal_parmas, body) = &*self.function_environment.get(name).unwrap().clone() {
-          let values = actual_params.iter().map(|actual_param| self.interpret(actual_param.clone())).collect::<Vec<_>>();
+        if let Expr::FunctionDefinition(def_name, formal_parmas, body) =
+          &*self.function_environment.get(name).unwrap().clone()
+        {
+          let values = actual_params
+            .iter()
+            .map(|actual_param| self.interpret(actual_param.clone()))
+            .collect::<Vec<_>>();
           let backup = self.variable_environment.clone();
           self.variable_environment = Environment::new(HashMap::new(), Some(Rc::new(backup.clone())));
           let mut i = 0;
@@ -889,7 +947,7 @@ impl Interpreter {
         let value = self.interpret(args.clone());
         println!("{}", value);
         value
-      },
+      }
       Expr::If(condition, body, else_body) => {
         let cond = self.interpret(condition.clone());
         if cond != 0 {
@@ -909,7 +967,7 @@ impl Interpreter {
         }
         1
       }
-      _ => panic!("must not reach here"),
+      expr => panic!("must not reach here: {:?}", expr),
     }
   }
 }

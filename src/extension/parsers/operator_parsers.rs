@@ -17,14 +17,18 @@ pub trait OperatorParsers: Parsers {
     A: Debug + 'a,
     B: Display + 'a;
 
-  fn not<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
+  fn exists<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
+  where
+    A: Debug + 'a;
+
+  fn not<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, ()>
   where
     A: Debug + 'a;
 
   fn opt<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, Option<A>>
   where
     A: Debug + 'a, {
-    Self::or(Self::map(parser, Some), Self::successful(|| None))
+    Self::or(Self::map(parser, Some), Self::successful_in_closure(|| None))
   }
 
   fn or<'a, I, A>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, A>) -> Self::P<'a, I, A>

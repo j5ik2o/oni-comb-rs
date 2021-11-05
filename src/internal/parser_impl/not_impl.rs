@@ -8,7 +8,7 @@ impl<'a, I, A> Not for Parser<'a, I, A>
 where
   A: Debug + 'a,
 {
-  type Output = Parser<'a, I, bool>;
+  type Output = Parser<'a, I, ()>;
 
   fn not(self) -> Self::Output {
     ParsersImpl::not(self)

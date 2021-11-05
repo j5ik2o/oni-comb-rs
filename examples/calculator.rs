@@ -1,3 +1,4 @@
+use std::env;
 use std::rc::Rc;
 
 use regex::Regex;
@@ -20,16 +21,30 @@ enum Expr {
   Parenthesized(Rc<Expr>),
 }
 
+impl Expr {
+  pub fn of_add(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
+    Rc::new(Expr::Add(lhs, rhs))
+  }
+
+  pub fn of_subtract(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
+    Rc::new(Expr::Sub(lhs, rhs))
+  }
+
+  pub fn of_multiply(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
+    Rc::new(Expr::Multiply(lhs, rhs))
+  }
+
+  pub fn of_divide(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
+    Rc::new(Expr::Divide(lhs, rhs))
+  }
+}
+
 fn space<'a>() -> Parser<'a, char, ()> {
   elm_of(" \t\r\n").of_many0().discard()
 }
 
 fn expr<'a>() -> Parser<'a, char, Rc<Expr>> {
-  add_sub_expr()
-}
-
-fn add_sub_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
-  mul_div_expr().flat_map(add_sub_rest)
+  additive()
 }
 
 fn add<'a>() -> Parser<'a, char, &'a char> {
@@ -48,40 +63,84 @@ fn div<'a>() -> Parser<'a, char, &'a char> {
   space() * elm_ref('/') - space()
 }
 
-fn add_sub_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
-  let v1 = a.clone();
-  let v2 = a.clone();
-  let v3 = a.clone();
-  let add_parser = add() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Add(v1.clone(), b.clone()))));
-  let sub_parser = sub() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Sub(v2.clone(), b.clone()))));
-  add_parser.attempt() | sub_parser.attempt() | empty().map(move |_| v3.clone())
+// fn additive<'a>() -> Parser<'a, char, Rc<Expr>> {
+//   multitive().flat_map(additive_rest)
+// }
+//
+// fn rest0<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
+//   additive_rest(a).flat_map(|e| {
+//     (add() | sub() | mul() | div())
+//       .exists()
+//       .flat_map(move |b| if b { rest0(e.clone()) } else { successful(e.clone()) })
+//   })
+// }
+//
+// fn additive_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
+//   let v1 = a.clone();
+//   let v2 = a.clone();
+//   let v3 = a.clone();
+//   let add_parser = add() * unary().flat_map(move |b| additive_rest(Rc::new(Expr::Add(v1.clone(), b.clone()))));
+//   let sub_parser = sub() * unary().flat_map(move |b| additive_rest(Rc::new(Expr::Sub(v2.clone(), b.clone()))));
+//   add_parser.attempt() | sub_parser.attempt() | empty().map(move |_| v3.clone())
+// }
+//
+// fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
+//   unary().flat_map(multitive_rest)
+// }
+//
+// fn multitive_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
+//   let v1 = a.clone();
+//   let v2 = a.clone();
+//   let v3 = a.clone();
+//   let mul_parser = mul() * unary().flat_map(move |b| multitive_rest(Rc::new(Expr::Multiply(v1.clone(), b.clone()))));
+//   let div_parser = div() * unary().flat_map(move |b| multitive_rest(Rc::new(Expr::Divide(v2.clone(), b.clone()))));
+//   mul_parser.attempt() | div_parser.attempt() | empty().map(move |_| v3.clone())
+// }
+
+fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
+  let aster = elm_ref('*');
+  let slash = elm_ref('/');
+
+  let p = chain_left1(
+    primary(),
+    (space() * (aster | slash) - space())
+      .logging("operator")
+      .map(|e| match e {
+        '*' => Expr::of_multiply,
+        '/' => Expr::of_divide,
+        _ => panic!("unexpected operator"),
+      }),
+  );
+  p
 }
 
-fn mul_div_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
-  unary().flat_map(mul_div_rest)
+fn additive<'a>() -> Parser<'a, char, Rc<Expr>> {
+  let plus = elm_ref('+');
+  let minus = elm_ref('-');
+
+  let p = chain_left1(
+    multitive(),
+    (space() * (plus | minus) - space()).map(|e| match e {
+      '+' => Expr::of_add,
+      '-' => Expr::of_subtract,
+      _ => panic!("unexpected operator"),
+    }),
+  );
+  p
 }
 
-fn mul_div_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
-  let v1 = a.clone();
-  let v2 = a.clone();
-  let v3 = a.clone();
-  let mul_parser = mul() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Multiply(v1.clone(), b.clone()))));
-  let div_parser = div() * unary().flat_map(move |b| mul_div_rest(Rc::new(Expr::Divide(v2.clone(), b.clone()))));
-  mul_parser.attempt() | div_parser.attempt() | empty().map(move |_| v3.clone())
-}
-
-fn unary<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let unary_parser = ((elm_ref('+') | elm_ref('-')) + lazy(unary))
+fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
+  let unary_parser = ((elm_ref('+') | elm_ref('-')) + lazy(primary))
     .map(|(c, expr): (&char, Rc<Expr>)| match c {
       '-' => Expr::Minus(Rc::clone(&expr)),
       '+' => Expr::Plus(Rc::clone(&expr)),
       _ => panic!(),
     })
     .map(Rc::new);
-  unary_parser | primary()
+  unary_parser | primary0()
 }
 
-fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
+fn primary0<'a>() -> Parser<'a, char, Rc<Expr>> {
   surround(
     space() + elm_ref('(') + space(),
     lazy(expr),
@@ -93,7 +152,7 @@ fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn value<'a>() -> Parser<'a, char, Rc<Expr>> {
-  regex(Regex::new(r#"\d+([.]\d+)?"#).unwrap())
+  regex(Regex::new(r#"^\d+([.]\d+)?"#).unwrap())
     .convert(|s| Decimal::from_str(&s))
     .map(Expr::Value)
     .map(Rc::new)
@@ -115,15 +174,20 @@ fn eval(expr: Rc<Expr>) -> Decimal {
 fn calculator<'a>() -> Parser<'a, char, Rc<Expr>> {
   expr() - end()
 }
-
+fn init() {
+  env::set_var("RUST_LOG", "debug");
+  let _ = env_logger::builder().is_test(true).try_init();
+}
 fn main() {
+  init();
   // use std::env;
   // env::set_var("RUST_LOG", "debug");
   // let _ = env_logger::builder().is_test(true).try_init();
-  let s = "(((0.1 + -1.2) * -3.3) / 4.3) + 5.9";
+  // let s = "(((0.1 + -1.2) * -3.3) / 4.3) + 5.9";
+  let s = "1+2*3+1";
   let input = s.chars().collect::<Vec<_>>();
   let result = calculator().parse(&input).to_result().unwrap();
   println!("expr = {:?}", result);
-  let n = eval(result.clone());
-  println!("{} = {}", s, n);
+  // let n = eval(result.clone());
+  // println!("{} = {}", s, n);
 }
