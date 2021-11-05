@@ -940,6 +940,9 @@ impl Interpreter {
 
 fn main() {
   let source = r#"
+    define aaaa() {
+      x = 1;
+    }
     define main() {
       a = 1;
       b = 2;
