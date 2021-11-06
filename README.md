@@ -52,6 +52,9 @@ fn main() {
 
 ## Examples
 
+- [Hello World!](/examples/hello_world.rs)
 - JSON Parsers
   - [Bytes](/examples/json_byte.rs)
-  - Characters
+  - [Characters](/examples/json_char.rs)
+- [Calculator](/examples/calculator.rs)
+- [Toys](/examples/toys.rs)
