@@ -1,6 +1,6 @@
 # oni-comb-rs (鬼昆布,おにこんぶ)
 
-A Rust crate for parser combinators.
+A Rust crate for LL(k) parser combinators.
 
 [![Workflow Status](https://github.com/j5ik2o/parsing-rust/workflows/Rust/badge.svg)](https://github.com/j5ik2o/parsing-rust/actions?query=workflow%3A%22Rust%22)
 [![crates.io](https://img.shields.io/crates/v/parsing-rust.svg)](https://crates.io/crates/parsing-rust)
@@ -17,6 +17,17 @@ Add this to your `Cargo.toml`:
 oni-comb-rs = "<<version>>"
 ```
 
+## Influenced by the following parsers implementations.
+
+- Rust
+  - [J-F-Liu/pom](https://github.com/J-F-Liu/pom)
+  - [Geal/nom](https://github.com/Geal/nom)
+- Scala
+  - [fp in scala](https://github.com/fpinscala/fpinscala/blob/first-edition/answers/src/main/scala/fpinscala/parsing)
+  - [scala-parser-combinators](https://github.com/scala/scala-parser-combinators)
+- Java
+  - [jparsec](https://github.com/jparsec/jparsec)
+ 
 ## Usage
 
 ```rust
