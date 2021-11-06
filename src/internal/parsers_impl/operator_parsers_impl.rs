@@ -78,16 +78,17 @@ impl OperatorParsers for ParsersImpl {
   where
     BOP: Fn(A, A) -> A + 'a,
     A: Clone + Debug + 'a, {
-    Parser::new(move |parse_state| match p.run(parse_state) {
-      ParseResult::Success { get: x, length: n } => {
-        let ps = parse_state.add_offset(n);
-        Self::rest_left1(p.clone(), op.clone(), x)
-          .run(&ps)
-          .with_committed_fallback(n != 0)
-          .with_add_length(n)
-      }
-      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
-    })
+    Self::flat_map(p.clone(), move |x| Self::rest_left1(p.clone(), op.clone(), x))
+    // Parser::new(move |parse_state| match p.run(parse_state) {
+    //   ParseResult::Success { get: x, length: n } => {
+    //     let ps = parse_state.add_offset(n);
+    //     Self::rest_left1(p.clone(), op.clone(), x)
+    //       .run(&ps)
+    //       .with_committed_fallback(n != 0)
+    //       .with_add_length(n)
+    //   }
+    //   ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+    // })
   }
 
   fn rest_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
