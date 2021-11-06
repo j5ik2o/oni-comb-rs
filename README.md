@@ -27,7 +27,7 @@ oni-comb-rs = "<<version>>"
   - [scala-parser-combinators](https://github.com/scala/scala-parser-combinators)
 - Java
   - [jparsec](https://github.com/jparsec/jparsec)
- 
+
 ## Usage
 
 ```rust
@@ -49,3 +49,9 @@ fn main() {
   println!("{}", result); // hello world
 }
 ```
+
+## Examples
+
+- JSON Parsers
+  - [Bytes](/examples/json_byte.rs)
+  - Characters
