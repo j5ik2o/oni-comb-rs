@@ -62,16 +62,16 @@ pub mod prelude {
   }
 
   pub fn failed_with_commit<'a, I, A>(value: ParseError<'a, I>) -> Parser<'a, I, A>
-    where
-        I: Clone + 'a,
-        A: 'a, {
+  where
+    I: Clone + 'a,
+    A: 'a, {
     ParsersImpl::failed(value, true)
   }
 
   pub fn failed_with_un_commit<'a, I, A>(value: ParseError<'a, I>) -> Parser<'a, I, A>
-    where
-        I: Clone + 'a,
-        A: 'a, {
+  where
+    I: Clone + 'a,
+    A: 'a, {
     ParsersImpl::failed(value, false)
   }
 
@@ -397,7 +397,9 @@ mod tests {
     init();
     {
       let input1 = b"b";
-      let p: Parser<u8, &u8> = failed_with_commit(ParseError::of_in_complete()).attempt().or(elm_ref(b'b'));
+      let p: Parser<u8, &u8> = failed_with_commit(ParseError::of_in_complete())
+        .attempt()
+        .or(elm_ref(b'b'));
 
       let r = p.parse_as_result(input1);
       assert!(r.is_ok());
