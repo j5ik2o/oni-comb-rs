@@ -11,4 +11,11 @@ impl<'a, I, A> LoggingParser<'a> for Parser<'a, I, A> {
     Self::Output: Debug + 'a, {
     ParsersImpl::logging(self, name)
   }
+
+  fn name(self, name: &'a str) -> Self::P<'a, Self::Input, Self::Output>
+  where
+    Self::Input: Debug,
+    Self::Output: Debug + 'a, {
+    ParsersImpl::name(self, name)
+  }
 }

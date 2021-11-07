@@ -368,9 +368,7 @@ mod tests {
 
   use crate::core::{ParserFunctor, ParserMonad, ParserRunner};
 
-  use crate::extension::parser::{
-    CollectParser, ConversionParser, DiscardParser, OffsetParser, OperatorParser, RepeatParser,
-  };
+  use crate::extension::parser::{CollectParser, ConversionParser, DiscardParser, LoggingParser, OffsetParser, OperatorParser, RepeatParser};
   use crate::*;
 
   use super::prelude::*;
@@ -463,7 +461,7 @@ mod tests {
     init();
     let input1 = "abc".chars().collect::<Vec<char>>();
     let input2 = "xbc".chars().collect::<Vec<char>>();
-    let p = regex(r"a.*c$");
+    let p = regex(r"a.*c$").name("regex_1");
 
     let r = p.parse_as_result(&input1);
     assert!(r.is_ok());
@@ -471,6 +469,7 @@ mod tests {
 
     let r = p.parse_as_result(&input2);
     assert!(r.is_err());
+    println!("{}", r.err().unwrap());
 
     {
       let input3 = "12345 to".chars().collect::<Vec<_>>();

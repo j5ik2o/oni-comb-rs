@@ -1,3 +1,6 @@
+use std::fmt;
+use std::fmt::Display;
+
 #[derive(Debug, Clone)]
 pub enum ParseError<'a, I> {
   Mismatch {
@@ -12,10 +15,57 @@ pub enum ParseError<'a, I> {
     length: usize,
     message: String,
   },
-  InComplete,
+  Incomplete,
+  Expect {
+    offset: usize,
+    inner: Box<ParseError<'a, I>>,
+    message: String,
+  },
+  Custom {
+    offset: usize,
+    inner: Option<Box<ParseError<'a, I>>>,
+    message: String,
+  },
+}
+
+impl<'a, I> Display for ParseError<'a, I> {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match self {
+      ParseError::Incomplete => write!(f, "Incomplete"),
+      ParseError::Mismatch {
+        ref message,
+        ref offset,
+        ..
+      } => write!(f, "Mismatch at {}: {}", offset, message),
+      ParseError::Conversion {
+        ref message,
+        ref offset,
+        ..
+      } => write!(f, "Conversion failed at {}: {}", offset, message),
+      ParseError::Expect {
+        ref message,
+        ref offset,
+        ref inner,
+      } => write!(f, "{} at {}: {}", message, offset, inner),
+      ParseError::Custom {
+        ref message,
+        ref offset,
+        inner: Some(ref inner),
+      } => write!(f, "{} at {}, (inner: {})", message, offset, inner),
+      ParseError::Custom {
+        ref message,
+        ref offset,
+        inner: None,
+      } => write!(f, "{} at {}", message, offset),
+    }
+  }
 }
 
 impl<'a, I> ParseError<'a, I> {
+  pub fn of_custom(offset: usize, inner: Option<Box<ParseError<'a, I>>>, message: String) -> Self {
+    ParseError::Custom { offset, inner, message }
+  }
+
   pub fn of_mismatch(input: &'a [I], offset: usize, length: usize, message: String) -> Self {
     ParseError::Mismatch {
       input,
@@ -35,6 +85,6 @@ impl<'a, I> ParseError<'a, I> {
   }
 
   pub fn of_in_complete() -> Self {
-    ParseError::InComplete
+    ParseError::Incomplete
   }
 }
