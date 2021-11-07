@@ -150,7 +150,7 @@ fn primary0<'a>() -> Parser<'a, char, Rc<Expr>> {
 
 fn value<'a>() -> Parser<'a, char, Rc<Expr>> {
   regex(r"^\d+([.]\d+)?")
-    .convert(|s| Decimal::from_str(&s))
+    .map_res(|s| Decimal::from_str(&s))
     .map(Expr::Value)
     .map(Rc::new)
 }

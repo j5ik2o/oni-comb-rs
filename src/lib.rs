@@ -632,7 +632,7 @@ mod tests {
   #[test]
   fn test_take_while0() {
     init();
-    let p = take_while0(|c: &u8| c.is_ascii_digit()).convert(std::str::from_utf8);
+    let p = take_while0(|c: &u8| c.is_ascii_digit()).map_res(std::str::from_utf8);
 
     let result = p.parse_as_result(b"a123b");
     assert!(result.is_ok());
@@ -645,7 +645,7 @@ mod tests {
   #[test]
   fn test_take_while1() {
     init();
-    let p = take_while1(|c: &u8| c.is_ascii_digit()).convert(std::str::from_utf8);
+    let p = take_while1(|c: &u8| c.is_ascii_digit()).map_res(std::str::from_utf8);
 
     let result = p.parse_as_result(b"a123b");
     assert!(result.is_ok());
@@ -658,7 +658,7 @@ mod tests {
   #[test]
   fn test_take_while_n_m() {
     init();
-    let p = take_while_n_m(1, 3, |c: &u8| c.is_ascii_digit()).convert(std::str::from_utf8);
+    let p = take_while_n_m(1, 3, |c: &u8| c.is_ascii_digit()).map_res(std::str::from_utf8);
 
     let result = p.parse_as_result(b"a1b");
     assert!(result.is_ok());
@@ -682,7 +682,7 @@ mod tests {
   #[test]
   fn test_take_till0() {
     init();
-    let p = take_till0(|c| *c == b'c').convert(std::str::from_utf8);
+    let p = take_till0(|c| *c == b'c').map_res(std::str::from_utf8);
 
     let result = p.parse_as_result(b"abcd");
     assert!(result.is_ok());
@@ -695,7 +695,7 @@ mod tests {
   #[test]
   fn test_take_till1() {
     init();
-    let p = take_till1(|c| *c == b'c').convert(std::str::from_utf8);
+    let p = take_till1(|c| *c == b'c').map_res(std::str::from_utf8);
 
     let result = p.parse_as_result(b"abcd");
     assert!(result.is_ok());

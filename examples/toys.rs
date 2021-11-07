@@ -284,7 +284,7 @@ fn println<'a>() -> Parser<'a, char, Rc<Expr>> {
 
 fn integer<'a>() -> Parser<'a, char, Rc<Expr>> {
   let p = regex(r#"^-?\d+"#)
-    .convert(|s| s.parse::<i64>())
+    .map_res(|s| s.parse::<i64>())
     .map(Expr::of_integer_literal);
   space() * p - space()
 }

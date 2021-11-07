@@ -25,7 +25,7 @@ fn number<'a>() -> Parser<'a, char, f64> {
   let frac = elm_ref('.') + elm_digit_ref().of_many1();
   let exp = elm_of("eE") + elm_of("+-").opt() + elm_digit_ref().of_many1();
   let number = elm_ref('-').opt() + integer + frac.opt() + exp.opt();
-  number.collect().map(String::from_iter).convert(|s| f64::from_str(&s))
+  number.collect().map(String::from_iter).map_res(|s| f64::from_str(&s))
 }
 
 fn string<'a>() -> Parser<'a, char, String> {
@@ -46,7 +46,7 @@ fn string<'a>() -> Parser<'a, char, String> {
     * elm_pred(|c: &char| c.is_digit(16))
       .of_count(4)
       .map(String::from_iter)
-      .convert(|digits| u16::from_str_radix(&digits, 16));
+      .map_res(|digits| u16::from_str_radix(&digits, 16));
   let utf16_string = utf16_char.of_many1().map(|chars| {
     decode_utf16(chars)
       .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))

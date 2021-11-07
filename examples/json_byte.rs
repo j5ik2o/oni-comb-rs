@@ -25,7 +25,7 @@ fn number<'a>() -> Parser<'a, u8, f64> {
   let frac = elm_ref(b'.') + elm_digit_ref().of_many1();
   let exp = elm_of(b"eE") + elm_of(b"+-").opt() + elm_digit_ref().of_many1();
   let number = elm_ref(b'-').opt() + integer + frac.opt() + exp.opt();
-  number.collect().convert(std::str::from_utf8).convert(f64::from_str)
+  number.collect().map_res(std::str::from_utf8).map_res(f64::from_str)
 }
 
 fn string<'a>() -> Parser<'a, u8, String> {
@@ -41,12 +41,12 @@ fn string<'a>() -> Parser<'a, u8, String> {
   let char_string = (none_ref_of(b"\\\"") | escape_sequence)
     .map(Clone::clone)
     .of_many1()
-    .convert(String::from_utf8);
+    .map_res(String::from_utf8);
   let utf16_char = seq(b"\\u")
     * elm_hex_digit()
       .of_count(4)
-      .convert(String::from_utf8)
-      .convert(|digits| u16::from_str_radix(&digits, 16));
+      .map_res(String::from_utf8)
+      .map_res(|digits| u16::from_str_radix(&digits, 16));
   let utf16_string = utf16_char.of_many1().map(|chars| {
     decode_utf16(chars)
       .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
