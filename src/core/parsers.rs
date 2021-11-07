@@ -13,7 +13,7 @@ pub trait Parsers {
     'b: 'a;
 
   fn unit<'a, I>() -> Self::P<'a, I, ()> {
-    Self::successful_lazy(|| ())
+    Self::successful(())
   }
 
   fn successful<'a, I, A>(value: A) -> Self::P<'a, I, A>
@@ -42,33 +42,15 @@ pub trait Parsers {
     I: 'a,
     A: 'a;
 
-  fn filter_ref<'a, I, A, F>(parser: Self::P<'a, I, &'a A>, f: F) -> Self::P<'a, I, &'a A>
-  where
-    F: Fn(&'a A) -> bool + 'a,
-    I: 'a,
-    A: 'a;
-
   fn flat_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> Self::P<'a, I, B> + 'a,
     A: 'a,
     B: 'a;
 
-  fn flat_map_ref<'a, I, A, B, F>(parser: Self::P<'a, I, &'a A>, f: F) -> Self::P<'a, I, B>
-  where
-    F: Fn(&'a A) -> Self::P<'a, I, B> + 'a,
-    A: 'a,
-    B: 'a;
-
   fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> B + 'a,
-    A: 'a,
-    B: 'a;
-
-  fn map_ref<'a, I, A, B, F>(parser: Self::P<'a, I, &'a A>, f: F) -> Self::P<'a, I, B>
-  where
-    F: Fn(&'a A) -> B + 'a,
     A: 'a,
     B: 'a;
 }

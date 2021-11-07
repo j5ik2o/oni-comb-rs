@@ -290,35 +290,25 @@ fn integer<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let aster = elm_ref('*');
-  let slash = elm_ref('/');
-
-  let p = chain_left1(
+  chain_left1(
     primary(),
-    (space() * (aster | slash) - space())
-      .logging("operator")
-      .map(|e| match e {
-        '*' => Expr::of_multiply,
-        '/' => Expr::of_divide,
-        _ => panic!("unexpected operator"),
-      }),
-  );
-  p
+    (mul() | div()).logging("operator").map(|e| match e {
+      '*' => Expr::of_multiply,
+      '/' => Expr::of_divide,
+      _ => panic!("unexpected operator"),
+    }),
+  )
 }
 
 fn additive<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let plus = elm_ref('+');
-  let minus = elm_ref('-');
-
-  let p = chain_left1(
+  chain_left1(
     multitive(),
-    (space() * (plus | minus) - space()).map(|e| match e {
+    (add() | subtract()).map(|e| match e {
       '+' => Expr::of_add,
       '-' => Expr::of_subtract,
       _ => panic!("unexpected operator"),
     }),
-  );
-  p
+  )
 }
 
 fn comparative<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -381,14 +371,12 @@ fn ident<'a>() -> Parser<'a, char, String> {
 }
 
 fn identifier<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let p = ident().map(Expr::of_symbol);
-  p
+  ident().map(Expr::of_symbol)
 }
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
   let expr = (lparen() * lazy(expression) - rparen()).map(|e| Rc::new(Expr::Parenthesized(e)));
-  let p = expr | integer() | function_call() | labelled_call() | array_literal() | bool_literal() | identifier();
-  p
+  expr | integer() | function_call() | labelled_call() | array_literal() | bool_literal() | identifier()
 }
 
 #[cfg(test)]
@@ -704,7 +692,7 @@ fn add<'a>() -> Parser<'a, char, &'a char> {
   space() * elm_ref('+') - space()
 }
 
-fn sub<'a>() -> Parser<'a, char, &'a char> {
+fn subtract<'a>() -> Parser<'a, char, &'a char> {
   space() * elm_ref('-') - space()
 }
 
