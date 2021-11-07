@@ -21,7 +21,7 @@ pub trait OperatorParser<'a>: ParserRunner<'a> {
 
   fn opt(self) -> Self::P<'a, Self::Input, Option<Self::Output>>
   where
-    Self::Output: Debug + 'a;
+    Self::Output: Clone + Debug + 'a;
 
   fn attempt(self) -> Self::P<'a, Self::Input, Self::Output>
   where

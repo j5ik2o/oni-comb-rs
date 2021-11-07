@@ -25,14 +25,14 @@ pub trait Parsers {
     F: Fn() -> A + 'a,
     A: 'a;
 
-  fn failed<'a, I, A>(value: ParseError<'a, I>) -> Self::P<'a, I, A>
+  fn failed<'a, I, A>(value: ParseError<'a, I>, committed: bool) -> Self::P<'a, I, A>
   where
     I: Clone + 'a,
     A: 'a;
 
   fn failed_lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
   where
-    F: Fn() -> ParseError<'a, I> + 'a,
+    F: Fn() -> (ParseError<'a, I>, bool) + 'a,
     I: 'a,
     A: 'a;
 
@@ -51,6 +51,6 @@ pub trait Parsers {
   fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> B + 'a,
-    A: 'a,
-    B: 'a;
+    A: Clone + 'a,
+    B: Clone + 'a;
 }

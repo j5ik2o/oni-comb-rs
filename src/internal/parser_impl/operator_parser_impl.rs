@@ -33,7 +33,7 @@ impl<'a, I, A> OperatorParser<'a> for Parser<'a, I, A> {
 
   fn opt(self) -> Self::P<'a, Self::Input, Option<Self::Output>>
   where
-    Self::Output: Debug + 'a, {
+    Self::Output: Clone + Debug + 'a, {
     ParsersImpl::opt(self)
   }
 

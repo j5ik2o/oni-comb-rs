@@ -43,19 +43,22 @@ impl Parsers for ParsersImpl {
     Parser::new(move |_| ParseResult::successful(value(), 0))
   }
 
-  fn failed<'a, I, A>(value: ParseError<'a, I>) -> Self::P<'a, I, A>
+  fn failed<'a, I, A>(value: ParseError<'a, I>, committed: bool) -> Self::P<'a, I, A>
   where
     I: Clone + 'a,
     A: 'a, {
-    Parser::new(move |_| ParseResult::failed_with_commit(value.clone()))
+    Parser::new(move |_| ParseResult::failed(value.clone(), committed))
   }
 
   fn failed_lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
   where
-    F: Fn() -> ParseError<'a, I> + 'a,
+    F: Fn() -> (ParseError<'a, I>, bool) + 'a,
     I: 'a,
     A: 'a, {
-    Parser::new(move |_| ParseResult::failed_with_commit(f()))
+    Parser::new(move |_| {
+      let (pe, committed) = f();
+      ParseResult::failed(pe, committed)
+    })
   }
 
   fn filter<'a, I, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
@@ -97,11 +100,8 @@ impl Parsers for ParsersImpl {
   fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> B + 'a,
-    A: 'a,
-    B: 'a, {
-    Parser::new(move |parse_state| match parser.run(parse_state) {
-      ParseResult::Success { get: a, length } => ParseResult::Success { get: f(a), length },
-      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
-    })
+    A: Clone + 'a,
+    B: Clone + 'a, {
+    Self::flat_map(parser, move |e| Self::successful(f(e)))
   }
 }

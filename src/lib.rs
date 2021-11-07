@@ -54,16 +54,16 @@ pub mod prelude {
     ParsersImpl::successful_lazy(f)
   }
 
-  pub fn failed<'a, I, A>(value: ParseError<'a, I>) -> Parser<'a, I, A>
+  pub fn failed<'a, I, A>(value: ParseError<'a, I>, commit: bool) -> Parser<'a, I, A>
   where
     I: Clone + 'a,
     A: 'a, {
-    ParsersImpl::failed(value)
+    ParsersImpl::failed(value, commit)
   }
 
   pub fn failed_lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
   where
-    F: Fn() -> ParseError<'a, I> + 'a,
+    F: Fn() -> (ParseError<'a, I>, bool) + 'a,
     I: 'a,
     A: 'a, {
     ParsersImpl::failed_lazy(f)

@@ -52,7 +52,7 @@ impl OperatorParsers for ParsersImpl {
   fn and_then<'a, I, A, B>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, B>) -> Self::P<'a, I, (A, B)>
   where
     A: Clone + 'a,
-    B: 'a, {
+    B: Clone + 'a, {
     Self::flat_map(parser1, move |a| Self::map(parser2.clone(), move |b| (a.clone(), b)))
     // Parser::new(move |parse_state| match parser1.run(parse_state) {
     //   ParseResult::Success { get: r1, length: n1 } => {
@@ -101,7 +101,7 @@ impl OperatorParsers for ParsersImpl {
         let mut ps = parse_state.add_offset(0);
         match op.run(&ps) {
           ParseResult::Success { get: f, length: n1 } => {
-            ps = parse_state.add_offset(n1);
+            ps = ps.add_offset(n1);
             (match p.run(&ps) {
               ParseResult::Success { get: y, length: n2 } => {
                 ps = ps.add_offset(n2);

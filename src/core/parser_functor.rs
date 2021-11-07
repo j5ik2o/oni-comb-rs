@@ -5,6 +5,6 @@ pub trait ParserFunctor<'a>: ParserPure<'a> {
   where
     F: Fn(Self::Output) -> B + 'a,
     Self::Input: 'a,
-    Self::Output: 'a,
-    B: 'a;
+    Self::Output: Clone + 'a,
+    B: Clone + 'a;
 }
