@@ -1,11 +1,11 @@
 #![feature(box_patterns)]
 
 use crate::Expr::*;
+use chrono::{DateTime, Datelike, NaiveDate, TimeZone, Timelike};
 use oni_comb_rs::core::{ParseError, Parser, ParserFunctor, ParserRunner};
 use oni_comb_rs::extension::parser::{LoggingParser, OperatorParser, RepeatParser};
 use oni_comb_rs::prelude::*;
 use std::env;
-use chrono::{Datelike, DateTime, NaiveDate, Timelike, TimeZone};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
@@ -45,12 +45,19 @@ fn min_digit<'a>() -> Parser<'a, char, Expr> {
 fn hour_digit<'a>() -> Parser<'a, char, Expr> {
   (elm('2') + elm_of("0123"))
     .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
-    .attempt().log("hour_digit_1")
+    .attempt()
+    .log("hour_digit_1")
     | (elm('1') + elm_of("0123456789"))
       .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
-      .attempt().log("hour_digit_2")
-    | (elm('0') * elm_of("0123456789")).map(|e| ValueExpr(e as u8 - 48)).attempt().log("hour_digit_3")
-    | elm_of("0123456789").map(|e| ValueExpr(e as u8 - 48)).log("hour_digit_4")
+      .attempt()
+      .log("hour_digit_2")
+    | (elm('0') * elm_of("0123456789"))
+      .map(|e| ValueExpr(e as u8 - 48))
+      .attempt()
+      .log("hour_digit_3")
+    | elm_of("0123456789")
+      .map(|e| ValueExpr(e as u8 - 48))
+      .log("hour_digit_4")
 }
 
 fn day_digit<'a>() -> Parser<'a, char, Expr> {
@@ -234,9 +241,9 @@ mod tests {
     init();
     let input = "1-10/2".chars().collect::<Vec<_>>();
     let result = (digit_instruction!(min_digit()) - end())
-        .parse(&input)
-        .to_result()
-        .unwrap();
+      .parse(&input)
+      .to_result()
+      .unwrap();
     assert_eq!(
       result,
       RangeExpr {
@@ -252,13 +259,10 @@ mod tests {
     init();
     let input = "1,2,3".chars().collect::<Vec<_>>();
     let result = (digit_instruction!(min_digit()) - end())
-        .parse(&input)
-        .to_result()
-        .unwrap();
-    assert_eq!(
-      result,
-      ListExpr(vec![ValueExpr(1), ValueExpr(2), ValueExpr(3)])
-    );
+      .parse(&input)
+      .to_result()
+      .unwrap();
+    assert_eq!(result, ListExpr(vec![ValueExpr(1), ValueExpr(2), ValueExpr(3)]));
   }
 
   #[test]
@@ -266,19 +270,16 @@ mod tests {
     init();
     let input = "1".chars().collect::<Vec<_>>();
     let result = (digit_instruction!(min_digit()) - end())
-        .parse(&input)
-        .to_result()
-        .unwrap();
+      .parse(&input)
+      .to_result()
+      .unwrap();
     assert_eq!(result, ValueExpr(1));
   }
 
   #[test]
   fn test_list() {
     init();
-    let s = (0..=59)
-        .map(|v| v.to_string())
-        .collect::<Vec<_>>()
-        .join(",");
+    let s = (0..=59).map(|v| v.to_string()).collect::<Vec<_>>().join(",");
     let input = s.chars().collect::<Vec<_>>();
     let result = (list(min_digit()) - end()).parse(&input).to_result().unwrap();
     let values = (0..=59).map(|v| ValueExpr(v)).collect::<Vec<_>>();
@@ -312,10 +313,7 @@ mod tests {
     for n in 0..59 {
       let s: &str = &format!("*/{:<02}", n);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (asterisk_per(min_digit()) - end())
-          .parse(&input)
-          .to_result()
-          .unwrap();
+      let result = (asterisk_per(min_digit()) - end()).parse(&input).to_result().unwrap();
       assert_eq!(
         result,
         PerExpr {
@@ -478,8 +476,8 @@ fn get_days_from_month(year: i32, month: u32) -> i64 {
     },
     1,
   )
-      .signed_duration_since(NaiveDate::from_ymd(year, month, 1))
-      .num_days()
+  .signed_duration_since(NaiveDate::from_ymd(year, month, 1))
+  .num_days()
 }
 
 impl<'a, Tz: TimeZone> CronEvaluator<'a, Tz> {
@@ -497,26 +495,11 @@ impl<'a, Tz: TimeZone> CronEvaluator<'a, Tz> {
         box day_of_weeks,
       } => {
         let last_day = get_days_from_month(self.instant.date().year(), self.instant.date().month());
-        let fmins = self.visit0(
-          &Environment::new(self.instant.time().minute() as u8, 59),
-          mins,
-        );
-        let fhours = self.visit0(
-          &Environment::new(self.instant.time().hour() as u8, 23),
-          hours,
-        );
-        let fdays = self.visit0(
-          &Environment::new(self.instant.date().day() as u8, last_day as u8),
-          days,
-        );
-        let fmonths = self.visit0(
-          &Environment::new(self.instant.date().month() as u8, 12),
-          months,
-        );
-        let fday_of_weeks = self.visit0(
-          &Environment::new(self.instant.time().minute() as u8, 7),
-          day_of_weeks,
-        );
+        let fmins = self.visit0(&Environment::new(self.instant.time().minute() as u8, 59), mins);
+        let fhours = self.visit0(&Environment::new(self.instant.time().hour() as u8, 23), hours);
+        let fdays = self.visit0(&Environment::new(self.instant.date().day() as u8, last_day as u8), days);
+        let fmonths = self.visit0(&Environment::new(self.instant.date().month() as u8, 12), months);
+        let fday_of_weeks = self.visit0(&Environment::new(self.instant.time().minute() as u8, 7), day_of_weeks);
         fmins && fhours && fdays && fmonths && fday_of_weeks
       }
       _ => false,
@@ -536,18 +519,18 @@ impl<'a, Tz: TimeZone> CronEvaluator<'a, Tz> {
       } => match per_option {
         box Expr::NoOp if *start <= env.now && env.now <= *end => true,
         box Expr::ValueExpr(per) => (*start as usize..=*end as usize)
-            .step_by(*per as usize)
-            .into_iter()
-            .any(|e| e == env.now as usize),
+          .step_by(*per as usize)
+          .into_iter()
+          .any(|e| e == env.now as usize),
         _ => false,
       },
       Expr::PerExpr {
         digit: box Expr::AnyValueExpr,
         option: box Expr::ValueExpr(per),
       } => (0usize..=(env.max as usize))
-          .step_by(*per as usize)
-          .into_iter()
-          .any(|e| e == env.now as usize),
+        .step_by(*per as usize)
+        .into_iter()
+        .any(|e| e == env.now as usize),
       _ => false,
     }
   }
