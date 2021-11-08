@@ -53,7 +53,7 @@ fn main() {
 ## Examples
 
 - [Hello World!](/parser/examples/hello_world.rs)
-- [CROND](/parser/examples/crond.rs)
+- [CROND](/crond.rs)
 - JSON Parsers
   - [Bytes](/parser/examples/json_byte.rs)
   - [Characters](/parser/examples/json_char.rs)
