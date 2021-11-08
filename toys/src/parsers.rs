@@ -7,6 +7,62 @@ use oni_comb_parser_rs::extension::parser::{
 use oni_comb_parser_rs::prelude::*;
 use std::rc::Rc;
 
+fn ident<'a>() -> Parser<'a, char, String> {
+  space() * regex(r"[a-zA-Z_][a-zA-Z0-9_]*") - space()
+}
+
+fn add<'a>() -> Parser<'a, char, &'a char> {
+  space() * elm_ref('+') - space()
+}
+
+fn subtract<'a>() -> Parser<'a, char, &'a char> {
+  space() * elm_ref('-') - space()
+}
+
+fn mul<'a>() -> Parser<'a, char, &'a char> {
+  space() * elm_ref('*') - space()
+}
+
+fn div<'a>() -> Parser<'a, char, &'a char> {
+  space() * elm_ref('/') - space()
+}
+
+fn lbracket<'a>() -> Parser<'a, char, &'a str> {
+  space() * tag("[") - space()
+}
+
+fn rbracket<'a>() -> Parser<'a, char, &'a str> {
+  space() * tag("]") - space()
+}
+
+fn lbrace<'a>() -> Parser<'a, char, &'a str> {
+  space() * tag("{") - space()
+}
+
+fn rbrace<'a>() -> Parser<'a, char, &'a str> {
+  space() * tag("}") - space()
+}
+
+fn lparen<'a>() -> Parser<'a, char, &'a str> {
+  space() * tag("(") - space()
+}
+
+fn rparen<'a>() -> Parser<'a, char, &'a str> {
+  space() * tag(")") - space()
+}
+
+fn comma<'a>() -> Parser<'a, char, &'a str> {
+  space() * tag(",") - space()
+}
+
+fn semi_colon<'a>() -> Parser<'a, char, &'a str> {
+  space() * tag(";") - space()
+}
+
+fn space<'a>() -> Parser<'a, char, ()> {
+  elm_of(" \t\r\n").of_many0().discard()
+}
+
 pub fn program<'a>() -> Parser<'a, char, Rc<Expr>> {
   space() * top_level_definition().of_many0().map(Expr::Program).map(Rc::new)
 }
@@ -18,7 +74,7 @@ fn top_level_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
 fn function_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
   let define_p = space() * tag("define") * space() * ident() - space();
   let def_args_p = ident().of_many0_sep(comma()).surround(lparen(), rparen());
-  let p = (define_p + def_args_p + block_expr())
+  let p = (define_p + def_args_p + block())
     .map(|((name, args), body)| Expr::of_function_definition(name.to_string(), args, body));
   space() * p - space()
 }
@@ -37,8 +93,7 @@ fn lines<'a>() -> Parser<'a, char, Vec<Rc<Expr>>> {
 }
 
 fn line<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let p =
-    println() | lazy(r#while) | lazy(r#if) | lazy(r#for) | assignment() | expression_line() | block_expr();
+  let p = println() | lazy(r#while) | lazy(r#if) | lazy(r#for) | assignment() | expression_line() | block();
   space() * p - space()
 }
 
@@ -50,11 +105,11 @@ fn r#while<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn r#for<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let params_p = lparen() * ident() - (space() + tag("in") + space()) + expression() - (space() * tag("to") - space())
-    + expression()
-    - space()
-    - rparen();
-  let p0 = (tag("for") - space()) * params_p.debug("params") + lazy(line);
+  let r#for = tag("for") - space();
+  let r#in = space() + tag("in") + space();
+  let to = space() * tag("to") - space();
+  let params = lparen() * ident() - r#in + expression() - to + expression() - space() - rparen();
+  let p0 = r#for * params.debug("params") + lazy(line);
   let p = p0.map(|(((name, from), to), body)| {
     Expr::of_block(vec![
       Expr::of_assignment(name.to_string(), from),
@@ -74,13 +129,14 @@ fn r#for<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn r#if<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let condition = (tag("if") - space()) * lparen() * expression() - rparen();
-  let else_p = space() * tag("else") - space();
-  let p = (condition + line() + (else_p * line()).opt()).map(|((p1, p2), p3)| Expr::of_if(p1, p2, p3));
+  let r#if = tag("if") - space();
+  let condition = r#if * lparen() * expression() - rparen();
+  let r#else = space() * tag("else") - space();
+  let p = (condition + line() + (r#else * line()).opt()).map(|((p1, p2), p3)| Expr::of_if(p1, p2, p3));
   (space() * p - space()).attempt()
 }
 
-fn block_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
+fn block<'a>() -> Parser<'a, char, Rc<Expr>> {
   let p = lazy(line).of_many0().surround(lbrace(), rbrace()).map(Expr::of_block);
   space() * p - space()
 }
@@ -100,8 +156,8 @@ fn expression<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn println<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let println_p = tag("println");
-  let p = (println_p * lazy(expression).surround(lparen(), rparen()) - semi_colon()).map(Expr::of_println);
+  let r#println = tag("println");
+  let p = (r#println * lazy(expression).surround(lparen(), rparen()) - semi_colon()).map(Expr::of_println);
   (space() * p - space()).attempt()
 }
 
@@ -187,10 +243,6 @@ fn bool_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
     _ => panic!("unexpected token"),
   });
   space() * p - space()
-}
-
-fn ident<'a>() -> Parser<'a, char, String> {
-  space() * regex(r"[a-zA-Z_][a-zA-Z0-9_]*") - space()
 }
 
 fn identifier<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -513,54 +565,4 @@ mod test {
       *result
     );
   }
-}
-fn add<'a>() -> Parser<'a, char, &'a char> {
-  space() * elm_ref('+') - space()
-}
-
-fn subtract<'a>() -> Parser<'a, char, &'a char> {
-  space() * elm_ref('-') - space()
-}
-
-fn mul<'a>() -> Parser<'a, char, &'a char> {
-  space() * elm_ref('*') - space()
-}
-
-fn div<'a>() -> Parser<'a, char, &'a char> {
-  space() * elm_ref('/') - space()
-}
-fn lbracket<'a>() -> Parser<'a, char, &'a str> {
-  space() * tag("[") - space()
-}
-
-fn rbracket<'a>() -> Parser<'a, char, &'a str> {
-  space() * tag("]") - space()
-}
-
-fn lbrace<'a>() -> Parser<'a, char, &'a str> {
-  space() * tag("{") - space()
-}
-
-fn rbrace<'a>() -> Parser<'a, char, &'a str> {
-  space() * tag("}") - space()
-}
-
-fn lparen<'a>() -> Parser<'a, char, &'a str> {
-  space() * tag("(") - space()
-}
-
-fn rparen<'a>() -> Parser<'a, char, &'a str> {
-  space() * tag(")") - space()
-}
-
-fn comma<'a>() -> Parser<'a, char, &'a str> {
-  space() * tag(",") - space()
-}
-
-fn semi_colon<'a>() -> Parser<'a, char, &'a str> {
-  space() * tag(";") - space()
-}
-
-fn space<'a>() -> Parser<'a, char, ()> {
-  elm_of(" \t\r\n").of_many0().discard()
 }
