@@ -5,7 +5,7 @@ use crate::internal::ParsersImpl;
 use std::fmt::Debug;
 
 impl<'a, I, A> LoggingParser<'a> for Parser<'a, I, A> {
-  fn logging(self, name: &'a str) -> Self::P<'a, Self::Input, Self::Output>
+  fn log(self, name: &'a str) -> Self::P<'a, Self::Input, Self::Output>
   where
     Self::Input: Debug,
     Self::Output: Debug + 'a, {
