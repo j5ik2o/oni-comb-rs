@@ -206,8 +206,8 @@ fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
 mod test {
   use super::*;
   use crate::interpreter::Interpreter;
+  use crate::labelled_parameter::LabelledParameter;
   use crate::operator::Operator;
-  use crate::LabelledParameter;
   use oni_comb_parser_rs::core::ParserRunner;
   use std::env;
 
