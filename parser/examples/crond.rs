@@ -33,54 +33,51 @@ pub enum Expr {
 }
 
 fn min_digit<'a>() -> Parser<'a, char, Expr> {
-  (elm_of("12345") + elm_of("0123456789"))
+  (elm_in('1', '5') + elm_digit())
     .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
     .attempt()
-    | (elm('0') * elm_of("0123456789"))
+    | (elm('0') * elm_digit())
       .map(|e| ValueExpr(e as u8 - 48))
       .attempt()
-    | (elm_of("0123456789")).map(|e| ValueExpr(e as u8 - 48))
+    | (elm_digit()).map(|e| ValueExpr(e as u8 - 48))
 }
 
 fn hour_digit<'a>() -> Parser<'a, char, Expr> {
-  (elm('2') + elm_of("0123"))
+  (elm('2') + elm_in('0', '3'))
     .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
     .attempt()
-    .log("hour_digit_1")
-    | (elm('1') + elm_of("0123456789"))
+    | (elm('1') + elm_digit())
       .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
       .attempt()
-      .log("hour_digit_2")
-    | (elm('0') * elm_of("0123456789"))
+    | (elm('0') * elm_digit())
       .map(|e| ValueExpr(e as u8 - 48))
       .attempt()
-      .log("hour_digit_3")
-    | elm_of("0123456789")
+    | elm_digit()
       .map(|e| ValueExpr(e as u8 - 48))
-      .log("hour_digit_4")
+      .debug("hour_digit_4")
 }
 
 fn day_digit<'a>() -> Parser<'a, char, Expr> {
   (elm('3') + elm_of("01"))
     .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
     .attempt()
-    | (elm_of("12") + elm_of("0123456789"))
+    | (elm_of("12") + elm_digit())
       .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
       .attempt()
-    | (elm('0') * elm_of("123456789"))
+    | (elm('0') * elm_digit_1_9())
       .map(|e| ValueExpr(e as u8 - 48))
       .attempt()
-    | elm_of("123456789").map(|e| ValueExpr(e as u8 - 48))
+    | elm_digit_1_9().map(|e| ValueExpr(e as u8 - 48))
 }
 
 fn month_digit<'a>() -> Parser<'a, char, Expr> {
   (elm('1') + elm_of("012"))
     .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
     .attempt()
-    | (elm('0') * elm_of("123456789"))
+    | (elm('0') * elm_digit_1_9())
       .map(|e| ValueExpr(e as u8 - 48))
       .attempt()
-    | elm_of("123456789").map(|e| ValueExpr(e as u8 - 48))
+    | elm_digit_1_9().map(|e| ValueExpr(e as u8 - 48))
 }
 
 fn day_of_week_digit<'a>() -> Parser<'a, char, Expr> {
@@ -95,7 +92,7 @@ fn day_of_week_digit<'a>() -> Parser<'a, char, Expr> {
 }
 
 fn day_of_week_text<'a>() -> Parser<'a, char, Expr> {
-  elm_of("1234567").map(|e| ValueExpr(e as u8 - 48))
+  elm_in('1', '7').map(|e| ValueExpr(e as u8 - 48))
 }
 
 fn asterisk<'a>() -> Parser<'a, char, Expr> {

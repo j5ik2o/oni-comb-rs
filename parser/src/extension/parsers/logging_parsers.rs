@@ -1,15 +1,22 @@
 use crate::core::{ParseResult, Parsers};
 use std::fmt::{Debug, Display};
 
+pub enum LogLevel {
+  Debug,
+  Info,
+  Warn,
+  Err,
+}
+
 pub trait LoggingParsers: Parsers {
-  fn logging<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str) -> Self::P<'a, I, A>
+  fn log<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str, log_level: LogLevel) -> Self::P<'a, I, A>
   where
     I: Debug,
     A: Debug + 'a, {
-    Self::logging_map(parser, name, move |a| format!("{:?}", a))
+    Self::log_map(parser, name, log_level, move |a| format!("{:?}", a))
   }
 
-  fn logging_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, name: &'a str, f: F) -> Self::P<'a, I, A>
+  fn log_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, name: &'a str, log_level: LogLevel, f: F) -> Self::P<'a, I, A>
   where
     F: Fn(&ParseResult<'a, I, A>) -> B + 'a,
     I: Debug,
