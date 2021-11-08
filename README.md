@@ -52,10 +52,10 @@ fn main() {
 
 ## Examples
 
-- [Hello World!](//hello_world.rs)
-- [CROND](//crond.rs)
+- [Hello World!](/parser/examples/hello_world.rs)
+- [CROND](/parser/examples/crond.rs)
 - JSON Parsers
-  - [Bytes](//json_byte.rs)
-  - [Characters](//json_char.rs)
-- [Calculator](//calculator.rs)
-- [Toys](//toys.rs)
+  - [Bytes](/parser/examples/json_byte.rs)
+  - [Characters](/parser/examples/json_char.rs)
+- [Calculator](/parser/examples/calculator.rs)
+- [Toys](/toys/src/main.rs)
