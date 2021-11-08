@@ -1,26 +1,15 @@
-mod operator;
-mod expr;
-mod labelled_parameter;
 mod environment;
+mod expr;
 mod interpreter;
+mod labelled_parameter;
+mod operator;
 mod parsers;
-use operator::*;
 
-use oni_comb_parser_rs::core::{Parser, ParserFunctor, ParserRunner};
-use oni_comb_parser_rs::extension::parser::{
-  ConversionParser, DiscardParser, LoggingParser, OperatorParser, RepeatParser, SkipParser,
-};
-use oni_comb_parser_rs::prelude::*;
+use oni_comb_parser_rs::core::ParserRunner;
 
-use std::collections::HashMap;
-
-use std::rc::Rc;
-use crate::environment::Environment;
-use crate::expr::Expr;
 use crate::interpreter::Interpreter;
-use crate::labelled_parameter::LabelledParameter;
-use crate::parsers::program;
 
+use crate::parsers::program;
 
 fn main() {
   let source = r#"
@@ -40,4 +29,3 @@ fn main() {
   println!("{:?}", result);
   Interpreter::new().call_main(result);
 }
-
