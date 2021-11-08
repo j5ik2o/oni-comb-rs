@@ -313,7 +313,7 @@ mod tests {
   fn test_per() {
     init();
     let input = "/2".chars().collect::<Vec<_>>();
-    let result = (asterisk_per(min_digit()) - end());
+    let _result = asterisk_per(min_digit()) - end();
     let result = (per(min_digit()) - end()).parse(&input).to_result().unwrap();
     assert_eq!(result, ValueExpr(2));
   }
