@@ -934,22 +934,13 @@ fn main() {
       }
     }
     define main() {
-      for(i in 1 to 10) {
+      for (i in 1 to 10) {
         sub(i);
       }
-      a = 1;
-      b = 2;
-      c = a + b;
-      if (a == 2) {
-        println(a);
-      } else {
-        println(b);
-      }
-      println(c);
     }
     "#;
   let input = source.chars().collect::<Vec<_>>();
-  let result = program().parse_as_result(&input).unwrap();
+  let result = program().parse(&input).to_result().unwrap();
   println!("{:?}", result);
   Interpreter::new().call_main(result);
 }
