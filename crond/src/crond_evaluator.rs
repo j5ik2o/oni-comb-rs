@@ -7,7 +7,6 @@ pub struct CronEvaluator<'a, Tz: TimeZone> {
     instant: &'a DateTime<Tz>,
 }
 
-
 impl<'a, Tz: TimeZone> CronEvaluator<'a, Tz> {
     pub fn new(instant: &'a DateTime<Tz>) -> Self {
         Self { instant }
