@@ -1,6 +1,6 @@
 use crate::labelled_parameter::LabelledParameter;
 use crate::operator::Operator;
-use std::any::Any;
+
 use std::rc::Rc;
 
 #[derive(Clone, Debug, PartialEq)]
