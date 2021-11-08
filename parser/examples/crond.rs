@@ -2,9 +2,9 @@
 
 use crate::Expr::*;
 use chrono::{DateTime, Datelike, NaiveDate, TimeZone, Timelike};
-use oni_comb_rs::core::{ParseError, Parser, ParserFunctor, ParserRunner};
-use oni_comb_rs::extension::parser::{LoggingParser, OperatorParser, RepeatParser};
-use oni_comb_rs::prelude::*;
+use oni_comb_parser_rs::core::{ParseError, Parser, ParserFunctor, ParserRunner};
+use oni_comb_parser_rs::extension::parser::{LoggingParser, OperatorParser, RepeatParser};
+use oni_comb_parser_rs::prelude::*;
 use std::env;
 
 #[derive(Debug, PartialEq, Clone)]

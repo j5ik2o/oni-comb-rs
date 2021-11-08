@@ -43,7 +43,7 @@ fn main() {
     (seq(b"hello") + elm_space() + seq(b"world")).collect(),
     elm(b'\'') + elm(b';'),
   )
-  .convert(std::str::from_utf8);
+  .map_res(std::str::from_utf8);
   let result: &str = parser.parse(input).unwrap();
 
   println!("{}", result); // hello world
@@ -52,10 +52,10 @@ fn main() {
 
 ## Examples
 
-- [Hello World!](/examples/hello_world.rs)
-- [CROND](/examples/crond.rs)
+- [Hello World!](//hello_world.rs)
+- [CROND](//crond.rs)
 - JSON Parsers
-  - [Bytes](/examples/json_byte.rs)
-  - [Characters](/examples/json_char.rs)
-- [Calculator](/examples/calculator.rs)
-- [Toys](/examples/toys.rs)
+  - [Bytes](//json_byte.rs)
+  - [Characters](//json_char.rs)
+- [Calculator](//calculator.rs)
+- [Toys](//toys.rs)

@@ -1,6 +1,6 @@
-use oni_comb_rs::core::{Parser, ParserRunner};
-use oni_comb_rs::extension::parser::{CollectParser, ConversionParser};
-use oni_comb_rs::prelude::*;
+use oni_comb_parser_rs::core::{Parser, ParserRunner};
+use oni_comb_parser_rs::extension::parser::{CollectParser, ConversionParser};
+use oni_comb_parser_rs::prelude::*;
 
 fn main() {
   let input: &[u8; 14] = b"'hello world';";

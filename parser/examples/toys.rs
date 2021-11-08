@@ -1,8 +1,8 @@
-use oni_comb_rs::core::{Parser, ParserFunctor, ParserRunner};
-use oni_comb_rs::extension::parser::{
+use oni_comb_parser_rs::core::{Parser, ParserFunctor, ParserRunner};
+use oni_comb_parser_rs::extension::parser::{
   ConversionParser, DiscardParser, LoggingParser, OperatorParser, RepeatParser, SkipParser,
 };
-use oni_comb_rs::prelude::*;
+use oni_comb_parser_rs::prelude::*;
 
 use std::collections::HashMap;
 
