@@ -24,11 +24,11 @@ fn function_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn global_variable_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let global_p = space() * tag("global") - space();
-  let global_indent_p = global_p * ident();
+  let global = space() * tag("global") - space();
+  let global_indent = global * ident();
   let eq = space() * tag("=") - space();
   let p =
-    (global_indent_p - eq + expression() - semi_colon()).map(|(name, e)| Expr::of_global_variable_definition(name, e));
+    (global_indent - eq + expression() - semi_colon()).map(|(name, e)| Expr::of_global_variable_definition(name, e));
   space() * p - space()
 }
 
@@ -38,18 +38,18 @@ fn lines<'a>() -> Parser<'a, char, Vec<Rc<Expr>>> {
 
 fn line<'a>() -> Parser<'a, char, Rc<Expr>> {
   let p =
-    println() | lazy(while_expr) | lazy(if_expr) | lazy(for_in_expr) | assignment() | expression_line() | block_expr();
+    println() | lazy(r#while) | lazy(r#if) | lazy(r#for) | assignment() | expression_line() | block_expr();
   space() * p - space()
 }
 
-fn while_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
+fn r#while<'a>() -> Parser<'a, char, Rc<Expr>> {
   let while_p = space() * tag("while") - space();
   let condition = while_p * lazy(expression).surround(lparen(), rparen());
   let p = (condition + lazy(line)).map(|(c, body)| Expr::of_while(c, body));
   (space() * p - space()).attempt()
 }
 
-fn for_in_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
+fn r#for<'a>() -> Parser<'a, char, Rc<Expr>> {
   let params_p = lparen() * ident() - (space() + tag("in") + space()) + expression() - (space() * tag("to") - space())
     + expression()
     - space()
@@ -73,7 +73,7 @@ fn for_in_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
   (space() * p - space()).attempt()
 }
 
-fn if_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
+fn r#if<'a>() -> Parser<'a, char, Rc<Expr>> {
   let condition = (tag("if") - space()) * lparen() * expression() - rparen();
   let else_p = space() * tag("else") - space();
   let p = (condition + line() + (else_p * line()).opt()).map(|((p1, p2), p3)| Expr::of_if(p1, p2, p3));
@@ -256,7 +256,7 @@ mod test {
     init();
     let source = r"for(i in 1 to 10) a=1;";
     let input = source.chars().collect::<Vec<_>>();
-    let result = for_in_expr().parse_as_result(&input).unwrap();
+    let result = r#for().parse_as_result(&input).unwrap();
     assert_eq!(
       Expr::Block(vec![
         Rc::new(Expr::Assignment("i".to_string(), Rc::new(Expr::IntegerLiteral(1)))),
@@ -287,7 +287,7 @@ mod test {
   fn test_if() {
     let source = r"if(1==2){1;}";
     let input = source.chars().collect::<Vec<_>>();
-    let result = if_expr().parse_as_result(&input).unwrap();
+    let result = r#if().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     assert_eq!(
       Expr::If(
