@@ -36,9 +36,7 @@ fn min_digit<'a>() -> Parser<'a, char, Expr> {
   (elm_in('1', '5') + elm_digit())
     .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
     .attempt()
-    | (elm('0') * elm_digit())
-      .map(|e| ValueExpr(e as u8 - 48))
-      .attempt()
+    | (elm('0') * elm_digit()).map(|e| ValueExpr(e as u8 - 48)).attempt()
     | (elm_digit()).map(|e| ValueExpr(e as u8 - 48))
 }
 
@@ -49,12 +47,8 @@ fn hour_digit<'a>() -> Parser<'a, char, Expr> {
     | (elm('1') + elm_digit())
       .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
       .attempt()
-    | (elm('0') * elm_digit())
-      .map(|e| ValueExpr(e as u8 - 48))
-      .attempt()
-    | elm_digit()
-      .map(|e| ValueExpr(e as u8 - 48))
-      .debug("hour_digit_4")
+    | (elm('0') * elm_digit()).map(|e| ValueExpr(e as u8 - 48)).attempt()
+    | elm_digit().map(|e| ValueExpr(e as u8 - 48)).debug("hour_digit_4")
 }
 
 fn day_digit<'a>() -> Parser<'a, char, Expr> {
@@ -64,9 +58,7 @@ fn day_digit<'a>() -> Parser<'a, char, Expr> {
     | (elm_of("12") + elm_digit())
       .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
       .attempt()
-    | (elm('0') * elm_digit_1_9())
-      .map(|e| ValueExpr(e as u8 - 48))
-      .attempt()
+    | (elm('0') * elm_digit_1_9()).map(|e| ValueExpr(e as u8 - 48)).attempt()
     | elm_digit_1_9().map(|e| ValueExpr(e as u8 - 48))
 }
 
@@ -74,9 +66,7 @@ fn month_digit<'a>() -> Parser<'a, char, Expr> {
   (elm('1') + elm_of("012"))
     .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
     .attempt()
-    | (elm('0') * elm_digit_1_9())
-      .map(|e| ValueExpr(e as u8 - 48))
-      .attempt()
+    | (elm('0') * elm_digit_1_9()).map(|e| ValueExpr(e as u8 - 48)).attempt()
     | elm_digit_1_9().map(|e| ValueExpr(e as u8 - 48))
 }
 

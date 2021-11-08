@@ -198,7 +198,7 @@ fn for_in_expr<'a>() -> Parser<'a, char, Rc<Expr>> {
     + expression()
     - space()
     - rparen();
-  let p0 = (tag("for") - space()) * params_p.log("params") + lazy(line);
+  let p0 = (tag("for") - space()) * params_p.debug("params") + lazy(line);
   let p = p0.map(|(((name, from), to), body)| {
     Expr::of_block(vec![
       Expr::of_assignment(name.to_string(), from),
@@ -259,7 +259,7 @@ fn integer<'a>() -> Parser<'a, char, Rc<Expr>> {
 fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
   chain_left1(
     primary(),
-    (mul() | div()).log("operator").map(|e| match e {
+    (mul() | div()).debug("operator").map(|e| match e {
       '*' => Expr::of_multiply,
       '/' => Expr::of_divide,
       _ => panic!("unexpected operator"),

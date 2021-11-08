@@ -1,4 +1,3 @@
-use crate::expr::ValueError::TypeMismatch;
 use crate::labelled_parameter::LabelledParameter;
 use crate::operator::Operator;
 use std::any::Any;
@@ -120,4 +119,3 @@ impl Expr {
     Rc::new(Expr::Binary(Operator::Divide, lhs, rhs))
   }
 }
-

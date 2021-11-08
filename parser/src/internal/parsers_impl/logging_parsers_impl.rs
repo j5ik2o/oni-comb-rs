@@ -1,5 +1,5 @@
 use crate::core::{ParseError, ParseResult, Parser, ParserRunner};
-use crate::extension::parsers::{LoggingParsers, LogLevel};
+use crate::extension::parsers::{LogLevel, LoggingParsers};
 use crate::internal::ParsersImpl;
 use std::fmt::{Debug, Display};
 
@@ -13,10 +13,10 @@ impl LoggingParsers for ParsersImpl {
       let ps = parser.run(parse_state);
       let s = format!("{} = {}", name, f(&ps));
       match log_level {
-        LogLevel::Debug => log::debug!("{}",s),
-        LogLevel::Info => log::info!("{}",s),
-        LogLevel::Warn => log::warn!("{}",s),
-        LogLevel::Err => log::error!("{}",s),
+        LogLevel::Debug => log::debug!("{}", s),
+        LogLevel::Info => log::info!("{}", s),
+        LogLevel::Warn => log::warn!("{}", s),
+        LogLevel::Err => log::error!("{}", s),
       }
       ps
     })
