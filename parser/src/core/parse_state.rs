@@ -1,3 +1,5 @@
+use crate::core::Element;
+
 #[derive(Clone)]
 pub struct ParseState<'a, I> {
   input: &'a [I],

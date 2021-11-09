@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 pub trait Element: Debug {
+  fn to_char(self) -> char;
   fn is_ascii_zero(&self) -> bool;
   fn is_ascii_space(&self) -> bool;
   fn is_ascii_multi_space(&self) -> bool;
@@ -23,6 +24,11 @@ pub trait Element: Debug {
 }
 
 impl Element for u8 {
+
+  fn to_char(self) -> char {
+    char::from(self)
+  }
+
   fn is_ascii_zero(&self) -> bool {
     *self == b'0'
   }
@@ -85,6 +91,10 @@ impl Element for u8 {
 }
 
 impl Element for char {
+  fn to_char(self) -> char {
+    self
+  }
+
   fn is_ascii_zero(&self) -> bool {
     *self == '0'
   }

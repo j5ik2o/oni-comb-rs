@@ -3,11 +3,11 @@ use crate::expr::Expr;
 use crate::get_days_from_month;
 use chrono::{DateTime, Datelike, TimeZone, Timelike};
 
-pub struct CronEvaluator<'a, Tz: TimeZone> {
+pub struct Evaluator<'a, Tz: TimeZone> {
   instant: &'a DateTime<Tz>,
 }
 
-impl<'a, Tz: TimeZone> CronEvaluator<'a, Tz> {
+impl<'a, Tz: TimeZone> Evaluator<'a, Tz> {
   pub fn new(instant: &'a DateTime<Tz>) -> Self {
     Self { instant }
   }

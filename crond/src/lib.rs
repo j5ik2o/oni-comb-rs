@@ -1,10 +1,10 @@
 #![feature(box_patterns)]
-mod crond_evaluator;
 mod environment;
+mod evaluator;
 mod expr;
 
-use chrono::{DateTime, Datelike, NaiveDate, TimeZone, Timelike};
-use oni_comb_parser_rs::core::{ParseError, Parser, ParserFunctor, ParserRunner};
+use chrono::{NaiveDate};
+use oni_comb_parser_rs::core::{Parser, ParserFunctor, ParserRunner};
 use oni_comb_parser_rs::extension::parser::{LoggingParser, OperatorParser, RepeatParser};
 use oni_comb_parser_rs::prelude::*;
 
@@ -147,8 +147,10 @@ fn instruction<'a>() -> Parser<'a, char, Expr> {
   })
 }
 
-pub fn parse<'a>(input: &'a [char]) -> Result<Expr, ParseError<'a, char>> {
-  (instruction() - end()).parse(input).to_result()
+pub fn parse<'a>(input: &str) -> Result<Expr, String> {
+  let input = input.chars().collect::<Vec<_>>();
+  let x = (instruction() - end()).parse(&input).to_result();
+  x.map_err(|e| e.to_string())
 }
 
 #[cfg(test)]
@@ -162,8 +164,7 @@ mod tests {
   #[test]
   fn test_instruction_1() {
     init();
-    let input = "* * * * *".chars().collect::<Vec<_>>();
-    let result = parse(&input).unwrap();
+    let result = parse("* * * * *").unwrap();
     assert_eq!(
       result,
       CronExpr {
@@ -179,8 +180,7 @@ mod tests {
   #[test]
   fn test_instruction_2() {
     init();
-    let input = "1 1 1 1 1".chars().collect::<Vec<_>>();
-    let result = parse(&input).unwrap();
+    let result = parse("1 1 1 1 1").unwrap();
     assert_eq!(
       result,
       CronExpr {
@@ -391,7 +391,7 @@ mod tests {
     let result = (month_digit() - end()).parse(&input).to_result();
     assert_eq!(result.is_err(), true);
   }
-  use crate::crond_evaluator::CronEvaluator;
+  use crate::evaluator::Evaluator;
   use crate::expr::Expr;
   use crate::expr::Expr::{AnyValueExpr, PerExpr, RangeExpr, ValueExpr};
   use chrono::{TimeZone, Utc};
@@ -399,7 +399,7 @@ mod tests {
   #[test]
   fn test_anytime() {
     let date_time = Utc.ymd(2021, 1, 1).and_hms(1, 1, 1);
-    let cron_evaluator = CronEvaluator::new(&date_time);
+    let cron_evaluator = Evaluator::new(&date_time);
     let expr = Expr::CronExpr {
       mins: Box::from(Expr::AnyValueExpr),
       hours: Box::from(Expr::AnyValueExpr),
@@ -414,7 +414,7 @@ mod tests {
   #[test]
   fn test_point_time() {
     let date_time = Utc.ymd(2021, 1, 1).and_hms(1, 1, 1);
-    let cron_evaluator = CronEvaluator::new(&date_time);
+    let cron_evaluator = Evaluator::new(&date_time);
     let expr = Expr::CronExpr {
       mins: Box::from(Expr::ValueExpr(1)),
       hours: Box::from(Expr::ValueExpr(1)),
@@ -431,7 +431,7 @@ mod tests {
     let input = "* * * * *".chars().collect::<Vec<_>>();
     let expr = (instruction() - end()).parse(&input).to_result().unwrap();
     let date_time = Utc.ymd(2021, 1, 1).and_hms(1, 1, 1);
-    let cron_evaluator = CronEvaluator::new(&date_time);
+    let cron_evaluator = Evaluator::new(&date_time);
     let result = cron_evaluator.eval(&expr);
     assert!(result)
   }
