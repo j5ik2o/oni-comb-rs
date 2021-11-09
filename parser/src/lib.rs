@@ -368,7 +368,6 @@ mod tests {
   use crate::extension::parser::{
     CollectParser, ConversionParser, DiscardParser, LoggingParser, OffsetParser, OperatorParser, RepeatParser,
   };
-  use crate::*;
 
   use super::prelude::*;
 

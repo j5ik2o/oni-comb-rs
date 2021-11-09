@@ -382,10 +382,7 @@ mod test {
     assert_eq!(
       Expr::of_labelled_call(
         "abc".to_string(),
-        vec![LabelledParameter::new(
-          "n".to_string(),
-         Expr::of_integer_literal(5)
-        )]
+        vec![LabelledParameter::new("n".to_string(), Expr::of_integer_literal(5))]
       ),
       result
     );
@@ -520,11 +517,7 @@ mod test {
     let result = additive().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     assert_eq!(
-      Expr::of_binary(
-        Operator::Add,
-        Expr::of_integer_literal(1),
-        Expr::of_integer_literal(2)
-      ),
+      Expr::of_binary(Operator::Add, Expr::of_integer_literal(1), Expr::of_integer_literal(2)),
       result
     );
   }
