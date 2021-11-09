@@ -115,6 +115,10 @@ impl Expr {
     Rc::new(Expr::Binary(Operator::Subtract, lhs, rhs))
   }
 
+  pub fn of_mod(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
+    Rc::new(Expr::Binary(Operator::Mod, lhs, rhs))
+  }
+
   pub fn of_multiply(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
     Rc::new(Expr::Binary(Operator::Multiply, lhs, rhs))
   }

@@ -14,7 +14,7 @@ use crate::parsers::program;
 fn main() {
   let source = r#"
     define sub(i) {
-      if (i > 3) {
+      if (i % 2 == 0) {
         println(i);
       }
     }

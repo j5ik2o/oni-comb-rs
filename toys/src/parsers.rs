@@ -15,6 +15,10 @@ fn subtract<'a>() -> Parser<'a, char, &'a char> {
   space() * elm_ref('-') - space()
 }
 
+fn r#mod<'a>() -> Parser<'a, char, &'a char> {
+  space() * elm_ref('%') - space()
+}
+
 fn mul<'a>() -> Parser<'a, char, &'a char> {
   space() * elm_ref('*') - space()
 }
@@ -68,9 +72,9 @@ fn top_level_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn function_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let define_p = space() * tag("define") * space() * ident() - space();
-  let def_args_p = ident().of_many0_sep(comma()).surround(lparen(), rparen());
-  let p = (define_p + def_args_p + block())
+  let define = space() * tag("define") * space() * ident() - space();
+  let args = ident().of_many0_sep(comma()).surround(lparen(), rparen());
+  let p = (define + args + block())
     .map(|((name, args), body)| Expr::of_function_definition(name.to_string(), args, body));
   space() * p - space()
 }
@@ -94,8 +98,8 @@ fn line<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn r#while<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let while_p = space() * tag("while") - space();
-  let condition = while_p * lazy(expression).surround(lparen(), rparen());
+  let r#while = space() * tag("while") - space();
+  let condition = r#while * lazy(expression).surround(lparen(), rparen());
   let p = (condition + lazy(line)).map(|(c, body)| Expr::of_while(c, body));
   (space() * p - space()).attempt()
 }
@@ -175,9 +179,19 @@ fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
   )
 }
 
-fn additive<'a>() -> Parser<'a, char, Rc<Expr>> {
+fn moditive<'a>() -> Parser<'a, char, Rc<Expr>> {
   chain_left1(
     multitive(),
+    r#mod().map(|e| match e {
+      '%' => Expr::of_mod,
+      _ => panic!("unexpected operator"),
+    }),
+  )
+}
+
+fn additive<'a>() -> Parser<'a, char, Rc<Expr>> {
+  chain_left1(
+    moditive(),
     (add() | subtract()).map(|e| match e {
       '+' => Expr::of_add,
       '-' => Expr::of_subtract,
@@ -506,6 +520,18 @@ mod test {
         Expr::of_integer_literal(1),
         Expr::of_integer_literal(2)
       ),
+      result
+    );
+  }
+
+  #[test]
+  fn test_moditive() {
+    let source = r"2%2";
+    let input = source.chars().collect::<Vec<_>>();
+    let result = moditive().parse_as_result(&input).unwrap();
+    println!("{:?}", result);
+    assert_eq!(
+      Expr::of_binary(Operator::Mod, Expr::of_integer_literal(2), Expr::of_integer_literal(2)),
       result
     );
   }

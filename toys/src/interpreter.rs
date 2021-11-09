@@ -60,6 +60,7 @@ impl Interpreter {
         let lhs = self.interpret(lhs.clone());
         let rhs = self.interpret(rhs.clone());
         match op {
+          Operator::Mod => lhs % rhs,
           Operator::Add => lhs + rhs,
           Operator::Subtract => lhs - rhs,
           Operator::Multiply => lhs * rhs,

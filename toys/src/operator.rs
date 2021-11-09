@@ -1,5 +1,6 @@
 #[derive(Clone, Debug, PartialEq)]
 pub enum Operator {
+  Mod,
   Add,            // +
   Subtract,       // -
   Multiply,       // *
