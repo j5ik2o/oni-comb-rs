@@ -31,6 +31,7 @@ impl Expr {
   pub fn of_string_literal(value: String) -> Rc<Expr> {
     Rc::new(Expr::StringLiteral(value))
   }
+
   pub fn of_binary(operator: Operator, lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
     Rc::new(Expr::Binary(operator, lhs, rhs))
   }

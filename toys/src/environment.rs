@@ -1,6 +1,6 @@
+use crate::values::Value;
 use std::collections::HashMap;
 use std::rc::Rc;
-use crate::values::Value;
 
 #[derive(Debug, Clone)]
 pub struct Environment {

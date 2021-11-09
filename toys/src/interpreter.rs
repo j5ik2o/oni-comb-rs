@@ -1,9 +1,9 @@
 use crate::environment::Environment;
 use crate::expr::Expr;
 use crate::operator::Operator;
+use crate::values::Value;
 use std::collections::HashMap;
 use std::rc::Rc;
-use crate::values::Value;
 
 pub struct Interpreter {
   variable_environment: Environment,
@@ -73,7 +73,7 @@ impl Interpreter {
           Operator::GreaterThan => Value::Bool(lhs.as_int() > rhs.as_int()),
           Operator::GreaterOrEqual => Value::Bool(lhs.as_int() >= rhs.as_int()),
           Operator::EqualEqual => Value::Bool(lhs.as_int() == rhs.as_int()),
-          Operator::NotEqual => Value::Bool(lhs.as_int() != rhs.as_int())
+          Operator::NotEqual => Value::Bool(lhs.as_int() != rhs.as_int()),
         }
       }
       Expr::StringLiteral(value) => Value::String(value.clone()),
@@ -138,10 +138,13 @@ impl Interpreter {
       }
       Expr::If(condition, body, else_body) => {
         let cond = self.interpret(condition.clone());
-        if cond.as_bool(){
+        if cond.as_bool() {
           self.interpret(body.clone())
         } else {
-          else_body.as_ref().map(|e| self.interpret(e.clone())).unwrap_or(Value::Bool(true))
+          else_body
+            .as_ref()
+            .map(|e| self.interpret(e.clone()))
+            .unwrap_or(Value::Bool(true))
         }
       }
       Expr::While(cond, body) => {

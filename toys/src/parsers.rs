@@ -1,9 +1,9 @@
-use std::iter::FromIterator;
 use crate::expr::Expr;
 use crate::labelled_parameter::LabelledParameter;
 use oni_comb_parser_rs::prelude::*;
-use std::rc::Rc;
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
+use std::iter::FromIterator;
+use std::rc::Rc;
 
 fn ident<'a>() -> Parser<'a, char, String> {
   space() * regex(r"[a-zA-Z_][a-zA-Z0-9_]*") - space()
@@ -76,8 +76,8 @@ fn top_level_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
 fn function_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
   let define = space() * tag("fn") * space() * ident() - space();
   let args = ident().of_many0_sep(comma()).surround(lparen(), rparen());
-  let p = (define + args + block())
-    .map(|((name, args), body)| Expr::of_function_definition(name.to_string(), args, body));
+  let p =
+    (define + args + block()).map(|((name, args), body)| Expr::of_function_definition(name.to_string(), args, body));
   space() * p - space()
 }
 
@@ -214,19 +214,27 @@ fn comparative<'a>() -> Parser<'a, char, Rc<Expr>> {
 
   let p = chain_left1(
     additive(),
-    (space() * (and.attempt()  | or.attempt() | lte.attempt() | gte.attempt() | lt.attempt() | gt.attempt() | neq.attempt() | eqeq) - space()).map(
-      |e| match e {
-        "&&" => Expr::of_and,
-        "||" => Expr::of_or,
-        "<=" => Expr::of_less_or_equal,
-        ">=" => Expr::of_greater_or_equal,
-        "<" => Expr::of_less_than,
-        ">" => Expr::of_greater_than,
-        "==" => Expr::of_equal_equal,
-        "!=" => Expr::of_not_equal,
-        _ => panic!("unexpected operator"),
-      },
-    ),
+    (space()
+      * (and.attempt()
+        | or.attempt()
+        | lte.attempt()
+        | gte.attempt()
+        | lt.attempt()
+        | gt.attempt()
+        | neq.attempt()
+        | eqeq)
+      - space())
+    .map(|e| match e {
+      "&&" => Expr::of_and,
+      "||" => Expr::of_or,
+      "<=" => Expr::of_less_or_equal,
+      ">=" => Expr::of_greater_or_equal,
+      "<" => Expr::of_less_than,
+      ">" => Expr::of_greater_than,
+      "==" => Expr::of_equal_equal,
+      "!=" => Expr::of_not_equal,
+      _ => panic!("unexpected operator"),
+    }),
   );
   p
 }
@@ -263,30 +271,32 @@ fn bool_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
 
 fn string_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
   let special_char = elm_ref('\\')
-      | elm_ref('/')
-      | elm_ref('"')
-      | elm_ref('b').map(|_| &'\x08')
-      | elm_ref('f').map(|_| &'\x0C')
-      | elm_ref('n').map(|_| &'\n')
-      | elm_ref('r').map(|_| &'\r')
-      | elm_ref('t').map(|_| &'\t');
+    | elm_ref('/')
+    | elm_ref('"')
+    | elm_ref('b').map(|_| &'\x08')
+    | elm_ref('f').map(|_| &'\x0C')
+    | elm_ref('n').map(|_| &'\n')
+    | elm_ref('r').map(|_| &'\r')
+    | elm_ref('t').map(|_| &'\t');
   let escape_sequence = elm_ref('\\') * special_char;
   let char_string = (none_ref_of("\\\"") | escape_sequence)
-      .map(Clone::clone)
-      .of_many1()
-      .map(String::from_iter);
+    .map(Clone::clone)
+    .of_many1()
+    .map(String::from_iter);
   let utf16_char: Parser<char, u16> = tag("\\u")
-      * elm_pred(|c: &char| c.is_digit(16))
+    * elm_pred(|c: &char| c.is_digit(16))
       .of_count(4)
       .map(String::from_iter)
       .map_res(|digits| u16::from_str_radix(&digits, 16));
   let utf16_string = utf16_char.of_many1().map(|chars| {
     decode_utf16(chars)
-        .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
-        .collect::<String>()
+      .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
+      .collect::<String>()
   });
   let string = surround(elm_ref('"'), (char_string | utf16_string).of_many0(), elm_ref('"'));
-  string.map(|strings| Expr::of_string_literal(strings.concat())).attempt()
+  string
+    .map(|strings| Expr::of_string_literal(strings.concat()))
+    .attempt()
 }
 
 fn identifier<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -295,7 +305,14 @@ fn identifier<'a>() -> Parser<'a, char, Rc<Expr>> {
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
   let expr = (lparen() * lazy(expression) - rparen()).map(|e| Rc::new(Expr::Parenthesized(e)));
-  expr | integer() | string_literal() | function_call() | labelled_call() | array_literal() | bool_literal() | identifier()
+  expr
+    | integer()
+    | string_literal()
+    | function_call()
+    | labelled_call()
+    | array_literal()
+    | bool_literal()
+    | identifier()
 }
 
 #[cfg(test)]
