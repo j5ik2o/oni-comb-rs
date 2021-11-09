@@ -399,7 +399,7 @@ mod tests {
   #[test]
   fn test_anytime() {
     let date_time = Utc.ymd(2021, 1, 1).and_hms(1, 1, 1);
-    let cron_evaluator = Evaluator::new(&date_time);
+    let evaluator = Evaluator::new(&date_time);
     let expr = Expr::CronExpr {
       mins: Box::from(Expr::AnyValueExpr),
       hours: Box::from(Expr::AnyValueExpr),
@@ -407,14 +407,14 @@ mod tests {
       months: Box::from(Expr::AnyValueExpr),
       day_of_weeks: Box::from(Expr::AnyValueExpr),
     };
-    let result = cron_evaluator.eval(&expr);
+    let result = evaluator.eval(&expr);
     assert!(result)
   }
 
   #[test]
   fn test_point_time() {
     let date_time = Utc.ymd(2021, 1, 1).and_hms(1, 1, 1);
-    let cron_evaluator = Evaluator::new(&date_time);
+    let evaluator = Evaluator::new(&date_time);
     let expr = Expr::CronExpr {
       mins: Box::from(Expr::ValueExpr(1)),
       hours: Box::from(Expr::ValueExpr(1)),
@@ -422,7 +422,7 @@ mod tests {
       months: Box::from(Expr::ValueExpr(1)),
       day_of_weeks: Box::from(Expr::AnyValueExpr),
     };
-    let result = cron_evaluator.eval(&expr);
+    let result = evaluator.eval(&expr);
     assert!(result)
   }
 
@@ -431,8 +431,8 @@ mod tests {
     let input = "* * * * *".chars().collect::<Vec<_>>();
     let expr = (instruction() - end()).parse(&input).to_result().unwrap();
     let date_time = Utc.ymd(2021, 1, 1).and_hms(1, 1, 1);
-    let cron_evaluator = Evaluator::new(&date_time);
-    let result = cron_evaluator.eval(&expr);
+    let evaluator = Evaluator::new(&date_time);
+    let result = evaluator.eval(&expr);
     assert!(result)
   }
 }
