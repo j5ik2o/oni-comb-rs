@@ -15,6 +15,9 @@ use crate::parsers::program;
 fn main() {
   let source = r#"
     fn sub(i) {
+      if ((i % 3 == 0) && (i % 5 == 0)) {
+        println("FizzBuzz");
+      } else {
         if (i % 3 == 0) {
           println("Fizz");
         } else {
@@ -24,10 +27,11 @@ fn main() {
             println(i);
           }
         }
+      }
     }
     fn main() {
       println("----");
-      for (i in 1 to 10) {
+      for (i in 1 to 100) {
         sub(i);
       }
       println("----");

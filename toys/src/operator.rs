@@ -11,4 +11,6 @@ pub enum Operator {
   GreaterOrEqual, // >=
   EqualEqual,     // ==
   NotEqual,       // !=
+  And,
+  Or,
 }

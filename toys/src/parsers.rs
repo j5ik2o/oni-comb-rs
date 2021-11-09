@@ -209,11 +209,15 @@ fn comparative<'a>() -> Parser<'a, char, Rc<Expr>> {
   let gte = tag(">=");
   let eqeq = tag("==");
   let neq = tag("!=");
+  let and = tag("&&");
+  let or = tag("||");
 
   let p = chain_left1(
     additive(),
-    (space() * (lte.attempt() | gte.attempt() | lt.attempt() | gt.attempt() | neq.attempt() | eqeq) - space()).map(
+    (space() * (and.attempt()  | or.attempt() | lte.attempt() | gte.attempt() | lt.attempt() | gt.attempt() | neq.attempt() | eqeq) - space()).map(
       |e| match e {
+        "&&" => Expr::of_and,
+        "||" => Expr::of_or,
         "<=" => Expr::of_less_or_equal,
         ">=" => Expr::of_greater_or_equal,
         "<" => Expr::of_less_than,

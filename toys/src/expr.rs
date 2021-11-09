@@ -111,6 +111,14 @@ impl Expr {
     Rc::new(Expr::Binary(Operator::NotEqual, lhs, rhs))
   }
 
+  pub fn of_and(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
+    Rc::new(Expr::Binary(Operator::And, lhs, rhs))
+  }
+
+  pub fn of_or(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
+    Rc::new(Expr::Binary(Operator::Or, lhs, rhs))
+  }
+
   pub fn of_add(lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
     Rc::new(Expr::Binary(Operator::Add, lhs, rhs))
   }

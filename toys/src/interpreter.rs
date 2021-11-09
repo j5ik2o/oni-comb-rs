@@ -61,6 +61,8 @@ impl Interpreter {
         let lhs = self.interpret(lhs.clone());
         let rhs = self.interpret(rhs.clone());
         match op {
+          Operator::And => Value::Bool(lhs.as_bool() && rhs.as_bool()),
+          Operator::Or => Value::Bool(lhs.as_bool() || rhs.as_bool()),
           Operator::Mod => Value::Int(lhs.as_int() % rhs.as_int()),
           Operator::Add => Value::Int(lhs.as_int() + rhs.as_int()),
           Operator::Subtract => Value::Int(lhs.as_int() - rhs.as_int()),
