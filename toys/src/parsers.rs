@@ -233,7 +233,7 @@ fn array_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
     .of_many0_sep(comma())
     .surround(lbracket(), rbracket())
     .map(Expr::of_array_literal);
-  p
+  space() * p - space()
 }
 
 fn bool_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
