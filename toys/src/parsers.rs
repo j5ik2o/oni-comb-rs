@@ -1,7 +1,9 @@
+use std::iter::FromIterator;
 use crate::expr::Expr;
 use crate::labelled_parameter::LabelledParameter;
 use oni_comb_parser_rs::prelude::*;
 use std::rc::Rc;
+use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 
 fn ident<'a>() -> Parser<'a, char, String> {
   space() * regex(r"[a-zA-Z_][a-zA-Z0-9_]*") - space()
@@ -255,13 +257,41 @@ fn bool_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
   space() * p - space()
 }
 
+fn string_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
+  let special_char = elm_ref('\\')
+      | elm_ref('/')
+      | elm_ref('"')
+      | elm_ref('b').map(|_| &'\x08')
+      | elm_ref('f').map(|_| &'\x0C')
+      | elm_ref('n').map(|_| &'\n')
+      | elm_ref('r').map(|_| &'\r')
+      | elm_ref('t').map(|_| &'\t');
+  let escape_sequence = elm_ref('\\') * special_char;
+  let char_string = (none_ref_of("\\\"") | escape_sequence)
+      .map(Clone::clone)
+      .of_many1()
+      .map(String::from_iter);
+  let utf16_char: Parser<char, u16> = tag("\\u")
+      * elm_pred(|c: &char| c.is_digit(16))
+      .of_count(4)
+      .map(String::from_iter)
+      .map_res(|digits| u16::from_str_radix(&digits, 16));
+  let utf16_string = utf16_char.of_many1().map(|chars| {
+    decode_utf16(chars)
+        .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
+        .collect::<String>()
+  });
+  let string = surround(elm_ref('"'), (char_string | utf16_string).of_many0(), elm_ref('"'));
+  string.map(|strings| Expr::of_string_literal(strings.concat())).attempt()
+}
+
 fn identifier<'a>() -> Parser<'a, char, Rc<Expr>> {
   ident().map(Expr::of_symbol)
 }
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
   let expr = (lparen() * lazy(expression) - rparen()).map(|e| Rc::new(Expr::Parenthesized(e)));
-  expr | integer() | function_call() | labelled_call() | array_literal() | bool_literal() | identifier()
+  expr | integer() | string_literal() | function_call() | labelled_call() | array_literal() | bool_literal() | identifier()
 }
 
 #[cfg(test)]

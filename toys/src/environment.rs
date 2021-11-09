@@ -1,22 +1,23 @@
 use std::collections::HashMap;
 use std::rc::Rc;
+use crate::values::Value;
 
 #[derive(Debug, Clone)]
 pub struct Environment {
-  bindings: HashMap<String, i64>,
+  bindings: HashMap<String, Value>,
   pub(crate) next: Option<Rc<Environment>>,
 }
 
 impl Environment {
-  pub fn as_bindings_mut(&mut self) -> &HashMap<String, i64> {
+  pub fn as_bindings_mut(&mut self) -> &HashMap<String, Value> {
     &mut self.bindings
   }
 
-  pub fn as_bindings(&self) -> &HashMap<String, i64> {
+  pub fn as_bindings(&self) -> &HashMap<String, Value> {
     &self.bindings
   }
 
-  pub fn find_binding(&self, name: &str) -> Option<&HashMap<String, i64>> {
+  pub fn find_binding(&self, name: &str) -> Option<&HashMap<String, Value>> {
     match self.bindings.get(name) {
       Some(_) => Some(&self.bindings),
       None => match &self.next {
@@ -29,7 +30,7 @@ impl Environment {
     }
   }
 
-  pub fn new(bindings: HashMap<String, i64>, next: Option<Rc<Environment>>) -> Environment {
+  pub fn new(bindings: HashMap<String, Value>, next: Option<Rc<Environment>>) -> Environment {
     Self { bindings, next }
   }
 }

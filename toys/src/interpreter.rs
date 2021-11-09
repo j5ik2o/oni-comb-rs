@@ -3,6 +3,7 @@ use crate::expr::Expr;
 use crate::operator::Operator;
 use std::collections::HashMap;
 use std::rc::Rc;
+use crate::values::Value;
 
 pub struct Interpreter {
   variable_environment: Environment,
@@ -22,11 +23,11 @@ impl Interpreter {
     self.function_environment.clear();
   }
 
-  pub fn get_value(&self, name: &str) -> &i64 {
+  pub fn get_value(&self, name: &str) -> &Value {
     self.variable_environment.as_bindings().get(name).unwrap()
   }
 
-  pub fn call_main(&mut self, expr: Rc<Expr>) -> i64 {
+  pub fn call_main(&mut self, expr: Rc<Expr>) -> Value {
     match &*expr {
       Expr::Program(definitions) => {
         for top_level in definitions {
@@ -54,67 +55,32 @@ impl Interpreter {
     }
   }
 
-  pub fn interpret(&mut self, expr: Rc<Expr>) -> i64 {
+  pub fn interpret(&mut self, expr: Rc<Expr>) -> Value {
     match &*expr {
       Expr::Binary(op, lhs, rhs) => {
         let lhs = self.interpret(lhs.clone());
         let rhs = self.interpret(rhs.clone());
         match op {
-          Operator::Mod => lhs % rhs,
-          Operator::Add => lhs + rhs,
-          Operator::Subtract => lhs - rhs,
-          Operator::Multiply => lhs * rhs,
-          Operator::Divide => lhs / rhs,
-          Operator::LessThan => {
-            if lhs < rhs {
-              1
-            } else {
-              0
-            }
-          }
-          Operator::LessOrEqual => {
-            if lhs <= rhs {
-              1
-            } else {
-              0
-            }
-          }
-          Operator::GreaterThan => {
-            if lhs > rhs {
-              1
-            } else {
-              0
-            }
-          }
-          Operator::GreaterOrEqual => {
-            if lhs >= rhs {
-              1
-            } else {
-              0
-            }
-          }
-          Operator::EqualEqual => {
-            if lhs == rhs {
-              1
-            } else {
-              0
-            }
-          }
-          Operator::NotEqual => {
-            if lhs != rhs {
-              1
-            } else {
-              0
-            }
-          }
+          Operator::Mod => Value::Int(lhs.as_int() % rhs.as_int()),
+          Operator::Add => Value::Int(lhs.as_int() + rhs.as_int()),
+          Operator::Subtract => Value::Int(lhs.as_int() - rhs.as_int()),
+          Operator::Multiply => Value::Int(lhs.as_int() * rhs.as_int()),
+          Operator::Divide => Value::Int(lhs.as_int() / rhs.as_int()),
+          Operator::LessThan => Value::Bool(lhs.as_int() < rhs.as_int()),
+          Operator::LessOrEqual => Value::Bool(lhs.as_int() <= rhs.as_int()),
+          Operator::GreaterThan => Value::Bool(lhs.as_int() > rhs.as_int()),
+          Operator::GreaterOrEqual => Value::Bool(lhs.as_int() >= rhs.as_int()),
+          Operator::EqualEqual => Value::Bool(lhs.as_int() == rhs.as_int()),
+          Operator::NotEqual => Value::Bool(lhs.as_int() != rhs.as_int())
         }
       }
-      Expr::IntegerLiteral(value) => *value,
+      Expr::StringLiteral(value) => Value::String(value.clone()),
+      Expr::IntegerLiteral(value) => Value::Int(*value),
       Expr::Parenthesized(expr) => self.interpret(expr.clone()),
       Expr::Symbol(name) => {
         let bindings_opt = self.variable_environment.find_binding(name);
         let v = bindings_opt.unwrap().get(name).unwrap();
-        *v
+        v.clone()
       }
       Expr::FunctionCall(name, actual_params) => {
         if let Expr::FunctionDefinition(_def_name, formal_parmas, body) =
@@ -129,7 +95,7 @@ impl Interpreter {
           let mut i = 0;
           for formal_param_name in formal_parmas {
             let mut bindings = self.variable_environment.as_bindings().clone();
-            bindings.insert(formal_param_name.clone(), values[i]);
+            bindings.insert(formal_param_name.clone(), values[i].clone());
             i += 1;
           }
           let result = self.interpret(body.clone());
@@ -145,23 +111,23 @@ impl Interpreter {
           let value = self.interpret(expr.clone());
           let mut bindings = self.variable_environment.as_bindings().clone();
           let r = bindings.get_mut(name).unwrap();
-          *r = value;
+          *r = value.clone();
           self.variable_environment = Environment::new(bindings, self.variable_environment.next.clone());
           value
         } else {
           let value = self.interpret(expr.clone());
           let mut bindings = self.variable_environment.as_bindings().clone();
-          bindings.insert(name.clone(), value);
+          bindings.insert(name.clone(), value.clone());
           self.variable_environment = Environment::new(bindings, self.variable_environment.next.clone());
           value
         }
       }
       Expr::Block(exprs) => {
-        let mut value = 0;
+        let mut value = None;
         for expr in exprs {
-          value = self.interpret(expr.clone());
+          value = Some(self.interpret(expr.clone()));
         }
-        value
+        value.unwrap()
       }
       Expr::Println(args) => {
         let value = self.interpret(args.clone());
@@ -170,22 +136,22 @@ impl Interpreter {
       }
       Expr::If(condition, body, else_body) => {
         let cond = self.interpret(condition.clone());
-        if cond != 0 {
+        if cond.as_bool(){
           self.interpret(body.clone())
         } else {
-          else_body.as_ref().map(|e| self.interpret(e.clone())).unwrap_or(1)
+          else_body.as_ref().map(|e| self.interpret(e.clone())).unwrap_or(Value::Bool(true))
         }
       }
       Expr::While(cond, body) => {
         loop {
           let condition = self.interpret(cond.clone());
-          if condition != 0 {
+          if condition.as_bool() {
             self.interpret(body.clone());
           } else {
             break;
           }
         }
-        1
+        Value::Bool(true)
       }
       expr => panic!("must not reach here: {:?}", expr),
     }

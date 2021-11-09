@@ -5,8 +5,11 @@ use std::rc::Rc;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Expr {
-  Binary(Operator, Rc<Expr>, Rc<Expr>),
+  StringLiteral(String),
   IntegerLiteral(i64),
+  BoolLiteral(bool),
+  ArrayLiteral(Vec<Rc<Expr>>),
+  Binary(Operator, Rc<Expr>, Rc<Expr>),
   Symbol(String),
   FunctionCall(String, Vec<Rc<Expr>>),
   LabelledCall(String, Vec<LabelledParameter>),
@@ -18,8 +21,6 @@ pub enum Expr {
   If(Rc<Expr>, Rc<Expr>, Option<Rc<Expr>>),
   Block(Vec<Rc<Expr>>),
   Assignment(String, Rc<Expr>),
-  ArrayLiteral(Vec<Rc<Expr>>),
-  BoolLiteral(bool),
   Parenthesized(Rc<Expr>),
   GlobalVariableDefinition(String, Rc<Expr>),
   FunctionDefinition(String, Vec<String>, Rc<Expr>),
@@ -27,6 +28,9 @@ pub enum Expr {
 }
 
 impl Expr {
+  pub fn of_string_literal(value: String) -> Rc<Expr> {
+    Rc::new(Expr::StringLiteral(value))
+  }
   pub fn of_binary(operator: Operator, lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
     Rc::new(Expr::Binary(operator, lhs, rhs))
   }
