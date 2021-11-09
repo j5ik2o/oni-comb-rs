@@ -1,9 +1,9 @@
 use crate::expr::Expr;
 use crate::labelled_parameter::LabelledParameter;
-use oni_comb_parser_rs::core::{Parser, ParserFunctor};
-use oni_comb_parser_rs::extension::parser::{
-  ConversionParser, DiscardParser, LoggingParser, OperatorParser, RepeatParser, SkipParser,
-};
+// use oni_comb_parser_rs::core::{Parser, ParserFunctor};
+// use oni_comb_parser_rs::extension::parser::{
+//   ConversionParser, DiscardParser, LoggingParser, OperatorParser, RepeatParser, SkipParser,
+// };
 use oni_comb_parser_rs::prelude::*;
 use std::rc::Rc;
 
@@ -260,7 +260,6 @@ mod test {
   use crate::interpreter::Interpreter;
   use crate::labelled_parameter::LabelledParameter;
   use crate::operator::Operator;
-  use oni_comb_parser_rs::core::ParserRunner;
   use std::env;
 
   fn init() {

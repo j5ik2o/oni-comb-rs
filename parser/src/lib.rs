@@ -4,25 +4,22 @@
 
 use std::fmt::{Debug, Display};
 
-use crate::core::*;
-use crate::internal::*;
-use crate::utils::*;
-
-pub mod core;
-pub mod extension;
+mod core;
+mod extension;
 mod internal;
-pub mod utils;
+mod utils;
 
-// https://github.com/com-lihaoyi/fastparse
-// https://github.com/fpinscala/fpinscala/blob/first-edition/answers/src/main/scala/fpinscala/parsing
-// https://github.com/Geal/nom
-// https://hazm.at/mox/lang/rust/nom/index.html
-// https://github.com/J-F-Liu/pom
 pub mod prelude {
   use super::*;
   use crate::extension::parsers::{
     ElementParsers, ElementsParsers, LazyParsers, OperatorParsers, PrimitiveParsers, SkipParsers, TakenParsers,
   };
+
+  pub use crate::core::*;
+  pub use crate::extension::parser::*;
+  pub use crate::extension::parsers::*;
+  use crate::internal::*;
+  pub use crate::utils::*;
 
   pub fn regex<'a>(pattern: &str) -> Parser<'a, char, String> {
     ParsersImpl::regex(pattern)

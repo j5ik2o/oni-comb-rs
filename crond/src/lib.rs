@@ -3,9 +3,7 @@ mod environment;
 mod evaluator;
 mod expr;
 
-use chrono::{NaiveDate};
-use oni_comb_parser_rs::core::{Parser, ParserFunctor, ParserRunner};
-use oni_comb_parser_rs::extension::parser::{LoggingParser, OperatorParser, RepeatParser};
+use chrono::NaiveDate;
 use oni_comb_parser_rs::prelude::*;
 
 use crate::expr::Expr;
@@ -156,11 +154,17 @@ pub fn parse<'a>(input: &str) -> Result<Expr, String> {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use crate::evaluator::Evaluator;
+  use crate::expr::Expr;
+  use crate::expr::Expr::{AnyValueExpr, PerExpr, RangeExpr, ValueExpr};
+  use chrono::{TimeZone, Utc};
   use std::env;
+
   fn init() {
     env::set_var("RUST_LOG", "debug");
     let _ = env_logger::builder().is_test(true).try_init();
   }
+
   #[test]
   fn test_instruction_1() {
     init();
@@ -391,10 +395,6 @@ mod tests {
     let result = (month_digit() - end()).parse(&input).to_result();
     assert_eq!(result.is_err(), true);
   }
-  use crate::evaluator::Evaluator;
-  use crate::expr::Expr;
-  use crate::expr::Expr::{AnyValueExpr, PerExpr, RangeExpr, ValueExpr};
-  use chrono::{TimeZone, Utc};
 
   #[test]
   fn test_anytime() {

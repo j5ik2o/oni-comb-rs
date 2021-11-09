@@ -1,5 +1,3 @@
-use crate::core::Element;
-
 #[derive(Clone)]
 pub struct ParseState<'a, I> {
   input: &'a [I],
@@ -24,12 +22,6 @@ impl<'a, I> ParseState<'a, I> {
   }
 
   pub fn add_offset(&self, num_chars: usize) -> ParseState<'a, I> {
-    // log::debug!(
-    //   "len = {}, offset = {}, num_chars = {}",
-    //   self.input.len(),
-    //   self.offset,
-    //   num_chars
-    // );
     Self::new(self.input, self.offset + num_chars)
   }
 

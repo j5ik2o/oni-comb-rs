@@ -24,7 +24,6 @@ pub trait Element: Debug {
 }
 
 impl Element for u8 {
-
   fn to_char(self) -> char {
     char::from(self)
   }

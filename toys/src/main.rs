@@ -5,7 +5,7 @@ mod labelled_parameter;
 mod operator;
 mod parsers;
 
-use oni_comb_parser_rs::core::ParserRunner;
+use oni_comb_parser_rs::prelude::*;
 
 use crate::interpreter::Interpreter;
 

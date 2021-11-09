@@ -1,4 +1,4 @@
-use crate::core::{Parser, ParserRunner};
+use crate::core::{Parser, ParserMonad, ParserRunner, Parsers};
 use crate::extension::parsers::LazyParsers;
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;
@@ -8,9 +8,10 @@ impl LazyParsers for ParsersImpl {
   where
     F: Fn() -> Self::P<'a, I, A> + 'a,
     A: Debug + 'a, {
-    Parser::new(move |parse_state| {
-      let parser = f();
-      parser.run(parse_state)
-    })
+    Self::unit().flat_map(move |_| f())
+    // Parser::new(move |parse_state| {
+    //   let parser = f();
+    //   parser.run(parse_state)
+    // })
   }
 }

@@ -14,26 +14,13 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oni-comb-rs = "<<version>>"
+oni-comb-parser-rs = "<<version>>"
 ```
-
-## Influenced by the following parsers implementations.
-
-- Rust
-  - [J-F-Liu/pom](https://github.com/J-F-Liu/pom)
-  - [Geal/nom](https://github.com/Geal/nom)
-- Scala
-  - [fp in scala](https://github.com/fpinscala/fpinscala/blob/first-edition/answers/src/main/scala/fpinscala/parsing)
-  - [scala-parser-combinators](https://github.com/scala/scala-parser-combinators)
-- Java
-  - [jparsec](https://github.com/jparsec/jparsec)
 
 ## Usage
 
 ```rust
-use oni_comb_rs::core::{Parser, ParserRunner};
-use oni_comb_rs::extension::parser::{CollectParser, ConversionParser};
-use oni_comb_rs::prelude::*;
+use oni_comb_parser_rs::prelude::*;
 
 fn main() {
   let input: &[u8; 14] = b"'hello world';";
@@ -50,6 +37,17 @@ fn main() {
 }
 ```
 
+## Influenced by the following parsers implementations.
+
+- Rust
+  - [J-F-Liu/pom](https://github.com/J-F-Liu/pom)
+  - [Geal/nom](https://github.com/Geal/nom)
+- Scala
+  - [fp in scala](https://github.com/fpinscala/fpinscala/blob/first-edition/answers/src/main/scala/fpinscala/parsing)
+  - [scala-parser-combinators](https://github.com/scala/scala-parser-combinators)
+- Java
+  - [jparsec](https://github.com/jparsec/jparsec)
+
 ## Examples
 
 - [Hello World!](/parser/examples/hello_world.rs)
@@ -58,4 +56,4 @@ fn main() {
   - [Bytes](/parser/examples/json_byte.rs)
   - [Characters](/parser/examples/json_char.rs)
 - [Calculator](/parser/examples/calculator.rs)
-- [Toys](/toys/src/main.rs)
+- [Toys](/toys/)
