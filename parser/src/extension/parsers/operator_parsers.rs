@@ -30,7 +30,38 @@ pub trait OperatorParsers: Parsers {
   where
     A: Debug + 'a;
 
+  fn scan_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
+  where
+    BOP: Fn(A, A) -> A + 'a,
+    A: Clone + Debug + 'a;
+
+  fn chain_right0<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
+    where
+        BOP: Fn(A, A) -> A + 'a,
+        A: Clone + Debug + 'a, {
+    Self::or(Self::chain_right1(p, op), Self::successful(x.clone()))
+  }
+
+  fn chain_left0<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
+    where
+        BOP: Fn(A, A) -> A + 'a,
+        A: Clone + Debug + 'a, {
+    Self::or(Self::chain_left1(p, op), Self::successful(x.clone()))
+  }
+
+  fn chain_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
+  where
+    BOP: Fn(A, A) -> A + 'a,
+    A: Clone + Debug + 'a, {
+    Self::scan_right1(p, op)
+  }
+
   fn chain_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
+  where
+    BOP: Fn(A, A) -> A + 'a,
+    A: Clone + Debug + 'a;
+
+  fn rest_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a,
     A: Clone + Debug + 'a;

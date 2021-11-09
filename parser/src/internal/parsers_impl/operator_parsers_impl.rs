@@ -74,6 +74,13 @@ impl OperatorParsers for ParsersImpl {
     Parser::new(move |parse_state| parser.run(parse_state).with_un_commit())
   }
 
+  fn scan_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
+  where
+    BOP: Fn(A, A) -> A + 'a,
+    A: Clone + Debug + 'a, {
+    Self::flat_map(p.clone(), move |x| Self::rest_left1(p.clone(), op.clone(), x.clone()))
+  }
+
   fn chain_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a,
@@ -91,11 +98,25 @@ impl OperatorParsers for ParsersImpl {
     // })
   }
 
+  fn rest_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
+  where
+    BOP: Fn(A, A) -> A + 'a,
+    A: Clone + Debug + 'a, {
+    let default_value = x.clone();
+    Self::or(
+      Self::flat_map(op.clone(), move |f| {
+        let default_value = x.clone();
+        Self::map(p.clone(), move |y| f(default_value.clone(), y.clone()))
+      }),
+      Self::successful(default_value.clone()),
+    )
+  }
+
   fn rest_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a,
     A: Clone + Debug + 'a, {
-    let n_x = x.clone();
+    let default_value = x.clone();
     Self::or(
       Parser::new(move |parse_state| {
         let mut ps = parse_state.add_offset(0);
@@ -105,7 +126,7 @@ impl OperatorParsers for ParsersImpl {
             (match p.run(&ps) {
               ParseResult::Success { get: y, length: n2 } => {
                 ps = ps.add_offset(n2);
-                Self::rest_left1(p.clone(), op.clone(), f(n_x.clone(), y))
+                Self::rest_left1(p.clone(), op.clone(), f(default_value.clone(), y))
                   .run(&ps)
                   .with_add_length(n2)
               }

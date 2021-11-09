@@ -7,12 +7,12 @@ mod internal;
 mod utils;
 
 pub mod prelude {
-  use std::fmt::{Debug, Display};
   pub use crate::core::*;
   pub use crate::extension::parser::*;
   pub use crate::extension::parsers::*;
   use crate::internal::*;
   pub use crate::utils::*;
+  use std::fmt::{Debug, Display};
 
   pub fn unit<'a, I>() -> Parser<'a, I, ()> {
     ParsersImpl::unit()
@@ -23,52 +23,52 @@ pub mod prelude {
   }
 
   pub fn end<'a, I>() -> Parser<'a, I, ()>
-    where
-        I: Debug + Display + 'a, {
+  where
+    I: Debug + Display + 'a, {
     ParsersImpl::end()
   }
 
   pub fn successful<'a, I, A>(value: A) -> Parser<'a, I, A>
-    where
-        I: 'a,
-        A: Clone + 'a, {
+  where
+    I: 'a,
+    A: Clone + 'a, {
     ParsersImpl::successful(value)
   }
 
   pub fn successful_lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
-    where
-        I: 'a,
-        F: Fn() -> A + 'a,
-        A: 'a, {
+  where
+    I: 'a,
+    F: Fn() -> A + 'a,
+    A: 'a, {
     ParsersImpl::successful_lazy(f)
   }
 
   pub fn failed<'a, I, A>(value: ParseError<'a, I>, commit: bool) -> Parser<'a, I, A>
-    where
-        I: Clone + 'a,
-        A: 'a, {
+  where
+    I: Clone + 'a,
+    A: 'a, {
     ParsersImpl::failed(value, commit)
   }
 
   pub fn failed_with_commit<'a, I, A>(value: ParseError<'a, I>) -> Parser<'a, I, A>
-    where
-        I: Clone + 'a,
-        A: 'a, {
+  where
+    I: Clone + 'a,
+    A: 'a, {
     ParsersImpl::failed(value, true)
   }
 
   pub fn failed_with_un_commit<'a, I, A>(value: ParseError<'a, I>) -> Parser<'a, I, A>
-    where
-        I: Clone + 'a,
-        A: 'a, {
+  where
+    I: Clone + 'a,
+    A: 'a, {
     ParsersImpl::failed(value, false)
   }
 
   pub fn failed_lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
-    where
-        F: Fn() -> (ParseError<'a, I>, bool) + 'a,
-        I: 'a,
-        A: 'a, {
+  where
+    F: Fn() -> (ParseError<'a, I>, bool) + 'a,
+    I: 'a,
+    A: 'a, {
     ParsersImpl::failed_lazy(f)
   }
 
@@ -208,75 +208,75 @@ pub mod prelude {
   }
 
   pub fn elm_ref_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
-    where
-        I: PartialEq + Display + Debug + 'a,
-        S: Set<I> + ?Sized, {
+  where
+    I: PartialEq + Display + Debug + 'a,
+    S: Set<I> + ?Sized, {
     ParsersImpl::elm_ref_of(set)
   }
 
   pub fn elm_of<'a, I, S>(set: &'a S) -> Parser<'a, I, I>
-    where
-        I: PartialEq + Display + Clone + Debug + 'a,
-        S: Set<I> + ?Sized, {
+  where
+    I: PartialEq + Display + Clone + Debug + 'a,
+    S: Set<I> + ?Sized, {
     ParsersImpl::elm_of(set)
   }
 
   pub fn elm_in_ref<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
-    where
-        I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+  where
+    I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
     ParsersImpl::elm_ref_in(start, end)
   }
 
   pub fn elm_in<'a, I>(start: I, end: I) -> Parser<'a, I, I>
-    where
-        I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
+  where
+    I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
     ParsersImpl::elm_in(start, end)
   }
 
   pub fn elm_from_until_ref<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
-    where
-        I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+  where
+    I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
     ParsersImpl::elm_ref_from_until(start, end)
   }
 
   pub fn elm_from_until<'a, I>(start: I, end: I) -> Parser<'a, I, I>
-    where
-        I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
+  where
+    I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
     ParsersImpl::elm_from_until(start, end)
   }
 
   pub fn none_ref_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
-    where
-        I: PartialEq + Display + Debug + 'a,
-        S: Set<I> + ?Sized, {
+  where
+    I: PartialEq + Display + Debug + 'a,
+    S: Set<I> + ?Sized, {
     ParsersImpl::none_ref_of(set)
   }
 
   pub fn none_of<'a, I, S>(set: &'a S) -> Parser<'a, I, I>
-    where
-        I: PartialEq + Display + Clone + Debug + 'a,
-        S: Set<I> + ?Sized, {
+  where
+    I: PartialEq + Display + Clone + Debug + 'a,
+    S: Set<I> + ?Sized, {
     ParsersImpl::none_of(set)
   }
 
   // --- Elements Parsers ---
 
   pub fn seq<'a, 'b, I>(tag: &'b [I]) -> Parser<'a, I, &'a [I]>
-    where
-        I: PartialEq + Debug + 'a,
-        'b: 'a, {
+  where
+    I: PartialEq + Debug + 'a,
+    'b: 'a, {
     ParsersImpl::seq(tag)
   }
 
   pub fn tag<'a, 'b>(tag: &'b str) -> Parser<'a, char, &'a str>
-    where
-        'b: 'a, {
+  where
+    'b: 'a, {
     ParsersImpl::tag(tag)
   }
 
   pub fn tag_no_case<'a, 'b>(tag: &'b str) -> Parser<'a, char, &'a str>
-    where
-        'b: 'a, {
+  where
+    'b: 'a, {
     ParsersImpl::tag_no_case(tag)
   }
 
@@ -336,17 +336,17 @@ pub mod prelude {
     parser: Parser<'a, I, B>,
     rp: Parser<'a, I, C>,
   ) -> Parser<'a, I, B>
-    where
-        A: Clone + Debug + 'a,
-        B: Clone + Debug + 'a,
-        C: Clone + Debug + 'a, {
+  where
+    A: Clone + Debug + 'a,
+    B: Clone + Debug + 'a,
+    C: Clone + Debug + 'a, {
     ParsersImpl::surround(lp, parser, rp)
   }
 
   pub fn lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
-    where
-        F: Fn() -> Parser<'a, I, A> + 'a,
-        A: Debug + 'a, {
+  where
+    F: Fn() -> Parser<'a, I, A> + 'a,
+    A: Debug + 'a, {
     ParsersImpl::lazy(f)
   }
 
