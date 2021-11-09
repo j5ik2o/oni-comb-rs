@@ -12,7 +12,6 @@ pub enum Value {
 
 impl std::fmt::Display for Value {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-    // println!("display: {:?}", self);
     match self {
       Value::Int(i) => write!(f, "{}", i),
       // Value::Float(f) => write!(f, "{}", f),
