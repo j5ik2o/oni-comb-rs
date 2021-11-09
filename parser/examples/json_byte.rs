@@ -1,7 +1,7 @@
+use oni_comb_parser_rs::prelude::*;
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::collections::HashMap;
 use std::str::FromStr;
-use oni_comb_parser_rs::prelude::*;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum JsonValue {

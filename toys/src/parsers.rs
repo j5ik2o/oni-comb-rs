@@ -290,15 +290,15 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = line().parse_as_result(&input).unwrap();
     assert_eq!(
-      Expr::While(
-        Rc::new(Expr::Binary(
+      Expr::of_while(
+        Expr::of_binary(
           Operator::EqualEqual,
-          Rc::new(Expr::IntegerLiteral(1)),
-          Rc::new(Expr::IntegerLiteral(2))
-        )),
-        Rc::new(Expr::Block(vec![Rc::new(Expr::IntegerLiteral(1))]))
+          Expr::of_integer_literal(1),
+          Expr::of_integer_literal(2)
+        ),
+        Expr::of_block(vec![Expr::of_integer_literal(1)])
       ),
-      *result,
+      result,
     );
   }
 
@@ -309,28 +309,28 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = r#for().parse_as_result(&input).unwrap();
     assert_eq!(
-      Expr::Block(vec![
-        Rc::new(Expr::Assignment("i".to_string(), Rc::new(Expr::IntegerLiteral(1)))),
-        Rc::new(Expr::While(
-          Rc::new(Expr::Binary(
+      Expr::of_block(vec![
+        Expr::of_assignment("i".to_string(), Expr::of_integer_literal(1)),
+        Expr::of_while(
+          Expr::of_binary(
             Operator::LessThan,
-            Rc::new(Expr::Symbol("i".to_string())),
-            Rc::new(Expr::IntegerLiteral(10)),
-          )),
-          Rc::new(Expr::Block(vec![
-            Rc::new(Expr::Assignment("a".to_string(), Rc::new(Expr::IntegerLiteral(1)),)),
-            Rc::new(Expr::Assignment(
+            Expr::of_symbol("i".to_string()),
+            Expr::of_integer_literal(10),
+          ),
+          Expr::of_block(vec![
+            Expr::of_assignment("a".to_string(), Expr::of_integer_literal(1)),
+            Expr::of_assignment(
               "i".to_string(),
-              Rc::new(Expr::Binary(
+              Expr::of_binary(
                 Operator::Add,
-                Rc::new(Expr::Symbol("i".to_string())),
-                Rc::new(Expr::IntegerLiteral(1))
-              ))
-            ))
-          ])),
-        )),
+                Expr::of_symbol("i".to_string()),
+                Expr::of_integer_literal(1)
+              )
+            )
+          ]),
+        ),
       ]),
-      *result,
+      result,
     );
   }
 
@@ -341,16 +341,16 @@ mod test {
     let result = r#if().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     assert_eq!(
-      Expr::If(
-        Rc::new(Expr::Binary(
+      Expr::of_if(
+        Expr::of_binary(
           Operator::EqualEqual,
-          Rc::new(Expr::IntegerLiteral(1)),
-          Rc::new(Expr::IntegerLiteral(2))
-        )),
-        Rc::new(Expr::Block(vec![Rc::new(Expr::IntegerLiteral(1))])),
+          Expr::of_integer_literal(1),
+          Expr::of_integer_literal(2)
+        ),
+        Expr::of_block(vec![Expr::of_integer_literal(1)]),
         None
       ),
-      *result
+      result
     );
   }
 
@@ -361,8 +361,8 @@ mod test {
     let result = line().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     assert_eq!(
-      Expr::Assignment("i".to_string(), Rc::new(Expr::IntegerLiteral(1))),
-      *result
+      Expr::of_assignment("i".to_string(), Expr::of_integer_literal(1)),
+      result
     );
   }
 
@@ -384,14 +384,14 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = labelled_call().parse_as_result(&input).unwrap();
     assert_eq!(
-      Expr::LabelledCall(
+      Expr::of_labelled_call(
         "abc".to_string(),
         vec![LabelledParameter::new(
           "n".to_string(),
-          Rc::new(Expr::IntegerLiteral(5))
+         Expr::of_integer_literal(5)
         )]
       ),
-      *result
+      result
     );
   }
 
@@ -402,7 +402,7 @@ mod test {
     "#;
     let input = source.chars().collect::<Vec<_>>();
     let result = function_call().parse_as_result(&input).unwrap();
-    assert_eq!(Expr::FunctionCall("abc".to_string(), vec![]), *result);
+    assert_eq!(Expr::of_function_call("abc".to_string(), vec![]), result);
   }
 
   #[test]
@@ -413,7 +413,7 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = function_call().parse_as_result(&input).unwrap();
     assert_eq!(
-      Expr::FunctionCall("abc".to_string(), vec![Rc::new(Expr::IntegerLiteral(1))]),
+      Expr::FunctionCall("abc".to_string(), vec![Expr::of_integer_literal(1)]),
       *result
     );
   }
@@ -426,11 +426,11 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = function_call().parse_as_result(&input).unwrap();
     assert_eq!(
-      Expr::FunctionCall(
+      Expr::of_function_call(
         "abc".to_string(),
-        vec![Rc::new(Expr::IntegerLiteral(1)), Rc::new(Expr::IntegerLiteral(2))]
+        vec![Expr::of_integer_literal(1), Expr::of_integer_literal(2)]
       ),
-      *result
+      result
     );
   }
 
@@ -439,7 +439,7 @@ mod test {
     let source = r"true";
     let input = source.chars().collect::<Vec<_>>();
     let result = bool_literal().parse_as_result(&input).unwrap();
-    assert_eq!(Expr::BoolLiteral(true), *result);
+    assert_eq!(Expr::of_bool_literal(true), result);
   }
 
   #[test]
@@ -447,7 +447,7 @@ mod test {
     let source = r"false";
     let input = source.chars().collect::<Vec<_>>();
     let result = bool_literal().parse_as_result(&input).unwrap();
-    assert_eq!(Expr::BoolLiteral(false), *result);
+    assert_eq!(Expr::of_bool_literal(false), result);
   }
 
   #[test]
@@ -455,7 +455,7 @@ mod test {
     let source = r"[]";
     let input = source.chars().collect::<Vec<_>>();
     let result = array_literal().parse_as_result(&input).unwrap();
-    assert_eq!(Expr::ArrayLiteral(vec![]), *result);
+    assert_eq!(Expr::of_array_literal(vec![]), result);
   }
 
   #[test]
@@ -463,7 +463,7 @@ mod test {
     let source = r"[1]";
     let input = source.chars().collect::<Vec<_>>();
     let result = array_literal().parse_as_result(&input).unwrap();
-    assert_eq!(Expr::ArrayLiteral(vec![Rc::new(Expr::IntegerLiteral(1))]), *result);
+    assert_eq!(Expr::of_array_literal(vec![Expr::of_integer_literal(1)]), result);
   }
 
   #[test]
@@ -474,8 +474,8 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = array_literal().parse_as_result(&input).unwrap();
     assert_eq!(
-      Expr::ArrayLiteral(vec![Rc::new(Expr::IntegerLiteral(1)), Rc::new(Expr::IntegerLiteral(2))]),
-      *result
+      Expr::of_array_literal(vec![Expr::of_integer_literal(1), Expr::of_integer_literal(2)]),
+      result
     );
   }
 
@@ -486,7 +486,7 @@ mod test {
     "#;
     let input = source.chars().collect::<Vec<_>>();
     let result = integer().parse_as_result(&input).unwrap();
-    assert_eq!(Expr::IntegerLiteral(10), *result);
+    assert_eq!(Expr::of_integer_literal(10), result);
   }
 
   #[test]
@@ -495,7 +495,7 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = identifier().parse_as_result(&input).unwrap();
     println!("{:?}", result);
-    assert_eq!(Expr::Symbol("abc".to_string()), *result);
+    assert_eq!(Expr::of_symbol("abc".to_string()), result);
   }
 
   #[test]
@@ -508,12 +508,12 @@ mod test {
     let result = expression().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     assert_eq!(
-      Expr::Binary(
+      Expr::of_binary(
         Operator::Divide,
-        Rc::new(Expr::IntegerLiteral(1)),
-        Rc::new(Expr::IntegerLiteral(2))
+        Expr::of_integer_literal(1),
+        Expr::of_integer_literal(2)
       ),
-      *result
+      result
     );
   }
 
@@ -524,12 +524,12 @@ mod test {
     let result = additive().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     assert_eq!(
-      Expr::Binary(
+      Expr::of_binary(
         Operator::Add,
-        Rc::new(Expr::IntegerLiteral(1)),
-        Rc::new(Expr::IntegerLiteral(2))
+        Expr::of_integer_literal(1),
+        Expr::of_integer_literal(2)
       ),
-      *result
+      result
     );
   }
 
@@ -540,12 +540,12 @@ mod test {
     let result = expression().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     assert_eq!(
-      Expr::Binary(
+      Expr::of_binary(
         Operator::GreaterThan,
-        Rc::new(Expr::IntegerLiteral(1)),
-        Rc::new(Expr::IntegerLiteral(2))
+        Expr::of_integer_literal(1),
+        Expr::of_integer_literal(2)
       ),
-      *result
+      result
     );
   }
 
@@ -556,12 +556,12 @@ mod test {
     let result = comparative().parse_as_result(&input).unwrap();
     println!("{:?}", result);
     assert_eq!(
-      Expr::Binary(
+      Expr::of_binary(
         Operator::GreaterThan,
-        Rc::new(Expr::Symbol("a".to_string())),
-        Rc::new(Expr::IntegerLiteral(2))
+        Expr::of_symbol("a".to_string()),
+        Expr::of_integer_literal(2)
       ),
-      *result
+      result
     );
   }
 }

@@ -27,6 +27,10 @@ pub enum Expr {
 }
 
 impl Expr {
+  pub fn of_binary(operator: Operator, lhs: Rc<Expr>, rhs: Rc<Expr>) -> Rc<Expr> {
+    Rc::new(Expr::Binary(operator, lhs, rhs))
+  }
+
   pub fn of_global_variable_definition(name: String, value: Rc<Expr>) -> Rc<Expr> {
     Rc::new(Expr::GlobalVariableDefinition(name, value))
   }
