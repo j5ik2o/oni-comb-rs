@@ -36,16 +36,16 @@ pub trait OperatorParsers: Parsers {
     A: Clone + Debug + 'a;
 
   fn chain_right0<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
-    where
-        BOP: Fn(A, A) -> A + 'a,
-        A: Clone + Debug + 'a, {
+  where
+    BOP: Fn(A, A) -> A + 'a,
+    A: Clone + Debug + 'a, {
     Self::or(Self::chain_right1(p, op), Self::successful(x.clone()))
   }
 
   fn chain_left0<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
-    where
-        BOP: Fn(A, A) -> A + 'a,
-        A: Clone + Debug + 'a, {
+  where
+    BOP: Fn(A, A) -> A + 'a,
+    A: Clone + Debug + 'a, {
     Self::or(Self::chain_left1(p, op), Self::successful(x.clone()))
   }
 

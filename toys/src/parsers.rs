@@ -171,35 +171,26 @@ fn integer<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
-  chain_left1(
-    primary(),
-    (mul() | div()).debug("operator").map(|e| match e {
-      '*' => Expr::of_multiply,
-      '/' => Expr::of_divide,
-      _ => panic!("unexpected operator"),
-    }),
-  )
+  primary().chain_left1((mul() | div()).debug("operator").map(|e| match e {
+    '*' => Expr::of_multiply,
+    '/' => Expr::of_divide,
+    _ => panic!("unexpected operator"),
+  }))
 }
 
 fn moditive<'a>() -> Parser<'a, char, Rc<Expr>> {
-  chain_left1(
-    multitive(),
-    r#mod().map(|e| match e {
-      '%' => Expr::of_mod,
-      _ => panic!("unexpected operator"),
-    }),
-  )
+  multitive().chain_left1(r#mod().map(|e| match e {
+    '%' => Expr::of_mod,
+    _ => panic!("unexpected operator"),
+  }))
 }
 
 fn additive<'a>() -> Parser<'a, char, Rc<Expr>> {
-  chain_left1(
-    moditive(),
-    (add() | subtract()).map(|e| match e {
-      '+' => Expr::of_add,
-      '-' => Expr::of_subtract,
-      _ => panic!("unexpected operator"),
-    }),
-  )
+  moditive().chain_left1((add() | subtract()).map(|e| match e {
+    '+' => Expr::of_add,
+    '-' => Expr::of_subtract,
+    _ => panic!("unexpected operator"),
+  }))
 }
 
 fn comparative<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -212,8 +203,7 @@ fn comparative<'a>() -> Parser<'a, char, Rc<Expr>> {
   let and = tag("&&");
   let or = tag("||");
 
-  let p = chain_left1(
-    additive(),
+  additive().chain_left1(
     (space()
       * (and.attempt()
         | or.attempt()
@@ -235,8 +225,7 @@ fn comparative<'a>() -> Parser<'a, char, Rc<Expr>> {
       "!=" => Expr::of_not_equal,
       _ => panic!("unexpected operator"),
     }),
-  );
-  p
+  )
 }
 
 fn function_call<'a>() -> Parser<'a, char, Rc<Expr>> {
