@@ -72,7 +72,7 @@ fn top_level_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn function_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let define = space() * tag("define") * space() * ident() - space();
+  let define = space() * tag("fn") * space() * ident() - space();
   let args = ident().of_many0_sep(comma()).surround(lparen(), rparen());
   let p = (define + args + block())
     .map(|((name, args), body)| Expr::of_function_definition(name.to_string(), args, body));

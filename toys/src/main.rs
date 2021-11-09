@@ -13,12 +13,12 @@ use crate::parsers::program;
 
 fn main() {
   let source = r#"
-    define sub(i) {
+    fn sub(i) {
       if (i % 2 == 0) {
         println(i);
       }
     }
-    define main() {
+    fn main() {
       for (i in 1 to 10) {
         sub(i);
       }
