@@ -301,7 +301,8 @@ fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
     | labelled_call()
     | array_literal()
     | bool_literal()
-    | identifier()).cache()
+    | identifier())
+  .cache()
 }
 
 #[cfg(test)]

@@ -1,8 +1,8 @@
 use std::fmt::Debug;
 
 use crate::core::Parser;
-use crate::extension::parser::{CacheParser, DiscardParser};
-use crate::extension::parsers::{CacheParsers, DiscardParsers};
+use crate::extension::parser::CacheParser;
+use crate::extension::parsers::CacheParsers;
 use crate::internal::ParsersImpl;
 
 impl<'a, I, A> CacheParser<'a> for Parser<'a, I, A> {
@@ -10,6 +10,6 @@ impl<'a, I, A> CacheParser<'a> for Parser<'a, I, A> {
   where
     Self::Input: Clone + 'a,
     Self::Output: Clone + Debug + 'a, {
-      ParsersImpl::cache(self)
+    ParsersImpl::cache(self)
   }
 }

@@ -6,7 +6,6 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 
 impl CacheParsers for ParsersImpl {
-
   fn cache<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
   where
     I: Clone + 'a,
@@ -21,5 +20,4 @@ impl CacheParsers for ParsersImpl {
         .clone()
     })
   }
-
 }
