@@ -66,3 +66,51 @@ impl<'a, Tz: TimeZone> Evaluator<'a, Tz> {
     self.visit1(env, ast)
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use crate::parsers::instruction;
+  use chrono::Utc;
+  use oni_comb_parser_rs::prelude::*;
+
+  #[test]
+  fn test_anytime() {
+    let date_time = Utc.ymd(2021, 1, 1).and_hms(1, 1, 1);
+    let evaluator = Evaluator::new(&date_time);
+    let expr = Expr::CronExpr {
+      mins: Box::from(Expr::AnyValueExpr),
+      hours: Box::from(Expr::AnyValueExpr),
+      days: Box::from(Expr::AnyValueExpr),
+      months: Box::from(Expr::AnyValueExpr),
+      day_of_weeks: Box::from(Expr::AnyValueExpr),
+    };
+    let result = evaluator.eval(&expr);
+    assert!(result)
+  }
+
+  #[test]
+  fn test_point_time() {
+    let date_time = Utc.ymd(2021, 1, 1).and_hms(1, 1, 1);
+    let evaluator = Evaluator::new(&date_time);
+    let expr = Expr::CronExpr {
+      mins: Box::from(Expr::ValueExpr(1)),
+      hours: Box::from(Expr::ValueExpr(1)),
+      days: Box::from(Expr::ValueExpr(1)),
+      months: Box::from(Expr::ValueExpr(1)),
+      day_of_weeks: Box::from(Expr::AnyValueExpr),
+    };
+    let result = evaluator.eval(&expr);
+    assert!(result)
+  }
+
+  #[test]
+  fn test_example() {
+    let input = "* * * * *".chars().collect::<Vec<_>>();
+    let expr = (instruction() - end()).parse(&input).to_result().unwrap();
+    let date_time = Utc.ymd(2021, 1, 1).and_hms(1, 1, 1);
+    let evaluator = Evaluator::new(&date_time);
+    let result = evaluator.eval(&expr);
+    assert!(result)
+  }
+}
