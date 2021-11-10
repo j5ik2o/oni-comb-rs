@@ -41,4 +41,21 @@ impl LoggingParsers for ParsersImpl {
       },
     })
   }
+
+  fn expect<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str) -> Self::P<'a, I, A>
+  where
+    I: Debug,
+    A: Debug + 'a, {
+    Parser::new(move |parse_state| match parser.run(parse_state) {
+      res @ ParseResult::Success { .. } => res,
+      ParseResult::Failure { get, is_committed } => ParseResult::failed(
+        ParseError::of_expect(
+          parse_state.last_offset().unwrap_or(0),
+          Box::new(get),
+          format!("Expect {}", name),
+        ),
+        is_committed,
+      ),
+    })
+  }
 }

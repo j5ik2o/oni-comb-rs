@@ -62,6 +62,10 @@ impl<'a, I> Display for ParseError<'a, I> {
 }
 
 impl<'a, I> ParseError<'a, I> {
+  pub fn of_expect(offset: usize, inner: Box<ParseError<'a, I>>, message: String) -> Self {
+    ParseError::Expect { offset, inner, message }
+  }
+
   pub fn of_custom(offset: usize, inner: Option<Box<ParseError<'a, I>>>, message: String) -> Self {
     ParseError::Custom { offset, inner, message }
   }

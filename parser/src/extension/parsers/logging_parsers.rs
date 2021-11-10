@@ -28,4 +28,9 @@ pub trait LoggingParsers: Parsers {
   where
     I: Debug,
     A: Debug + 'a;
+
+  fn expect<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str) -> Self::P<'a, I, A>
+  where
+    I: Debug,
+    A: Debug + 'a;
 }
