@@ -2,6 +2,7 @@ use crate::core::{Parser, ParserRunner};
 use crate::extension::parsers::CacheParsers;
 use crate::internal::ParsersImpl;
 use std::cell::RefCell;
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::fmt::Debug;
 
@@ -13,11 +14,13 @@ impl CacheParsers for ParsersImpl {
     let results = RefCell::new(HashMap::new());
     Parser::new(move |parser_state| {
       let key = format!("{:p}:{:p}", parser_state, &parser.method);
-      results
+      let parse_result = results
         .borrow_mut()
         .entry(key)
         .or_insert_with(|| parser.run(parser_state))
-        .clone()
+        .clone();
+
+      parse_result
     })
   }
 }
