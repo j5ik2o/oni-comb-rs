@@ -22,23 +22,23 @@ impl<'a, Tz: TimeZone> Evaluator<'a, Tz> {
         box day_of_weeks,
       } => {
         let last_day = get_days_from_month(self.instant.date().year(), self.instant.date().month());
-        let fmins = self.visit0(&Environment::new(self.instant.time().minute() as u8, 59), mins);
-        let fhours = self.visit0(&Environment::new(self.instant.time().hour() as u8, 23), hours);
-        let fdays = self.visit0(&Environment::new(self.instant.date().day() as u8, last_day as u8), days);
-        let fmonths = self.visit0(&Environment::new(self.instant.date().month() as u8, 12), months);
-        let fday_of_weeks = self.visit0(&Environment::new(self.instant.time().minute() as u8, 7), day_of_weeks);
+        let fmins = self.visit(&Environment::new(self.instant.time().minute() as u8, 59), mins);
+        let fhours = self.visit(&Environment::new(self.instant.time().hour() as u8, 23), hours);
+        let fdays = self.visit(&Environment::new(self.instant.date().day() as u8, last_day as u8), days);
+        let fmonths = self.visit(&Environment::new(self.instant.date().month() as u8, 12), months);
+        let fday_of_weeks = self.visit(&Environment::new(self.instant.time().minute() as u8, 7), day_of_weeks);
         fmins && fhours && fdays && fmonths && fday_of_weeks
       }
       _ => false,
     }
   }
 
-  fn visit1(&self, env: &Environment, ast: &Expr) -> bool {
+  fn visit(&self, env: &Environment, ast: &Expr) -> bool {
     match ast {
       Expr::AnyValueExpr => true,
       Expr::LastValueExpr if env.now == env.max => true,
       Expr::ValueExpr(n) if env.now == *n => true,
-      Expr::ListExpr(list) => list.iter().any(|e| self.visit0(env, e)),
+      Expr::ListExpr(list) => list.iter().any(|e| self.visit(env, e)),
       Expr::RangeExpr {
         from: box Expr::ValueExpr(start),
         to: box Expr::ValueExpr(end),
@@ -62,9 +62,9 @@ impl<'a, Tz: TimeZone> Evaluator<'a, Tz> {
     }
   }
 
-  fn visit0(&self, env: &Environment, ast: &Expr) -> bool {
-    self.visit1(env, ast)
-  }
+  //fn visit0(&self, env: &Environment, ast: &Expr) -> bool {
+  //  self.visit1(env, ast)
+  //}
 }
 
 #[cfg(test)]

@@ -311,7 +311,7 @@ mod tests {
     }
     let input = "60".chars().collect::<Vec<_>>();
     let result = (min_digit() - end()).parse(&input).to_result();
-    assert_eq!(result.is_err(), true);
+    assert!(result.is_err());
   }
 
   #[test]
@@ -331,7 +331,7 @@ mod tests {
     }
     let input = "24".chars().collect::<Vec<_>>();
     let result = (hour_digit() - end()).parse(&input).to_result();
-    assert_eq!(result.is_err(), true);
+    assert!(result.is_err());
   }
 
   #[test]
@@ -351,7 +351,7 @@ mod tests {
     }
     let input = "32".chars().collect::<Vec<_>>();
     let result = (day_digit() - end()).parse(&input).to_result();
-    assert_eq!(result.is_err(), true);
+    assert!(result.is_err());
   }
 
   #[test]
@@ -371,6 +371,6 @@ mod tests {
     }
     let input = "13".chars().collect::<Vec<_>>();
     let result = (month_digit() - end()).parse(&input).to_result();
-    assert_eq!(result.is_err(), true);
+    assert!(result.is_err());
   }
 }
