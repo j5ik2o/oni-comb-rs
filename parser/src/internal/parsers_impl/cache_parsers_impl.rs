@@ -2,7 +2,7 @@ use crate::core::{Parser, ParserRunner};
 use crate::extension::parsers::CacheParsers;
 use crate::internal::ParsersImpl;
 use std::cell::RefCell;
-use std::collections::hash_map::Entry;
+
 use std::collections::HashMap;
 use std::fmt::Debug;
 
