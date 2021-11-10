@@ -7,7 +7,8 @@ fn min_digit<'a>() -> Parser<'a, char, Expr> {
     .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
     .attempt()
     | (elm('0') * elm_digit()).map(|e| ValueExpr(e as u8 - 48)).attempt()
-    | (elm_digit()).map(|e| ValueExpr(e as u8 - 48))).cache()
+    | (elm_digit()).map(|e| ValueExpr(e as u8 - 48)))
+  .cache()
 }
 
 fn hour_digit<'a>() -> Parser<'a, char, Expr> {
@@ -18,7 +19,8 @@ fn hour_digit<'a>() -> Parser<'a, char, Expr> {
       .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
       .attempt()
     | (elm('0') * elm_digit()).map(|e| ValueExpr(e as u8 - 48)).attempt()
-    | elm_digit().map(|e| ValueExpr(e as u8 - 48)).debug("hour_digit_4")).cache()
+    | elm_digit().map(|e| ValueExpr(e as u8 - 48)).debug("hour_digit_4"))
+  .cache()
 }
 
 fn day_digit<'a>() -> Parser<'a, char, Expr> {
@@ -29,7 +31,8 @@ fn day_digit<'a>() -> Parser<'a, char, Expr> {
       .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
       .attempt()
     | (elm('0') * elm_digit_1_9()).map(|e| ValueExpr(e as u8 - 48)).attempt()
-    | elm_digit_1_9().map(|e| ValueExpr(e as u8 - 48))).cache()
+    | elm_digit_1_9().map(|e| ValueExpr(e as u8 - 48)))
+  .cache()
 }
 
 fn month_digit<'a>() -> Parser<'a, char, Expr> {
@@ -37,7 +40,8 @@ fn month_digit<'a>() -> Parser<'a, char, Expr> {
     .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
     .attempt()
     | (elm('0') * elm_digit_1_9()).map(|e| ValueExpr(e as u8 - 48)).attempt()
-    | elm_digit_1_9().map(|e| ValueExpr(e as u8 - 48))).cache()
+    | elm_digit_1_9().map(|e| ValueExpr(e as u8 - 48)))
+  .cache()
 }
 
 fn day_of_week_digit<'a>() -> Parser<'a, char, Expr> {
@@ -48,7 +52,8 @@ fn day_of_week_digit<'a>() -> Parser<'a, char, Expr> {
     | tag("THU").map(|_| ValueExpr(5)).attempt()
     | tag("FRI").map(|_| ValueExpr(6)).attempt()
     | tag("SAT").map(|_| ValueExpr(7)).attempt()
-    | elm('L').map(|_| LastValueExpr)).cache()
+    | elm('L').map(|_| LastValueExpr))
+  .cache()
 }
 
 fn day_of_week_text<'a>() -> Parser<'a, char, Expr> {
@@ -69,7 +74,8 @@ fn asterisk_per(p: Parser<char, Expr>) -> Parser<char, Expr> {
       digit: Box::from(d.clone()),
       option: Box::from(op.clone()),
     })
-    .attempt().cache()
+    .attempt()
+    .cache()
 }
 
 fn range_per(p: Parser<char, Expr>) -> Parser<char, Expr> {
@@ -157,7 +163,6 @@ mod tests {
         day_of_weeks: Box::from(AnyValueExpr)
       }
     );
-
   }
 
   #[test]
