@@ -3,60 +3,60 @@ use crate::expr::Expr::*;
 use oni_comb_parser_rs::prelude::*;
 
 fn min_digit<'a>() -> Parser<'a, char, Expr> {
-  (elm_in('1', '5') + elm_digit())
+  ((elm_in('1', '5') + elm_digit())
     .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
     .attempt()
     | (elm('0') * elm_digit()).map(|e| ValueExpr(e as u8 - 48)).attempt()
-    | (elm_digit()).map(|e| ValueExpr(e as u8 - 48))
+    | (elm_digit()).map(|e| ValueExpr(e as u8 - 48))).cache()
 }
 
 fn hour_digit<'a>() -> Parser<'a, char, Expr> {
-  (elm('2') + elm_in('0', '3'))
+  ((elm('2') + elm_in('0', '3'))
     .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
     .attempt()
     | (elm('1') + elm_digit())
       .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
       .attempt()
     | (elm('0') * elm_digit()).map(|e| ValueExpr(e as u8 - 48)).attempt()
-    | elm_digit().map(|e| ValueExpr(e as u8 - 48)).debug("hour_digit_4")
+    | elm_digit().map(|e| ValueExpr(e as u8 - 48)).debug("hour_digit_4")).cache()
 }
 
 fn day_digit<'a>() -> Parser<'a, char, Expr> {
-  (elm('3') + elm_of("01"))
+  ((elm('3') + elm_of("01"))
     .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
     .attempt()
     | (elm_of("12") + elm_digit())
       .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
       .attempt()
     | (elm('0') * elm_digit_1_9()).map(|e| ValueExpr(e as u8 - 48)).attempt()
-    | elm_digit_1_9().map(|e| ValueExpr(e as u8 - 48))
+    | elm_digit_1_9().map(|e| ValueExpr(e as u8 - 48))).cache()
 }
 
 fn month_digit<'a>() -> Parser<'a, char, Expr> {
-  (elm('1') + elm_of("012"))
+  ((elm('1') + elm_of("012"))
     .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
     .attempt()
     | (elm('0') * elm_digit_1_9()).map(|e| ValueExpr(e as u8 - 48)).attempt()
-    | elm_digit_1_9().map(|e| ValueExpr(e as u8 - 48))
+    | elm_digit_1_9().map(|e| ValueExpr(e as u8 - 48))).cache()
 }
 
 fn day_of_week_digit<'a>() -> Parser<'a, char, Expr> {
-  tag("SUN").map(|_| ValueExpr(1)).attempt()
+  (tag("SUN").map(|_| ValueExpr(1)).attempt()
     | tag("MON").map(|_| ValueExpr(2)).attempt()
     | tag("TUE").map(|_| ValueExpr(3)).attempt()
     | tag("WED").map(|_| ValueExpr(4)).attempt()
     | tag("THU").map(|_| ValueExpr(5)).attempt()
     | tag("FRI").map(|_| ValueExpr(6)).attempt()
     | tag("SAT").map(|_| ValueExpr(7)).attempt()
-    | elm('L').map(|_| LastValueExpr)
+    | elm('L').map(|_| LastValueExpr)).cache()
 }
 
 fn day_of_week_text<'a>() -> Parser<'a, char, Expr> {
-  elm_in('1', '7').map(|e| ValueExpr(e as u8 - 48))
+  elm_in('1', '7').map(|e| ValueExpr(e as u8 - 48)).cache()
 }
 
 fn asterisk<'a>() -> Parser<'a, char, Expr> {
-  elm('*').map(|_| AnyValueExpr)
+  elm('*').map(|_| AnyValueExpr).cache()
 }
 
 fn per(p: Parser<char, Expr>) -> Parser<char, Expr> {
@@ -69,7 +69,7 @@ fn asterisk_per(p: Parser<char, Expr>) -> Parser<char, Expr> {
       digit: Box::from(d.clone()),
       option: Box::from(op.clone()),
     })
-    .attempt()
+    .attempt().cache()
 }
 
 fn range_per(p: Parser<char, Expr>) -> Parser<char, Expr> {
@@ -157,6 +157,7 @@ mod tests {
         day_of_weeks: Box::from(AnyValueExpr)
       }
     );
+
   }
 
   #[test]

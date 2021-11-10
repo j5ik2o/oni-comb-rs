@@ -11,10 +11,10 @@ impl CacheParsers for ParsersImpl {
   where
     I: Clone + 'a,
     A: Clone + Debug + 'a, {
-    let results = RefCell::new(HashMap::new());
+    let caches = RefCell::new(HashMap::new());
     Parser::new(move |parser_state| {
       let key = format!("{:p}:{}:{:p}", parser_state, parser_state.last_offset().unwrap_or(0), &parser.method);
-      let parse_result = results
+      let parse_result = caches
         .borrow_mut()
         .entry(key)
         .or_insert_with(|| parser.run(parser_state))
