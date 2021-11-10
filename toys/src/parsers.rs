@@ -70,7 +70,7 @@ pub fn program<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn top_level_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
-  global_variable_definition() | function_definition()
+  (global_variable_definition() | function_definition()).name("top level definition")
 }
 
 fn function_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -78,7 +78,7 @@ fn function_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
   let args = ident().of_many0_sep(comma()).surround(lparen(), rparen());
   let p =
     (define + args + block()).map(|((name, args), body)| Expr::of_function_definition(name.to_string(), args, body));
-  space() * p - space()
+  (space() * p - space()).name("function definition").cache()
 }
 
 fn global_variable_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -87,7 +87,7 @@ fn global_variable_definition<'a>() -> Parser<'a, char, Rc<Expr>> {
   let eq = space() * tag("=") - space();
   let p =
     (global_indent - eq + expression() - semi_colon()).map(|(name, e)| Expr::of_global_variable_definition(name, e));
-  space() * p - space()
+  (space() * p - space()).name("global variable definition").cache()
 }
 
 fn lines<'a>() -> Parser<'a, char, Vec<Rc<Expr>>> {
@@ -96,14 +96,14 @@ fn lines<'a>() -> Parser<'a, char, Vec<Rc<Expr>>> {
 
 fn line<'a>() -> Parser<'a, char, Rc<Expr>> {
   let p = println() | lazy(r#while) | lazy(r#if) | lazy(r#for) | assignment() | expression_line() | block();
-  space() * p - space()
+  (space() * p - space()).name("line").cache()
 }
 
 fn r#while<'a>() -> Parser<'a, char, Rc<Expr>> {
   let r#while = space() * tag("while") - space();
   let condition = r#while * lazy(expression).surround(lparen(), rparen());
   let p = (condition + lazy(line)).map(|(c, body)| Expr::of_while(c, body));
-  (space() * p - space()).attempt()
+  (space() * p - space()).attempt().name("while").cache()
 }
 
 fn r#for<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -127,7 +127,7 @@ fn r#for<'a>() -> Parser<'a, char, Rc<Expr>> {
       ),
     ])
   });
-  (space() * p - space()).attempt()
+  (space() * p - space()).attempt().name("for").cache()
 }
 
 fn r#if<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -135,62 +135,71 @@ fn r#if<'a>() -> Parser<'a, char, Rc<Expr>> {
   let condition = r#if * lparen() * expression() - rparen();
   let r#else = space() * tag("else") - space();
   let p = (condition + line() + (r#else * line()).opt()).map(|((p1, p2), p3)| Expr::of_if(p1, p2, p3));
-  (space() * p - space()).attempt()
+  (space() * p - space()).attempt().name("if").cache()
 }
 
 fn block<'a>() -> Parser<'a, char, Rc<Expr>> {
   let p = lazy(line).of_many0().surround(lbrace(), rbrace()).map(Expr::of_block);
-  space() * p - space()
+  (space() * p - space()).name("block").cache()
 }
 
 fn assignment<'a>() -> Parser<'a, char, Rc<Expr>> {
   let eq = space() * tag("=") - space();
   let p = (ident() - eq + expression() - semi_colon()).map(|(name, expr)| Expr::of_assignment(name, expr));
-  (space() * p - space()).attempt()
+  (space() * p - space()).attempt().name("assignment").cache()
 }
 
 fn expression_line<'a>() -> Parser<'a, char, Rc<Expr>> {
-  (expression() - semi_colon()).attempt()
+  (expression() - semi_colon()).attempt().name("expression_line").cache()
 }
 
 fn expression<'a>() -> Parser<'a, char, Rc<Expr>> {
-  comparative()
+  comparative().name("expression").cache()
 }
 
 fn println<'a>() -> Parser<'a, char, Rc<Expr>> {
   let r#println = tag("println");
   let p = (r#println * lazy(expression).surround(lparen(), rparen()) - semi_colon()).map(Expr::of_println);
-  (space() * p - space()).attempt()
+  (space() * p - space()).attempt().name("println").cache()
 }
 
 fn integer<'a>() -> Parser<'a, char, Rc<Expr>> {
   let p = regex(r#"^-?\d+"#)
     .map_res(|s| s.parse::<i64>())
     .map(Expr::of_integer_literal);
-  space() * p - space()
+  (space() * p - space()).name("integer").cache()
 }
 
 fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
-  primary().chain_left1((mul() | div()).debug("operator").map(|e| match e {
-    '*' => Expr::of_multiply,
-    '/' => Expr::of_divide,
-    _ => panic!("unexpected operator"),
-  }))
+  primary()
+    .chain_left1((mul() | div()).debug("operator").map(|e| match e {
+      '*' => Expr::of_multiply,
+      '/' => Expr::of_divide,
+      _ => panic!("unexpected operator"),
+    }))
+    .name("multitive")
+    .cache()
 }
 
 fn moditive<'a>() -> Parser<'a, char, Rc<Expr>> {
-  multitive().chain_left1(r#mod().map(|e| match e {
-    '%' => Expr::of_mod,
-    _ => panic!("unexpected operator"),
-  }))
+  multitive()
+    .chain_left1(r#mod().map(|e| match e {
+      '%' => Expr::of_mod,
+      _ => panic!("unexpected operator"),
+    }))
+    .name("moditive")
+    .cache()
 }
 
 fn additive<'a>() -> Parser<'a, char, Rc<Expr>> {
-  moditive().chain_left1((add() | subtract()).map(|e| match e {
-    '+' => Expr::of_add,
-    '-' => Expr::of_subtract,
-    _ => panic!("unexpected operator"),
-  }))
+  moditive()
+    .chain_left1((add() | subtract()).map(|e| match e {
+      '+' => Expr::of_add,
+      '-' => Expr::of_subtract,
+      _ => panic!("unexpected operator"),
+    }))
+    .name("additive")
+    .cache()
 }
 
 fn comparative<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -203,42 +212,45 @@ fn comparative<'a>() -> Parser<'a, char, Rc<Expr>> {
   let and = tag("&&");
   let or = tag("||");
 
-  additive().chain_left1(
-    (space()
-      * (and.attempt()
-        | or.attempt()
-        | lte.attempt()
-        | gte.attempt()
-        | lt.attempt()
-        | gt.attempt()
-        | neq.attempt()
-        | eqeq)
-      - space())
-    .map(|e| match e {
-      "&&" => Expr::of_and,
-      "||" => Expr::of_or,
-      "<=" => Expr::of_less_or_equal,
-      ">=" => Expr::of_greater_or_equal,
-      "<" => Expr::of_less_than,
-      ">" => Expr::of_greater_than,
-      "==" => Expr::of_equal_equal,
-      "!=" => Expr::of_not_equal,
-      _ => panic!("unexpected operator"),
-    }),
-  )
+  additive()
+    .chain_left1(
+      (space()
+        * (and.attempt()
+          | or.attempt()
+          | lte.attempt()
+          | gte.attempt()
+          | lt.attempt()
+          | gt.attempt()
+          | neq.attempt()
+          | eqeq)
+        - space())
+      .map(|e| match e {
+        "&&" => Expr::of_and,
+        "||" => Expr::of_or,
+        "<=" => Expr::of_less_or_equal,
+        ">=" => Expr::of_greater_or_equal,
+        "<" => Expr::of_less_than,
+        ">" => Expr::of_greater_than,
+        "==" => Expr::of_equal_equal,
+        "!=" => Expr::of_not_equal,
+        _ => panic!("unexpected operator"),
+      }),
+    )
+    .name("comparative")
+    .cache()
 }
 
 fn function_call<'a>() -> Parser<'a, char, Rc<Expr>> {
   let p = (ident() + lazy(expression).of_many0_sep(comma()).surround(lparen(), rparen()))
     .map(|(name, params)| Expr::of_function_call(name.to_string(), params));
-  (space() * p - space()).attempt()
+  (space() * p - space()).attempt().name("function_call").cache()
 }
 
 fn labelled_call<'a>() -> Parser<'a, char, Rc<Expr>> {
   let param = (ident() - elm_ref('=') + lazy(expression)).map(|(label, param)| LabelledParameter::new(label, param));
   let p = (ident() + param.of_many1_sep(comma()).surround(lbracket(), rbracket()))
     .map(|(name, params)| Expr::of_labelled_call(name.to_string(), params));
-  (space() * p - space()).attempt()
+  (space() * p - space()).attempt().name("labelled_call").cache()
 }
 
 fn array_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -246,7 +258,7 @@ fn array_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
     .of_many0_sep(comma())
     .surround(lbracket(), rbracket())
     .map(Expr::of_array_literal);
-  space() * p - space()
+  (space() * p - space()).name("array_literal").cache()
 }
 
 fn bool_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -255,7 +267,7 @@ fn bool_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
     "false" => Expr::of_bool_literal(false),
     _ => panic!("unexpected token"),
   });
-  space() * p - space()
+  (space() * p - space()).name("bool_literal").cache()
 }
 
 fn string_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -286,10 +298,12 @@ fn string_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
   string
     .map(|strings| Expr::of_string_literal(strings.concat()))
     .attempt()
+    .name("string_literal")
+    .cache()
 }
 
 fn identifier<'a>() -> Parser<'a, char, Rc<Expr>> {
-  ident().map(Expr::of_symbol)
+  ident().map(Expr::of_symbol).name("identifier").cache()
 }
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
@@ -302,6 +316,8 @@ fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
     | array_literal()
     | bool_literal()
     | identifier())
+  .cache()
+  .name("primary")
   .cache()
 }
 

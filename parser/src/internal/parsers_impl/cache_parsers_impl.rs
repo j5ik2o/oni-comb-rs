@@ -13,13 +13,12 @@ impl CacheParsers for ParsersImpl {
     A: Clone + Debug + 'a, {
     let results = RefCell::new(HashMap::new());
     Parser::new(move |parser_state| {
-      let key = format!("{:p}:{:p}", parser_state, &parser.method);
+      let key = format!("{:p}:{}:{:p}", parser_state, parser_state.last_offset().unwrap_or(0), &parser.method);
       let parse_result = results
         .borrow_mut()
         .entry(key)
         .or_insert_with(|| parser.run(parser_state))
         .clone();
-
       parse_result
     })
   }
