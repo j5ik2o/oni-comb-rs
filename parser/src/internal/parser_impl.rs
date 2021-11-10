@@ -1,5 +1,6 @@
 mod add_impl;
 mod bitor_impl;
+mod cache_parser_impl;
 mod collect_parser_impl;
 mod conversion_parser_impl;
 mod discard_parser_impl;

@@ -1,3 +1,4 @@
+pub use cache_parsers::*;
 pub use collect_parsers::*;
 pub use conversion_parsers::*;
 pub use discard_parsers::*;
@@ -21,6 +22,7 @@ mod operator_parsers;
 mod repeat_parsers;
 mod skip_parsers;
 
+mod cache_parsers;
 mod element_parsers;
 mod elements_parsers;
 mod logging_parsers;
