@@ -63,25 +63,21 @@ fn div<'a>() -> Parser<'a, char, &'a char> {
 fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
   let aster = elm_ref('*');
   let slash = elm_ref('/');
-  primary().chain_left1(
-    (space() * (aster | slash) - space()).map(|e| match e {
-      '*' => Expr::of_multiply,
-      '/' => Expr::of_divide,
-      _ => panic!("unexpected operator"),
-    }),
-  )
+  primary().chain_left1((space() * (aster | slash) - space()).map(|e| match e {
+    '*' => Expr::of_multiply,
+    '/' => Expr::of_divide,
+    _ => panic!("unexpected operator"),
+  }))
 }
 
 fn additive<'a>() -> Parser<'a, char, Rc<Expr>> {
   let plus = elm_ref('+');
   let minus = elm_ref('-');
-  multitive().chain_left1(
-    (space() * (plus | minus) - space()).map(|e| match e {
-      '+' => Expr::of_add,
-      '-' => Expr::of_subtract,
-      _ => panic!("unexpected operator"),
-    }),
-  )
+  multitive().chain_left1((space() * (plus | minus) - space()).map(|e| match e {
+    '+' => Expr::of_add,
+    '-' => Expr::of_subtract,
+    _ => panic!("unexpected operator"),
+  }))
 }
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {

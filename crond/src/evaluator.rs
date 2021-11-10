@@ -62,7 +62,7 @@ impl<'a, Tz: TimeZone> Evaluator<'a, Tz> {
     }
   }
 
-  //fn visit0(&self, env: &Environment, ast: &Expr) -> bool {
+  // fn visit0(&self, env: &Environment, ast: &Expr) -> bool {
   //  self.visit1(env, ast)
   //}
 }
