@@ -39,6 +39,15 @@ fn path_rootless<'a>() -> Parser<'a, char, &'a [char]> {
 fn path_nocheme<'a>() -> Parser<'a, char, &'a [char]> {
   (seqment_nz_nc() + (elm('/') + segment()).of_many0()).collect().name("path-noscheme")
 }
+//
+// fn path_without_abempty<'a>() -> Parser<'a, char, &'a [char]> {
+//   Parser::new(|ps|{
+//     let p1 = (elm('/') + elm('/').not()).opt();
+//     let is_absolute = p1.parse(ps).to_result().unwrap().is_some();
+//     let is_no_scheme = seqment_nz_nc().opt().parse(ps).to_result().unwrap();
+//   })
+// }
+
 
 // segment       = *pchar
 fn segment<'a>() -> Parser<'a, char, &'a [char]> {
