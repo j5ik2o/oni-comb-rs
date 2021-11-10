@@ -60,68 +60,28 @@ fn div<'a>() -> Parser<'a, char, &'a char> {
   space() * elm_ref('/') - space()
 }
 
-// fn additive<'a>() -> Parser<'a, char, Rc<Expr>> {
-//   multitive().flat_map(additive_rest)
-// }
-//
-// fn rest0<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
-//   additive_rest(a).flat_map(|e| {
-//     (add() | sub() | mul() | div())
-//       .exists()
-//       .flat_map(move |b| if b { rest0(e.clone()) } else { successful(e.clone()) })
-//   })
-// }
-//
-// fn additive_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
-//   let v1 = a.clone();
-//   let v2 = a.clone();
-//   let v3 = a.clone();
-//   let add_parser = add() * unary().flat_map(move |b| additive_rest(Rc::new(Expr::Add(v1.clone(), b.clone()))));
-//   let sub_parser = sub() * unary().flat_map(move |b| additive_rest(Rc::new(Expr::Sub(v2.clone(), b.clone()))));
-//   add_parser.attempt() | sub_parser.attempt() | empty().map(move |_| v3.clone())
-// }
-//
-// fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
-//   unary().flat_map(multitive_rest)
-// }
-//
-// fn multitive_rest<'a>(a: Rc<Expr>) -> Parser<'a, char, Rc<Expr>> {
-//   let v1 = a.clone();
-//   let v2 = a.clone();
-//   let v3 = a.clone();
-//   let mul_parser = mul() * unary().flat_map(move |b| multitive_rest(Rc::new(Expr::Multiply(v1.clone(), b.clone()))));
-//   let div_parser = div() * unary().flat_map(move |b| multitive_rest(Rc::new(Expr::Divide(v2.clone(), b.clone()))));
-//   mul_parser.attempt() | div_parser.attempt() | empty().map(move |_| v3.clone())
-// }
-
 fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
   let aster = elm_ref('*');
   let slash = elm_ref('/');
-
-  let p = chain_left1(
-    primary(),
+  primary().chain_left1(
     (space() * (aster | slash) - space()).map(|e| match e {
       '*' => Expr::of_multiply,
       '/' => Expr::of_divide,
       _ => panic!("unexpected operator"),
     }),
-  );
-  p
+  )
 }
 
 fn additive<'a>() -> Parser<'a, char, Rc<Expr>> {
   let plus = elm_ref('+');
   let minus = elm_ref('-');
-
-  let p = chain_left1(
-    multitive(),
+  multitive().chain_left1(
     (space() * (plus | minus) - space()).map(|e| match e {
       '+' => Expr::of_add,
       '-' => Expr::of_subtract,
       _ => panic!("unexpected operator"),
     }),
-  );
-  p
+  )
 }
 
 fn primary<'a>() -> Parser<'a, char, Rc<Expr>> {
