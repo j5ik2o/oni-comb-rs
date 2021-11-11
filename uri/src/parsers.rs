@@ -4,7 +4,7 @@ mod ip_v4_address_parsers;
 mod ip_v6_address_parsers;
 
 use crate::parsers::basic_parsers::{pchar, pct_encoded, sub_delims, unreserved};
-use crate::parsers::ip_v4_address_parsers::ip_v4_address;
+
 use oni_comb_parser_rs::prelude::*;
 use std::iter::FromIterator;
 
@@ -114,7 +114,6 @@ fn fragment<'a>() -> Parser<'a, char, &'a [char]> {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use crate::parsers::basic_parsers::{gen_delims, reserved};
 
   #[test]
   fn test_path_empty() {

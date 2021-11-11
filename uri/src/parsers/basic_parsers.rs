@@ -69,12 +69,12 @@ pub mod gens {
     })
   }
 
-  pub fn rep_char_gen(len: u8, mut g: Gen<char>) -> Gen<String> {
+  pub fn rep_char_gen(len: u8, g: Gen<char>) -> Gen<String> {
     Gens::choose_u8(1, len)
       .flat_map(move |len| Gens::list_of_n(len as usize, g.clone()).map(|sl| sl.into_iter().collect()))
   }
 
-  pub fn rep_str_gen(min: u8, max: u8, mut g: Gen<String>) -> Gen<String> {
+  pub fn rep_str_gen(min: u8, max: u8, g: Gen<String>) -> Gen<String> {
     Gens::choose_u8(min, max)
       .flat_map(move |len| Gens::list_of_n(len as usize, g.clone()).map(|sl| sl.into_iter().collect()))
   }

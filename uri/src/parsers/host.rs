@@ -61,7 +61,6 @@ mod tests {
   use prop_check_rs::prop::TestCases;
   use prop_check_rs::rng::RNG;
 
-  use super::gens::*;
   use super::*;
 
   const TEST_COUNT: TestCases = 100;
