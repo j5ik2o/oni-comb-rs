@@ -64,10 +64,12 @@ mod tests {
     let mut counter = 0;
     let prop = prop::for_all(authority_gen(), move |s| {
       counter += 1;
-      log::debug!("{:>03}, authority = {}", counter, s);
+      log::debug!("{:>03}, authority:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (authority() - end()).parse(&input).to_result();
-      assert_eq!(result.unwrap().to_string(), s);
+      let authority = result.unwrap();
+      log::debug!("{:>03}, authority:object = {:?}", counter, authority);
+      assert_eq!(authority.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())

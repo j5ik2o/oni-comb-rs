@@ -15,15 +15,15 @@ pub fn user_info<'a>() -> Parser<'a, char, UserInfo> {
 pub mod gens {
   use prop_check_rs::gen::{Gen, Gens};
 
-  use crate::parsers::basic_parsers::gens::{pct_encoded_str_gen, rep_str_gen, sub_delims_str_gen, unreserved_str_gen};
+  use crate::parsers::basic_parsers::gens::{pct_encoded_gen, repeat_gen_of_string, sub_delims_gen, unreserved_gen};
 
   pub fn user_info_gen() -> Gen<String> {
     let gen = {
-      rep_str_gen(1, 5, {
+      repeat_gen_of_string(1, 5, {
         Gens::choose_u8(1, 3).flat_map(|n| match n {
-          1 => unreserved_str_gen(1),
-          2 => pct_encoded_str_gen(),
-          3 => sub_delims_str_gen(1),
+          1 => unreserved_gen(1),
+          2 => pct_encoded_gen(),
+          3 => sub_delims_gen(1),
           x => panic!("x = {}", x),
         })
       })
@@ -66,10 +66,12 @@ mod tests {
     let mut counter = 0;
     let prop = prop::for_all(user_info_gen(), move |s| {
       counter += 1;
-      log::debug!("{:>03}, user_info = {}", counter, s);
+      log::debug!("{:>03}, user_info:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (user_info() - end()).parse(&input).to_result();
-      assert_eq!(result.unwrap().to_string(), s);
+      let user_info = result.unwrap();
+      log::debug!("{:>03}, user_info:object = {:?}", counter, user_info);
+      assert_eq!(user_info.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())

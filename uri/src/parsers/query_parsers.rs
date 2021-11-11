@@ -1,12 +1,12 @@
 use crate::models::query::Query;
-use crate::parsers::basic_parsers::pchar_without_eq_ampersand;
+use crate::parsers::basic_parsers::pchar_without_eq_amp;
 use oni_comb_parser_rs::prelude::*;
 use std::iter::FromIterator;
 
 //  query         = *( pchar / "/" / "?" )
 pub fn query<'a>() -> Parser<'a, char, Query> {
   let code_point = || {
-    (pchar_without_eq_ampersand() | elm_of("/?").collect())
+    (pchar_without_eq_amp() | elm_of("/?").collect())
       .of_many0()
       .collect()
       .map(String::from_iter)
@@ -25,20 +25,20 @@ pub mod gens {
 
   use crate::parsers::basic_parsers::gens::*;
 
-  fn sub_delims_without_char_gen() -> Gen<char> {
+  fn sub_delims_without_gen_of_char() -> Gen<char> {
     Gens::one_of_vec(vec!['!', '$', '\'', '(', ')', '*', '+', ',', ';'])
   }
 
-  fn sub_delims_without_str_gen(len: u8) -> Gen<String> {
-    rep_char_gen(len, sub_delims_without_char_gen())
+  fn sub_delims_without_gen(len: u8) -> Gen<String> {
+    repeat_gen_of_char(len, sub_delims_without_gen_of_char())
   }
 
-  pub fn pchar_without_eq_and_str_gen(min: u8, max: u8) -> Gen<String> {
-    rep_str_gen(min, max, {
+  pub fn pchar_without_eq_amp_gen(min: u8, max: u8) -> Gen<String> {
+    repeat_gen_of_string(min, max, {
       Gens::choose_u8(1, 4).flat_map(|n| match n {
-        1 => unreserved_char_gen().map(|c| c.into()),
-        2 => pct_encoded_str_gen(),
-        3 => sub_delims_without_char_gen().map(|c| c.into()),
+        1 => unreserved_gen_of_char().map(|c| c.into()),
+        2 => pct_encoded_gen(),
+        3 => sub_delims_without_gen_of_char().map(|c| c.into()),
         4 => Gens::one_of_vec(vec![':', '@']).map(|c| c.into()),
         x => panic!("x = {}", x),
       })
@@ -47,8 +47,8 @@ pub mod gens {
 
   pub fn query_gen() -> Gen<String> {
     Gens::list_of_n(3, {
-      pchar_without_eq_and_str_gen(1, 10).flat_map(|key| {
-        Gens::list_of_n(2, pchar_without_eq_and_str_gen(1, 10)).map(move |vl| {
+      pchar_without_eq_amp_gen(1, 10).flat_map(|key| {
+        Gens::list_of_n(2, pchar_without_eq_amp_gen(1, 10)).map(move |vl| {
           let kvl = vl.into_iter().map(|v| format!("{}={}", key, v)).collect::<Vec<_>>();
           kvl.join("&")
         })
@@ -80,19 +80,19 @@ mod tests {
   }
 
   #[test]
-  fn test_pchar_without_eq_and() -> Result<()> {
+  fn test_pchar_without_eq_amp() -> Result<()> {
     init();
     let mut counter = 0;
-    let prop = prop::for_all(pchar_without_eq_and_str_gen(1, u8::MAX - 1), move |s| {
+    let prop = prop::for_all(pchar_without_eq_amp_gen(1, u8::MAX - 1), move |s| {
       counter += 1;
-      log::debug!("{:>03}, value = {}", counter, s);
+      log::debug!("{:>03}, query:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (query() - end())
-        .collect()
-        .map(String::from_iter)
         .parse(&input)
         .to_result();
-      assert_eq!(result.unwrap(), s);
+      let query = result.unwrap();
+      log::debug!("{:>03}, query:object = {:?}", counter, query);
+      assert_eq!(query.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
@@ -104,10 +104,12 @@ mod tests {
     let mut counter = 0;
     let prop = prop::for_all(query_gen(), move |s| {
       counter += 1;
-      log::debug!("{:>03}, query = {}", counter, s);
+      log::debug!("{:>03}, query:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (query() - end()).parse(&input).to_result();
-      assert_eq!(result.unwrap().to_string(), s);
+      let query = result.unwrap();
+      log::debug!("{:>03}, query:object = {:?}", counter, query);
+      assert_eq!(query.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())

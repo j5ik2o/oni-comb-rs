@@ -18,7 +18,7 @@ pub fn uri<'a>() -> Parser<'a, char, Uri> {
 
 #[cfg(test)]
 pub mod gens {
-  use crate::parsers::fragment_parsers::gens::fragment_str_gen;
+  use crate::parsers::fragment_parsers::gens::fragment_gen;
   use crate::parsers::hier_part_parsers::gens::hier_part_gen;
   use crate::parsers::path_parsers::gens::Pair;
   use crate::parsers::query_parsers::gens::query_gen;
@@ -40,7 +40,7 @@ pub mod gens {
         if is_empty_opt.unwrap_or(false) {
           Gen::<(String, Option<bool>)>::unit(|| s.clone())
         } else {
-          fragment_str_gen().map(move |f| format!("{}#{}", s, f))
+          fragment_gen().map(move |f| format!("{}#{}", s, f))
         }
       });
       fragment_gen
@@ -74,14 +74,14 @@ mod tests {
     let mut counter = 0;
     let prop = prop::for_all(uri_gen(), move |s| {
       counter += 1;
-      log::debug!("{:>03} uri = {}", counter, s);
+      log::debug!("{:>03}, uri:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (uri() - end())
-        .collect()
-        .map(String::from_iter)
         .parse(&input)
         .to_result();
-      assert_eq!(result.unwrap(), s);
+      let uri = result.unwrap();
+      log::debug!("{:>03}, uri:object = {:?}", counter, uri);
+      assert_eq!(uri.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())

@@ -49,24 +49,24 @@ pub mod gens {
 
   use super::*;
 
-  pub fn reg_name_str_gen() -> Gen<String> {
-    rep_str_gen(1, 10, {
+  pub fn reg_name_gen() -> Gen<String> {
+    repeat_gen_of_string(1, 10, {
       Gens::choose_u8(1, 3).flat_map(|n| match n {
-        1 => unreserved_char_gen().map(|c| c.into()),
-        2 => sub_delims_char_gen().map(|c| c.into()),
-        3 => pct_encoded_str_gen(),
+        1 => unreserved_gen_of_char().map(|c| c.into()),
+        2 => sub_delims_gen_of_char().map(|c| c.into()),
+        3 => pct_encoded_gen(),
         x => panic!("x = {}", x),
       })
     })
   }
 
-  pub fn ip_v_future_str_gen() -> Gen<String> {
-    let a = rep_char_gen(5, hex_digit_char_gen());
+  pub fn ip_v_future_gen() -> Gen<String> {
+    let a = repeat_gen_of_char(5, hex_digit_gen());
     let b = {
-      rep_char_gen(5, {
+      repeat_gen_of_char(5, {
         Gens::choose_u8(1, 3).flat_map(|n| match n {
-          1 => unreserved_char_gen(),
-          2 => sub_delims_char_gen(),
+          1 => unreserved_gen_of_char(),
+          2 => sub_delims_gen_of_char(),
           3 => Gen::<char>::unit(|| ':'),
           x => panic!("x = {}", x),
         })
@@ -75,11 +75,11 @@ pub mod gens {
     a.flat_map(move |s1| b.clone().map(move |s2| format!("v{}.{}", s1, s2)))
   }
 
-  pub fn ip_literal_str_gen() -> Gen<String> {
+  pub fn ip_literal_gen() -> Gen<String> {
     Gens::choose_u8(1, 2)
       .flat_map(|n| match n {
         1 => ipv6_address_str_gen(),
-        2 => ip_v_future_str_gen(),
+        2 => ip_v_future_gen(),
         x => panic!("x = {}", x),
       })
       .map(|s| format!("[{}]", s))
@@ -87,9 +87,9 @@ pub mod gens {
 
   pub fn host_gen() -> Gen<String> {
     Gens::choose_u8(1, 3).flat_map(|n| match n {
-      1 => ip_literal_str_gen(),
-      2 => ipv4_address_str_gen(),
-      3 => reg_name_str_gen(),
+      1 => ip_literal_gen(),
+      2 => ipv4_address_gen(),
+      3 => reg_name_gen(),
       x => panic!("x = {}", x),
     })
   }
@@ -118,7 +118,7 @@ mod tests {
   fn test_ip_v_future() -> Result<()> {
     init();
     let mut counter = 0;
-    let prop = prop::for_all(gens::ip_v_future_str_gen(), move |s| {
+    let prop = prop::for_all(gens::ip_v_future_gen(), move |s| {
       counter += 1;
       log::debug!("{}, ip_v_future = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
@@ -137,7 +137,7 @@ mod tests {
   fn test_reg_name() -> Result<()> {
     init();
     let mut counter = 0;
-    let prop = prop::for_all(gens::reg_name_str_gen(), move |s| {
+    let prop = prop::for_all(gens::reg_name_gen(), move |s| {
       counter += 1;
       log::debug!("{}, reg_name = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
@@ -156,9 +156,9 @@ mod tests {
   fn test_ip_literal() -> Result<()> {
     init();
     let mut counter = 0;
-    let prop = prop::for_all(gens::ip_literal_str_gen(), move |s| {
+    let prop = prop::for_all(gens::ip_literal_gen(), move |s| {
       counter += 1;
-      log::debug!("{}, ip_literal_str_gen = {}", counter, s);
+      log::debug!("{}, ip_literal_gen = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (ip_literal() - end())
         .collect()
@@ -180,7 +180,9 @@ mod tests {
       log::debug!("{}, host = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (host() - end()).parse(&input).to_result();
-      assert_eq!(result.unwrap().to_string(), s);
+      let host_name = result.unwrap();
+      log::debug!("{}, host = {:?}", counter, host_name);
+      assert_eq!(host_name.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())

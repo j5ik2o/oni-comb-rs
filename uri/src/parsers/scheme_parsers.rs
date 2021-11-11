@@ -17,7 +17,7 @@ pub mod gens {
   use crate::parsers::basic_parsers::gens::*;
 
   pub fn scheme_gen() -> Gen<String> {
-    rep_char_gen(5, {
+    repeat_gen_of_char(5, {
       Gens::choose_u8(1, 5).flat_map(|n| match n {
         1 => alpha_char_gen(),
         2 => digit_gen('0', '9'),
@@ -56,14 +56,14 @@ mod tests {
     let mut counter = 0;
     let prop = prop::for_all(scheme_gen(), move |s| {
       counter += 1;
-      log::debug!("{:>03}, scheme = {}", counter, s);
+      log::debug!("{:>03}, scheme:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (scheme() - end())
-        // .collect()
-        // .map(String::from_iter)
         .parse(&input)
         .to_result();
-      assert_eq!(result.unwrap().to_string(), s);
+      let scheme = result.unwrap();
+      log::debug!("{:>03}, scheme:object = {:?}", counter, scheme);
+      assert_eq!(scheme.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())

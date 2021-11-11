@@ -13,13 +13,13 @@ pub fn fragment<'a>() -> Parser<'a, char, String> {
 
 #[cfg(test)]
 pub mod gens {
-  use crate::parsers::basic_parsers::gens::{pchar_str_gen, rep_str_gen};
+  use crate::parsers::basic_parsers::gens::{pchar_gen, repeat_gen_of_string};
   use prop_check_rs::gen::{Gen, Gens};
 
-  pub fn fragment_str_gen() -> Gen<String> {
-    rep_str_gen(1, u8::MAX - 1, {
+  pub fn fragment_gen() -> Gen<String> {
+    repeat_gen_of_string(1, u8::MAX - 1, {
       Gens::choose_u8(1, 2).flat_map(|n| match n {
-        1 => pchar_str_gen(1, 1),
+        1 => pchar_gen(1, 1),
         2 => Gens::one_of_vec(vec!['/', '?']).map(|c| c.into()),
         x => panic!("x = {}", x),
       })
@@ -51,7 +51,7 @@ mod tests {
   fn test_fragment() -> Result<()> {
     init();
     let mut counter = 0;
-    let prop = prop::for_all(fragment_str_gen(), move |s| {
+    let prop = prop::for_all(fragment_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, fragment = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();

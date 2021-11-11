@@ -42,14 +42,14 @@ mod tests {
     let mut counter = 0;
     let prop = prop::for_all(gens::port_gen(), move |s| {
       counter += 1;
-      log::debug!("{:>03}, port = {}", counter, s);
+      log::debug!("{:>03}, port:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (port() - end())
-        .collect()
-        .map(String::from_iter)
         .parse(&input)
         .to_result();
-      assert_eq!(result.unwrap(), s);
+      let port = result.unwrap();
+      log::debug!("{:>03}, port:object = {:?}", counter, port);
+      assert_eq!(port.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())

@@ -18,12 +18,12 @@ pub mod gens {
   use crate::parsers::authority_parsers::gens::authority_gen;
   use prop_check_rs::gen::{Gen, Gens};
 
-  use crate::parsers::path_parsers::gens::{path_abempty_str_gen, path_str_without_abempty_gen, Pair};
+  use crate::parsers::path_parsers::gens::{path_abempty_gen, path_str_without_abempty_gen, Pair};
 
   pub fn hier_part_gen() -> Gen<Pair<String, Option<bool>>> {
     let gen1 = {
       authority_gen().flat_map(move |authority| {
-        path_abempty_str_gen().map(move |path_abempty| format!("//{}{}", authority, path_abempty))
+        path_abempty_gen().map(move |path_abempty| format!("//{}{}", authority, path_abempty))
       })
     };
     let gen2 = { path_str_without_abempty_gen().map(|Pair(p1, p2)| Pair(p2, Some(p1 == "empty_path".to_string()))) };
@@ -63,10 +63,12 @@ mod tests {
     let mut counter = 0;
     let prop = prop::for_all(hier_part_gen(), move |Pair(s, _b)| {
       counter += 1;
-      log::debug!("{:>03}, hier_part = {}", counter, s);
+      log::debug!("{:>03}, hier_part:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (hier_part() - end()).parse(&input).to_result().unwrap();
-      assert_eq!(result.map(|e| e.to_string()).unwrap_or("".to_string()), s);
+      let result = (hier_part() - end()).parse(&input).to_result();
+      let hier_port = result.unwrap();
+      log::debug!("{:>03}, hier_part:object = {:?}", counter, hier_port);
+      assert_eq!(hier_port.map(|e| e.to_string()).unwrap_or("".to_string()), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())

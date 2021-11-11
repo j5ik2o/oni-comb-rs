@@ -85,12 +85,12 @@ pub mod gens {
   use prop_check_rs::gen::*;
 
   pub fn h16_gen() -> Gen<String> {
-    Gens::choose_u8(1, 4).flat_map(|n| rep_char_gen(n, hex_digit_char_gen()))
+    Gens::choose_u8(1, 4).flat_map(|n| repeat_gen_of_char(n, hex_digit_gen()))
   }
 
   pub fn ls32_gen() -> Gen<String> {
     Gens::choose_u8(1, 2).flat_map(|n| match n {
-      1 => ipv4_address_str_gen(),
+      1 => ipv4_address_gen(),
       2 => Gens::list_of_n(2, h16_gen()).map(|sl| sl.join(":")),
       x => panic!("x = {}", x),
     })

@@ -100,48 +100,48 @@ pub mod gens {
 
   use crate::parsers::basic_parsers::gens::*;
 
-  pub fn segment_str_gen() -> Gen<String> {
-    pchar_str_gen(0, u8::MAX - 1)
+  pub fn segment_gen() -> Gen<String> {
+    pchar_gen(0, u8::MAX - 1)
   }
 
-  pub fn segment_nz_str_gen() -> Gen<String> {
-    pchar_str_gen(1, u8::MAX - 1)
+  pub fn segment_nz_gen() -> Gen<String> {
+    pchar_gen(1, u8::MAX - 1)
   }
 
   pub fn segment_nz_nc_str_gen() -> Gen<String> {
-    rep_str_gen(1, u8::MAX - 1, {
+    repeat_gen_of_string(1, u8::MAX - 1, {
       Gens::choose_u8(1, 2).flat_map(|n| match n {
-        1 => unreserved_char_gen().map(|c| c.into()),
-        2 => pct_encoded_str_gen(),
-        3 => sub_delims_char_gen().map(|c| c.into()),
+        1 => unreserved_gen_of_char().map(|c| c.into()),
+        2 => pct_encoded_gen(),
+        3 => sub_delims_gen_of_char().map(|c| c.into()),
         4 => Gens::one_of_vec(vec!['@']).map(|c| c.into()),
         x => panic!("x = {}", x),
       })
     })
   }
 
-  pub fn path_abempty_str_gen() -> Gen<String> {
-    rep_str_gen(1, 10, segment_str_gen().map(|s| format!("/{}", s)))
+  pub fn path_abempty_gen() -> Gen<String> {
+    repeat_gen_of_string(1, 10, segment_gen().map(|s| format!("/{}", s)))
   }
 
-  pub fn path_absolute_str_gen() -> Gen<String> {
-    rep_str_gen(1, 10, segment_nz_str_gen().map(|s| format!("/{}", s))).flat_map(|s1| {
-      path_abempty_str_gen().map(move |s2| {
+  pub fn path_absolute_gen() -> Gen<String> {
+    repeat_gen_of_string(1, 10, segment_nz_gen().map(|s| format!("/{}", s))).flat_map(|s1| {
+      path_abempty_gen().map(move |s2| {
         let prefix = if !s1.starts_with("/") { "/" } else { "" };
         format!("{}{}{}", prefix, s1, s2)
       })
     })
   }
 
-  pub fn path_no_scheme_str_gen() -> Gen<String> {
+  pub fn path_no_scheme_gen() -> Gen<String> {
     segment_nz_nc_str_gen().flat_map(|s1| {
-      rep_str_gen(1, 10, segment_str_gen().map(|s2| format!("/{}", s2))).map(move |s2| format!("{}{}", s1, s2))
+      repeat_gen_of_string(1, 10, segment_gen().map(|s2| format!("/{}", s2))).map(move |s2| format!("{}{}", s1, s2))
     })
   }
 
-  pub fn path_rootless_str_gen() -> Gen<String> {
-    segment_nz_str_gen().flat_map(|s1| {
-      rep_str_gen(1, 10, segment_str_gen().map(|s2| format!("/{}", s2))).map(move |s2| format!("{}{}", s1, s2))
+  pub fn path_rootless_gen() -> Gen<String> {
+    segment_nz_gen().flat_map(|s1| {
+      repeat_gen_of_string(1, 10, segment_gen().map(|s2| format!("/{}", s2))).map(move |s2| format!("{}{}", s1, s2))
     })
   }
 
@@ -158,12 +158,12 @@ pub mod gens {
     }
   }
 
-  pub fn path_str_with_abempty_gen() -> Gen<Pair<String, String>> {
+  pub fn path_with_abempty_gen() -> Gen<Pair<String, String>> {
     Gens::choose_u8(1, 5).flat_map(|n| match n {
-      1 => path_abempty_str_gen().map(|s| Pair("abempty_path".to_string(), s)),
-      2 => path_absolute_str_gen().map(|s| Pair("absolute_path".to_string(), s)),
-      3 => path_no_scheme_str_gen().map(|s| Pair("no_scheme_path".to_string(), s)),
-      4 => path_rootless_str_gen().map(|s| Pair("rootless_path".to_string(), s)),
+      1 => path_abempty_gen().map(|s| Pair("abempty_path".to_string(), s)),
+      2 => path_absolute_gen().map(|s| Pair("absolute_path".to_string(), s)),
+      3 => path_no_scheme_gen().map(|s| Pair("no_scheme_path".to_string(), s)),
+      4 => path_rootless_gen().map(|s| Pair("rootless_path".to_string(), s)),
       5 => Gen::<String>::unit(|| Pair("empty_path".to_string(), "".to_string())),
       x => panic!("x = {}", x),
     })
@@ -171,8 +171,8 @@ pub mod gens {
 
   pub fn path_str_without_abempty_gen() -> Gen<Pair<String, String>> {
     Gens::choose_u8(1, 3).flat_map(|n| match n {
-      1 => path_absolute_str_gen().map(|s| Pair("absolute_path".to_string(), s)),
-      2 => path_rootless_str_gen().map(|s| Pair("rootless_path".to_string(), s)),
+      1 => path_absolute_gen().map(|s| Pair("absolute_path".to_string(), s)),
+      2 => path_rootless_gen().map(|s| Pair("rootless_path".to_string(), s)),
       3 => Gen::<String>::unit(|| Pair("empty_path".to_string(), "".to_string())),
       x => panic!("x = {}", x),
     })
@@ -199,16 +199,16 @@ mod tests {
   fn test_path() -> Result<()> {
     init();
     let mut counter = 0;
-    let prop = prop::for_all(gens::path_str_with_abempty_gen(), move |s| {
+    let prop = prop::for_all(gens::path_with_abempty_gen(), move |s| {
       counter += 1;
-      log::debug!("{:>03}, path_str_with_abempty_gen = {}", counter, s);
+      log::debug!("{:>03}, path_str_with_abempty:string = {}", counter, s);
       let input = s.1.chars().collect::<Vec<_>>();
       let result = (path() - end())
-        // .collect()
-        // .map(String::from_iter)
         .parse(&input)
         .to_result();
-      assert_eq!(result.unwrap().map(|e| e.to_string()).unwrap_or("".to_string()), s.1);
+      let path = result.unwrap();
+      log::debug!("{:>03}, path_str_with_abempty:object = {:?}", counter, path);
+      assert_eq!(path.map(|e| e.to_string()).unwrap_or("".to_string()), s.1);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
@@ -218,16 +218,16 @@ mod tests {
   fn test_path_abempty() -> Result<()> {
     init();
     let mut counter = 0;
-    let prop = prop::for_all(gens::path_abempty_str_gen(), move |s| {
+    let prop = prop::for_all(gens::path_abempty_gen(), move |s| {
       counter += 1;
-      log::debug!("{:>03}, path_abempty = {}", counter, s);
+      log::debug!("{:>03}, path_abempty:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (path_abempty(true) - end())
-        // .collect()
-        // .map(String::from_iter)
         .parse(&input)
         .to_result();
-      assert_eq!(result.unwrap().to_string(), s);
+      let path = result.unwrap();
+      log::debug!("{:>03}, path_abempty:object = {:?}", counter, path);
+      assert_eq!(path.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
@@ -237,16 +237,16 @@ mod tests {
   fn test_path_absolute() -> Result<()> {
     init();
     let mut counter = 0;
-    let prop = prop::for_all(gens::path_absolute_str_gen(), move |s| {
+    let prop = prop::for_all(gens::path_absolute_gen(), move |s| {
       counter += 1;
-      log::debug!("{:>03}, path_abempty = {}", counter, s);
+      log::debug!("{:>03}, path_absolute:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (path_absolute() - end())
-        // .collect()
-        // .map(String::from_iter)
         .parse(&input)
         .to_result();
-      assert_eq!(result.unwrap().to_string(), s);
+      let path = result.unwrap();
+      log::debug!("{:>03}, path_absolute:object = {:?}", counter, path);
+      assert_eq!(path.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
@@ -256,16 +256,16 @@ mod tests {
   fn test_path_noscheme() -> Result<()> {
     init();
     let mut counter = 0;
-    let prop = prop::for_all(gens::path_no_scheme_str_gen(), move |s| {
+    let prop = prop::for_all(gens::path_no_scheme_gen(), move |s| {
       counter += 1;
-      log::debug!("{:>03}, path_abempty = {}", counter, s);
+      log::debug!("{:>03}, path_noscheme:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (path_noscheme() - end())
-        // .collect()
-        // .map(String::from_iter)
         .parse(&input)
         .to_result();
-      assert_eq!(result.unwrap().to_string(), s);
+      let path = result.unwrap();
+      log::debug!("{:>03}, path_noscheme:object = {:?}", counter, path);
+      assert_eq!(path.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
@@ -275,16 +275,16 @@ mod tests {
   fn test_path_rootless() -> Result<()> {
     init();
     let mut counter = 0;
-    let prop = prop::for_all(gens::path_rootless_str_gen(), move |s| {
+    let prop = prop::for_all(gens::path_rootless_gen(), move |s| {
       counter += 1;
-      log::debug!("{:>03}, path_rootless_str_gen = {}", counter, s);
+      log::debug!("{:>03}, path_rootless:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (path_rootless() - end())
-        // .collect()
-        // .map(String::from_iter)
         .parse(&input)
         .to_result();
-      assert_eq!(result.unwrap().to_string(), s);
+      let path = result.unwrap();
+      log::debug!("{:>03}, path_rootless:object = {:?}", counter, path);
+      assert_eq!(path.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())

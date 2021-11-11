@@ -1,5 +1,6 @@
-use oni_comb_parser_rs::prelude::*;
 use std::iter::FromIterator;
+
+use oni_comb_parser_rs::prelude::*;
 
 // IPv4address   = dec-octet "." dec-octet "." dec-octet "." dec-octet
 pub fn ip_v4_address<'a>() -> Parser<'a, char, (u8, u8, u8, u8)> {
@@ -31,25 +32,29 @@ pub fn dec_octet<'a>() -> Parser<'a, char, u8> {
 pub mod gens {
   use prop_check_rs::gen::*;
 
-  pub fn dec_octet_str_gen() -> Gen<String> {
+  pub fn dec_octet_gen() -> Gen<String> {
     Gens::choose_u32(1, 255).map(|n| n.to_string())
   }
 
-  pub fn ipv4_address_str_gen() -> Gen<String> {
-    Gens::list_of_n(4, dec_octet_str_gen()).map(|sl| sl.join("."))
+  pub fn ipv4_address_gen() -> Gen<String> {
+    Gens::list_of_n(4, dec_octet_gen()).map(|sl| sl.join("."))
   }
 }
 
 #[cfg(test)]
 mod tests {
-  use super::*;
-  use prop_check_rs::prop::TestCases;
   use std::env;
-  const TEST_COUNT: TestCases = 100;
-  use crate::parsers::ip_v4_address_parsers::gens::dec_octet_str_gen;
+
   use anyhow::Result;
   use prop_check_rs::prop;
+  use prop_check_rs::prop::TestCases;
   use prop_check_rs::rng::RNG;
+
+  use crate::parsers::ip_v4_address_parsers::gens::dec_octet_gen;
+
+  use super::*;
+
+  const TEST_COUNT: TestCases = 100;
 
   fn init() {
     env::set_var("RUST_LOG", "debug");
@@ -60,7 +65,7 @@ mod tests {
   fn test_dec_octet() -> Result<()> {
     init();
     let mut counter = 0;
-    let prop = prop::for_all(dec_octet_str_gen(), move |s| {
+    let prop = prop::for_all(dec_octet_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, dec_octet = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
@@ -79,7 +84,7 @@ mod tests {
   fn test_ipv4_address() -> Result<()> {
     init();
     let mut counter = 0;
-    let prop = prop::for_all(gens::ipv4_address_str_gen(), move |s| {
+    let prop = prop::for_all(gens::ipv4_address_gen(), move |s| {
       counter += 1;
       log::debug!("{}, ipv4_address = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
