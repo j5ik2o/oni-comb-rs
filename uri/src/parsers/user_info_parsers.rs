@@ -1,11 +1,13 @@
+use crate::models::user_info::UserInfo;
 use crate::parsers::basic_parsers::*;
 use oni_comb_parser_rs::prelude::*;
+use std::iter::FromIterator;
 
 //  userinfo      = *( unreserved / pct-encoded / sub-delims / ":" )
-pub fn user_info<'a>() -> Parser<'a, char, &'a [char]> {
-  (unreserved().attempt() | pct_encoded().attempt() | sub_delims().attempt() | elm(':').collect())
-    .of_many0()
-    .collect()
+pub fn user_info<'a>() -> Parser<'a, char, UserInfo> {
+  let p = || (unreserved().attempt() | pct_encoded().attempt() | sub_delims());
+  (p().of_many0().collect().map(String::from_iter) + (elm(':') * p().of_many1().collect().map(String::from_iter)).opt())
+    .map(|(user_name, password)| UserInfo::new(user_name, password))
     .name("user_info")
 }
 
@@ -67,12 +69,8 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, user_info = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (user_info() - end())
-        .collect()
-        .map(String::from_iter)
-        .parse(&input)
-        .to_result();
-      assert_eq!(result.unwrap(), s);
+      let result = (user_info() - end()).parse(&input).to_result();
+      assert_eq!(result.unwrap().to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())

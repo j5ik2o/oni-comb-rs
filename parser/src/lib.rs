@@ -520,13 +520,13 @@ mod tests {
     init();
 
     let input = "aname".chars().collect::<Vec<char>>();
-    let p = (elm_ref('a').peek() + tag("aname"));
+    let p = (elm('a').peek() + tag("aname"));
 
     let result = p.parse_as_result(&input).unwrap();
 
     log::debug!("result = {:?}", result);
-
-    
+    assert_eq!(result.0, 'a');
+    assert_eq!(result.1, "aname");
   }
 
   #[test]

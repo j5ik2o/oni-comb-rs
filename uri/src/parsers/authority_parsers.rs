@@ -1,12 +1,14 @@
 //  authority     = [ userinfo "@" ] host [ ":" port ]
 
+use crate::models::authority::Authority;
 use crate::parsers::host_parsers::host;
 use crate::parsers::port_parsers::port;
 use crate::parsers::user_info_parsers::user_info;
 use oni_comb_parser_rs::prelude::*;
 
-pub fn authority<'a>() -> Parser<'a, char, &'a [char]> {
-  ((user_info() + elm_ref('@')).opt() + host() + (elm_ref(':') + port()).opt()).collect()
+pub fn authority<'a>() -> Parser<'a, char, Authority> {
+  ((user_info() - elm_ref('@')).opt() + host() + (elm_ref(':') * port()).opt())
+    .map(|((user_info, host_name), port)| Authority::new(host_name, port, user_info))
 }
 
 #[cfg(test)]
@@ -66,11 +68,9 @@ mod tests {
       log::debug!("{:>03}, authority = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (authority() - end())
-        .collect()
-        .map(String::from_iter)
         .parse(&input)
         .to_result();
-      assert_eq!(result.unwrap(), s);
+      assert_eq!(result.unwrap().to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())

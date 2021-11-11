@@ -8,5 +8,5 @@ use oni_comb_parser_rs::prelude::*;
 //                / path-empty
 //
 // pub fn hier_part<'a>() -> Parser<'a, char, &'a [char]> {
-//     ((tag("//") + authority() + path_abempty()).collect() | path_abempty(true) | path_rootless()).opt()
+//   ((tag("//") + authority() + path_abempty(true)).collect() | path_abempty(true) | path_rootless()).opt()
 // }
