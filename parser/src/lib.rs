@@ -643,6 +643,37 @@ mod tests {
   }
 
   #[test]
+  fn test_take() {
+    init();
+    let str = "abc".as_bytes();
+    let str_len = str.len();
+    let mut input = vec![str_len as u8];
+    input.extend_from_slice(str);
+
+    let bytes_parser: Parser<u8, &[u8]> = take(1).flat_map(|size: &[u8]| take(size[0] as usize));
+
+    let ss = bytes_parser
+      .parse(&input)
+      .to_result()
+      .map(|r| std::str::from_utf8(r).unwrap())
+      .unwrap();
+
+    println!("{}", ss);
+  }
+
+  #[test]
+  fn test_take_2() {
+    init();
+    let input1 = "abcd".chars().collect::<Vec<char>>();
+    let p = ((elm_ref('a') + elm_ref('b')).flat_map(|e| skip(1).map(move |_| e)) + elm_any_ref() + end())
+        .collect()
+        .map(|chars| String::from_iter(chars));
+
+    let result = p.parse_as_result(&input1).unwrap();
+    log::debug!("result = {:?}", result);
+  }
+
+  #[test]
   fn test_take_while0() {
     init();
     let p = take_while0(|c: &u8| c.is_ascii_digit()).map_res(std::str::from_utf8);
@@ -760,17 +791,7 @@ mod tests {
     //  assert_eq!(b, pv2);
   }
 
-  #[test]
-  fn test_take() {
-    init();
-    let input1 = "abcd".chars().collect::<Vec<char>>();
-    let p = ((elm_ref('a') + elm_ref('b')).flat_map(|e| skip(1).map(move |_| e)) + elm_any_ref() + end())
-      .collect()
-      .map(|chars| String::from_iter(chars));
 
-    let result = p.parse_as_result(&input1).unwrap();
-    log::debug!("result = {:?}", result);
-  }
 
   #[test]
   fn test_or() {
