@@ -20,23 +20,26 @@ fn port<'a>() -> Parser<'a, char, u16> {
 //                / [ *6( h16 ":" ) h16 ] "::"
 fn ip_v6_address<'a>() -> Parser<'a, char, &'a [char]> {
   let p1 = ((h16() + elm(':')).of_count(6) + ls32()).collect().attempt();
-  let p2 = (tag("::") + (h16() + elm(':')).of_count(5) + ls32())
-    .collect();
-  let p3 = (h16().opt() + tag("::") + (h16() + elm(':')).of_count(4) + ls32())
-    .collect();
+  let p2 = (tag("::") + (h16() + elm(':')).of_count(5) + ls32()).collect();
+  let p3 = (h16().opt() + tag("::") + (h16() + elm(':')).of_count(4) + ls32()).collect();
   let p4 = (((h16() + elm(':')).of_many_n_m(0, 1) + h16()).opt() + tag("::") + (h16() + elm(':')).of_count(3) + ls32())
     .collect();
   let p5 = (((h16() + elm(':')).of_many_n_m(0, 2) + h16()).opt() + tag("::") + (h16() + elm(':')).of_count(2) + ls32())
     .collect();
-  let p6 = (((h16() + elm(':')).of_many_n_m(0, 3) + h16()).opt() + tag("::") + h16() + elm(':') + ls32())
-    .collect();
-  let p7 = (((h16() + elm(':')).of_many_n_m(0, 4) + h16()).opt() + tag("::") + ls32())
-    .collect();
-  let p8 = (((h16() + elm(':')).of_many_n_m(0, 5) + h16()).opt() + tag("::") + h16())
-    .collect();
-  let p9 = (((h16() + elm(':')).of_many_n_m(0, 6) + h16()).opt() + tag("::"))
-    .collect();
-  (p1.attempt() | p2.attempt() | p3.attempt() | p4.attempt() | p5.attempt() | p6.attempt() | p7.attempt() | p8.attempt() | p9).name("ip_v6_address")
+  let p6 = (((h16() + elm(':')).of_many_n_m(0, 3) + h16()).opt() + tag("::") + h16() + elm(':') + ls32()).collect();
+  let p7 = (((h16() + elm(':')).of_many_n_m(0, 4) + h16()).opt() + tag("::") + ls32()).collect();
+  let p8 = (((h16() + elm(':')).of_many_n_m(0, 5) + h16()).opt() + tag("::") + h16()).collect();
+  let p9 = (((h16() + elm(':')).of_many_n_m(0, 6) + h16()).opt() + tag("::")).collect();
+  (p1.attempt()
+    | p2.attempt()
+    | p3.attempt()
+    | p4.attempt()
+    | p5.attempt()
+    | p6.attempt()
+    | p7.attempt()
+    | p8.attempt()
+    | p9)
+    .name("ip_v6_address")
 }
 
 fn h16<'a>() -> Parser<'a, char, &'a [char]> {
