@@ -2,6 +2,7 @@ mod basic_parsers;
 mod host;
 mod ip_v4_address_parsers;
 mod ip_v6_address_parsers;
+mod path_parsers;
 
 use crate::parsers::basic_parsers::{pchar, pct_encoded, sub_delims, unreserved};
 
@@ -16,91 +17,6 @@ fn port<'a>() -> Parser<'a, char, u16> {
     .name("port")
 }
 
-// https://github.com/j5ik2o/uri-rs/blob/main/src/parser/parsers/path_parsers.rs
-
-//  path          = path-abempty    ; begins with "/" or is empty
-//                / path-absolute   ; begins with "/" but not "//"
-//                / path-noscheme   ; begins with a non-colon segment
-//                / path-rootless   ; begins with a segment
-//                / path-empty      ; zero characters
-fn path<'a>() -> Parser<'a, char, Option<Vec<&'a [char]>>> {
-  (path_abempty(true).attempt() | path_absolute().attempt() | path_noscheme().attempt() | path_rootless())
-    .opt()
-    .name("path")
-}
-
-//  path-abempty  = *( "/" segment )
-fn path_abempty<'a>(required: bool) -> Parser<'a, char, Vec<&'a [char]>> {
-  let n = if required { 1 } else { 0 };
-  ((elm('/') + segment()).collect()).repeat(n..).name("path-abempty")
-}
-
-//  path-absolute = "/" [ segment-nz *( "/" segment ) ]
-fn path_absolute<'a>() -> Parser<'a, char, Vec<&'a [char]>> {
-  let p = (seqment_nz() + ((elm('/') + segment()).collect()).of_many0())
-    .map(|(a, b)| {
-      let mut l = vec![a];
-      l.extend_from_slice(&b);
-      l
-    })
-    .opt();
-  (elm('/').collect() + p)
-    .map(|(a, b_opt)| match b_opt {
-      None => vec![a],
-      Some(b) => {
-        let mut l = vec![a];
-        l.extend_from_slice(&b);
-        l
-      }
-    })
-    .name("path-absolute")
-}
-
-//  path-rootless = segment-nz *( "/" segment )
-fn path_rootless<'a>() -> Parser<'a, char, Vec<&'a [char]>> {
-  (seqment_nz() + ((elm('/') + segment()).collect()).of_many0())
-    .map(|(a, b)| {
-      let mut l = vec![a];
-      l.extend_from_slice(&b);
-      l
-    })
-    .name("path-rootless")
-}
-
-//  path-noscheme = segment-nz-nc *( "/" segment )
-fn path_noscheme<'a>() -> Parser<'a, char, Vec<&'a [char]>> {
-  (seqment_nz_nc() + ((elm('/') + segment()).collect()).of_many0())
-    .map(|(a, b)| {
-      let mut l = vec![a];
-      l.extend_from_slice(&b);
-      l
-    })
-    .name("path-noscheme")
-}
-
-// fn path_without_abempty<'a>() -> Parser<'a, char, &'a [char]> {
-//   path_absolute().attempt() | path_rootless()
-// }
-
-// segment       = *pchar
-fn segment<'a>() -> Parser<'a, char, &'a [char]> {
-  pchar().of_many0().collect().name("segment")
-}
-
-// segment-nz    = 1*pchar
-fn seqment_nz<'a>() -> Parser<'a, char, &'a [char]> {
-  pchar().of_many1().collect().name("segment-nz")
-}
-
-// segment-nz-nc = 1*( unreserved / pct-encoded / sub-delims / "@" )
-// ; non-zero-length segment without any colon ":"
-fn seqment_nz_nc<'a>() -> Parser<'a, char, &'a [char]> {
-  (unreserved() | pct_encoded() | sub_delims() | elm('@').collect())
-    .of_many1()
-    .collect()
-    .name("segment-nz-nc")
-}
-
 //  query         = *( pchar / "/" / "?" )
 fn query<'a>() -> Parser<'a, char, &'a [char]> {
   (pchar() | elm_of("/?").collect()).of_many0().collect().name("query")
@@ -113,6 +29,7 @@ fn fragment<'a>() -> Parser<'a, char, &'a [char]> {
 
 #[cfg(test)]
 mod tests {
+  use crate::parsers::path_parsers::path;
   use super::*;
 
   #[test]

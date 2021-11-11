@@ -1,6 +1,18 @@
 use oni_comb_parser_rs::prelude::*;
 
 use crate::parsers::basic_parsers::{pct_encoded, sub_delims, unreserved};
+use crate::parsers::ip_v4_address_parsers::ip_v4_address;
+use crate::parsers::ip_v6_address_parsers::ip_v6_address;
+
+// host          = IP-literal / IPv4address / reg-name
+pub fn host<'a>() -> Parser<'a, char, &'a [char]> {
+  ip_literal().attempt() | ip_v4_address().collect().attempt() | reg_name()
+}
+
+// IP-literal    = "[" ( IPv6address / IPvFuture  ) "]"
+pub fn ip_literal<'a>() -> Parser<'a, char, &'a [char]> {
+  (elm('[') + (ip_v6_address().attempt() | ip_v_future()) + elm(']')).collect()
+}
 
 // "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
 pub fn ip_v_future<'a>() -> Parser<'a, char, &'a [char]> {
@@ -119,6 +131,44 @@ mod tests {
       log::debug!("{}, reg_name = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (reg_name() - end())
+        .collect()
+        .map(String::from_iter)
+        .parse(&input)
+        .to_result();
+      assert_eq!(result.unwrap(), s);
+      true
+    });
+    prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
+  }
+
+  #[test]
+  fn test_ip_literal() -> Result<()> {
+    init();
+    let mut counter = 0;
+    let prop = prop::for_all(gens::ip_literal_str_gen(), move |s| {
+      counter += 1;
+      log::debug!("{}, ip_literal_str_gen = {}", counter, s);
+      let input = s.chars().collect::<Vec<_>>();
+      let result = (ip_literal() - end())
+        .collect()
+        .map(String::from_iter)
+        .parse(&input)
+        .to_result();
+      assert_eq!(result.unwrap(), s);
+      true
+    });
+    prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
+  }
+
+  #[test]
+  fn test_host() -> Result<()> {
+    init();
+    let mut counter = 0;
+    let prop = prop::for_all(gens::host_gen(), move |s| {
+      counter += 1;
+      log::debug!("{}, ip_literal_str_gen = {}", counter, s);
+      let input = s.chars().collect::<Vec<_>>();
+      let result = (host() - end())
         .collect()
         .map(String::from_iter)
         .parse(&input)

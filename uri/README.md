@@ -1,3 +1,4 @@
+```
  URI           = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
 
  hier-part     = "//" authority path-abempty
@@ -79,3 +80,4 @@
  gen-delims    = ":" / "/" / "?" / "#" / "[" / "]" / "@"
  sub-delims    = "!" / "$" / "&" / "'" / "(" / ")"
                / "*" / "+" / "," / ";" / "="
+```

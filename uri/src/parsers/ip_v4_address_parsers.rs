@@ -13,7 +13,7 @@ pub fn ip_v4_address<'a>() -> Parser<'a, char, (u8, u8, u8, u8)> {
 //                / "1" 2DIGIT            ; 100-199
 //                / "2" %x30-34 DIGIT     ; 200-249
 //                / "25" %x30-35          ; 250-255
-fn dec_octet<'a>() -> Parser<'a, char, u8> {
+pub fn dec_octet<'a>() -> Parser<'a, char, u8> {
   let p1 = elm_digit().collect();
   let p2 = (elm_digit_1_9() + elm_digit()).collect();
   let p3 = (elm('1') + elm_digit() + elm_digit()).collect();
@@ -26,6 +26,7 @@ fn dec_octet<'a>() -> Parser<'a, char, u8> {
     .map_res(|s| s.parse::<u8>())
     .name("dec-octet")
 }
+
 #[cfg(test)]
 pub mod gens {
   use prop_check_rs::gen::*;
