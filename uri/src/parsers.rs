@@ -1,5 +1,8 @@
+mod basic_parsers;
+
 use oni_comb_parser_rs::prelude::*;
 use std::iter::FromIterator;
+use crate::parsers::basic_parsers::{pct_encoded, sub_delims, unreserved};
 
 fn port<'a>() -> Parser<'a, char, u16> {
   elm_digit()
@@ -187,35 +190,9 @@ fn fragment<'a>() -> Parser<'a, char, &'a [char]> {
   (pchar() | elm_of("/?").collect()).of_many0().collect().name("fragment")
 }
 
-//  pct-encoded   = "%" HEXDIG HEXDIG
-fn pct_encoded<'a>() -> Parser<'a, char, &'a [char]> {
-  (elm('%') + elm_hex_digit() + elm_hex_digit()).collect()
-}
-
-//  unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
-fn unreserved<'a>() -> Parser<'a, char, &'a [char]> {
-  (elm_alpha() | elm_digit() | elm_of("-._~"))
-    .collect()
-    .name("unreserved")
-}
-
-//  reserved      = gen-delims / sub-delims
-fn reserved<'a>() -> Parser<'a, char, &'a [char]> {
-  (gen_delims() | sub_delims()).name("reserved")
-}
-
-// gen-delims    = ":" / "/" / "?" / "#" / "[" / "]" / "@"
-fn gen_delims<'a>() -> Parser<'a, char, &'a [char]> {
-  elm_of(":/?#[]@").name("gen_delims").collect()
-}
-
-// sub-delims    = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
-fn sub_delims<'a>() -> Parser<'a, char, &'a [char]> {
-  elm_of("!$&'()*+,;=").name("sub_delims").collect()
-}
-
 #[cfg(test)]
 mod tests {
+  use crate::parsers::basic_parsers::{gen_delims, reserved};
   use super::*;
 
   #[test]
@@ -236,12 +213,12 @@ mod tests {
   fn test_path_absolute() {
     let input = "/abc".chars().collect::<Vec<_>>();
     let result = path()
-      .map(|result_opt| match result_opt {
-        None => vec!["".to_string()],
-        Some(results) => results.into_iter().map(String::from_iter).collect::<Vec<_>>(),
-      })
-      .parse(&input)
-      .to_result();
+        .map(|result_opt| match result_opt {
+          None => vec!["".to_string()],
+          Some(results) => results.into_iter().map(String::from_iter).collect::<Vec<_>>(),
+        })
+        .parse(&input)
+        .to_result();
     assert_eq!(result.unwrap(), vec!["/abc".to_string()]);
   }
 
@@ -250,60 +227,5 @@ mod tests {
     let input = "123".chars().collect::<Vec<_>>();
     let result = port().parse(&input).to_result();
     assert_eq!(result.unwrap(), 123);
-  }
-
-  #[test]
-  fn test_pct_encoded() {
-    let input = "%1A".chars().collect::<Vec<_>>();
-    let result = (pct_encoded().of_many1() - end())
-      .collect()
-      .map(String::from_iter)
-      .parse(&input)
-      .to_result();
-    assert_eq!(result.unwrap(), "%1A".to_string());
-  }
-
-  #[test]
-  fn test_unreserved() {
-    let input = "1a-._~".chars().collect::<Vec<_>>();
-    let result = (unreserved().of_many1() - end())
-      .collect()
-      .map(String::from_iter)
-      .parse(&input)
-      .to_result();
-    assert_eq!(result.unwrap(), "1a-._~".to_string());
-  }
-
-  #[test]
-  fn test_reserved() {
-    let input = "!$&'()*+,;=:/?#[]@".chars().collect::<Vec<_>>();
-    let result = (reserved().of_many1() - end())
-      .collect()
-      .map(String::from_iter)
-      .parse(&input)
-      .to_result();
-    assert_eq!(result.unwrap(), "!$&'()*+,;=:/?#[]@".to_string());
-  }
-
-  #[test]
-  fn test_gen_delims() {
-    let input = ":/?#[]@".chars().collect::<Vec<_>>();
-    let result = (gen_delims().of_many1() - end())
-      .collect()
-      .map(String::from_iter)
-      .parse(&input)
-      .to_result();
-    assert_eq!(result.unwrap(), ":/?#[]@".to_string());
-  }
-
-  #[test]
-  fn test_sub_delims() {
-    let input = "!$&'()*+,;=".chars().collect::<Vec<_>>();
-    let result = (sub_delims().of_many1() - end())
-      .collect()
-      .map(String::from_iter)
-      .parse(&input)
-      .to_result();
-    assert_eq!(result.unwrap(), "!$&'()*+,;=".to_string());
   }
 }

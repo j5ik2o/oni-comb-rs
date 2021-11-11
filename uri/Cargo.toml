@@ -13,3 +13,6 @@ repository = "https://github.com/j5ik2o/oni-comb-rs"
 
 [dependencies]
 oni-comb-parser-rs = { path = "../parser" }
+
+[dev-dependencies]
+prop-check-rs = "0.0.6"
