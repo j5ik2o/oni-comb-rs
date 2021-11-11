@@ -16,13 +16,19 @@ pub fn host<'a>() -> Parser<'a, char, HostName> {
 
 // IP-literal    = "[" ( IPv6address / IPvFuture  ) "]"
 pub fn ip_literal<'a>() -> Parser<'a, char, &'a [char]> {
-  (elm_ref('[') + (ip_v6_address().attempt() | ip_v_future()) + elm_ref(']')).collect().name("ip-literal")
+  (elm_ref('[') + (ip_v6_address().attempt() | ip_v_future()) + elm_ref(']'))
+    .collect()
+    .name("ip-literal")
 }
 
 // "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
 pub fn ip_v_future<'a>() -> Parser<'a, char, &'a [char]> {
-  (elm_ref('v') + elm_hex_digit().of_many1() + elm('.') + (unreserved() | sub_delims() | elm_ref(':').collect()).of_many1())
-    .collect().name("ipv-future")
+  (elm_ref('v')
+    + elm_hex_digit().of_many1()
+    + elm('.')
+    + (unreserved() | sub_delims() | elm_ref(':').collect()).of_many1())
+  .collect()
+  .name("ipv-future")
 }
 
 //  reg-name      = *( unreserved / pct-encoded / sub-delims )
@@ -39,6 +45,7 @@ pub mod gens {
 
   use crate::parsers::basic_parsers::gens::*;
   use crate::parsers::ip_v4_address_parsers::gens::*;
+  use crate::parsers::ip_v6_address_parsers::gens::ipv6_address_str_gen;
 
   use super::*;
 

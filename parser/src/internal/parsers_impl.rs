@@ -11,6 +11,7 @@ mod lazy_parsers_impl;
 mod logging_parsers_impl;
 mod offset_parsers_impl;
 mod operator_parsers_impl;
+mod peek_parsers_impl;
 mod primitive_parsers_impl;
 mod repeat_parsers_impl;
 mod skip_parser_impl;

@@ -516,7 +516,21 @@ mod tests {
   }
 
   #[test]
-  fn test_rep() {
+  fn test_peek() {
+    init();
+
+    let input = "aname".chars().collect::<Vec<char>>();
+    let p = (elm_ref('a').peek() + tag("aname"));
+
+    let result = p.parse_as_result(&input).unwrap();
+
+    log::debug!("result = {:?}", result);
+
+    
+  }
+
+  #[test]
+  fn test_repeat() {
     init();
     let p = elm_ref(b'a').repeat(..=3).collect();
 

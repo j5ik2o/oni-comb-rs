@@ -3,7 +3,10 @@ use oni_comb_parser_rs::prelude::*;
 
 // fragment      = *( pchar / "/" / "?" )
 pub fn fragment<'a>() -> Parser<'a, char, &'a [char]> {
-  (pchar() | elm_ref_of("/?").collect()).of_many0().collect().name("fragment")
+  (pchar() | elm_ref_of("/?").collect())
+    .of_many0()
+    .collect()
+    .name("fragment")
 }
 
 #[cfg(test)]
