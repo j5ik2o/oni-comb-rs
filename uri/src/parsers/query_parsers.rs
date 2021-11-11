@@ -4,7 +4,7 @@ use oni_comb_parser_rs::prelude::*;
 use std::iter::FromIterator;
 
 //  query         = *( pchar / "/" / "?" )
-fn query<'a>() -> Parser<'a, char, Query> {
+pub fn query<'a>() -> Parser<'a, char, Query> {
   let code_point = || {
     (pchar_without_eq_ampersand() | elm_of("/?").collect())
       .of_many0()

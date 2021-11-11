@@ -9,6 +9,7 @@ mod path_parsers;
 mod port_parsers;
 mod query_parsers;
 mod scheme_parsers;
+pub mod uri_parsers;
 mod user_info_parsers;
 
 use crate::parsers::basic_parsers::{pchar, pct_encoded, sub_delims, unreserved};

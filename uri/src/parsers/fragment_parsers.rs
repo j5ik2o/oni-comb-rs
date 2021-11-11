@@ -1,11 +1,13 @@
 use crate::parsers::basic_parsers::pchar;
 use oni_comb_parser_rs::prelude::*;
+use std::iter::FromIterator;
 
 // fragment      = *( pchar / "/" / "?" )
-pub fn fragment<'a>() -> Parser<'a, char, &'a [char]> {
+pub fn fragment<'a>() -> Parser<'a, char, String> {
   (pchar() | elm_ref_of("/?").collect())
     .of_many0()
     .collect()
+    .map(String::from_iter)
     .name("fragment")
 }
 
