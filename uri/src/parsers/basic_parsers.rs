@@ -9,7 +9,9 @@ pub(crate) fn pchar<'a>() -> Parser<'a, char, &'a [char]> {
 
 //  pct-encoded   = "%" HEXDIG HEXDIG
 pub(crate) fn pct_encoded<'a>() -> Parser<'a, char, &'a [char]> {
-  (elm('%') + elm_hex_digit() + elm_hex_digit()).collect().name("pct-encoded")
+  (elm('%') + elm_hex_digit() + elm_hex_digit())
+    .collect()
+    .name("pct-encoded")
 }
 
 //  unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"

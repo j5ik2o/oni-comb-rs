@@ -1,6 +1,10 @@
 mod basic_parsers;
+mod host;
+mod ip_v4_address_parsers;
+mod ip_v6_address_parsers;
 
 use crate::parsers::basic_parsers::{pchar, pct_encoded, sub_delims, unreserved};
+use crate::parsers::ip_v4_address_parsers::ip_v4_address;
 use oni_comb_parser_rs::prelude::*;
 use std::iter::FromIterator;
 
@@ -12,75 +16,7 @@ fn port<'a>() -> Parser<'a, char, u16> {
     .name("port")
 }
 
-//  IPv6address   =                            6( h16 ":" ) ls32
-//                /                       "::" 5( h16 ":" ) ls32
-//                / [               h16 ] "::" 4( h16 ":" ) ls32
-//                / [ *1( h16 ":" ) h16 ] "::" 3( h16 ":" ) ls32
-//                / [ *2( h16 ":" ) h16 ] "::" 2( h16 ":" ) ls32
-//                / [ *3( h16 ":" ) h16 ] "::"    h16 ":"   ls32
-//                / [ *4( h16 ":" ) h16 ] "::"              ls32
-//                / [ *5( h16 ":" ) h16 ] "::"              h16
-//                / [ *6( h16 ":" ) h16 ] "::"
-fn ip_v6_address<'a>() -> Parser<'a, char, &'a [char]> {
-  let p1 = ((h16() + elm(':')).of_count(6) + ls32()).collect().attempt();
-  let p2 = (tag("::") + (h16() + elm(':')).of_count(5) + ls32()).collect();
-  let p3 = (h16().opt() + tag("::") + (h16() + elm(':')).of_count(4) + ls32()).collect();
-  let p4 = (((h16() + elm(':')).of_many_n_m(0, 1) + h16()).opt() + tag("::") + (h16() + elm(':')).of_count(3) + ls32())
-    .collect();
-  let p5 = (((h16() + elm(':')).of_many_n_m(0, 2) + h16()).opt() + tag("::") + (h16() + elm(':')).of_count(2) + ls32())
-    .collect();
-  let p6 = (((h16() + elm(':')).of_many_n_m(0, 3) + h16()).opt() + tag("::") + h16() + elm(':') + ls32()).collect();
-  let p7 = (((h16() + elm(':')).of_many_n_m(0, 4) + h16()).opt() + tag("::") + ls32()).collect();
-  let p8 = (((h16() + elm(':')).of_many_n_m(0, 5) + h16()).opt() + tag("::") + h16()).collect();
-  let p9 = (((h16() + elm(':')).of_many_n_m(0, 6) + h16()).opt() + tag("::")).collect();
-  (p1.attempt()
-    | p2.attempt()
-    | p3.attempt()
-    | p4.attempt()
-    | p5.attempt()
-    | p6.attempt()
-    | p7.attempt()
-    | p8.attempt()
-    | p9)
-    .name("ip_v6_address")
-}
-
-fn h16<'a>() -> Parser<'a, char, &'a [char]> {
-  elm_hex_digit().of_many_n_m(1, 4).collect().name("h16")
-}
-
 // https://github.com/j5ik2o/uri-rs/blob/main/src/parser/parsers/path_parsers.rs
-//  ls32          = ( h16 ":" h16 ) / IPv4address
-
-fn ls32<'a>() -> Parser<'a, char, &'a [char]> {
-  (h16() + elm(':') + h16()).collect() | ip_v4_address().collect()
-}
-
-// IPv4address   = dec-octet "." dec-octet "." dec-octet "." dec-octet
-fn ip_v4_address<'a>() -> Parser<'a, char, (u8, u8, u8, u8)> {
-  (dec_octet() - elm('.') + dec_octet() - elm('.') + dec_octet() - elm('.') + dec_octet())
-    .map(|(((a, b), c), d)| (a, b, c, d))
-    .name("ip_v4_address")
-}
-
-//  dec-octet     = DIGIT                 ; 0-9
-//                / %x31-39 DIGIT         ; 10-99
-//                / "1" 2DIGIT            ; 100-199
-//                / "2" %x30-34 DIGIT     ; 200-249
-//                / "25" %x30-35          ; 250-255
-fn dec_octet<'a>() -> Parser<'a, char, u8> {
-  let p1 = elm_digit().collect();
-  let p2 = (elm_digit_1_9() + elm_digit()).collect();
-  let p3 = (elm('1') + elm_digit() + elm_digit()).collect();
-  let p4 = (elm('2') + elm_of("01234") + elm_digit()).collect();
-  let p5 = (elm('2') + elm('5') + elm_of("012345")).collect();
-
-  (p5.attempt() | p4.attempt() | p3.attempt() | p2.attempt() | p1)
-    .collect()
-    .map(String::from_iter)
-    .map_res(|s| s.parse::<u8>())
-    .name("dec-octet")
-}
 
 //  reg-name      = *( unreserved / pct-encoded / sub-delims )
 fn reg_name<'a>() -> Parser<'a, char, &'a [char]> {
@@ -187,13 +123,6 @@ fn fragment<'a>() -> Parser<'a, char, &'a [char]> {
 mod tests {
   use super::*;
   use crate::parsers::basic_parsers::{gen_delims, reserved};
-
-  #[test]
-  fn test_ip_v4_address() {
-    let input = "1.10.20.255".chars().collect::<Vec<_>>();
-    let result = ip_v4_address().parse(&input).to_result();
-    assert_eq!(result.unwrap(), (1, 2, 3, 4));
-  }
 
   #[test]
   fn test_path_empty() {
