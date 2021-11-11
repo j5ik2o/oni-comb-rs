@@ -209,7 +209,7 @@ mod tests {
         // .map(String::from_iter)
         .parse(&input)
         .to_result();
-      assert_eq!(result.unwrap().map(|e|e.to_string()).unwrap_or("".to_string()), s.1);
+      assert_eq!(result.unwrap().map(|e| e.to_string()).unwrap_or("".to_string()), s.1);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())

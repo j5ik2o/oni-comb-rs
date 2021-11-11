@@ -6,7 +6,7 @@ use crate::parsers::user_info_parsers::user_info;
 use oni_comb_parser_rs::prelude::*;
 
 pub fn authority<'a>() -> Parser<'a, char, &'a [char]> {
-  ((user_info() + elm('@')).opt() + host() + (elm(':') + port()).opt()).collect()
+  ((user_info() + elm_ref('@')).opt() + host() + (elm_ref(':') + port()).opt()).collect()
 }
 
 #[cfg(test)]

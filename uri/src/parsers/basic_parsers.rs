@@ -2,21 +2,21 @@ use oni_comb_parser_rs::prelude::*;
 
 // pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
 pub(crate) fn pchar<'a>() -> Parser<'a, char, &'a [char]> {
-  (unreserved() | pct_encoded() | sub_delims() | elm_of(":@").collect())
+  (unreserved() | pct_encoded() | sub_delims() | elm_ref_of(":@").collect())
     .collect()
     .name("pchar")
 }
 
 //  pct-encoded   = "%" HEXDIG HEXDIG
 pub(crate) fn pct_encoded<'a>() -> Parser<'a, char, &'a [char]> {
-  (elm('%') + elm_hex_digit() + elm_hex_digit())
+  (elm_ref('%') + elm_hex_digit_ref() + elm_hex_digit_ref())
     .collect()
     .name("pct-encoded")
 }
 
 //  unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
 pub(crate) fn unreserved<'a>() -> Parser<'a, char, &'a [char]> {
-  (elm_alpha() | elm_digit() | elm_of("-._~"))
+  (elm_alpha_ref() | elm_digit_ref() | elm_ref_of("-._~"))
     .collect()
     .name("unreserved")
 }
@@ -28,12 +28,12 @@ pub(crate) fn reserved<'a>() -> Parser<'a, char, &'a [char]> {
 
 // gen-delims    = ":" / "/" / "?" / "#" / "[" / "]" / "@"
 pub(crate) fn gen_delims<'a>() -> Parser<'a, char, &'a [char]> {
-  elm_of(":/?#[]@").name("gen-delims").collect()
+  elm_ref_of(":/?#[]@").name("gen-delims").collect()
 }
 
 // sub-delims    = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
 pub(crate) fn sub_delims<'a>() -> Parser<'a, char, &'a [char]> {
-  elm_of("!$&'()*+,;=").name("sub-delims").collect()
+  elm_ref_of("!$&'()*+,;=").name("sub-delims").collect()
 }
 
 #[cfg(test)]
