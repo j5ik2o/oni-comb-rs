@@ -1,8 +1,8 @@
 mod basic_parsers;
 
+use crate::parsers::basic_parsers::{pchar, pct_encoded, sub_delims, unreserved};
 use oni_comb_parser_rs::prelude::*;
 use std::iter::FromIterator;
-use crate::parsers::basic_parsers::{pct_encoded, sub_delims, unreserved};
 
 fn port<'a>() -> Parser<'a, char, u16> {
   elm_digit()
@@ -173,13 +173,6 @@ fn seqment_nz_nc<'a>() -> Parser<'a, char, &'a [char]> {
     .name("segment-nz-nc")
 }
 
-// pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
-fn pchar<'a>() -> Parser<'a, char, &'a [char]> {
-  (unreserved() | pct_encoded() | sub_delims() | elm_of(":@").collect())
-    .collect()
-    .name("pchar")
-}
-
 //  query         = *( pchar / "/" / "?" )
 fn query<'a>() -> Parser<'a, char, &'a [char]> {
   (pchar() | elm_of("/?").collect()).of_many0().collect().name("query")
@@ -192,12 +185,12 @@ fn fragment<'a>() -> Parser<'a, char, &'a [char]> {
 
 #[cfg(test)]
 mod tests {
-  use crate::parsers::basic_parsers::{gen_delims, reserved};
   use super::*;
+  use crate::parsers::basic_parsers::{gen_delims, reserved};
 
   #[test]
   fn test_ip_v4_address() {
-    let input = "255.1.10.30".chars().collect::<Vec<_>>();
+    let input = "1.10.20.255".chars().collect::<Vec<_>>();
     let result = ip_v4_address().parse(&input).to_result();
     assert_eq!(result.unwrap(), (1, 2, 3, 4));
   }
@@ -213,12 +206,12 @@ mod tests {
   fn test_path_absolute() {
     let input = "/abc".chars().collect::<Vec<_>>();
     let result = path()
-        .map(|result_opt| match result_opt {
-          None => vec!["".to_string()],
-          Some(results) => results.into_iter().map(String::from_iter).collect::<Vec<_>>(),
-        })
-        .parse(&input)
-        .to_result();
+      .map(|result_opt| match result_opt {
+        None => vec!["".to_string()],
+        Some(results) => results.into_iter().map(String::from_iter).collect::<Vec<_>>(),
+      })
+      .parse(&input)
+      .to_result();
     assert_eq!(result.unwrap(), vec!["/abc".to_string()]);
   }
 
