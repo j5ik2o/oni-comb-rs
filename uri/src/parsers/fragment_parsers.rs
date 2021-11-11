@@ -1,26 +1,31 @@
+use crate::parsers::basic_parsers::pchar;
 use oni_comb_parser_rs::prelude::*;
-use std::iter::FromIterator;
 
-pub fn port<'a>() -> Parser<'a, char, u16> {
-  elm_digit()
-    .of_many0()
-    .map(String::from_iter)
-    .map_res(|s| s.parse::<u16>())
-    .name("port")
+// fragment      = *( pchar / "/" / "?" )
+pub fn fragment<'a>() -> Parser<'a, char, &'a [char]> {
+  (pchar() | elm_of("/?").collect()).of_many0().collect().name("fragment")
 }
 
 #[cfg(test)]
 pub mod gens {
+  use crate::parsers::basic_parsers::gens::{pchar_str_gen, rep_str_gen};
   use prop_check_rs::gen::{Gen, Gens};
 
-  pub fn port_gen() -> Gen<String> {
-    Gens::choose_u16(1, u16::MAX - 1).map(move |n| n.to_string())
+  pub fn fragment_str_gen() -> Gen<String> {
+    rep_str_gen(1, u8::MAX - 1, {
+      Gens::choose_u8(1, 2).flat_map(|n| match n {
+        1 => pchar_str_gen(1, 1),
+        2 => Gens::one_of_vec(vec!['/', '?']).map(|c| c.into()),
+        x => panic!("x = {}", x),
+      })
+    })
   }
 }
 
 #[cfg(test)]
 mod tests {
   use std::env;
+  use std::iter::FromIterator;
 
   use anyhow::Result;
   use prop_check_rs::prop;
@@ -38,14 +43,14 @@ mod tests {
   }
 
   #[test]
-  fn test_port() -> Result<()> {
+  fn test_fragment() -> Result<()> {
     init();
     let mut counter = 0;
-    let prop = prop::for_all(gens::port_gen(), move |s| {
+    let prop = prop::for_all(fragment_str_gen(), move |s| {
       counter += 1;
-      log::debug!("{:>03}, port = {}", counter, s);
+      log::debug!("{:>03}, fragment = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (port() - end())
+      let result = (fragment() - end())
         .collect()
         .map(String::from_iter)
         .parse(&input)

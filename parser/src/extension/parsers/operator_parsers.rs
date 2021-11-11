@@ -14,7 +14,7 @@ pub trait OperatorParsers: Parsers {
   fn opt<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, Option<A>>
   where
     A: Clone + Debug + 'a, {
-    Self::or(Self::map(parser, Some), Self::successful(None))
+    Self::or(Self::map(Self::attempt(parser), Some), Self::successful(None))
   }
 
   fn or<'a, I, A>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, A>) -> Self::P<'a, I, A>

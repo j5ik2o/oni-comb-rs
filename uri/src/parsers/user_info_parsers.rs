@@ -6,6 +6,7 @@ pub fn user_info<'a>() -> Parser<'a, char, &'a [char]> {
   (unreserved().attempt() | pct_encoded().attempt() | sub_delims().attempt() | elm(':').collect())
     .of_many0()
     .collect()
+    .name("user_info")
 }
 
 #[cfg(test)]

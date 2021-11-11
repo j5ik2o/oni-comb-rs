@@ -1,4 +1,5 @@
 mod expr;
+pub mod models;
 mod parsers;
 
 #[cfg(test)]

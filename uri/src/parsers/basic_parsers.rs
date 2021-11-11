@@ -40,6 +40,17 @@ pub(crate) fn sub_delims<'a>() -> Parser<'a, char, &'a [char]> {
 pub mod gens {
   use prop_check_rs::gen::{Gen, Gens};
 
+  pub fn to_option(mut gen: Gen<String>) -> Gen<Option<String>> {
+    Gens::one_bool().flat_map(move |b| {
+      if b {
+        let g = gen.clone();
+        g.map(|v| Some(v))
+      } else {
+        Gen::<String>::unit(|| None)
+      }
+    })
+  }
+
   // Generators
   fn low_alpha_gen() -> Gen<char> {
     let low_alpha_gen: Vec<char> = ('a'..='z').into_iter().collect::<Vec<_>>();
