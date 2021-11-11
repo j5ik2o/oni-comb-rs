@@ -21,6 +21,8 @@ pub mod gens {
   use prop_check_rs::gen::{Gen, Gens};
 
   use crate::parsers::basic_parsers::gens::*;
+  use crate::parsers::ip_v4_address_parsers::gens::ipv4_address_str_gen;
+  use crate::parsers::ip_v6_address_parsers::gens::ipv6_address_str_gen;
 
   use super::*;
 
@@ -48,6 +50,25 @@ pub mod gens {
       })
     };
     a.flat_map(move |s1| b.clone().map(move |s2| format!("v{}.{}", s1, s2)))
+  }
+
+  pub fn ip_literal_str_gen() -> Gen<String> {
+    Gens::choose_u8(1, 2)
+      .flat_map(|n| match n {
+        1 => ipv6_address_str_gen(),
+        2 => ip_v_future_str_gen(),
+        x => panic!("x = {}", x),
+      })
+      .map(|s| format!("[{}]", s))
+  }
+
+  pub fn host_gen() -> Gen<String> {
+    Gens::choose_u8(1, 3).flat_map(|n| match n {
+      1 => ip_literal_str_gen(),
+      2 => ipv4_address_str_gen(),
+      3 => reg_name_str_gen(),
+      x => panic!("x = {}", x),
+    })
   }
 }
 
