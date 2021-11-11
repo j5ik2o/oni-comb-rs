@@ -645,10 +645,12 @@ mod tests {
   #[test]
   fn test_take() {
     init();
-    let str = "abc".as_bytes();
+    let str = "abc";
     let str_len = str.len();
     let mut input = vec![str_len as u8];
-    input.extend_from_slice(str);
+    input.extend_from_slice(str.as_bytes());
+
+    // input: [u8; N]  = [ data size as u8 | data bytes ----- ]
 
     let bytes_parser: Parser<u8, &[u8]> = take(1).flat_map(|size: &[u8]| take(size[0] as usize));
 
@@ -659,6 +661,7 @@ mod tests {
       .unwrap();
 
     println!("{}", ss);
+    assert_eq!(ss, str);
   }
 
   #[test]
@@ -666,8 +669,8 @@ mod tests {
     init();
     let input1 = "abcd".chars().collect::<Vec<char>>();
     let p = ((elm_ref('a') + elm_ref('b')).flat_map(|e| skip(1).map(move |_| e)) + elm_any_ref() + end())
-        .collect()
-        .map(|chars| String::from_iter(chars));
+      .collect()
+      .map(|chars| String::from_iter(chars));
 
     let result = p.parse_as_result(&input1).unwrap();
     log::debug!("result = {:?}", result);
@@ -790,8 +793,6 @@ mod tests {
     //  assert_eq!(a, pv1);
     //  assert_eq!(b, pv2);
   }
-
-
 
   #[test]
   fn test_or() {
