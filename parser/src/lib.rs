@@ -520,7 +520,7 @@ mod tests {
     init();
 
     let input = "aname".chars().collect::<Vec<char>>();
-    let p = (elm('a').peek() + tag("aname"));
+    let p = elm('a').peek() + tag("aname");
 
     let result = p.parse_as_result(&input).unwrap();
 

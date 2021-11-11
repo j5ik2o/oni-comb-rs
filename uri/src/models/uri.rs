@@ -3,9 +3,9 @@ use crate::models::hier_part::HierPart;
 use crate::models::path::Path;
 use crate::models::query::Query;
 use crate::models::scheme::Scheme;
-use std::fmt::Formatter;
-use oni_comb_parser_rs::prelude::ParserRunner;
 use crate::parsers::uri_parsers;
+use oni_comb_parser_rs::prelude::ParserRunner;
+use std::fmt::Formatter;
 
 pub type Fragment = String;
 
@@ -63,7 +63,6 @@ impl std::fmt::Display for Uri {
 }
 
 impl Uri {
-
   pub fn parse(text: &str) -> Result<Uri, String> {
     let input = text.chars().collect::<Vec<_>>();
     let p = uri_parsers::uri().parse(&input).to_result();

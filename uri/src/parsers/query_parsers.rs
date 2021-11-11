@@ -1,5 +1,5 @@
 use crate::models::query::Query;
-use crate::parsers::basic_parsers::{pchar, pchar_without_eq_ampersand};
+use crate::parsers::basic_parsers::pchar_without_eq_ampersand;
 use oni_comb_parser_rs::prelude::*;
 use std::iter::FromIterator;
 

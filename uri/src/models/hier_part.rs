@@ -1,6 +1,6 @@
 use crate::models::authority::Authority;
 use crate::models::path::Path;
-use crate::models::user_info::UserInfo;
+
 use std::fmt::Formatter;
 
 #[derive(Debug, Clone, PartialEq, Hash)]

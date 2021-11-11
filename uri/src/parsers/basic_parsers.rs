@@ -50,7 +50,7 @@ pub(crate) fn sub_delims_without_eq_ampersand<'a>() -> Parser<'a, char, &'a [cha
 pub mod gens {
   use prop_check_rs::gen::{Gen, Gens};
 
-  pub fn to_option(mut gen: Gen<String>) -> Gen<Option<String>> {
+  pub fn to_option(gen: Gen<String>) -> Gen<Option<String>> {
     Gens::one_bool().flat_map(move |b| {
       if b {
         let g = gen.clone();

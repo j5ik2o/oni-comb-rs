@@ -26,11 +26,7 @@ pub mod gens {
         path_abempty_str_gen().map(move |path_abempty| format!("//{}{}", authority, path_abempty))
       })
     };
-    let gen2 = {
-      path_str_without_abempty_gen().map(|Pair(p1, p2)| {
-        Pair(p2, Some(p1 == "empty_path".to_string()))
-      })
-    };
+    let gen2 = { path_str_without_abempty_gen().map(|Pair(p1, p2)| Pair(p2, Some(p1 == "empty_path".to_string()))) };
     Gens::one_bool().flat_map(move |b| {
       if b {
         gen1.clone().map(|s| Pair(s, None))
