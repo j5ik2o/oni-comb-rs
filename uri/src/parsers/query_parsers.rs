@@ -1,9 +1,22 @@
-use crate::parsers::basic_parsers::pchar;
+use crate::models::query::Query;
+use crate::parsers::basic_parsers::{pchar, pchar_without_eq_ampersand};
 use oni_comb_parser_rs::prelude::*;
+use std::iter::FromIterator;
 
 //  query         = *( pchar / "/" / "?" )
-fn query<'a>() -> Parser<'a, char, &'a [char]> {
-  (pchar() | elm_of("/?").collect()).of_many0().collect().name("query")
+fn query<'a>() -> Parser<'a, char, Query> {
+  let code_point = || {
+    (pchar_without_eq_ampersand() | elm_of("/?").collect())
+      .of_many0()
+      .collect()
+      .map(String::from_iter)
+  };
+  let key_values = || (code_point() + (elm('=') * code_point()).opt());
+  (key_values() + (elm('&') * key_values()).of_many0()).map(|(a, b)| {
+    let mut m = vec![a];
+    m.extend(b);
+    Query::new(m)
+  })
 }
 
 #[cfg(test)]
@@ -93,12 +106,8 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, query = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (query() - end())
-        .collect()
-        .map(String::from_iter)
-        .parse(&input)
-        .to_result();
-      assert_eq!(result.unwrap(), s);
+      let result = (query() - end()).parse(&input).to_result();
+      assert_eq!(result.unwrap().to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())

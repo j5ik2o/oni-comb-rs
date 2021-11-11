@@ -7,6 +7,12 @@ pub(crate) fn pchar<'a>() -> Parser<'a, char, &'a [char]> {
     .name("pchar")
 }
 
+pub(crate) fn pchar_without_eq_ampersand<'a>() -> Parser<'a, char, &'a [char]> {
+  (unreserved() | pct_encoded() | sub_delims_without_eq_ampersand() | elm_ref_of(":@").collect())
+    .collect()
+    .name("pchar")
+}
+
 //  pct-encoded   = "%" HEXDIG HEXDIG
 pub(crate) fn pct_encoded<'a>() -> Parser<'a, char, &'a [char]> {
   (elm_ref('%') + elm_hex_digit_ref() + elm_hex_digit_ref())
@@ -34,6 +40,10 @@ pub(crate) fn gen_delims<'a>() -> Parser<'a, char, &'a [char]> {
 // sub-delims    = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
 pub(crate) fn sub_delims<'a>() -> Parser<'a, char, &'a [char]> {
   elm_ref_of("!$&'()*+,;=").name("sub-delims").collect()
+}
+
+pub(crate) fn sub_delims_without_eq_ampersand<'a>() -> Parser<'a, char, &'a [char]> {
+  elm_ref_of("!$'()*+,;").name("sub-delims").collect()
 }
 
 #[cfg(test)]

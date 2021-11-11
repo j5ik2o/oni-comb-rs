@@ -67,9 +67,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, authority = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (authority() - end())
-        .parse(&input)
-        .to_result();
+      let result = (authority() - end()).parse(&input).to_result();
       assert_eq!(result.unwrap().to_string(), s);
       true
     });
