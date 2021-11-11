@@ -1,8 +1,9 @@
 mod basic_parsers;
-mod host;
+mod host_parsers;
 mod ip_v4_address_parsers;
 mod ip_v6_address_parsers;
 mod path_parsers;
+mod user_info_parsers;
 
 use crate::parsers::basic_parsers::{pchar, pct_encoded, sub_delims, unreserved};
 
@@ -29,8 +30,8 @@ fn fragment<'a>() -> Parser<'a, char, &'a [char]> {
 
 #[cfg(test)]
 mod tests {
-  use crate::parsers::path_parsers::path;
   use super::*;
+  use crate::parsers::path_parsers::path;
 
   #[test]
   fn test_path_empty() {
