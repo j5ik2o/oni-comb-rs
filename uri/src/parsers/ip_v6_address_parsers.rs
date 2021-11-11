@@ -273,7 +273,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, h16 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (h16().of_many1() - end())
+      let result = (h16() - end())
         .collect()
         .map(String::from_iter)
         .parse(&input)
@@ -292,7 +292,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, ls32 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ls32().of_many1() - end())
+      let result = (ls32() - end())
         .collect()
         .map(String::from_iter)
         .parse(&input)
@@ -311,7 +311,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, ipv6_address1 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_v6_address1().of_many1() - end())
+      let result = (ip_v6_address1() - end())
         .collect()
         .map(String::from_iter)
         .parse(&input)
@@ -330,7 +330,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, ipv6_address2 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_v6_address2().of_many1() - end())
+      let result = (ip_v6_address2() - end())
         .collect()
         .map(String::from_iter)
         .parse(&input)
@@ -349,7 +349,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, ipv6_address3 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_v6_address3().of_many1() - end())
+      let result = (ip_v6_address3() - end())
         .collect()
         .map(String::from_iter)
         .parse(&input)
@@ -406,7 +406,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, ipv6_address6 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_v6_address6().of_many1() - end())
+      let result = (ip_v6_address6() - end())
         .collect()
         .map(String::from_iter)
         .parse(&input)
@@ -425,7 +425,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, ipv6_address7 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_v6_address7().of_many1() - end())
+      let result = (ip_v6_address7() - end())
         .collect()
         .map(String::from_iter)
         .parse(&input)
@@ -444,7 +444,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, ipv6_address8 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_v6_address8().of_many1() - end())
+      let result = (ip_v6_address8() - end())
         .collect()
         .map(String::from_iter)
         .parse(&input)
@@ -463,7 +463,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, ipv6_address9 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_v6_address9().of_many1() - end())
+      let result = (ip_v6_address9() - end())
         .collect()
         .map(String::from_iter)
         .parse(&input)
@@ -482,7 +482,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, ipv6_address = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_v6_address().of_many1() - end())
+      let result = (ip_v6_address() - end())
         .collect()
         .map(String::from_iter)
         .parse(&input)

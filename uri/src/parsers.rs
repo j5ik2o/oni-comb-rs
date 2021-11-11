@@ -18,14 +18,6 @@ fn port<'a>() -> Parser<'a, char, u16> {
 
 // https://github.com/j5ik2o/uri-rs/blob/main/src/parser/parsers/path_parsers.rs
 
-//  reg-name      = *( unreserved / pct-encoded / sub-delims )
-fn reg_name<'a>() -> Parser<'a, char, &'a [char]> {
-  (unreserved() | pct_encoded() | sub_delims())
-    .of_many0()
-    .collect()
-    .name("reg-name")
-}
-
 //  path          = path-abempty    ; begins with "/" or is empty
 //                / path-absolute   ; begins with "/" but not "//"
 //                / path-noscheme   ; begins with a non-colon segment
