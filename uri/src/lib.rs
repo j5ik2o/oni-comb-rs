@@ -1,3 +1,4 @@
+mod expr;
 mod parsers;
 
 #[cfg(test)]
