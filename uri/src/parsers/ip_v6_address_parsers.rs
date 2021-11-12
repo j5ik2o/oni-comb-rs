@@ -372,11 +372,20 @@ mod tests {
   use prop_check_rs::prop::TestCases;
   use prop_check_rs::rng::RNG;
   use std::env;
+  use rand::Rng;
 
   const TEST_COUNT: TestCases = 100;
+
   fn init() {
     env::set_var("RUST_LOG", "debug");
     let _ = env_logger::builder().is_test(true).try_init();
+  }
+
+  fn new_rng() -> RNG {
+    let mut rand = rand::thread_rng();
+    let mut rng = RNG::new();
+    rng.with_seed(rand.gen());
+    rng
   }
 
   #[test]
@@ -392,7 +401,7 @@ mod tests {
       assert_eq!(h16.to_string(), s);
       true
     });
-    prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
+    prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
   }
 
   #[test]
@@ -408,7 +417,7 @@ mod tests {
       assert_eq!(ls32.to_string(), s);
       true
     });
-    prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
+    prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
   }
 
   #[test]
@@ -425,7 +434,7 @@ mod tests {
       assert_eq!(ipv6_address1, expected);
       true
     });
-    prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
+    prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
   }
 
   #[test]
@@ -442,7 +451,7 @@ mod tests {
       assert_eq!(ipv6_address2, expected);
       true
     });
-    prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
+    prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
   }
 
   #[test]
@@ -459,7 +468,7 @@ mod tests {
       assert_eq!(ipv6_address3, expected);
       true
     });
-    prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
+    prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
   }
 
   #[test]
@@ -480,7 +489,7 @@ mod tests {
       assert_eq!(ipv6_address4, expected);
       true
     });
-    prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
+    prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
   }
 
   #[test]
@@ -497,7 +506,7 @@ mod tests {
       assert_eq!(ipv6_address5, expected);
       true
     });
-    prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
+    prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
   }
 
   #[test]
@@ -514,7 +523,7 @@ mod tests {
       assert_eq!(ipv6_address6, expected);
       true
     });
-    prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
+    prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
   }
 
   #[test]
@@ -531,7 +540,7 @@ mod tests {
       assert_eq!(ipv6_address7, expected);
       true
     });
-    prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
+    prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
   }
 
   #[test]
@@ -548,7 +557,7 @@ mod tests {
       assert_eq!(ipv6_address8, expected);
       true
     });
-    prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
+    prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
   }
 
   #[test]
@@ -565,7 +574,7 @@ mod tests {
       assert_eq!(ipv6_address9, expected);
       true
     });
-    prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
+    prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
   }
 
   #[test]
@@ -586,6 +595,6 @@ mod tests {
       assert_eq!(ipv6_address, expected);
       true
     });
-    prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
+    prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
   }
 }

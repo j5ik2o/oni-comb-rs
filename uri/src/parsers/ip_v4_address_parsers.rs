@@ -19,8 +19,8 @@ pub fn dec_octet<'a>() -> Parser<'a, char, u8> {
   let p1 = elm_digit().collect();
   let p2 = (elm_digit_1_9() + elm_digit()).collect();
   let p3 = (elm('1') + elm_digit() + elm_digit()).collect();
-  let p4 = (elm('2') + elm_of("01234") + elm_digit()).collect();
-  let p5 = (elm('2') + elm('5') + elm_of("012345")).collect();
+  let p4 = (elm('2') + elm_in('0', '4') + elm_digit()).collect();
+  let p5 = (elm('2') + elm('5') + elm_in('0', '5')).collect();
 
   (p5.attempt() | p4.attempt() | p3.attempt() | p2.attempt() | p1)
     .collect()
