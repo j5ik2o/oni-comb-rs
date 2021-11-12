@@ -95,26 +95,33 @@ fn ip_v6_address5<'a>() -> Parser<'a, char, Ipv6Addr> {
 
 //                / [ *3( h16 ":" ) h16 ] "::"    h16 ":"   ls32
 fn ip_v6_address6<'a>() -> Parser<'a, char, Ipv6Addr> {
-  ip_v6_address_p2(3, 1).map(String::from_iter)
-      .map_res(|s| s.parse::<Ipv6Addr>())
+  ip_v6_address_p2(3, 1)
+    .map(String::from_iter)
+    .map_res(|s| s.parse::<Ipv6Addr>())
 }
 
 //                / [ *4( h16 ":" ) h16 ] "::"              ls32
 fn ip_v6_address7<'a>() -> Parser<'a, char, Ipv6Addr> {
-  (ip_v6_address_p1(4) + tag("::") + ls32()).collect().map(String::from_iter)
-      .map_res(|s| s.parse::<Ipv6Addr>())
+  (ip_v6_address_p1(4) + tag("::") + ls32())
+    .collect()
+    .map(String::from_iter)
+    .map_res(|s| s.parse::<Ipv6Addr>())
 }
 
 //                / [ *5( h16 ":" ) h16 ] "::"              h16
 fn ip_v6_address8<'a>() -> Parser<'a, char, Ipv6Addr> {
-  (ip_v6_address_p1(5) + tag("::") + h16()).collect().map(String::from_iter)
-      .map_res(|s| s.parse::<Ipv6Addr>())
+  (ip_v6_address_p1(5) + tag("::") + h16())
+    .collect()
+    .map(String::from_iter)
+    .map_res(|s| s.parse::<Ipv6Addr>())
 }
 
 //                / [ *6( h16 ":" ) h16 ] "::"
 fn ip_v6_address9<'a>() -> Parser<'a, char, Ipv6Addr> {
-  (ip_v6_address_p1(5) + tag("::")).collect().map(String::from_iter)
-      .map_res(|s| s.parse::<Ipv6Addr>())
+  (ip_v6_address_p1(5) + tag("::"))
+    .collect()
+    .map(String::from_iter)
+    .map_res(|s| s.parse::<Ipv6Addr>())
 }
 
 pub fn ip_v6_address<'a>() -> Parser<'a, char, Ipv6Addr> {
@@ -358,7 +365,6 @@ mod tests {
   use prop_check_rs::prop::TestCases;
   use prop_check_rs::rng::RNG;
   use std::env;
-  use std::iter::FromIterator;
 
   const TEST_COUNT: TestCases = 100;
   fn init() {
@@ -495,9 +501,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, ipv6_address6 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_v6_address6() - end())
-        .parse(&input)
-        .to_result();
+      let result = (ip_v6_address6() - end()).parse(&input).to_result();
       let ipv6_address6 = result.unwrap();
       let expected = s.parse::<Ipv6Addr>().unwrap();
       assert_eq!(ipv6_address6, expected);
@@ -514,9 +518,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, ipv6_address7 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_v6_address7() - end())
-        .parse(&input)
-        .to_result();
+      let result = (ip_v6_address7() - end()).parse(&input).to_result();
       let ipv6_address7 = result.unwrap();
       let expected = s.parse::<Ipv6Addr>().unwrap();
       assert_eq!(ipv6_address7, expected);
@@ -533,9 +535,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, ipv6_address8 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_v6_address8() - end())
-        .parse(&input)
-        .to_result();
+      let result = (ip_v6_address8() - end()).parse(&input).to_result();
       let ipv6_address8 = result.unwrap();
       let expected = s.parse::<Ipv6Addr>().unwrap();
       assert_eq!(ipv6_address8, expected);
@@ -552,9 +552,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, ipv6_address9 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_v6_address9() - end())
-        .parse(&input)
-        .to_result();
+      let result = (ip_v6_address9() - end()).parse(&input).to_result();
       let ipv6_address9 = result.unwrap();
       let expected = s.parse::<Ipv6Addr>().unwrap();
       assert_eq!(ipv6_address9, expected);
