@@ -233,7 +233,7 @@ pub mod gens {
       .map(|s0| format!("{}::", s0))
   }
 
-  pub fn ipv6_address_str_gen() -> Gen<String> {
+  pub fn ipv6_address_gen() -> Gen<String> {
     Gens::choose_u8(1, 9).flat_map(|n| match n {
       1 => ipv6_address_gen1(),
       2 => ipv6_address_gen2(),
@@ -478,7 +478,7 @@ mod tests {
   fn test_ipv6_address() -> Result<()> {
     init();
     let mut counter = 0;
-    let prop = prop::for_all(gens::ipv6_address_str_gen(), move |s| {
+    let prop = prop::for_all(gens::ipv6_address_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, ipv6_address = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();

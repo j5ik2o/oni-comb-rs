@@ -108,7 +108,7 @@ pub mod gens {
     pchar_gen(1, u8::MAX - 1)
   }
 
-  pub fn segment_nz_nc_str_gen() -> Gen<String> {
+  pub fn segment_nz_nc_gen() -> Gen<String> {
     repeat_gen_of_string(1, u8::MAX - 1, {
       Gens::choose_u8(1, 2).flat_map(|n| match n {
         1 => unreserved_gen_of_char().map(|c| c.into()),
@@ -134,7 +134,7 @@ pub mod gens {
   }
 
   pub fn path_no_scheme_gen() -> Gen<String> {
-    segment_nz_nc_str_gen().flat_map(|s1| {
+    segment_nz_nc_gen().flat_map(|s1| {
       repeat_gen_of_string(1, 10, segment_gen().map(|s2| format!("/{}", s2))).map(move |s2| format!("{}{}", s1, s2))
     })
   }

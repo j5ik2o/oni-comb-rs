@@ -45,7 +45,7 @@ pub mod gens {
 
   use crate::parsers::basic_parsers::gens::*;
   use crate::parsers::ip_v4_address_parsers::gens::*;
-  use crate::parsers::ip_v6_address_parsers::gens::ipv6_address_str_gen;
+  use crate::parsers::ip_v6_address_parsers::gens::ipv6_address_gen;
 
   use super::*;
 
@@ -78,7 +78,7 @@ pub mod gens {
   pub fn ip_literal_gen() -> Gen<String> {
     Gens::choose_u8(1, 2)
       .flat_map(|n| match n {
-        1 => ipv6_address_str_gen(),
+        1 => ipv6_address_gen(),
         2 => ip_v_future_gen(),
         x => panic!("x = {}", x),
       })
