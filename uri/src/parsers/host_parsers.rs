@@ -1,4 +1,4 @@
-use crate::models::host_name::HostName;
+use crate::models::host_name::{HostName, IpLiteral};
 use oni_comb_parser_rs::prelude::*;
 use std::iter::FromIterator;
 
@@ -8,34 +8,35 @@ use crate::parsers::ip_v6_address_parsers::ip_v6_address;
 
 // host          = IP-literal / IPv4address / reg-name
 pub fn host<'a>() -> Parser<'a, char, HostName> {
-  (ip_literal().attempt() | ip_v4_address().collect().attempt() | reg_name())
+  (ip_literal().map(HostName::IpLiteral).attempt() | ip_v4_address().map(HostName::Ipv4Address).attempt() | reg_name())
     .name("host")
-    .map(String::from_iter)
-    .map(HostName::new)
 }
 
 // IP-literal    = "[" ( IPv6address / IPvFuture  ) "]"
-pub fn ip_literal<'a>() -> Parser<'a, char, &'a [char]> {
-  (elm_ref('[') + (ip_v6_address().collect().attempt() | ip_v_future()) + elm_ref(']'))
-    .collect()
-    .name("ip-literal")
+pub fn ip_literal<'a>() -> Parser<'a, char, IpLiteral> {
+  (elm_ref('[') * (ip_v6_address().map(IpLiteral::Ipv6Address).attempt() | ip_v_future().map(IpLiteral::IpvFuture))
+    - elm_ref(']'))
+  .name("ip-literal")
 }
 
 // "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
-pub fn ip_v_future<'a>() -> Parser<'a, char, &'a [char]> {
+pub fn ip_v_future<'a>() -> Parser<'a, char, String> {
   (elm_ref('v')
     + elm_hex_digit().of_many1()
     + elm('.')
     + (unreserved() | sub_delims() | elm_ref(':').collect()).of_many1())
   .collect()
+  .map(String::from_iter)
   .name("ipv-future")
 }
 
 //  reg-name      = *( unreserved / pct-encoded / sub-delims )
-pub fn reg_name<'a>() -> Parser<'a, char, &'a [char]> {
+pub fn reg_name<'a>() -> Parser<'a, char, HostName> {
   (unreserved().attempt() | pct_encoded().attempt() | sub_delims())
     .of_many0()
     .collect()
+    .map(String::from_iter)
+    .map(HostName::RegName)
     .name("reg-name")
 }
 
@@ -122,12 +123,10 @@ mod tests {
       counter += 1;
       log::debug!("{}, ip_v_future = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_v_future() - end())
-        .collect()
-        .map(String::from_iter)
-        .parse(&input)
-        .to_result();
-      assert_eq!(result.unwrap(), s);
+      let result = (ip_v_future() - end()).parse(&input).to_result();
+      let ip_v_future = result.unwrap();
+      log::debug!("{}, ip_v_future = {}", counter, ip_v_future);
+      assert_eq!(ip_v_future.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
@@ -141,12 +140,10 @@ mod tests {
       counter += 1;
       log::debug!("{}, reg_name = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (reg_name() - end())
-        .collect()
-        .map(String::from_iter)
-        .parse(&input)
-        .to_result();
-      assert_eq!(result.unwrap(), s);
+      let result = (reg_name() - end()).parse(&input).to_result();
+      let reg_name = result.unwrap();
+      log::debug!("{}, reg_name = {}", counter, reg_name);
+      assert_eq!(reg_name.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
@@ -158,14 +155,12 @@ mod tests {
     let mut counter = 0;
     let prop = prop::for_all(gens::ip_literal_gen(), move |s| {
       counter += 1;
-      log::debug!("{}, ip_literal_gen = {}", counter, s);
+      log::debug!("{}, ip_literal = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_literal() - end())
-        .collect()
-        .map(String::from_iter)
-        .parse(&input)
-        .to_result();
-      assert_eq!(result.unwrap(), s);
+      let result = (ip_literal() - end()).parse(&input).to_result();
+      let ip_literal = result.unwrap();
+      log::debug!("{}, ip_literal = {}", counter, ip_literal);
+      assert_eq!(ip_literal.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
@@ -181,7 +176,7 @@ mod tests {
       let input = s.chars().collect::<Vec<_>>();
       let result = (host() - end()).parse(&input).to_result();
       let host_name = result.unwrap();
-      log::debug!("{}, host = {:?}", counter, host_name);
+      log::debug!("{}, host = {}", counter, host_name);
       assert_eq!(host_name.to_string(), s);
       true
     });

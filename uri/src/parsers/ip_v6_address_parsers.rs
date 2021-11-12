@@ -195,6 +195,7 @@ pub mod gens {
   use crate::parsers::basic_parsers::gens::*;
   use crate::parsers::ip_v4_address_parsers::gens::*;
   use prop_check_rs::gen::*;
+  use std::net::Ipv6Addr;
 
   pub fn h16_gen() -> Gen<String> {
     Gens::choose_u8(1, 4)
@@ -349,18 +350,21 @@ pub mod gens {
   }
 
   pub fn ipv6_address_gen() -> Gen<String> {
-    Gens::choose_u8(1, 9).flat_map(|n| match n {
-      1 => ipv6_address_gen1(),
-      2 => ipv6_address_gen2(),
-      3 => ipv6_address_gen3(),
-      4 => ipv6_address_gen4(),
-      5 => ipv6_address_gen5(),
-      6 => ipv6_address_gen6(),
-      7 => ipv6_address_gen7(),
-      8 => ipv6_address_gen8(),
-      9 => ipv6_address_gen9(),
-      x => panic!("x = {}", x),
-    })
+    Gens::choose_u8(1, 9)
+      .flat_map(|n| match n {
+        1 => ipv6_address_gen1(),
+        2 => ipv6_address_gen2(),
+        3 => ipv6_address_gen3(),
+        4 => ipv6_address_gen4(),
+        5 => ipv6_address_gen5(),
+        6 => ipv6_address_gen6(),
+        7 => ipv6_address_gen7(),
+        8 => ipv6_address_gen8(),
+        9 => ipv6_address_gen9(),
+        x => panic!("x = {}", x),
+      })
+      .map(|s| s.parse::<Ipv6Addr>().unwrap())
+      .map(|i| i.to_string())
   }
 }
 
@@ -371,8 +375,8 @@ mod tests {
   use prop_check_rs::prop;
   use prop_check_rs::prop::TestCases;
   use prop_check_rs::rng::RNG;
-  use std::env;
   use rand::Rng;
+  use std::env;
 
   const TEST_COUNT: TestCases = 100;
 
