@@ -16,7 +16,7 @@ pub fn host<'a>() -> Parser<'a, char, HostName> {
 
 // IP-literal    = "[" ( IPv6address / IPvFuture  ) "]"
 pub fn ip_literal<'a>() -> Parser<'a, char, &'a [char]> {
-  (elm_ref('[') + (ip_v6_address().attempt() | ip_v_future()) + elm_ref(']'))
+  (elm_ref('[') + (ip_v6_address().collect().attempt() | ip_v_future()) + elm_ref(']'))
     .collect()
     .name("ip-literal")
 }
