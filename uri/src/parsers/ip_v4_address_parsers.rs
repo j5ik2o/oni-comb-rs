@@ -70,12 +70,11 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, dec_octet = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (dec_octet().of_many1() - end())
-        .collect()
-        .map(String::from_iter)
+      let result = (dec_octet() - end())
         .parse(&input)
         .to_result();
-      assert_eq!(result.unwrap(), s);
+      let dec_octet = result.unwrap();
+      assert_eq!(dec_octet.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
