@@ -61,7 +61,6 @@ pub mod gens {
 #[cfg(test)]
 mod tests {
   use std::env;
-  use std::iter::FromIterator;
 
   use anyhow::Result;
 
