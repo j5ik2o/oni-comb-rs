@@ -55,5 +55,6 @@ fn main() {
 - JSON Parsers
   - [Bytes](/parser/examples/json_byte.rs)
   - [Characters](/parser/examples/json_char.rs)
+- [URI](/uri/)
 - [Calculator](/parser/examples/calculator.rs)
 - [Toys](/toys/)
