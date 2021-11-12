@@ -71,7 +71,14 @@ fn ip_v6_address3<'a>() -> Parser<'a, char, Ipv6Addr> {
 }
 
 fn ip_v6_address_p1<'a>(n: usize) -> Parser<'a, char, &'a [char]> {
-  (h16() + (elm(':') + h16()).of_many_n_m(0, n)).opt().collect()
+  ((h16() + (elm(':') * h16()).of_many_n_m(0, n)).map(|(h, vec)| {
+    vec.into_iter().fold(vec![h], |mut acc, e| {
+      acc.push(e);
+      acc
+    });
+  }))
+  .opt()
+  .collect()
 }
 
 fn ip_v6_address_p2<'a>(n: usize, m: usize) -> Parser<'a, char, &'a [char]> {
