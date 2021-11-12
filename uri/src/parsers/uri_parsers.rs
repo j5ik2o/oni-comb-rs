@@ -25,6 +25,7 @@ pub mod gens {
   use crate::parsers::scheme_parsers::gens::scheme_gen;
   use prop_check_rs::gen::Gen;
 
+  // URI = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
   pub fn uri_gen() -> Gen<String> {
     scheme_gen().flat_map(|scheme| {
       let base_gen =

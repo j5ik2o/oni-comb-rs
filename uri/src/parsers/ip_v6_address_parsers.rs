@@ -145,7 +145,7 @@ pub fn ip_v6_address<'a>() -> Parser<'a, char, Ipv6Addr> {
 }
 
 #[derive(Debug, Clone)]
-pub struct H16(u16);
+struct H16(u16);
 
 impl H16 {
   pub fn to_u16(self) -> u16 {
@@ -171,7 +171,7 @@ fn h16<'a>() -> Parser<'a, char, H16> {
 }
 
 #[derive(Debug, Clone)]
-pub enum LS32 {
+enum LS32 {
   Ls32(H16, H16),
   Ipv4Address(Ipv4Addr),
 }
