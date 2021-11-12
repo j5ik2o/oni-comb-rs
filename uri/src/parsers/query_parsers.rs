@@ -87,9 +87,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, query:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (query() - end())
-        .parse(&input)
-        .to_result();
+      let result = (query() - end()).parse(&input).to_result();
       let query = result.unwrap();
       log::debug!("{:>03}, query:object = {:?}", counter, query);
       assert_eq!(query.to_string(), s);

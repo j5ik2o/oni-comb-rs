@@ -70,9 +70,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, dec_octet = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (dec_octet() - end())
-        .parse(&input)
-        .to_result();
+      let result = (dec_octet() - end()).parse(&input).to_result();
       let dec_octet = result.unwrap();
       assert_eq!(dec_octet.to_string(), s);
       true
@@ -88,9 +86,7 @@ mod tests {
       counter += 1;
       log::debug!("{}, ipv4_address = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_v4_address() - end())
-        .parse(&input)
-        .to_result();
+      let result = (ip_v4_address() - end()).parse(&input).to_result();
       let ipv4addr = result.unwrap();
       assert_eq!(ipv4addr.to_string(), s);
       true

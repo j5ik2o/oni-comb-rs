@@ -58,9 +58,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, scheme:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (scheme() - end())
-        .parse(&input)
-        .to_result();
+      let result = (scheme() - end()).parse(&input).to_result();
       let scheme = result.unwrap();
       log::debug!("{:>03}, scheme:object = {:?}", counter, scheme);
       assert_eq!(scheme.to_string(), s);

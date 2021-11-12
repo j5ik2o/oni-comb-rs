@@ -44,9 +44,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, port:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (port() - end())
-        .parse(&input)
-        .to_result();
+      let result = (port() - end()).parse(&input).to_result();
       let port = result.unwrap();
       log::debug!("{:>03}, port:object = {:?}", counter, port);
       assert_eq!(port.to_string(), s);

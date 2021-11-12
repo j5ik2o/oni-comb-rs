@@ -1,9 +1,12 @@
 use crate::parsers::ip_v4_address_parsers::ip_v4_address;
 use oni_comb_parser_rs::prelude::*;
+use std::fmt::Formatter;
+use std::iter::FromIterator;
+use std::net::Ipv4Addr;
 
 //  IPv6address   =                            6( h16 ":" ) ls32
 fn ip_v6_address1<'a>() -> Parser<'a, char, &'a [char]> {
-  ((h16() + elm(':')).of_count(6) + ls32()).collect()
+  ((h16() - elm(':')).of_count(6) + ls32()).collect()
 }
 
 //                /                       "::" 5( h16 ":" ) ls32
@@ -68,14 +71,44 @@ pub fn ip_v6_address<'a>() -> Parser<'a, char, &'a [char]> {
   .name("ip_v6_address")
 }
 
+#[derive(Debug, Clone)]
+pub struct H16(u16);
+
+impl std::fmt::Display for H16 {
+  fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{:x}", self.0)
+  }
+}
+
 //  h16           = 1*4HEXDIG
-fn h16<'a>() -> Parser<'a, char, &'a [char]> {
-  elm_hex_digit().of_many_n_m(1, 4).collect().name("h16")
+fn h16<'a>() -> Parser<'a, char, H16> {
+  elm_hex_digit()
+    .of_many_n_m(1, 4)
+    .collect()
+    .map(String::from_iter)
+    .map_res(|s| u16::from_str_radix(&s, 16))
+    .map(H16)
+    .name("h16")
+}
+
+#[derive(Debug, Clone)]
+pub enum LS32 {
+  Ls32(H16, H16),
+  Ipv4Address(Ipv4Addr),
+}
+
+impl std::fmt::Display for LS32 {
+  fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    match self {
+      LS32::Ls32(l, r) => write!(f, "{}:{}", l, r),
+      LS32::Ipv4Address(ip) => write!(f, "{}", ip),
+    }
+  }
 }
 
 //  ls32          = ( h16 ":" h16 ) / IPv4address
-fn ls32<'a>() -> Parser<'a, char, &'a [char]> {
-  (h16() + elm(':') + h16()).collect().attempt() | ip_v4_address().collect()
+fn ls32<'a>() -> Parser<'a, char, LS32> {
+  (h16() - elm(':') + h16()).map(|(a, b)| LS32::Ls32(a, b)).attempt() | ip_v4_address().map(|a| LS32::Ipv4Address(a))
 }
 
 #[cfg(test)]
@@ -85,7 +118,10 @@ pub mod gens {
   use prop_check_rs::gen::*;
 
   pub fn h16_gen() -> Gen<String> {
-    Gens::choose_u8(1, 4).flat_map(|n| repeat_gen_of_char(n, hex_digit_gen()))
+    Gens::choose_u8(1, 4)
+      .flat_map(|n| repeat_gen_of_char(n, hex_digit_gen(HexDigitMode::Lower)))
+      .map(|s| u16::from_str_radix(&s, 16).unwrap())
+      .map(|n| format!("{:x}", n))
   }
 
   pub fn ls32_gen() -> Gen<String> {
@@ -274,11 +310,12 @@ mod tests {
       log::debug!("{:>03}, h16 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (h16() - end())
-        .collect()
-        .map(String::from_iter)
+        // .collect()
+        // .map(String::from_iter)
         .parse(&input)
         .to_result();
-      assert_eq!(result.unwrap(), s);
+      let h16 = result.unwrap();
+      assert_eq!(h16.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
@@ -293,11 +330,12 @@ mod tests {
       log::debug!("{:>03}, ls32 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (ls32() - end())
-        .collect()
-        .map(String::from_iter)
+        // .collect()
+        // .map(String::from_iter)
         .parse(&input)
         .to_result();
-      assert_eq!(result.unwrap(), s);
+      let ls32 = result.unwrap();
+      assert_eq!(ls32.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())

@@ -203,9 +203,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, path_str_with_abempty:string = {}", counter, s);
       let input = s.1.chars().collect::<Vec<_>>();
-      let result = (path() - end())
-        .parse(&input)
-        .to_result();
+      let result = (path() - end()).parse(&input).to_result();
       let path = result.unwrap();
       log::debug!("{:>03}, path_str_with_abempty:object = {:?}", counter, path);
       assert_eq!(path.map(|e| e.to_string()).unwrap_or("".to_string()), s.1);
@@ -222,9 +220,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, path_abempty:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (path_abempty(true) - end())
-        .parse(&input)
-        .to_result();
+      let result = (path_abempty(true) - end()).parse(&input).to_result();
       let path = result.unwrap();
       log::debug!("{:>03}, path_abempty:object = {:?}", counter, path);
       assert_eq!(path.to_string(), s);
@@ -241,9 +237,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, path_absolute:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (path_absolute() - end())
-        .parse(&input)
-        .to_result();
+      let result = (path_absolute() - end()).parse(&input).to_result();
       let path = result.unwrap();
       log::debug!("{:>03}, path_absolute:object = {:?}", counter, path);
       assert_eq!(path.to_string(), s);
@@ -260,9 +254,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, path_noscheme:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (path_noscheme() - end())
-        .parse(&input)
-        .to_result();
+      let result = (path_noscheme() - end()).parse(&input).to_result();
       let path = result.unwrap();
       log::debug!("{:>03}, path_noscheme:object = {:?}", counter, path);
       assert_eq!(path.to_string(), s);
@@ -279,9 +271,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, path_rootless:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (path_rootless() - end())
-        .parse(&input)
-        .to_result();
+      let result = (path_rootless() - end()).parse(&input).to_result();
       let path = result.unwrap();
       log::debug!("{:>03}, path_rootless:object = {:?}", counter, path);
       assert_eq!(path.to_string(), s);

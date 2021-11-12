@@ -61,7 +61,7 @@ pub mod gens {
   }
 
   pub fn ip_v_future_gen() -> Gen<String> {
-    let a = repeat_gen_of_char(5, hex_digit_gen());
+    let a = repeat_gen_of_char(5, hex_digit_gen(HexDigitMode::Lower));
     let b = {
       repeat_gen_of_char(5, {
         Gens::choose_u8(1, 3).flat_map(|n| match n {
