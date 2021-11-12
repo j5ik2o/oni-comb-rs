@@ -32,9 +32,9 @@ impl Default for HostName {
 impl std::fmt::Display for HostName {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
     match self {
-      HostName::RegName(ref reg_name) => write!(f, "{}", reg_name),
-      HostName::Ipv4Address(ref ipv4_addr) => write!(f, "{}", ipv4_addr),
-      HostName::IpLiteral(ref ip_literal) => write!(f, "{}", ip_literal),
+      HostName::RegName(reg_name) => write!(f, "{}", reg_name),
+      HostName::Ipv4Address(ipv4_addr) => write!(f, "{}", ipv4_addr),
+      HostName::IpLiteral(ip_literal) => write!(f, "{}", ip_literal),
     }
   }
 }
