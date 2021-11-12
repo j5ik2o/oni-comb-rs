@@ -1,11 +1,12 @@
 use std::iter::FromIterator;
+use std::net::Ipv4Addr;
 
 use oni_comb_parser_rs::prelude::*;
 
 // IPv4address   = dec-octet "." dec-octet "." dec-octet "." dec-octet
-pub fn ip_v4_address<'a>() -> Parser<'a, char, (u8, u8, u8, u8)> {
+pub fn ip_v4_address<'a>() -> Parser<'a, char, Ipv4Addr> {
   (dec_octet() - elm('.') + dec_octet() - elm('.') + dec_octet() - elm('.') + dec_octet())
-    .map(|(((a, b), c), d)| (a, b, c, d))
+    .map(|(((a, b), c), d)| Ipv4Addr::new(a, b, c, d))
     .name("ip_v4_address")
 }
 
@@ -89,11 +90,10 @@ mod tests {
       log::debug!("{}, ipv4_address = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (ip_v4_address() - end())
-        .collect()
-        .map(String::from_iter)
         .parse(&input)
         .to_result();
-      assert_eq!(result.unwrap(), s);
+      let ipv4addr = result.unwrap();
+      assert_eq!(ipv4addr.to_string(), s);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
