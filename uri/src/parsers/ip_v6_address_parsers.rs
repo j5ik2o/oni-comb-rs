@@ -2,21 +2,73 @@ use crate::parsers::ip_v4_address_parsers::ip_v4_address;
 use oni_comb_parser_rs::prelude::*;
 use std::fmt::Formatter;
 use std::iter::FromIterator;
-use std::net::Ipv4Addr;
+use std::net::{Ipv4Addr, Ipv6Addr};
 
 //  IPv6address   =                            6( h16 ":" ) ls32
-fn ip_v6_address1<'a>() -> Parser<'a, char, &'a [char]> {
-  ((h16() - elm(':')).of_count(6) + ls32()).collect()
+fn ip_v6_address1<'a>() -> Parser<'a, char, Ipv6Addr> {
+  ((h16() - elm(':')).of_count(6) + ls32()).map(|(vec, b)| {
+    let vec = vec.into_iter().map(|e| e.to_u16()).collect::<Vec<_>>();
+    match b {
+      LS32::Ls32(l, r) => Ipv6Addr::new(vec[0], vec[1], vec[2], vec[3], vec[4], vec[5], l.to_u16(), r.to_u16()),
+      LS32::Ipv4Address(ipv4addr) => {
+        let o = ipv4addr.octets();
+        let l: u16 = ((o[0] as u16) << 8) | o[1] as u16;
+        let r: u16 = ((o[2] as u16) << 8) | o[3] as u16;
+        Ipv6Addr::new(vec[0], vec[1], vec[2], vec[3], vec[4], vec[5], l, r)
+      }
+    }
+  }) //.collect()
 }
 
 //                /                       "::" 5( h16 ":" ) ls32
-fn ip_v6_address2<'a>() -> Parser<'a, char, &'a [char]> {
-  (tag("::") + (h16() + elm(':')).of_count(5) + ls32()).collect()
+fn ip_v6_address2<'a>() -> Parser<'a, char, Ipv6Addr> {
+  (tag("::") * (h16() - elm(':')).of_count(5) + ls32()).map(|(vec, b)| {
+    let vec = vec.into_iter().map(|e| e.to_u16()).collect::<Vec<_>>();
+    match b {
+      LS32::Ls32(l, r) => Ipv6Addr::new(0, vec[0], vec[1], vec[2], vec[3], vec[4], l.to_u16(), r.to_u16()),
+      LS32::Ipv4Address(ipv4addr) => {
+        let o = ipv4addr.octets();
+        let l: u16 = ((o[0] as u16) << 8) | o[1] as u16;
+        let r: u16 = ((o[2] as u16) << 8) | o[3] as u16;
+        Ipv6Addr::new(0, vec[0], vec[1], vec[2], vec[3], vec[4], l, r)
+      }
+    }
+  })
 }
 
 //                / [               h16 ] "::" 4( h16 ":" ) ls32
-fn ip_v6_address3<'a>() -> Parser<'a, char, &'a [char]> {
-  (h16().opt() + tag("::") + (h16() + elm(':')).of_count(4) + ls32()).collect()
+fn ip_v6_address3<'a>() -> Parser<'a, char, Ipv6Addr> {
+  ((h16().opt() - tag("::")) + (h16() - elm(':')).of_count(4) + ls32())
+    .map(|((h, vec), b)| {
+      let vec = vec.into_iter().map(|e| e.to_u16()).collect::<Vec<_>>();
+      match b {
+        LS32::Ls32(l, r) => Ipv6Addr::new(
+          h.map(|e| e.to_u16()).unwrap_or(0),
+          0,
+          vec[0],
+          vec[1],
+          vec[2],
+          vec[3],
+          l.to_u16(),
+          r.to_u16(),
+        ),
+        LS32::Ipv4Address(ipv4addr) => {
+          let o = ipv4addr.octets();
+          let l: u16 = ((o[0] as u16) << 8) | o[1] as u16;
+          let r: u16 = ((o[2] as u16) << 8) | o[3] as u16;
+          Ipv6Addr::new(
+            h.map(|e| e.to_u16()).unwrap_or(0),
+            0,
+            vec[0],
+            vec[1],
+            vec[2],
+            vec[3],
+            l,
+            r,
+          )
+        }
+      }
+    })
 }
 
 fn ip_v6_address_p1<'a>(n: usize) -> Parser<'a, char, &'a [char]> {
@@ -59,9 +111,9 @@ fn ip_v6_address9<'a>() -> Parser<'a, char, &'a [char]> {
 }
 
 pub fn ip_v6_address<'a>() -> Parser<'a, char, &'a [char]> {
-  (ip_v6_address1().attempt()
-    | ip_v6_address2().attempt()
-    | ip_v6_address3().attempt()
+  (ip_v6_address1().collect().attempt()
+    | ip_v6_address2().collect().attempt()
+    | ip_v6_address3().collect().attempt()
     | ip_v6_address4().attempt()
     | ip_v6_address5().attempt()
     | ip_v6_address6().attempt()
@@ -73,6 +125,12 @@ pub fn ip_v6_address<'a>() -> Parser<'a, char, &'a [char]> {
 
 #[derive(Debug, Clone)]
 pub struct H16(u16);
+
+impl H16 {
+  pub fn to_u16(self) -> u16 {
+    self.0
+  }
+}
 
 impl std::fmt::Display for H16 {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -309,11 +367,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, h16 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (h16() - end())
-        // .collect()
-        // .map(String::from_iter)
-        .parse(&input)
-        .to_result();
+      let result = (h16() - end()).parse(&input).to_result();
       let h16 = result.unwrap();
       assert_eq!(h16.to_string(), s);
       true
@@ -329,11 +383,7 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, ls32 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ls32() - end())
-        // .collect()
-        // .map(String::from_iter)
-        .parse(&input)
-        .to_result();
+      let result = (ls32() - end()).parse(&input).to_result();
       let ls32 = result.unwrap();
       assert_eq!(ls32.to_string(), s);
       true
@@ -349,12 +399,10 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, ipv6_address1 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_v6_address1() - end())
-        .collect()
-        .map(String::from_iter)
-        .parse(&input)
-        .to_result();
-      assert_eq!(result.unwrap(), s);
+      let result = (ip_v6_address1() - end()).parse(&input).to_result();
+      let ipv6_address1 = result.unwrap();
+      let expected = s.parse::<Ipv6Addr>().unwrap();
+      assert_eq!(ipv6_address1, expected);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
@@ -368,12 +416,10 @@ mod tests {
       counter += 1;
       log::debug!("{:>03}, ipv6_address2 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_v6_address2() - end())
-        .collect()
-        .map(String::from_iter)
-        .parse(&input)
-        .to_result();
-      assert_eq!(result.unwrap(), s);
+      let result = (ip_v6_address2() - end()).parse(&input).to_result();
+      let ipv6_address2 = result.unwrap();
+      let expected = s.parse::<Ipv6Addr>().unwrap();
+      assert_eq!(ipv6_address2, expected);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
@@ -388,11 +434,11 @@ mod tests {
       log::debug!("{:>03}, ipv6_address3 = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
       let result = (ip_v6_address3() - end())
-        .collect()
-        .map(String::from_iter)
         .parse(&input)
         .to_result();
-      assert_eq!(result.unwrap(), s);
+      let ipv6_address3 = result.unwrap();
+      let expected = s.parse::<Ipv6Addr>().unwrap();
+      assert_eq!(ipv6_address3, expected);
       true
     });
     prop::test_with_prop(prop, 5, TEST_COUNT, RNG::new())
