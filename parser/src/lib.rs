@@ -14,7 +14,7 @@ pub mod prelude {
   pub use crate::utils::*;
   use std::fmt::{Debug, Display};
 
-  /// Returns a parser that does nothing.
+  /// Returns a parser that does nothing.<br/>
   /// 何もしないParserを返します。
   ///
   /// # Example
@@ -22,19 +22,21 @@ pub mod prelude {
   /// ```rust
   /// # use oni_comb_parser_rs::prelude::*;
   ///
-  /// let text = "a";
-  /// let input = text.chars().collect::<Vec<_>>();
+  /// let text: &str = "a";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser = unit();
+  /// let parser: Parser<char, ()> = unit();
   ///
-  /// let result = parser.parse(&input).to_result();
-  /// assert_eq!(result.unwrap(), ());
+  /// let result: ParseResult<char, ()> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), ());
   /// ```
   pub fn unit<'a, I>() -> Parser<'a, I, ()> {
     ParsersImpl::unit()
   }
 
-  /// Returns a parser that does nothing. It is an alias for `unit()`.
+  /// Returns a parser that does nothing. It is an alias for `unit()`.<br/>
   /// 何もしないParserを返します。`unit()`のエイリアスです。
   ///
   /// # Example
@@ -42,44 +44,57 @@ pub mod prelude {
   /// ```rust
   /// use oni_comb_parser_rs::prelude::*;
   ///
-  /// let text = "a";
-  /// let input = text.chars().collect::<Vec<_>>();
+  /// let text: &str = "a";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser = empty();
+  /// let parser: Parser<char, ()> = empty();
   ///
-  /// let result = parser.parse(&input).to_result();
-  /// assert_eq!(result.unwrap(), ());
+  /// let result: ParseResult<char, ()> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), ());
   /// ```
   pub fn empty<'a, I>() -> Parser<'a, I, ()> {
     ParsersImpl::empty()
   }
 
+  /// Returns a Parser representing the termination.<br/>
   /// 終端を表すParserを返します。
-  /// Returns a Parser representing the termination.
   ///
+  /// Returns `Ok(())` if the termination is parsed successfully, `Err(Mismatch)` if the parsing fails.<br/>
   /// 終端の解析に成功したら`Ok(())`を返し、解析に失敗したら`Err(Mismatch)`を返します。
-  /// Returns `Ok(())` if the termination is parsed successfully, `Err(Mismatch)` if the parsing fails.
-  /// 
-  /// # Example
+  ///
+  /// # Example(例)
+  ///
+  /// ## Parsing of the non-termination(非終端の解析)
   ///
   /// ```rust
   /// use oni_comb_parser_rs::prelude::*;
   ///
-  /// let text = "a";
-  /// let input = text.chars().collect::<Vec<_>>();
+  /// let text: &str = "a";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser = end();
+  /// let parser: Parser<char, ()> = end();
   ///
-  /// let result = parser.parse(&input).to_result();
+  /// let result: Result<(), ParseError<char>> = parser.parse(&input).to_result();
+  ///
   /// assert!(result.is_err());
+  /// ```
   ///
-  /// let text = "";
-  /// let input = text.chars().collect::<Vec<_>>();
+  /// ## Parsing of the termination(終端の解析)
   ///
-  /// let parser = end();
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
   ///
-  /// let result = parser.parse(&input).to_result();
-  /// assert!(result.is_ok());
+  /// let text: &str = "";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, ()> = end();
+  ///
+  /// let result: ParseResult<char, ()> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), ());
   /// ```
   pub fn end<'a, I>() -> Parser<'a, I, ()>
   where
@@ -87,6 +102,24 @@ pub mod prelude {
     ParsersImpl::end()
   }
 
+  /// Returns a Parser representing the successful parsing result.<br/>
+  /// 成功した解析結果を表すParserを返します。
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "x";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, char> = successful('a');
+  ///
+  /// let result: ParseResult<char, char> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), 'a');
+  /// ```
   pub fn successful<'a, I, A>(value: A) -> Parser<'a, I, A>
   where
     I: 'a,
@@ -94,6 +127,26 @@ pub mod prelude {
     ParsersImpl::successful(value)
   }
 
+  /// Returns a Parser representing the successful parsing result.<br/>
+  /// 成功した解析結果を表すParserを返します。
+  ///
+  /// - f: 解析結果を返すクロージャ
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "x";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, char> = successful_lazy(|| 'a');
+  ///
+  /// let result: ParseResult<char, char> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), 'a');
+  /// ```
   pub fn successful_lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
   where
     I: 'a,
@@ -102,6 +155,28 @@ pub mod prelude {
     ParsersImpl::successful_lazy(f)
   }
 
+  /// Returns a Parser that represents the result of the failed parsing.<br/>
+  /// 失敗した解析結果を表すParserを返します。
+  ///
+  /// - value: [ParseError]
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "x";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parse_error: ParseError<char> = ParseError::of_in_complete();
+  ///
+  /// let parser: Parser<char, ()> = failed(parse_error.clone(), true);
+  ///
+  /// let result: ParseResult<char, ()> = parser.parse(&input);
+  ///
+  /// assert!(result.is_failure());
+  /// assert_eq!(result.failure().unwrap(), parse_error);
+  /// ```
   pub fn failed<'a, I, A>(value: ParseError<'a, I>, commit: bool) -> Parser<'a, I, A>
   where
     I: Clone + 'a,
@@ -109,6 +184,30 @@ pub mod prelude {
     ParsersImpl::failed(value, commit)
   }
 
+  /// Returns a Parser that returns and commits the failed parsing result.<br/>
+  /// 失敗した解析結果を返しコミットするParserを返します。
+  ///
+  /// - value: [ParseError]
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "x";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parse_error: ParseError<char> = ParseError::of_in_complete();
+  ///
+  /// let parser: Parser<char, ()> = failed_with_commit(parse_error.clone());
+  ///
+  /// let result: ParseResult<char, ()> = parser.parse(&input);
+  ///
+  /// assert!(result.is_failure());
+  /// assert!(result.is_committed().unwrap());
+  ///
+  /// assert_eq!(result.failure().unwrap(), parse_error);
+  /// ```
   pub fn failed_with_commit<'a, I, A>(value: ParseError<'a, I>) -> Parser<'a, I, A>
   where
     I: Clone + 'a,
@@ -116,6 +215,30 @@ pub mod prelude {
     ParsersImpl::failed(value, true)
   }
 
+  /// Returns a Parser that returns failed parsing results and does not commit.<br/>
+  /// 失敗した解析結果を返しコミットしないParserを返します。
+  ///
+  /// - value: [ParseError]
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "x";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parse_error: ParseError<char> = ParseError::of_in_complete();
+  ///
+  /// let parser: Parser<char, ()> = failed_with_un_commit(parse_error.clone());
+  ///
+  /// let result: ParseResult<char, ()> = parser.parse(&input);
+  ///
+  /// assert!(result.is_failure());
+  /// assert!(!result.is_committed().unwrap());
+  ///
+  /// assert_eq!(result.failure().unwrap(), parse_error);
+  /// ```
   pub fn failed_with_un_commit<'a, I, A>(value: ParseError<'a, I>) -> Parser<'a, I, A>
   where
     I: Clone + 'a,
@@ -123,6 +246,28 @@ pub mod prelude {
     ParsersImpl::failed(value, false)
   }
 
+  /// Returns a Parser that represents the result of the failed parsing.<br/>
+  /// 失敗した解析結果を表すParserを返します。
+  ///
+  /// - f: 失敗した解析結果を返すクロージャ
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "x";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parse_error: ParseError<char> = ParseError::of_in_complete();
+  ///
+  /// let parser: Parser<char, ()> = failed_lazy(|| (parse_error.clone(), true));
+  ///
+  /// let result: ParseResult<char, ()> = parser.parse(&input);
+  ///
+  /// assert!(result.is_failure());
+  /// assert_eq!(result.failure().unwrap(), parse_error);
+  /// ```
   pub fn failed_lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
   where
     F: Fn() -> (ParseError<'a, I>, bool) + 'a,
@@ -132,30 +277,180 @@ pub mod prelude {
   }
 
   // --- Element Parsers ---
+  /// Returns a Parser that parses an any element.(for reference)<br/>
+  /// 任意の要素を解析するParserを返します。(参照版)
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "x";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, &char> = elm_any_ref();
+  ///
+  /// let result: ParseResult<char, &char> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), &input[0]);
+  /// ```
   pub fn elm_any_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
     ParsersImpl::elm_any_ref()
   }
 
+  /// Returns a Parser that parses an any element.<br/>
+  /// 任意の要素を解析するParserを返します。
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "x";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, char> = elm_any();
+  ///
+  /// let result: ParseResult<char, char> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), input[0]);
+  /// ```
   pub fn elm_any<'a, I>() -> Parser<'a, I, I>
   where
     I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_any()
   }
 
+  /// Returns a Parser that parses the specified element.(for reference)<br/>
+  /// 指定した要素を解析するParserを返します。(参照版)
+  ///
+  /// - c: 要素
+  ///
+  /// # Example
+  ///
+  /// ## Success case
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "x";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, &char> = elm_ref('x');
+  ///
+  /// let result: ParseResult<char, &char> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), &input[0]);
+  /// ```
+  ///
+  /// ## Failure case
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "x";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, &char> = elm_ref('a');
+  ///
+  /// let result: ParseResult<char, &char> = parser.parse(&input);
+  ///
+  /// assert!(result.is_failure());
+  /// assert!(result.failure().unwrap().is_mismatch());
+  /// ```
   pub fn elm_ref<'a, I>(c: I) -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
     ParsersImpl::elm_ref(c)
   }
 
+  /// Returns a Parser that parses the specified element.<br/>
+  /// 指定した要素を解析するParserを返します。
+  ///
+  /// - c: 要素
+  ///
+  /// # Example
+  ///
+  /// ## Success case
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "x";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, char> = elm('x');
+  ///
+  /// let result: ParseResult<char, char> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), input[0]);
+  /// ```
+  ///
+  /// ## Failure case
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "x";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, char> = elm('a');
+  ///
+  /// let result: ParseResult<char, char> = parser.parse(&input);
+  ///
+  /// assert!(result.is_failure());
+  /// assert!(result.failure().unwrap().is_mismatch());
+  /// ```
   pub fn elm<'a, I>(c: I) -> Parser<'a, I, I>
   where
     I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm(c)
   }
 
+  /// Returns a parser that parses the elements that satisfy the specified closure conditions.(for reference)<br/>
+  /// 指定されたクロージャの条件を満たす要素を解析するパーサーを返します。(参照版)
+  ///
+  /// - f: Closure(クロージャ)
+  ///
+  /// # Example
+  ///
+  /// ## Success case
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "x";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, &char> = elm_pred_ref(|c| *c == 'x');
+  ///
+  /// let result: ParseResult<char, &char> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), &input[0]);
+  /// ```
+  ///
+  /// ## Failure case
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "x";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, &char> = elm_pred_ref(|c| *c == 'a');
+  ///
+  /// let result: ParseResult<char, &char> = parser.parse(&input);
+  ///
+  /// assert!(result.is_failure());
+  /// assert!(result.failure().unwrap().is_mismatch());
+  /// ```
   pub fn elm_pred_ref<'a, I, F>(f: F) -> Parser<'a, I, &'a I>
   where
     F: Fn(&I) -> bool + 'a,
@@ -163,6 +458,44 @@ pub mod prelude {
     ParsersImpl::elm_pred_ref(f)
   }
 
+  /// Returns a parser that parses the elements that satisfy the specified closure conditions.<br/>
+  /// 指定されたクロージャの条件を満たす要素を解析するパーサーを返します。
+  ///
+  /// - f: Closure(クロージャ)
+  ///
+  /// # Example
+  ///
+  /// ## Success case
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "x";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, char> = elm_pred(|c| *c == 'x');
+  ///
+  /// let result: ParseResult<char, char> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), input[0]);
+  /// ```
+  ///
+  /// ## Failure case
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "x";
+  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, char> = elm_pred(|c| *c == 'a');
+  ///
+  /// let result: ParseResult<char, char> = parser.parse(&input);
+  ///
+  /// assert!(result.is_failure());
+  /// assert!(result.failure().unwrap().is_mismatch());
+  /// ```
   pub fn elm_pred<'a, I, F>(f: F) -> Parser<'a, I, I>
   where
     F: Fn(&I) -> bool + 'a,

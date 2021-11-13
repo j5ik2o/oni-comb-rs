@@ -36,10 +36,31 @@ impl<'a, I, A> ParseResult<'a, I, A> {
     }
   }
 
-  pub fn to_option(self) -> Option<A> {
+  pub fn is_success(&self) -> bool {
+    match self {
+      ParseResult::Failure { .. } => false,
+      ParseResult::Success { .. } => true,
+    }
+  }
+
+  pub fn success(self) -> Option<A> {
     match self {
       ParseResult::Failure { .. } => None,
       ParseResult::Success { get: a, .. } => Some(a),
+    }
+  }
+
+  pub fn failure(self) -> Option<ParseError<'a, I>> {
+    match self {
+      ParseResult::Failure { get: e, .. } => Some(e),
+      ParseResult::Success { .. } => None,
+    }
+  }
+
+  pub fn is_failure(&self) -> bool {
+    match self {
+      ParseResult::Failure { .. } => true,
+      ParseResult::Success { .. } => false,
     }
   }
 

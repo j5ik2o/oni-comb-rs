@@ -1,7 +1,7 @@
 use std::fmt;
 use std::fmt::Display;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum ParseError<'a, I> {
   Mismatch {
     input: &'a [I],
@@ -62,6 +62,41 @@ impl<'a, I> Display for ParseError<'a, I> {
 }
 
 impl<'a, I> ParseError<'a, I> {
+  pub fn is_expect(&self) -> bool {
+    match self {
+      ParseError::Expect { .. } => true,
+      _ => false,
+    }
+  }
+
+  pub fn is_custom(&self) -> bool {
+    match self {
+      ParseError::Custom { .. } => true,
+      _ => false,
+    }
+  }
+
+  pub fn is_mismatch(&self) -> bool {
+    match self {
+      ParseError::Mismatch { .. } => true,
+      _ => false,
+    }
+  }
+
+  pub fn is_conversion(&self) -> bool {
+    match self {
+      ParseError::Conversion { .. } => true,
+      _ => false,
+    }
+  }
+
+  pub fn is_in_complete(&self) -> bool {
+    match self {
+      ParseError::Incomplete => true,
+      _ => false,
+    }
+  }
+
   pub fn of_expect(offset: usize, inner: Box<ParseError<'a, I>>, message: String) -> Self {
     ParseError::Expect { offset, inner, message }
   }
