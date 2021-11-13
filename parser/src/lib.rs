@@ -14,14 +14,73 @@ pub mod prelude {
   pub use crate::utils::*;
   use std::fmt::{Debug, Display};
 
+  /// Returns a parser that does nothing.
+  /// 何もしないParserを返します。
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// # use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text = "a";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser = unit();
+  ///
+  /// let result = parser.parse(&input).to_result();
+  /// assert_eq!(result.unwrap(), ());
+  /// ```
   pub fn unit<'a, I>() -> Parser<'a, I, ()> {
     ParsersImpl::unit()
   }
 
+  /// Returns a parser that does nothing. It is an alias for `unit()`.
+  /// 何もしないParserを返します。`unit()`のエイリアスです。
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text = "a";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser = empty();
+  ///
+  /// let result = parser.parse(&input).to_result();
+  /// assert_eq!(result.unwrap(), ());
+  /// ```
   pub fn empty<'a, I>() -> Parser<'a, I, ()> {
     ParsersImpl::empty()
   }
 
+  /// 終端を表すParserを返します。
+  /// Returns a Parser representing the termination.
+  ///
+  /// 終端の解析に成功したら`Ok(())`を返し、解析に失敗したら`Err(Mismatch)`を返します。
+  /// Returns `Ok(())` if the termination is parsed successfully, `Err(Mismatch)` if the parsing fails.
+  /// 
+  /// # Example
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text = "a";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser = end();
+  ///
+  /// let result = parser.parse(&input).to_result();
+  /// assert!(result.is_err());
+  ///
+  /// let text = "";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser = end();
+  ///
+  /// let result = parser.parse(&input).to_result();
+  /// assert!(result.is_ok());
+  /// ```
   pub fn end<'a, I>() -> Parser<'a, I, ()>
   where
     I: Debug + Display + 'a, {

@@ -13,7 +13,6 @@ pub fn authority<'a>() -> Parser<'a, char, Authority> {
 
 #[cfg(test)]
 pub mod gens {
-  use super::*;
   use crate::parsers::basic_parsers::gens::to_option;
   use crate::parsers::host_parsers::gens::host_gen;
   use crate::parsers::port_parsers::gens::port_gen;

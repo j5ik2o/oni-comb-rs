@@ -48,8 +48,6 @@ pub mod gens {
   use crate::parsers::ip_v4_address_parsers::gens::*;
   use crate::parsers::ip_v6_address_parsers::gens::ipv6_address_gen;
 
-  use super::*;
-
   pub fn reg_name_gen() -> Gen<String> {
     repeat_gen_of_string(1, 10, {
       Gens::choose_u8(1, 3).flat_map(|n| match n {
@@ -99,7 +97,6 @@ pub mod gens {
 #[cfg(test)]
 mod tests {
   use std::env;
-  use std::iter::FromIterator;
 
   use anyhow::Result;
   use prop_check_rs::prop;

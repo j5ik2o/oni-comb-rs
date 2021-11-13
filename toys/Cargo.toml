@@ -12,7 +12,7 @@ repository = "https://github.com/j5ik2o/oni-comb-rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-oni-comb-parser-rs = { path = "../parser" }
+oni-comb-parser-rs = { version = "0.0.1", path = "../parser" }
 
 [dev-dependencies]
 env_logger = "0.9.0"
