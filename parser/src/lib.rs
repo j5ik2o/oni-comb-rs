@@ -742,12 +742,6 @@ pub mod prelude {
     ParsersImpl::lazy(f)
   }
 
-  pub fn chain_left1<'a, I, A, BOP>(p: Parser<'a, I, A>, op: Parser<'a, I, BOP>) -> Parser<'a, I, A>
-  where
-    BOP: Fn(A, A) -> A + Copy + 'a,
-    A: Clone + Debug + 'a, {
-    ParsersImpl::chain_left1(p, op)
-  }
 }
 
 #[cfg(test)]
@@ -766,18 +760,6 @@ mod tests {
   fn init() {
     env::set_var("RUST_LOG", "debug");
     let _ = env_logger::builder().is_test(true).try_init();
-  }
-
-  #[test]
-  fn test_chain_left1() {
-    let input1 = "abc".chars().collect::<Vec<char>>();
-
-    let p1 = tag("abc").collect().map(String::from_iter);
-    let p2 = successful(|a: String, b: String| format!("{}{}", a, b));
-    let p3 = chain_left1(p1, p2);
-    let r = p3.parse_as_result(&input1).unwrap();
-
-    println!("{:?}", r);
   }
 
   #[test]
@@ -800,31 +782,6 @@ mod tests {
       println!("result = {:?}", r);
       assert!(r.is_ok());
     }
-  }
-
-  #[test]
-  fn test_end() {
-    init();
-    let input1 = b"";
-    let input2 = b"a";
-
-    let p = end();
-
-    let r = p.parse_as_result(input1);
-    assert!(r.is_ok());
-
-    let r = p.parse_as_result(input2);
-    assert!(r.is_err());
-  }
-
-  #[test]
-  fn test_unit() {
-    init();
-    let input = b"a";
-    let p = unit();
-
-    let r = p.parse_as_result(input);
-    assert_eq!(r.unwrap(), ());
   }
 
   #[test]
