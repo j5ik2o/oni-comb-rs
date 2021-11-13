@@ -50,10 +50,10 @@ fn main() {
 
 ## Sub projects
 
-- [Parser](/parser/)
-- [CROND](/crond/)
-- [URI](/uri/)
-- [Toys](/toys/)
+- [oni-comb-parser-rs](/parser/)
+- [oni-comb-crond-rs](/crond/)
+- [oni-comb-uri-rs](/uri/)
+- [oni-comb-toys-rs](/toys/)
 
 ## Examples
 
