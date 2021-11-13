@@ -50,7 +50,8 @@ fn main() {
 
 ## Sub projects
 
-- [CROND](/crond/src/lib.rs)
+- [Parser](/parser/)
+- [CROND](/crond/)
 - [URI](/uri/)
 - [Toys](/toys/)
 
