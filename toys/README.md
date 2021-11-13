@@ -1,4 +1,6 @@
-# A Toys language implementation by oni-comb-rs
+# oni-comb-toys-rs
+
+A Toys language implementation by oni-comb-rs
 
 [Toys](https://github.com/kmizu/toys) is a simple scripting language.
 
