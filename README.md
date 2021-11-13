@@ -48,9 +48,14 @@ fn main() {
 - Java
   - [jparsec](https://github.com/jparsec/jparsec)
 
-## Sub projects
+## Main project
 
 - [oni-comb-parser-rs](/parser/)
+
+## Sub projects
+
+The following is projects implemented using `oni-comb-parser-rs`.
+
 - [oni-comb-crond-rs](/crond/)
 - [oni-comb-uri-rs](/uri/)
 - [oni-comb-toys-rs](/toys/)
