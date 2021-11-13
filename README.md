@@ -48,13 +48,17 @@ fn main() {
 - Java
   - [jparsec](https://github.com/jparsec/jparsec)
 
+## Sub projects
+
+- [CROND](/crond/src/lib.rs)
+- [URI](/uri/)
+- [Toys](/toys/)
+
 ## Examples
 
 - [Hello World!](/parser/examples/hello_world.rs)
-- [CROND](/crond/src/lib.rs)
 - JSON Parsers
   - [Bytes](/parser/examples/json_byte.rs)
   - [Characters](/parser/examples/json_char.rs)
-- [URI](/uri/)
 - [Calculator](/parser/examples/calculator.rs)
-- [Toys](/toys/)
+
