@@ -78,7 +78,7 @@ impl Parsers for ParsersImpl {
           let msg = format!("no matched to predicate: last offset: {}", offset);
           let ps = parse_state.add_offset(length);
           let pe = ParsedError::of_mismatch(input, ps.next_offset(), length, msg);
-          ParsedResult::failed_with_un_commit(pe)
+          ParsedResult::failed_with_uncommitted(pe)
         }
       }
       ParsedResult::Failure { error, is_committed } => ParsedResult::failed(error, is_committed),

@@ -15,16 +15,16 @@ pub trait ElementParsers: Parsers {
     Self::map(Self::elm_any_ref(), Clone::clone)
   }
 
-  fn elm_ref<'a, I>(c: I) -> Self::P<'a, I, &'a I>
+  fn elm_ref<'a, I>(element: I) -> Self::P<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
-    Self::elm_pred_ref(move |actual| *actual == c)
+    Self::elm_pred_ref(move |actual| *actual == element)
   }
 
-  fn elm<'a, I>(c: I) -> Self::P<'a, I, I>
+  fn elm<'a, I>(element: I) -> Self::P<'a, I, I>
   where
     I: Element + Clone + PartialEq + 'a, {
-    Self::map(Self::elm_ref(c), Clone::clone)
+    Self::map(Self::elm_ref(element), Clone::clone)
   }
 
   fn elm_pred_ref<'a, I, F>(f: F) -> Self::P<'a, I, &'a I>

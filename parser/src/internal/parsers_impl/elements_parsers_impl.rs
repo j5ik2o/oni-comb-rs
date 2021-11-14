@@ -6,7 +6,7 @@ use std::fmt::Debug;
 use std::iter::FromIterator;
 
 impl ElementsParsers for ParsersImpl {
-  fn seq<'a, 'b, I>(tag: &'b [I]) -> Self::P<'a, I, &'a [I]>
+  fn seq<'a, 'b, I>(seq: &'b [I]) -> Self::P<'a, I, &'a [I]>
   where
     I: PartialEq + Debug + 'a,
     'b: 'a, {
@@ -14,18 +14,18 @@ impl ElementsParsers for ParsersImpl {
       let input = parse_state.input();
       let mut index = 0;
       loop {
-        if index == tag.len() {
-          return ParsedResult::successful(tag, index);
+        if index == seq.len() {
+          return ParsedResult::successful(seq, index);
         }
         if let Some(str) = input.get(index) {
-          if tag[index] != *str {
-            let msg = format!("seq {:?} expect: {:?}, found: {:?}", tag, tag[index], str);
+          if seq[index] != *str {
+            let msg = format!("seq {:?} expect: {:?}, found: {:?}", seq, seq[index], str);
             let ps = parse_state.add_offset(index);
             let pe = ParsedError::of_mismatch(input, ps.next_offset(), index, msg);
             return ParsedResult::failed(pe, (index != 0).into());
           }
         } else {
-          return ParsedResult::failed_with_un_commit(ParsedError::of_in_complete());
+          return ParsedResult::failed_with_uncommitted(ParsedError::of_in_complete());
         }
         index += 1;
       }
@@ -47,7 +47,7 @@ impl ElementsParsers for ParsersImpl {
             return ParsedResult::failed(pe, (index != 0).into());
           }
         } else {
-          return ParsedResult::failed_with_un_commit(ParsedError::of_in_complete());
+          return ParsedResult::failed_with_uncommitted(ParsedError::of_in_complete());
         }
         index += 1;
       }
@@ -70,7 +70,7 @@ impl ElementsParsers for ParsersImpl {
             return ParsedResult::failed(pe, (index != 0).into());
           }
         } else {
-          return ParsedResult::failed_with_un_commit(ParsedError::of_in_complete());
+          return ParsedResult::failed_with_uncommitted(ParsedError::of_in_complete());
         }
         index += 1;
       }
@@ -99,8 +99,7 @@ impl ElementsParsers for ParsersImpl {
           return ParsedResult::failed(pe, (captures.len() != 0).into());
         }
       } else {
-        // log::debug!("regex: failed, '{}'", str);
-        return ParsedResult::failed_with_un_commit(ParsedError::of_in_complete());
+        return ParsedResult::failed_with_uncommitted(ParsedError::of_in_complete());
       }
     })
   }

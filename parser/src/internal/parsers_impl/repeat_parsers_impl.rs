@@ -68,7 +68,7 @@ impl RepeatParsers for ParsersImpl {
               items.len()
             ),
           );
-          return ParsedResult::failed_with_un_commit(pe);
+          return ParsedResult::failed_with_uncommitted(pe);
         }
       }
       ParsedResult::successful(items, all_length)

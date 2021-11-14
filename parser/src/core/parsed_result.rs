@@ -47,7 +47,7 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
   /// 失敗の解析結果を返します。
   ///
   /// - error: a [ParsedError]
-  pub fn failed_with_un_commit(error: ParsedError<'a, I>) -> Self {
+  pub fn failed_with_uncommitted(error: ParsedError<'a, I>) -> Self {
     Self::failed(error, CommittedStatus::Uncommitted)
   }
 
@@ -101,7 +101,7 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
   }
 
   /// 失敗時のコミットを解除する
-  pub fn with_un_commit(self) -> Self {
+  pub fn with_uncommitted(self) -> Self {
     match self {
       ParsedResult::Failure {
         error,

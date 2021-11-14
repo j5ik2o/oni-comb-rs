@@ -17,7 +17,7 @@ impl ConversionParsers for ParsersImpl {
           let ps = parse_state.add_offset(0);
           let msg = format!("Conversion error: {:?}", err);
           let parser_error = ParsedError::of_conversion(ps.input(), ps.last_offset().unwrap_or(0), 0, msg);
-          ParsedResult::failed_with_un_commit(parser_error)
+          ParsedResult::failed_with_uncommitted(parser_error)
         }
       },
       ParsedResult::Failure { error, is_committed } => ParsedResult::failed(error, is_committed),
@@ -36,7 +36,7 @@ impl ConversionParsers for ParsersImpl {
           let ps = parse_state.add_offset(0);
           let msg = format!("Conversion error");
           let parser_error = ParsedError::of_conversion(ps.input(), ps.last_offset().unwrap_or(0), 0, msg);
-          ParsedResult::failed_with_un_commit(parser_error)
+          ParsedResult::failed_with_uncommitted(parser_error)
         }
       },
       ParsedResult::Failure { error, is_committed } => ParsedResult::failed(error, is_committed),

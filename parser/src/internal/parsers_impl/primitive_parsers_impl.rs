@@ -13,7 +13,7 @@ impl PrimitiveParsers for ParsersImpl {
         let msg = format!("expect end of input, found: {}", actual);
         let ps = parse_state.add_offset(1);
         let pe = ParsedError::of_mismatch(input, ps.next_offset(), 1, msg);
-        ParsedResult::failed_with_un_commit(pe)
+        ParsedResult::failed_with_uncommitted(pe)
       } else {
         ParsedResult::successful((), 0)
       }

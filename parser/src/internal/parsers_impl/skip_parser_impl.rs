@@ -9,7 +9,7 @@ impl SkipParsers for ParsersImpl {
       if input.len() >= n {
         ParsedResult::successful((), n)
       } else {
-        ParsedResult::failed_with_un_commit(ParsedError::of_in_complete())
+        ParsedResult::failed_with_uncommitted(ParsedError::of_in_complete())
       }
     })
   }

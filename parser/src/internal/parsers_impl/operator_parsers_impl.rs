@@ -27,7 +27,7 @@ impl OperatorParsers for ParsersImpl {
           0,
           "not predicate failed".to_string(),
         );
-        ParsedResult::failed_with_un_commit(parser_error)
+        ParsedResult::failed_with_uncommitted(parser_error)
       }
       ParsedResult::Failure { .. } => ParsedResult::successful((), 0),
     })
@@ -57,7 +57,7 @@ impl OperatorParsers for ParsersImpl {
   fn attempt<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
   where
     A: Debug + 'a, {
-    Parser::new(move |parse_state| parser.run(parse_state).with_un_commit())
+    Parser::new(move |parse_state| parser.run(parse_state).with_uncommitted())
   }
 
   fn scan_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>

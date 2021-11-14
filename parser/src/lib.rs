@@ -234,7 +234,7 @@ pub mod prelude {
   ///
   /// let parse_error: ParsedError<char> = ParsedError::of_in_complete();
   ///
-  /// let parser: Parser<char, ()> = failed_with_un_commit(parse_error.clone());
+  /// let parser: Parser<char, ()> = failed_with_uncommit(parse_error.clone());
   ///
   /// let result: ParsedResult<char, ()> = parser.parse(&input);
   ///
@@ -243,7 +243,7 @@ pub mod prelude {
   ///
   /// assert_eq!(result.failure().unwrap(), parse_error);
   /// ```
-  pub fn failed_with_un_commit<'a, I, A>(value: ParsedError<'a, I>) -> Parser<'a, I, A>
+  pub fn failed_with_uncommit<'a, I, A>(value: ParsedError<'a, I>) -> Parser<'a, I, A>
   where
     I: Clone + 'a,
     A: 'a, {
@@ -332,7 +332,8 @@ pub mod prelude {
   /// Returns a [Parser] that parses the specified element.(for reference)<br/>
   /// 指定した要素を解析する[Parser]を返します。(参照版)
   ///
-  /// - c: element(要素)
+  /// - element: element
+  /// - element: 要素
   ///
   /// # Example(例)
   ///
@@ -367,16 +368,17 @@ pub mod prelude {
   /// assert!(result.is_failure());
   /// assert!(result.failure().unwrap().is_mismatch());
   /// ```
-  pub fn elm_ref<'a, I>(c: I) -> Parser<'a, I, &'a I>
+  pub fn elm_ref<'a, I>(element: I) -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
-    ParsersImpl::elm_ref(c)
+    ParsersImpl::elm_ref(element)
   }
 
   /// Returns a [Parser] that parses the specified element.<br/>
   /// 指定した要素を解析する[Parser]を返します。
   ///
-  /// - c: 要素
+  /// - element: an element
+  /// - element: 要素
   ///
   /// # Example
   ///
@@ -411,10 +413,10 @@ pub mod prelude {
   /// assert!(result.is_failure());
   /// assert!(result.failure().unwrap().is_mismatch());
   /// ```
-  pub fn elm<'a, I>(c: I) -> Parser<'a, I, I>
+  pub fn elm<'a, I>(element: I) -> Parser<'a, I, I>
   where
     I: Element + Clone + PartialEq + 'a, {
-    ParsersImpl::elm(c)
+    ParsersImpl::elm(element)
   }
 
   /// Returns a parser that parses the elements that satisfy the specified closure conditions.(for reference)<br/>
@@ -563,8 +565,8 @@ pub mod prelude {
   /// Returns a [Parser] that parses the elements in the specified range. (for reference)<br/>
   /// 指定した範囲の要素を解析する[Parser]を返します。(参照版)
   ///
-  /// - start: start element
-  /// - end: end element, process up to the element at end - 1
+  /// - start: a start element
+  /// - end: an end element, process up to the element at end - 1
   ///
   /// - start: 開始要素
   /// - end: 終了要素, end - 1の要素まで処理
@@ -577,8 +579,8 @@ pub mod prelude {
   /// Returns a [Parser] that parses the elements in the specified range.<br/>
   /// 指定した範囲の要素を解析する[Parser]を返します。
   ///
-  /// - start: start element
-  /// - end: end element, process up to the element at end - 1
+  /// - start: a start element
+  /// - end: an end element, process up to the element at end - 1
   ///
   /// - start: 開始要素
   /// - end: 終了要素, end - 1の要素まで処理
@@ -591,7 +593,8 @@ pub mod prelude {
   /// Returns a [Parser] that parses elements that do not contain elements of the specified set.(for reference)
   /// 指定した集合の要素を含まない要素を解析する[Parser]を返します。(参照版)
   ///
-  /// - set: element of sets(集合)
+  /// - set: a element of sets
+  /// - set: 要素の集合
   pub fn none_ref_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
@@ -602,7 +605,7 @@ pub mod prelude {
   /// Returns a [Parser] that parses elements that do not contain elements of the specified set.
   /// 指定した集合の要素を含まない要素を解析する[Parser]を返します。
   ///
-  /// - set: element of sets
+  /// - set: an element of sets
   /// - set: 要素の集合
   pub fn none_of<'a, I, S>(set: &'a S) -> Parser<'a, I, I>
   where
@@ -741,11 +744,13 @@ pub mod prelude {
 
   // --- Elements Parsers ---
 
-  pub fn seq<'a, 'b, I>(tag: &'b [I]) -> Parser<'a, I, &'a [I]>
+  /// Returns a [Parser] that parses a sequence of elements.
+  /// 要素の列を解析する[Parser]を返す。
+  pub fn seq<'a, 'b, I>(seq: &'b [I]) -> Parser<'a, I, &'a [I]>
   where
     I: PartialEq + Debug + 'a,
     'b: 'a, {
-    ParsersImpl::seq(tag)
+    ParsersImpl::seq(seq)
   }
 
   pub fn tag<'a, 'b>(tag: &'b str) -> Parser<'a, char, &'a str>
