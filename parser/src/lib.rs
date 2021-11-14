@@ -465,7 +465,8 @@ pub mod prelude {
   /// Returns a parser that parses the elements that satisfy the specified closure conditions.<br/>
   /// 指定されたクロージャの条件を満たす要素を解析するパーサーを返します。
   ///
-  /// - f: Closure(クロージャ)
+  /// - f: closure
+  /// - f: クロージャ
   ///
   /// # Example
   ///
@@ -510,7 +511,8 @@ pub mod prelude {
   /// Returns a [Parser] that parses the elements in the specified set. (for reference)<br/>
   /// 指定した集合の要素を解析する[Parser]を返します。(参照版)
   ///
-  /// - set: element of sets(集合)
+  /// - set: element of sets
+  /// - set: 要素の集合
   pub fn elm_ref_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
@@ -521,7 +523,8 @@ pub mod prelude {
   /// Returns a [Parser] that parses the elements in the specified set.<br/>
   /// 指定した集合の要素を解析する[Parser]を返します。
   ///
-  /// - set: element of sets(集合)
+  /// - set: element of sets
+  /// - set: 要素の集合
   pub fn elm_of<'a, I, S>(set: &'a S) -> Parser<'a, I, I>
   where
     I: PartialEq + Display + Clone + Debug + 'a,
@@ -532,8 +535,11 @@ pub mod prelude {
   /// Returns a [Parser] that parses the elements in the specified range. (for reference)<br/>
   /// 指定した範囲の要素を解析する[Parser]を返します。(参照版)
   ///
-  /// - start: start element(開始要素)
-  /// - end: end element(終了要素)
+  /// - start: start element
+  /// - end: end element
+  ///
+  /// - start: 開始要素
+  /// - end: 終了要素
   pub fn elm_in_ref<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
@@ -543,8 +549,11 @@ pub mod prelude {
   /// Returns a [Parser] that parses the elements in the specified range.<br/>
   /// 指定した範囲の要素を解析する[Parser]を返します。
   ///
-  /// - start: start element(開始要素)
-  /// - end: end element(終了要素)
+  /// - start: start element
+  /// - end: end element
+  ///
+  /// - start: 開始要素
+  /// - end: 終了要素
   pub fn elm_in<'a, I>(start: I, end: I) -> Parser<'a, I, I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
@@ -554,8 +563,11 @@ pub mod prelude {
   /// Returns a [Parser] that parses the elements in the specified range. (for reference)<br/>
   /// 指定した範囲の要素を解析する[Parser]を返します。(参照版)
   ///
-  /// - start: start element(開始要素)
-  /// - end: end element, process up to the element at end - 1(終了要素, end - 1の要素まで処理)
+  /// - start: start element
+  /// - end: end element, process up to the element at end - 1
+  ///
+  /// - start: 開始要素
+  /// - end: 終了要素, end - 1の要素まで処理
   pub fn elm_from_until_ref<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
@@ -565,8 +577,11 @@ pub mod prelude {
   /// Returns a [Parser] that parses the elements in the specified range.<br/>
   /// 指定した範囲の要素を解析する[Parser]を返します。
   ///
-  /// - start: start element(開始要素)
-  /// - end: end element, process up to the element at end - 1(終了要素, end - 1の要素まで処理)
+  /// - start: start element
+  /// - end: end element, process up to the element at end - 1
+  ///
+  /// - start: 開始要素
+  /// - end: 終了要素, end - 1の要素まで処理
   pub fn elm_from_until<'a, I>(start: I, end: I) -> Parser<'a, I, I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
@@ -587,7 +602,8 @@ pub mod prelude {
   /// Returns a [Parser] that parses elements that do not contain elements of the specified set.
   /// 指定した集合の要素を含まない要素を解析する[Parser]を返します。
   ///
-  /// - set: element of sets(集合)
+  /// - set: element of sets
+  /// - set: 要素の集合
   pub fn none_of<'a, I, S>(set: &'a S) -> Parser<'a, I, I>
   where
     I: PartialEq + Display + Clone + Debug + 'a,
