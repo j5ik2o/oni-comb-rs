@@ -1,5 +1,5 @@
-use std::fmt::Debug;
 use crate::core::{Element, ParsedError, ParsedResult, Parser};
+use std::fmt::Debug;
 
 use crate::extension::parsers::TakenParsers;
 use crate::internal::ParsersImpl;

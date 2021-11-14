@@ -1,4 +1,4 @@
-use crate::core::{ParsedResult, ParseState, Parser, ParserRunner};
+use crate::core::{ParseState, ParsedResult, Parser, ParserRunner};
 
 impl<'a, I, A> ParserRunner<'a> for Parser<'a, I, A> {
   type Input = I;

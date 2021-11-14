@@ -1,4 +1,4 @@
-use crate::core::{ParsedResult, ParseState};
+use crate::core::{ParseState, ParsedResult};
 use std::rc::Rc;
 
 type Parse<'a, I, A> = dyn Fn(&ParseState<'a, I>) -> ParsedResult<'a, I, A> + 'a;

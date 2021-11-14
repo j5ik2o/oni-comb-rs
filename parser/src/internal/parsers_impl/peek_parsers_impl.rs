@@ -1,7 +1,7 @@
+use crate::core::{ParsedResult, Parser, ParserRunner};
 use crate::internal::ParsersImpl;
 use crate::prelude::PeekParsers;
 use std::fmt::Debug;
-use crate::core::{ParsedResult, Parser, ParserRunner};
 
 impl PeekParsers for ParsersImpl {
   fn peek<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>

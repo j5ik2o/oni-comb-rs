@@ -1,5 +1,5 @@
-use crate::core::ParsedError;
 use crate::core::parser_monad::ParserMonad;
+use crate::core::ParsedError;
 
 pub trait Parsers {
   type P<'p, I, A>: ParserMonad<'p, Input = I, Output = A>

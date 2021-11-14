@@ -1,7 +1,7 @@
+use crate::core::{ParsedError, ParsedResult, Parser, ParserRunner};
 use crate::extension::parsers::{LogLevel, LoggingParsers};
 use crate::internal::ParsersImpl;
 use std::fmt::{Debug, Display};
-use crate::core::{ParsedError, ParsedResult, Parser, ParserRunner};
 
 impl LoggingParsers for ParsersImpl {
   fn log_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, name: &'a str, log_level: LogLevel, f: F) -> Self::P<'a, I, A>

@@ -1,8 +1,8 @@
+use crate::core::{ParsedError, ParsedResult, Parser, ParserRunner};
 use crate::extension::parsers::RepeatParsers;
 use crate::internal::ParsersImpl;
 use crate::utils::{Bound, RangeArgument};
 use std::fmt::Debug;
-use crate::core::{ParsedError, ParsedResult, Parser, ParserRunner};
 
 impl RepeatParsers for ParsersImpl {
   fn repeat_sep<'a, I, A, B, R>(

@@ -1,4 +1,4 @@
-use crate::core::{ParsedError, ParsedResult, ParseState, Parser, ParserRunner, Parsers};
+use crate::core::{ParseState, ParsedError, ParsedResult, Parser, ParserRunner, Parsers};
 use crate::internal::ParsersImpl;
 
 mod cache_parsers_impl;

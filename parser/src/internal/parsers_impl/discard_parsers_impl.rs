@@ -1,7 +1,7 @@
+use crate::core::{ParsedResult, Parser, ParserRunner};
 use crate::extension::parsers::DiscardParsers;
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;
-use crate::core::{ParsedResult, Parser, ParserRunner};
 
 impl DiscardParsers for ParsersImpl {
   fn discard<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, ()>

@@ -1,5 +1,5 @@
-use crate::core::{ParsedError, ParsedResult, ParseState};
-use crate::core::{ParserMonad};
+use crate::core::ParserMonad;
+use crate::core::{ParseState, ParsedError, ParsedResult};
 
 pub trait ParserRunner<'a> {
   type Input;

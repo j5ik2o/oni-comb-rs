@@ -38,7 +38,6 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
   ///
   /// - error: a [ParsedError]
   /// - is_committed: a [CommittedStatus]
-  ///
   pub fn failed(error: ParsedError<'a, I>, is_committed: bool) -> Self {
     ParsedResult::Failure { error, is_committed }
   }
@@ -57,7 +56,7 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
   pub fn failed_with_commit(error: ParsedError<'a, I>) -> Self {
     ParsedResult::Failure {
       error,
-      is_committed: true
+      is_committed: true,
     }
   }
 
