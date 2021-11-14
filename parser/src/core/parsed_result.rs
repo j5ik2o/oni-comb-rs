@@ -1,4 +1,4 @@
-use crate::core::parse_error::ParsedError;
+use crate::core::parsed_error::ParsedError;
 
 /// A Parsed Result.<br/>
 /// 解析された結果。
