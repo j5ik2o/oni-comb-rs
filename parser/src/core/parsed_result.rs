@@ -1,5 +1,5 @@
-use crate::core::ParseCommittedStatus;
 use crate::core::parsed_error::ParsedError;
+use crate::core::ParseCommittedStatus;
 
 /// A Parsed Result.<br/>
 /// 解析された結果。
