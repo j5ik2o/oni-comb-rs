@@ -38,7 +38,7 @@ impl OperatorParsers for ParsersImpl {
     A: 'a, {
     Parser::new(move |parse_state| {
       let result = parser1.run(parse_state);
-      if let Some(is_committed) = result.is_committed() {
+      if let Some(is_committed) = result.committed_status() {
         if is_committed.to_bool() == false {
           return parser2.run(parse_state);
         }

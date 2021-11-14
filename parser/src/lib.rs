@@ -208,7 +208,7 @@ pub mod prelude {
   /// let result: ParsedResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
-  /// assert_eq!(result.is_committed().unwrap(), ParseCommittedStatus::Committed);
+  /// assert_eq!(result.committed_status().unwrap(), ParseCommittedStatus::Committed);
   ///
   /// assert_eq!(result.failure().unwrap(), parse_error);
   /// ```
@@ -239,7 +239,7 @@ pub mod prelude {
   /// let result: ParsedResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
-  /// assert_eq!(result.is_committed().unwrap(), ParseCommittedStatus::Uncommitted);
+  /// assert_eq!(result.committed_status().unwrap(), ParseCommittedStatus::Uncommitted);
   ///
   /// assert_eq!(result.failure().unwrap(), parse_error);
   /// ```

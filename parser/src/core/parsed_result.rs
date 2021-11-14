@@ -93,7 +93,7 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
     }
   }
 
-  pub fn is_committed(&self) -> Option<ParseCommittedStatus> {
+  pub fn committed_status(&self) -> Option<ParseCommittedStatus> {
     match self {
       ParsedResult::Failure { is_committed, .. } => Some(is_committed.clone()),
       _ => None,
