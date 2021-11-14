@@ -1,5 +1,5 @@
-pub use element::*;
 pub use committed_status::*;
+pub use element::*;
 pub use parse_state::*;
 pub use parsed_error::*;
 pub use parsed_result::*;
@@ -11,8 +11,8 @@ pub use parser_pure::*;
 pub use parser_runner::*;
 pub use parsers::*;
 
-mod element;
 mod committed_status;
+mod element;
 mod parse_state;
 mod parsed_error;
 mod parsed_result;

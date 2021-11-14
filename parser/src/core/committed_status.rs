@@ -15,13 +15,24 @@ impl From<bool> for CommittedStatus {
 }
 
 impl CommittedStatus {
-  pub fn to_bool(self) -> bool {
+
+  /// コミット済みかどうかを返す。
+  pub fn is_committed(&self) -> bool {
     match self {
       CommittedStatus::Committed => true,
       CommittedStatus::Uncommitted => false,
     }
   }
 
+  /// アンコミット済みかどうかを返す。
+  pub fn is_uncommitted(&self) -> bool {
+    !self.is_committed()
+  }
+
+  /// [CommittedStatus]を合成します。
+  ///
+  /// どちらか一方がコミット済みであれば、それを返します。
+  /// そうでなければ、アンコミット済みを返します。
   pub fn or(&self, other: &Self) -> Self {
     match (self, other) {
       (CommittedStatus::Committed, _) => CommittedStatus::Committed,

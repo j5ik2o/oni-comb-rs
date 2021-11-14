@@ -72,12 +72,12 @@ mod tests {
   fn test_uri() -> Result<()> {
     init();
     let mut counter = 0;
-    let prop = prop::for_all(uri_gen(), move |s| {
+    let uri_gen = uri_gen();
+    let prop = prop::for_all(uri_gen, move |s| {
       counter += 1;
       log::debug!("{:>03}, uri:string = {}", counter, s);
       let input = s.chars().collect::<Vec<_>>();
-      let result = (uri() - end()).parse(&input).to_result();
-      let uri = result.unwrap();
+      let uri = (uri() - end()).parse(&input).success().unwrap();
       log::debug!("{:>03}, uri:object = {:?}", counter, uri);
       assert_eq!(uri.to_string(), s);
       true
