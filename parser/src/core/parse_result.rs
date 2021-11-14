@@ -2,7 +2,7 @@ use crate::core::parse_error::ParseError;
 use crate::core::CommittedStatus;
 
 /// A Parse Result.<br/>
-/// 解析された結果。
+/// 解析結果。
 #[derive(Debug, Clone)]
 pub enum ParseResult<'a, I, A> {
   /// 成功
@@ -58,8 +58,7 @@ impl<'a, I, A> ParseResult<'a, I, A> {
     Self::failed(error, CommittedStatus::Committed)
   }
 
-  /// Convert [ParsedResult] to [Result].
-  ///
+  /// Convert [ParsedResult] to [Result].<br/>
   /// [ParsedResult]を[Result]に変換する。
   pub fn to_result(self) -> Result<A, ParseError<'a, I>> {
     match self {
@@ -68,6 +67,8 @@ impl<'a, I, A> ParseResult<'a, I, A> {
     }
   }
 
+  /// Returns whether the parsing was successful or not.<br/>
+  /// 解析が成功したかどうかを返す。
   pub fn is_success(&self) -> bool {
     match self {
       ParseResult::Failure { .. } => false,
@@ -75,6 +76,8 @@ impl<'a, I, A> ParseResult<'a, I, A> {
     }
   }
 
+  /// Return the results of a successful parsing.<br/>
+  /// 成功した解析結果を返す。
   pub fn success(self) -> Option<A> {
     match self {
       ParseResult::Failure { .. } => None,
@@ -82,17 +85,21 @@ impl<'a, I, A> ParseResult<'a, I, A> {
     }
   }
 
-  pub fn failure(self) -> Option<ParseError<'a, I>> {
-    match self {
-      ParseResult::Failure { error, .. } => Some(error),
-      ParseResult::Success { .. } => None,
-    }
-  }
-
+  /// Returns whether the parsing has failed or not.<br/>
+  /// 解析が失敗したかどうかを返す。
   pub fn is_failure(&self) -> bool {
     match self {
       ParseResult::Failure { .. } => true,
       ParseResult::Success { .. } => false,
+    }
+  }
+
+  /// Return the result of the failed parsing.<br/>
+  /// 失敗した解析結果を返す。
+  pub fn failure(self) -> Option<ParseError<'a, I>> {
+    match self {
+      ParseResult::Failure { error, .. } => Some(error),
+      ParseResult::Success { .. } => None,
     }
   }
 
