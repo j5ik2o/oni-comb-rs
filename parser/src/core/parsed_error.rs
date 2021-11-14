@@ -2,7 +2,7 @@ use std::fmt;
 use std::fmt::Display;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq)]
-pub enum ParsedError<'a, I> {
+pub enum ParseError<'a, I> {
   Mismatch {
     input: &'a [I],
     offset: usize,
@@ -18,41 +18,41 @@ pub enum ParsedError<'a, I> {
   Incomplete,
   Expect {
     offset: usize,
-    inner: Box<ParsedError<'a, I>>,
+    inner: Box<ParseError<'a, I>>,
     message: String,
   },
   Custom {
     offset: usize,
-    inner: Option<Box<ParsedError<'a, I>>>,
+    inner: Option<Box<ParseError<'a, I>>>,
     message: String,
   },
 }
 
-impl<'a, I> Display for ParsedError<'a, I> {
+impl<'a, I> Display for ParseError<'a, I> {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match self {
-      ParsedError::Incomplete => write!(f, "Incomplete"),
-      ParsedError::Mismatch {
+      ParseError::Incomplete => write!(f, "Incomplete"),
+      ParseError::Mismatch {
         ref message,
         ref offset,
         ..
       } => write!(f, "Mismatch at {}: {}", offset, message),
-      ParsedError::Conversion {
+      ParseError::Conversion {
         ref message,
         ref offset,
         ..
       } => write!(f, "Conversion failed at {}: {}", offset, message),
-      ParsedError::Expect {
+      ParseError::Expect {
         ref message,
         ref offset,
         ref inner,
       } => write!(f, "{} at {}: {}", message, offset, inner),
-      ParsedError::Custom {
+      ParseError::Custom {
         ref message,
         ref offset,
         inner: Some(ref inner),
       } => write!(f, "{} at {}, (inner: {})", message, offset, inner),
-      ParsedError::Custom {
+      ParseError::Custom {
         ref message,
         ref offset,
         inner: None,
@@ -61,52 +61,52 @@ impl<'a, I> Display for ParsedError<'a, I> {
   }
 }
 
-impl<'a, I> ParsedError<'a, I> {
+impl<'a, I> ParseError<'a, I> {
   pub fn is_expect(&self) -> bool {
     match self {
-      ParsedError::Expect { .. } => true,
+      ParseError::Expect { .. } => true,
       _ => false,
     }
   }
 
   pub fn is_custom(&self) -> bool {
     match self {
-      ParsedError::Custom { .. } => true,
+      ParseError::Custom { .. } => true,
       _ => false,
     }
   }
 
   pub fn is_mismatch(&self) -> bool {
     match self {
-      ParsedError::Mismatch { .. } => true,
+      ParseError::Mismatch { .. } => true,
       _ => false,
     }
   }
 
   pub fn is_conversion(&self) -> bool {
     match self {
-      ParsedError::Conversion { .. } => true,
+      ParseError::Conversion { .. } => true,
       _ => false,
     }
   }
 
   pub fn is_in_complete(&self) -> bool {
     match self {
-      ParsedError::Incomplete => true,
+      ParseError::Incomplete => true,
       _ => false,
     }
   }
 
-  pub fn of_expect(offset: usize, inner: Box<ParsedError<'a, I>>, message: String) -> Self {
-    ParsedError::Expect { offset, inner, message }
+  pub fn of_expect(offset: usize, inner: Box<ParseError<'a, I>>, message: String) -> Self {
+    ParseError::Expect { offset, inner, message }
   }
 
-  pub fn of_custom(offset: usize, inner: Option<Box<ParsedError<'a, I>>>, message: String) -> Self {
-    ParsedError::Custom { offset, inner, message }
+  pub fn of_custom(offset: usize, inner: Option<Box<ParseError<'a, I>>>, message: String) -> Self {
+    ParseError::Custom { offset, inner, message }
   }
 
   pub fn of_mismatch(input: &'a [I], offset: usize, length: usize, message: String) -> Self {
-    ParsedError::Mismatch {
+    ParseError::Mismatch {
       input,
       offset,
       length,
@@ -115,7 +115,7 @@ impl<'a, I> ParsedError<'a, I> {
   }
 
   pub fn of_conversion(input: &'a [I], offset: usize, length: usize, message: String) -> Self {
-    ParsedError::Conversion {
+    ParseError::Conversion {
       input,
       offset,
       length,
@@ -124,6 +124,6 @@ impl<'a, I> ParsedError<'a, I> {
   }
 
   pub fn of_in_complete() -> Self {
-    ParsedError::Incomplete
+    ParseError::Incomplete
   }
 }

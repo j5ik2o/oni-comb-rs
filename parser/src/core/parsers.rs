@@ -1,5 +1,5 @@
 use crate::core::parser_monad::ParserMonad;
-use crate::core::{CommittedStatus, ParsedError};
+use crate::core::{CommittedStatus, ParseError};
 
 pub trait Parsers {
   type P<'p, I, A>: ParserMonad<'p, Input = I, Output = A>
@@ -7,7 +7,7 @@ pub trait Parsers {
     I: 'p,
     A: 'p;
 
-  fn parse<'a, 'b, I, A>(parser: &Self::P<'a, I, A>, input: &'b [I]) -> Result<A, ParsedError<'a, I>>
+  fn parse<'a, 'b, I, A>(parser: &Self::P<'a, I, A>, input: &'b [I]) -> Result<A, ParseError<'a, I>>
   where
     A: 'a,
     'b: 'a;
@@ -25,14 +25,14 @@ pub trait Parsers {
     F: Fn() -> A + 'a,
     A: 'a;
 
-  fn failed<'a, I, A>(value: ParsedError<'a, I>, committed: CommittedStatus) -> Self::P<'a, I, A>
+  fn failed<'a, I, A>(value: ParseError<'a, I>, committed: CommittedStatus) -> Self::P<'a, I, A>
   where
     I: Clone + 'a,
     A: 'a;
 
   fn failed_lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
   where
-    F: Fn() -> (ParsedError<'a, I>, CommittedStatus) + 'a,
+    F: Fn() -> (ParseError<'a, I>, CommittedStatus) + 'a,
     I: 'a,
     A: 'a;
 

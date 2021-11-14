@@ -1,4 +1,4 @@
-use crate::core::{ParsedError, ParsedResult, Parser, ParserRunner};
+use crate::core::{ParseError, ParsedResult, Parser, ParserRunner};
 use crate::extension::parsers::RepeatParsers;
 use crate::internal::ParsersImpl;
 use crate::utils::{Bound, RangeArgument};
@@ -58,7 +58,7 @@ impl RepeatParsers for ParsersImpl {
       if let Bound::Included(&min_count) = range.start() {
         if items.len() < min_count {
           let ps = parse_state.add_offset(all_length);
-          let pe = ParsedError::of_mismatch(
+          let pe = ParseError::of_mismatch(
             ps.input(),
             ps.last_offset().unwrap_or(0),
             all_length,

@@ -1,4 +1,4 @@
-use crate::core::{Element, ParsedError, ParsedResult, Parser};
+use crate::core::{Element, ParseError, ParsedResult, Parser};
 use std::fmt::Debug;
 
 use crate::extension::parsers::TakenParsers;
@@ -11,7 +11,7 @@ impl TakenParsers for ParsersImpl {
       if input.len() >= n {
         ParsedResult::successful(parse_state.slice_with_len(n), n)
       } else {
-        ParsedResult::failed_with_uncommitted(ParsedError::of_in_complete())
+        ParsedResult::failed_with_uncommitted(ParseError::of_in_complete())
       }
     })
   }
@@ -61,7 +61,7 @@ impl TakenParsers for ParsersImpl {
       }
       match start {
         Some(s) => ParsedResult::successful(&input[s..s + len], 0),
-        None => ParsedResult::failed_with_uncommitted(ParsedError::of_in_complete()),
+        None => ParsedResult::failed_with_uncommitted(ParseError::of_in_complete()),
       }
     })
   }
@@ -90,10 +90,10 @@ impl TakenParsers for ParsersImpl {
           if n <= str.len() && str.len() <= m {
             ParsedResult::successful(str, 0)
           } else {
-            ParsedResult::failed_with_uncommitted(ParsedError::of_in_complete())
+            ParsedResult::failed_with_uncommitted(ParseError::of_in_complete())
           }
         }
-        None => ParsedResult::failed_with_uncommitted(ParsedError::of_in_complete()),
+        None => ParsedResult::failed_with_uncommitted(ParseError::of_in_complete()),
       }
     })
   }
@@ -137,7 +137,7 @@ impl TakenParsers for ParsersImpl {
         index += 1;
       }
       if !b {
-        ParsedResult::failed_with_uncommitted(ParsedError::of_in_complete())
+        ParsedResult::failed_with_uncommitted(ParseError::of_in_complete())
       } else {
         ParsedResult::successful(parse_state.slice_with_len(index + 1), index + 1)
       }

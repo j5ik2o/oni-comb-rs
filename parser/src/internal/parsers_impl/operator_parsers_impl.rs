@@ -1,4 +1,4 @@
-use crate::core::{ParsedError, ParsedResult, ParserRunner, Parsers};
+use crate::core::{ParseError, ParsedResult, ParserRunner, Parsers};
 use std::fmt::Debug;
 
 use crate::core::Parser;
@@ -21,7 +21,7 @@ impl OperatorParsers for ParsersImpl {
     Parser::new(move |parse_state| match parser.run(parse_state) {
       ParsedResult::Success { .. } => {
         let ps = parse_state.add_offset(0);
-        let parser_error = ParsedError::of_mismatch(
+        let parser_error = ParseError::of_mismatch(
           ps.input(),
           ps.last_offset().unwrap_or(0),
           0,

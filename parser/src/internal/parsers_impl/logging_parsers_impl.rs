@@ -1,4 +1,4 @@
-use crate::core::{ParsedError, ParsedResult, Parser, ParserRunner};
+use crate::core::{ParseError, ParsedResult, Parser, ParserRunner};
 use crate::extension::parsers::{LogLevel, LoggingParsers};
 use crate::internal::ParsersImpl;
 use std::fmt::{Debug, Display};
@@ -29,9 +29,9 @@ impl LoggingParsers for ParsersImpl {
     Parser::new(move |parse_state| match parser.run(parse_state) {
       res @ ParsedResult::Success { .. } => res,
       ParsedResult::Failure { error, is_committed } => match error {
-        ParsedError::Custom { .. } => ParsedResult::failed(error, is_committed),
+        ParseError::Custom { .. } => ParsedResult::failed(error, is_committed),
         _ => ParsedResult::failed(
-          ParsedError::of_custom(
+          ParseError::of_custom(
             parse_state.last_offset().unwrap_or(0),
             Some(Box::new(error)),
             format!("failed to parse {}", name),
@@ -49,7 +49,7 @@ impl LoggingParsers for ParsersImpl {
     Parser::new(move |parse_state| match parser.run(parse_state) {
       res @ ParsedResult::Success { .. } => res,
       ParsedResult::Failure { error, is_committed } => ParsedResult::failed(
-        ParsedError::of_expect(
+        ParseError::of_expect(
           parse_state.last_offset().unwrap_or(0),
           Box::new(error),
           format!("Expect {}", name),

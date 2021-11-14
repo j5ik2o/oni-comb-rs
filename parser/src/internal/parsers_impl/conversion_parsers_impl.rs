@@ -1,4 +1,4 @@
-use crate::core::{ParsedError, ParsedResult, Parser, ParserRunner};
+use crate::core::{ParseError, ParsedResult, Parser, ParserRunner};
 use crate::extension::parsers::ConversionParsers;
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;
@@ -16,7 +16,7 @@ impl ConversionParsers for ParsersImpl {
         Err(err) => {
           let ps = parse_state.add_offset(0);
           let msg = format!("Conversion error: {:?}", err);
-          let parser_error = ParsedError::of_conversion(ps.input(), ps.last_offset().unwrap_or(0), 0, msg);
+          let parser_error = ParseError::of_conversion(ps.input(), ps.last_offset().unwrap_or(0), 0, msg);
           ParsedResult::failed_with_uncommitted(parser_error)
         }
       },
@@ -35,7 +35,7 @@ impl ConversionParsers for ParsersImpl {
         None => {
           let ps = parse_state.add_offset(0);
           let msg = format!("Conversion error");
-          let parser_error = ParsedError::of_conversion(ps.input(), ps.last_offset().unwrap_or(0), 0, msg);
+          let parser_error = ParseError::of_conversion(ps.input(), ps.last_offset().unwrap_or(0), 0, msg);
           ParsedResult::failed_with_uncommitted(parser_error)
         }
       },

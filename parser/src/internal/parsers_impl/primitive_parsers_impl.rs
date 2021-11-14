@@ -1,4 +1,4 @@
-use crate::core::{ParsedError, ParsedResult, Parser, Parsers};
+use crate::core::{ParseError, ParsedResult, Parser, Parsers};
 use crate::extension::parsers::PrimitiveParsers;
 use crate::internal::ParsersImpl;
 use std::fmt::{Debug, Display};
@@ -12,7 +12,7 @@ impl PrimitiveParsers for ParsersImpl {
       if let Some(actual) = input.get(0) {
         let msg = format!("expect end of input, found: {}", actual);
         let ps = parse_state.add_offset(1);
-        let pe = ParsedError::of_mismatch(input, ps.next_offset(), 1, msg);
+        let pe = ParseError::of_mismatch(input, ps.next_offset(), 1, msg);
         ParsedResult::failed_with_uncommitted(pe)
       } else {
         ParsedResult::successful((), 0)

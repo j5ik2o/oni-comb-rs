@@ -79,7 +79,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, ()> = end();
   ///
-  /// let result: Result<(), ParsedError<char>> = parser.parse(&input).to_result();
+  /// let result: Result<(), ParseError<char>> = parser.parse(&input).to_result();
   ///
   /// assert!(result.is_err());
   /// ```
@@ -172,7 +172,7 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parse_error: ParsedError<char> = ParsedError::of_in_complete();
+  /// let parse_error: ParseError<char> = ParseError::of_in_complete();
   ///
   /// let parser: Parser<char, ()> = failed(parse_error.clone(), CommittedStatus::Committed);
   ///
@@ -181,7 +181,7 @@ pub mod prelude {
   /// assert!(result.is_failure());
   /// assert_eq!(result.failure().unwrap(), parse_error);
   /// ```
-  pub fn failed<'a, I, A>(value: ParsedError<'a, I>, commit: CommittedStatus) -> Parser<'a, I, A>
+  pub fn failed<'a, I, A>(value: ParseError<'a, I>, commit: CommittedStatus) -> Parser<'a, I, A>
   where
     I: Clone + 'a,
     A: 'a, {
@@ -201,7 +201,7 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parse_error: ParsedError<char> = ParsedError::of_in_complete();
+  /// let parse_error: ParseError<char> = ParseError::of_in_complete();
   ///
   /// let parser: Parser<char, ()> = failed_with_commit(parse_error.clone());
   ///
@@ -212,7 +212,7 @@ pub mod prelude {
   ///
   /// assert_eq!(result.failure().unwrap(), parse_error);
   /// ```
-  pub fn failed_with_commit<'a, I, A>(value: ParsedError<'a, I>) -> Parser<'a, I, A>
+  pub fn failed_with_commit<'a, I, A>(value: ParseError<'a, I>) -> Parser<'a, I, A>
   where
     I: Clone + 'a,
     A: 'a, {
@@ -232,7 +232,7 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parse_error: ParsedError<char> = ParsedError::of_in_complete();
+  /// let parse_error: ParseError<char> = ParseError::of_in_complete();
   ///
   /// let parser: Parser<char, ()> = failed_with_uncommit(parse_error.clone());
   ///
@@ -243,7 +243,7 @@ pub mod prelude {
   ///
   /// assert_eq!(result.failure().unwrap(), parse_error);
   /// ```
-  pub fn failed_with_uncommit<'a, I, A>(value: ParsedError<'a, I>) -> Parser<'a, I, A>
+  pub fn failed_with_uncommit<'a, I, A>(value: ParseError<'a, I>) -> Parser<'a, I, A>
   where
     I: Clone + 'a,
     A: 'a, {
@@ -263,7 +263,7 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parse_error: ParsedError<char> = ParsedError::of_in_complete();
+  /// let parse_error: ParseError<char> = ParseError::of_in_complete();
   ///
   /// let parser: Parser<char, ()> = failed_lazy(|| (parse_error.clone(), CommittedStatus::Committed));
   ///
@@ -274,7 +274,7 @@ pub mod prelude {
   /// ```
   pub fn failed_lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
   where
-    F: Fn() -> (ParsedError<'a, I>, CommittedStatus) + 'a,
+    F: Fn() -> (ParseError<'a, I>, CommittedStatus) + 'a,
     I: 'a,
     A: 'a, {
     ParsersImpl::failed_lazy(f)
@@ -859,7 +859,7 @@ mod tests {
     init();
     {
       let input1 = b"b";
-      let p: Parser<u8, &u8> = failed_with_commit(ParsedError::of_in_complete())
+      let p: Parser<u8, &u8> = failed_with_commit(ParseError::of_in_complete())
         .attempt()
         .or(elm_ref(b'b'));
 
@@ -1332,14 +1332,14 @@ mod tests {
       let input: Vec<char> = "abc def".chars().collect::<Vec<char>>();
       let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");
       let p2 = p1.with_filter(|chars| chars.len() > 1);
-      let result: Result<Vec<char>, ParsedError<char>> = p2.parse_as_result(&input);
+      let result: Result<Vec<char>, ParseError<char>> = p2.parse_as_result(&input);
       assert!(result.is_err());
     }
     {
       let input: Vec<char> = "abc  def".chars().collect::<Vec<char>>();
       let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");
       let p2 = p1.with_filter(|chars| chars.len() > 1);
-      let result: Result<Vec<char>, ParsedError<char>> = p2.parse_as_result(&input);
+      let result: Result<Vec<char>, ParseError<char>> = p2.parse_as_result(&input);
       assert!(result.is_ok());
     }
   }
@@ -1351,14 +1351,14 @@ mod tests {
       let input: Vec<char> = "abc def".chars().collect::<Vec<char>>();
       let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");
       let p2 = p1.with_filter_not(|chars| chars.len() > 1);
-      let result: Result<Vec<char>, ParsedError<char>> = p2.parse_as_result(&input);
+      let result: Result<Vec<char>, ParseError<char>> = p2.parse_as_result(&input);
       assert!(result.is_ok());
     }
     {
       let input: Vec<char> = "abc  def".chars().collect::<Vec<char>>();
       let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");
       let p2 = p1.with_filter_not(|chars| chars.len() > 1);
-      let result: Result<Vec<char>, ParsedError<char>> = p2.parse_as_result(&input);
+      let result: Result<Vec<char>, ParseError<char>> = p2.parse_as_result(&input);
       assert!(result.is_err());
     }
   }

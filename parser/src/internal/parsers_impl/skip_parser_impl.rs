@@ -1,4 +1,4 @@
-use crate::core::{ParsedError, ParsedResult, Parser};
+use crate::core::{ParseError, ParsedResult, Parser};
 use crate::extension::parsers::SkipParsers;
 use crate::internal::ParsersImpl;
 
@@ -9,7 +9,7 @@ impl SkipParsers for ParsersImpl {
       if input.len() >= n {
         ParsedResult::successful((), n)
       } else {
-        ParsedResult::failed_with_uncommitted(ParsedError::of_in_complete())
+        ParsedResult::failed_with_uncommitted(ParseError::of_in_complete())
       }
     })
   }

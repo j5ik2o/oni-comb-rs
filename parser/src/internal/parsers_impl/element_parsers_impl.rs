@@ -1,4 +1,4 @@
-use crate::core::{Element, ParsedError, ParsedResult, Parser};
+use crate::core::{Element, ParseError, ParsedResult, Parser};
 use crate::extension::parsers::ElementParsers;
 use crate::internal::ParsersImpl;
 use crate::utils::Set;
@@ -19,7 +19,7 @@ impl ElementParsers for ParsersImpl {
       let offset = parse_state.next_offset();
       let msg = format!("offset: {}", offset);
       let ps = parse_state.add_offset(1);
-      let pe = ParsedError::of_mismatch(input, ps.next_offset(), 1, msg);
+      let pe = ParseError::of_mismatch(input, ps.next_offset(), 1, msg);
       ParsedResult::failed_with_uncommitted(pe)
     })
   }
@@ -78,11 +78,11 @@ impl ElementParsers for ParsersImpl {
         } else {
           let msg = format!("expect one of: {}, found: {}", set.to_str(), s);
           let ps = parse_state.add_offset(1);
-          let pe = ParsedError::of_mismatch(input, ps.next_offset(), 1, msg);
+          let pe = ParseError::of_mismatch(input, ps.next_offset(), 1, msg);
           ParsedResult::failed_with_uncommitted(pe)
         }
       } else {
-        ParsedResult::failed_with_uncommitted(ParsedError::of_in_complete())
+        ParsedResult::failed_with_uncommitted(ParseError::of_in_complete())
       }
     })
   }
@@ -99,11 +99,11 @@ impl ElementParsers for ParsersImpl {
         } else {
           let msg = format!("expect elm of: {}, found: {}", set.to_str(), s);
           let ps = parse_state.add_offset(1);
-          let pe = ParsedError::of_mismatch(input, ps.next_offset(), 1, msg);
+          let pe = ParseError::of_mismatch(input, ps.next_offset(), 1, msg);
           ParsedResult::failed_with_uncommitted(pe)
         }
       } else {
-        ParsedResult::failed_with_uncommitted(ParsedError::of_in_complete())
+        ParsedResult::failed_with_uncommitted(ParseError::of_in_complete())
       }
     })
   }
@@ -120,11 +120,11 @@ impl ElementParsers for ParsersImpl {
         } else {
           let msg = format!("expect elm of: {}, found: {}", set.to_str(), s);
           let ps = parse_state.add_offset(1);
-          let pe = ParsedError::of_mismatch(input, ps.next_offset(), 1, msg);
+          let pe = ParseError::of_mismatch(input, ps.next_offset(), 1, msg);
           ParsedResult::failed_with_uncommitted(pe)
         }
       } else {
-        ParsedResult::failed_with_uncommitted(ParsedError::of_in_complete())
+        ParsedResult::failed_with_uncommitted(ParseError::of_in_complete())
       }
     })
   }
@@ -141,11 +141,11 @@ impl ElementParsers for ParsersImpl {
         } else {
           let msg = format!("expect none of: {}, found: {}", set.to_str(), s);
           let ps = parse_state.add_offset(1);
-          let pe = ParsedError::of_mismatch(input, ps.next_offset(), 1, msg);
+          let pe = ParseError::of_mismatch(input, ps.next_offset(), 1, msg);
           ParsedResult::failed_with_uncommitted(pe)
         }
       } else {
-        ParsedResult::failed_with_uncommitted(ParsedError::of_in_complete())
+        ParsedResult::failed_with_uncommitted(ParseError::of_in_complete())
       }
     })
   }

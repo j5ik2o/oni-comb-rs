@@ -1,4 +1,4 @@
-use crate::core::parsed_error::ParsedError;
+use crate::core::parsed_error::ParseError;
 use crate::core::CommittedStatus;
 
 /// A Parsed Result.<br/>
@@ -15,7 +15,7 @@ pub enum ParsedResult<'a, I, A> {
   /// 失敗
   Failure {
     /// 失敗の原因
-    error: ParsedError<'a, I>,
+    error: ParseError<'a, I>,
     /// コミット状態
     is_committed: CommittedStatus,
   },
@@ -39,7 +39,7 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
   ///
   /// - error: a [ParsedError]
   /// - is_committed: a [CommittedStatus]
-  pub fn failed(error: ParsedError<'a, I>, is_committed: CommittedStatus) -> Self {
+  pub fn failed(error: ParseError<'a, I>, is_committed: CommittedStatus) -> Self {
     ParsedResult::Failure { error, is_committed }
   }
 
@@ -47,18 +47,18 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
   /// 失敗の解析結果を返します。
   ///
   /// - error: a [ParsedError]
-  pub fn failed_with_uncommitted(error: ParsedError<'a, I>) -> Self {
+  pub fn failed_with_uncommitted(error: ParseError<'a, I>) -> Self {
     Self::failed(error, CommittedStatus::Uncommitted)
   }
 
-  pub fn failed_with_commit(error: ParsedError<'a, I>) -> Self {
+  pub fn failed_with_commit(error: ParseError<'a, I>) -> Self {
     Self::failed(error, CommittedStatus::Committed)
   }
 
   /// Convert [ParsedResult] to [Result].
   ///
   /// [ParsedResult]を[Result]に変換する。
-  pub fn to_result(self) -> Result<A, ParsedError<'a, I>> {
+  pub fn to_result(self) -> Result<A, ParseError<'a, I>> {
     match self {
       ParsedResult::Failure { error, .. } => Err(error),
       ParsedResult::Success { value, .. } => Ok(value),
@@ -79,7 +79,7 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
     }
   }
 
-  pub fn failure(self) -> Option<ParsedError<'a, I>> {
+  pub fn failure(self) -> Option<ParseError<'a, I>> {
     match self {
       ParsedResult::Failure { error, .. } => Some(error),
       ParsedResult::Success { .. } => None,
@@ -126,7 +126,7 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
 
   pub fn map_err<F>(self, f: F) -> Self
   where
-    F: Fn(ParsedError<'a, I>) -> ParsedError<'a, I>, {
+    F: Fn(ParseError<'a, I>) -> ParseError<'a, I>, {
     match self {
       ParsedResult::Failure {
         error: e,
