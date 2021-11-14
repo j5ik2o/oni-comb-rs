@@ -1,7 +1,7 @@
 pub use committed_status::*;
 pub use element::*;
+pub use parse_error::*;
 pub use parse_state::*;
-pub use parsed_error::*;
 pub use parsed_result::*;
 pub use parser::*;
 pub use parser_filter::*;
@@ -13,8 +13,8 @@ pub use parsers::*;
 
 mod committed_status;
 mod element;
+mod parse_error;
 mod parse_state;
-mod parsed_error;
 mod parsed_result;
 mod parser;
 mod parser_filter;

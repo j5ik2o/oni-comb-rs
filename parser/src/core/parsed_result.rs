@@ -1,4 +1,4 @@
-use crate::core::parsed_error::ParseError;
+use crate::core::parse_error::ParseError;
 use crate::core::CommittedStatus;
 
 /// A Parsed Result.<br/>
