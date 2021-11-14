@@ -1,7 +1,8 @@
 pub use element::*;
+pub use parse_committed::*;
+pub use parse_state::*;
 pub use parsed_error::*;
 pub use parsed_result::*;
-pub use parse_state::*;
 pub use parser::*;
 pub use parser_filter::*;
 pub use parser_functor::*;
@@ -11,9 +12,10 @@ pub use parser_runner::*;
 pub use parsers::*;
 
 mod element;
+mod parse_committed;
+mod parse_state;
 mod parsed_error;
 mod parsed_result;
-mod parse_state;
 mod parser;
 mod parser_filter;
 mod parser_functor;

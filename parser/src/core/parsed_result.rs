@@ -1,3 +1,4 @@
+use crate::core::ParseCommittedStatus;
 use crate::core::parsed_error::ParsedError;
 
 /// A Parsed Result.<br/>
@@ -16,7 +17,7 @@ pub enum ParsedResult<'a, I, A> {
     /// 失敗の原因
     error: ParsedError<'a, I>,
     /// コミット状態
-    is_committed: bool,
+    is_committed: ParseCommittedStatus,
   },
 }
 
@@ -38,7 +39,7 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
   ///
   /// - error: a [ParsedError]
   /// - is_committed: a [CommittedStatus]
-  pub fn failed(error: ParsedError<'a, I>, is_committed: bool) -> Self {
+  pub fn failed(error: ParsedError<'a, I>, is_committed: ParseCommittedStatus) -> Self {
     ParsedResult::Failure { error, is_committed }
   }
 
@@ -47,17 +48,11 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
   ///
   /// - error: a [ParsedError]
   pub fn failed_with_un_commit(error: ParsedError<'a, I>) -> Self {
-    ParsedResult::Failure {
-      error,
-      is_committed: false,
-    }
+    Self::failed(error, ParseCommittedStatus::Uncommitted)
   }
 
   pub fn failed_with_commit(error: ParsedError<'a, I>) -> Self {
-    ParsedResult::Failure {
-      error,
-      is_committed: true,
-    }
+    Self::failed(error, ParseCommittedStatus::Committed)
   }
 
   /// Convert [ParsedResult] to [Result].
@@ -98,9 +93,9 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
     }
   }
 
-  pub fn is_committed(&self) -> Option<bool> {
+  pub fn is_committed(&self) -> Option<ParseCommittedStatus> {
     match self {
-      ParsedResult::Failure { is_committed, .. } => Some(*is_committed),
+      ParsedResult::Failure { is_committed, .. } => Some(is_committed.clone()),
       _ => None,
     }
   }
@@ -110,10 +105,10 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
     match self {
       ParsedResult::Failure {
         error,
-        is_committed: true,
+        is_committed: ParseCommittedStatus::Committed,
       } => ParsedResult::Failure {
         error,
-        is_committed: false,
+        is_committed: ParseCommittedStatus::Uncommitted,
       },
       _ => self,
     }
@@ -123,7 +118,7 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
     match self {
       ParsedResult::Failure { error, is_committed: c } => ParsedResult::Failure {
         error,
-        is_committed: (c || is_committed),
+        is_committed: (c.or(&is_committed.into())),
       },
       _ => self,
     }

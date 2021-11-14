@@ -22,7 +22,7 @@ impl ElementsParsers for ParsersImpl {
             let msg = format!("seq {:?} expect: {:?}, found: {:?}", tag, tag[index], str);
             let ps = parse_state.add_offset(index);
             let pe = ParsedError::of_mismatch(input, ps.next_offset(), index, msg);
-            return ParsedResult::failed(pe, index != 0);
+            return ParsedResult::failed(pe, (index != 0).into());
           }
         } else {
           return ParsedResult::failed_with_un_commit(ParsedError::of_in_complete());
@@ -44,7 +44,7 @@ impl ElementsParsers for ParsersImpl {
             let msg = format!("tag {:?} expect: {:?}, found: {}", tag, c, actual);
             let ps = parse_state.add_offset(index);
             let pe = ParsedError::of_mismatch(input, ps.next_offset(), index, msg);
-            return ParsedResult::failed(pe, index != 0);
+            return ParsedResult::failed(pe, (index != 0).into());
           }
         } else {
           return ParsedResult::failed_with_un_commit(ParsedError::of_in_complete());
@@ -67,7 +67,7 @@ impl ElementsParsers for ParsersImpl {
             let msg = format!("tag_no_case {:?} expect: {:?}, found: {}", tag, c, actual);
             let ps = parse_state.add_offset(index);
             let pe = ParsedError::of_mismatch(input, ps.next_offset(), index, msg);
-            return ParsedResult::failed(pe, index != 0);
+            return ParsedResult::failed(pe, (index != 0).into());
           }
         } else {
           return ParsedResult::failed_with_un_commit(ParsedError::of_in_complete());
@@ -96,7 +96,7 @@ impl ElementsParsers for ParsersImpl {
         } else {
           let msg = format!("regex {:?} found: {:?}", regex, str);
           let pe = ParsedError::of_mismatch(input, parse_state.next_offset(), str.len(), msg);
-          return ParsedResult::failed(pe, captures.len() != 0);
+          return ParsedResult::failed(pe, (captures.len() != 0).into());
         }
       } else {
         // log::debug!("regex: failed, '{}'", str);

@@ -1,4 +1,4 @@
-use crate::core::{ParseState, ParsedError, ParsedResult, Parser, ParserRunner, Parsers};
+use crate::core::{ParseState, ParsedError, ParsedResult, Parser, ParserRunner, Parsers, ParseCommittedStatus};
 use crate::internal::ParsersImpl;
 
 mod cache_parsers_impl;
@@ -45,16 +45,16 @@ impl Parsers for ParsersImpl {
     Parser::new(move |_| ParsedResult::successful(value(), 0))
   }
 
-  fn failed<'a, I, A>(value: ParsedError<'a, I>, committed: bool) -> Self::P<'a, I, A>
+  fn failed<'a, I, A>(value: ParsedError<'a, I>, committed: ParseCommittedStatus) -> Self::P<'a, I, A>
   where
     I: Clone + 'a,
     A: 'a, {
-    Parser::new(move |_| ParsedResult::failed(value.clone(), committed))
+    Parser::new(move |_| ParsedResult::failed(value.clone(), committed.clone()))
   }
 
   fn failed_lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
   where
-    F: Fn() -> (ParsedError<'a, I>, bool) + 'a,
+    F: Fn() -> (ParsedError<'a, I>, ParseCommittedStatus) + 'a,
     I: 'a,
     A: 'a, {
     Parser::new(move |_| {
