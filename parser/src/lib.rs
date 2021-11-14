@@ -19,6 +19,8 @@ pub mod prelude {
   ///
   /// # Example
   ///
+  /// ## Success case
+  ///
   /// ```rust
   /// # use oni_comb_parser_rs::prelude::*;
   ///
@@ -27,7 +29,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, ()> = unit();
   ///
-  /// let result: ParseResult<char, ()> = parser.parse(&input);
+  /// let result: ParsedResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), ());
@@ -49,7 +51,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, ()> = empty();
   ///
-  /// let result: ParseResult<char, ()> = parser.parse(&input);
+  /// let result: ParsedResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), ());
@@ -61,12 +63,13 @@ pub mod prelude {
   /// Returns a [Parser] representing the termination.<br/>
   /// 終端を表す[Parser]を返します。
   ///
-  /// Returns `Ok(())` if the termination is parsed successfully, `Err(Mismatch)` if the parsing fails.<br/>
+  /// Returns `Ok(())` if the termination is parsed successfully, `Err(Mismatch)` if the parsing fails.
+  ///
   /// 終端の解析に成功したら`Ok(())`を返し、解析に失敗したら`Err(Mismatch)`を返します。
   ///
   /// # Example(例)
   ///
-  /// ## Parsing of the non-termination(非終端の解析)
+  /// ## Success case
   ///
   /// ```rust
   /// use oni_comb_parser_rs::prelude::*;
@@ -76,12 +79,12 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, ()> = end();
   ///
-  /// let result: Result<(), ParseError<char>> = parser.parse(&input).to_result();
+  /// let result: Result<(), ParsedError<char>> = parser.parse(&input).to_result();
   ///
   /// assert!(result.is_err());
   /// ```
   ///
-  /// ## Parsing of the termination(終端の解析)
+  /// ## Failure case
   ///
   /// ```rust
   /// use oni_comb_parser_rs::prelude::*;
@@ -91,7 +94,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, ()> = end();
   ///
-  /// let result: ParseResult<char, ()> = parser.parse(&input);
+  /// let result: ParsedResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), ());
@@ -115,7 +118,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, char> = successful('a');
   ///
-  /// let result: ParseResult<char, char> = parser.parse(&input);
+  /// let result: ParsedResult<char, char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), 'a');
@@ -130,7 +133,8 @@ pub mod prelude {
   /// Returns a [Parser] representing the successful parsing result.<br/>
   /// 成功した解析結果を表す[Parser]を返します。
   ///
-  /// - f: 解析結果を返すクロージャ
+  /// - f: a closure that returns the parsed result value.
+  /// - f: 解析結果の値を返すクロージャ
   ///
   /// # Example
   ///
@@ -142,7 +146,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, char> = successful_lazy(|| 'a');
   ///
-  /// let result: ParseResult<char, char> = parser.parse(&input);
+  /// let result: ParsedResult<char, char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), 'a');
@@ -168,16 +172,16 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parse_error: ParseError<char> = ParseError::of_in_complete();
+  /// let parse_error: ParsedError<char> = ParsedError::of_in_complete();
   ///
   /// let parser: Parser<char, ()> = failed(parse_error.clone(), true);
   ///
-  /// let result: ParseResult<char, ()> = parser.parse(&input);
+  /// let result: ParsedResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
   /// assert_eq!(result.failure().unwrap(), parse_error);
   /// ```
-  pub fn failed<'a, I, A>(value: ParseError<'a, I>, commit: bool) -> Parser<'a, I, A>
+  pub fn failed<'a, I, A>(value: ParsedError<'a, I>, commit: CommittedStatus) -> Parser<'a, I, A>
   where
     I: Clone + 'a,
     A: 'a, {
@@ -197,22 +201,22 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parse_error: ParseError<char> = ParseError::of_in_complete();
+  /// let parse_error: ParsedError<char> = ParsedError::of_in_complete();
   ///
   /// let parser: Parser<char, ()> = failed_with_commit(parse_error.clone());
   ///
-  /// let result: ParseResult<char, ()> = parser.parse(&input);
+  /// let result: ParsedResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
   /// assert!(result.is_committed().unwrap());
   ///
   /// assert_eq!(result.failure().unwrap(), parse_error);
   /// ```
-  pub fn failed_with_commit<'a, I, A>(value: ParseError<'a, I>) -> Parser<'a, I, A>
+  pub fn failed_with_commit<'a, I, A>(value: ParsedError<'a, I>) -> Parser<'a, I, A>
   where
     I: Clone + 'a,
     A: 'a, {
-    ParsersImpl::failed(value, true)
+    ParsersImpl::failed(value, CommittedStatus::Committed)
   }
 
   /// Returns a [Parser] that returns failed parsing results and does not commit.<br/>
@@ -228,22 +232,22 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parse_error: ParseError<char> = ParseError::of_in_complete();
+  /// let parse_error: ParsedError<char> = ParsedError::of_in_complete();
   ///
   /// let parser: Parser<char, ()> = failed_with_un_commit(parse_error.clone());
   ///
-  /// let result: ParseResult<char, ()> = parser.parse(&input);
+  /// let result: ParsedResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
   /// assert!(!result.is_committed().unwrap());
   ///
   /// assert_eq!(result.failure().unwrap(), parse_error);
   /// ```
-  pub fn failed_with_un_commit<'a, I, A>(value: ParseError<'a, I>) -> Parser<'a, I, A>
+  pub fn failed_with_un_commit<'a, I, A>(value: ParsedError<'a, I>) -> Parser<'a, I, A>
   where
     I: Clone + 'a,
     A: 'a, {
-    ParsersImpl::failed(value, false)
+    ParsersImpl::failed(value, CommittedStatus::Uncommitted)
   }
 
   /// Returns a Parser that represents the result of the failed parsing.<br/>
@@ -259,18 +263,18 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parse_error: ParseError<char> = ParseError::of_in_complete();
+  /// let parse_error: ParsedError<char> = ParsedError::of_in_complete();
   ///
   /// let parser: Parser<char, ()> = failed_lazy(|| (parse_error.clone(), true));
   ///
-  /// let result: ParseResult<char, ()> = parser.parse(&input);
+  /// let result: ParsedResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
   /// assert_eq!(result.failure().unwrap(), parse_error);
   /// ```
   pub fn failed_lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
   where
-    F: Fn() -> (ParseError<'a, I>, bool) + 'a,
+    F: Fn() -> (ParsedError<'a, I>, CommittedStatus) + 'a,
     I: 'a,
     A: 'a, {
     ParsersImpl::failed_lazy(f)
@@ -290,7 +294,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, &char> = elm_any_ref();
   ///
-  /// let result: ParseResult<char, &char> = parser.parse(&input);
+  /// let result: ParsedResult<char, &char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), &input[0]);
@@ -314,7 +318,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, char> = elm_any();
   ///
-  /// let result: ParseResult<char, char> = parser.parse(&input);
+  /// let result: ParsedResult<char, char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), input[0]);
@@ -342,7 +346,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, &char> = elm_ref('x');
   ///
-  /// let result: ParseResult<char, &char> = parser.parse(&input);
+  /// let result: ParsedResult<char, &char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), &input[0]);
@@ -358,7 +362,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, &char> = elm_ref('a');
   ///
-  /// let result: ParseResult<char, &char> = parser.parse(&input);
+  /// let result: ParsedResult<char, &char> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
   /// assert!(result.failure().unwrap().is_mismatch());
@@ -386,7 +390,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, char> = elm('x');
   ///
-  /// let result: ParseResult<char, char> = parser.parse(&input);
+  /// let result: ParsedResult<char, char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), input[0]);
@@ -402,7 +406,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, char> = elm('a');
   ///
-  /// let result: ParseResult<char, char> = parser.parse(&input);
+  /// let result: ParsedResult<char, char> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
   /// assert!(result.failure().unwrap().is_mismatch());
@@ -430,7 +434,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, &char> = elm_pred_ref(|c| *c == 'x');
   ///
-  /// let result: ParseResult<char, &char> = parser.parse(&input);
+  /// let result: ParsedResult<char, &char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), &input[0]);
@@ -446,7 +450,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, &char> = elm_pred_ref(|c| *c == 'a');
   ///
-  /// let result: ParseResult<char, &char> = parser.parse(&input);
+  /// let result: ParsedResult<char, &char> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
   /// assert!(result.failure().unwrap().is_mismatch());
@@ -475,7 +479,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, char> = elm_pred(|c| *c == 'x');
   ///
-  /// let result: ParseResult<char, char> = parser.parse(&input);
+  /// let result: ParsedResult<char, char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), input[0]);
@@ -491,7 +495,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, char> = elm_pred(|c| *c == 'a');
   ///
-  /// let result: ParseResult<char, char> = parser.parse(&input);
+  /// let result: ParsedResult<char, char> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
   /// assert!(result.failure().unwrap().is_mismatch());
@@ -834,7 +838,7 @@ mod tests {
     init();
     {
       let input1 = b"b";
-      let p: Parser<u8, &u8> = failed_with_commit(ParseError::of_in_complete())
+      let p: Parser<u8, &u8> = failed_with_commit(ParsedError::of_in_complete())
         .attempt()
         .or(elm_ref(b'b'));
 
@@ -1307,14 +1311,14 @@ mod tests {
       let input: Vec<char> = "abc def".chars().collect::<Vec<char>>();
       let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");
       let p2 = p1.with_filter(|chars| chars.len() > 1);
-      let result: Result<Vec<char>, ParseError<char>> = p2.parse_as_result(&input);
+      let result: Result<Vec<char>, ParsedError<char>> = p2.parse_as_result(&input);
       assert!(result.is_err());
     }
     {
       let input: Vec<char> = "abc  def".chars().collect::<Vec<char>>();
       let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");
       let p2 = p1.with_filter(|chars| chars.len() > 1);
-      let result: Result<Vec<char>, ParseError<char>> = p2.parse_as_result(&input);
+      let result: Result<Vec<char>, ParsedError<char>> = p2.parse_as_result(&input);
       assert!(result.is_ok());
     }
   }
@@ -1326,14 +1330,14 @@ mod tests {
       let input: Vec<char> = "abc def".chars().collect::<Vec<char>>();
       let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");
       let p2 = p1.with_filter_not(|chars| chars.len() > 1);
-      let result: Result<Vec<char>, ParseError<char>> = p2.parse_as_result(&input);
+      let result: Result<Vec<char>, ParsedError<char>> = p2.parse_as_result(&input);
       assert!(result.is_ok());
     }
     {
       let input: Vec<char> = "abc  def".chars().collect::<Vec<char>>();
       let p1 = tag("abc") * elm_ref(' ').map(|e| *e).of_many1() - tag("def");
       let p2 = p1.with_filter_not(|chars| chars.len() > 1);
-      let result: Result<Vec<char>, ParseError<char>> = p2.parse_as_result(&input);
+      let result: Result<Vec<char>, ParsedError<char>> = p2.parse_as_result(&input);
       assert!(result.is_err());
     }
   }
