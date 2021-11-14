@@ -1,9 +1,9 @@
-use crate::core::{ParseError, ParseResult, ParseState, Parser};
 use crate::extension::parsers::ElementsParsers;
 use crate::internal::ParsersImpl;
 use regex::Regex;
 use std::fmt::Debug;
 use std::iter::FromIterator;
+use crate::core::{ParsedError, ParsedResult, Parser, ParseState};
 
 impl ElementsParsers for ParsersImpl {
   fn seq<'a, 'b, I>(tag: &'b [I]) -> Self::P<'a, I, &'a [I]>
@@ -15,17 +15,17 @@ impl ElementsParsers for ParsersImpl {
       let mut index = 0;
       loop {
         if index == tag.len() {
-          return ParseResult::successful(tag, index);
+          return ParsedResult::successful(tag, index);
         }
         if let Some(str) = input.get(index) {
           if tag[index] != *str {
             let msg = format!("seq {:?} expect: {:?}, found: {:?}", tag, tag[index], str);
             let ps = parse_state.add_offset(index);
-            let pe = ParseError::of_mismatch(input, ps.next_offset(), index, msg);
-            return ParseResult::failed(pe, index != 0);
+            let pe = ParsedError::of_mismatch(input, ps.next_offset(), index, msg);
+            return ParsedResult::failed(pe, index != 0);
           }
         } else {
-          return ParseResult::failed_with_un_commit(ParseError::of_in_complete());
+          return ParsedResult::failed_with_un_commit(ParsedError::of_in_complete());
         }
         index += 1;
       }
@@ -43,15 +43,15 @@ impl ElementsParsers for ParsersImpl {
           if c != actual {
             let msg = format!("tag {:?} expect: {:?}, found: {}", tag, c, actual);
             let ps = parse_state.add_offset(index);
-            let pe = ParseError::of_mismatch(input, ps.next_offset(), index, msg);
-            return ParseResult::failed(pe, index != 0);
+            let pe = ParsedError::of_mismatch(input, ps.next_offset(), index, msg);
+            return ParsedResult::failed(pe, index != 0);
           }
         } else {
-          return ParseResult::failed_with_un_commit(ParseError::of_in_complete());
+          return ParsedResult::failed_with_un_commit(ParsedError::of_in_complete());
         }
         index += 1;
       }
-      ParseResult::successful(tag, index)
+      ParsedResult::successful(tag, index)
     })
   }
 
@@ -66,15 +66,15 @@ impl ElementsParsers for ParsersImpl {
           if !c.eq_ignore_ascii_case(actual) {
             let msg = format!("tag_no_case {:?} expect: {:?}, found: {}", tag, c, actual);
             let ps = parse_state.add_offset(index);
-            let pe = ParseError::of_mismatch(input, ps.next_offset(), index, msg);
-            return ParseResult::failed(pe, index != 0);
+            let pe = ParsedError::of_mismatch(input, ps.next_offset(), index, msg);
+            return ParsedResult::failed(pe, index != 0);
           }
         } else {
-          return ParseResult::failed_with_un_commit(ParseError::of_in_complete());
+          return ParsedResult::failed_with_un_commit(ParsedError::of_in_complete());
         }
         index += 1;
       }
-      ParseResult::successful(tag, index)
+      ParsedResult::successful(tag, index)
     })
   }
 
@@ -92,15 +92,15 @@ impl ElementsParsers for ParsersImpl {
       if let Some(captures) = regex.captures(&str).as_ref() {
         if let Some(m) = captures.get(0) {
           let str = m.as_str();
-          ParseResult::successful(str.to_string(), str.len())
+          ParsedResult::successful(str.to_string(), str.len())
         } else {
           let msg = format!("regex {:?} found: {:?}", regex, str);
-          let pe = ParseError::of_mismatch(input, parse_state.next_offset(), str.len(), msg);
-          return ParseResult::failed(pe, captures.len() != 0);
+          let pe = ParsedError::of_mismatch(input, parse_state.next_offset(), str.len(), msg);
+          return ParsedResult::failed(pe, captures.len() != 0);
         }
       } else {
         // log::debug!("regex: failed, '{}'", str);
-        return ParseResult::failed_with_un_commit(ParseError::of_in_complete());
+        return ParsedResult::failed_with_un_commit(ParsedError::of_in_complete());
       }
     })
   }

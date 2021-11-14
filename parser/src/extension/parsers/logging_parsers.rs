@@ -1,4 +1,4 @@
-use crate::core::{ParseResult, Parsers};
+use crate::core::{ParsedResult, Parsers};
 use std::fmt::{Debug, Display};
 
 #[derive(Debug, Clone)]
@@ -19,7 +19,7 @@ pub trait LoggingParsers: Parsers {
 
   fn log_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, name: &'a str, log_level: LogLevel, f: F) -> Self::P<'a, I, A>
   where
-    F: Fn(&ParseResult<'a, I, A>) -> B + 'a,
+    F: Fn(&ParsedResult<'a, I, A>) -> B + 'a,
     I: Debug,
     A: Debug + 'a,
     B: Display + 'a;

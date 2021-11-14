@@ -1,4 +1,4 @@
-use crate::core::{ParseResult, Parser, ParserRunner};
+use crate::core::{ParsedResult, Parser, ParserRunner};
 use crate::extension::parsers::CollectParsers;
 use crate::internal::ParsersImpl;
 
@@ -7,11 +7,11 @@ impl CollectParsers for ParsersImpl {
   where
     A: 'a, {
     Parser::new(move |parse_state| match parser.run(parse_state) {
-      ParseResult::Success { length, .. } => {
+      ParsedResult::Success { length, .. } => {
         let slice = parse_state.slice_with_len(length);
-        ParseResult::successful(slice, length)
+        ParsedResult::successful(slice, length)
       }
-      ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+      ParsedResult::Failure { error, is_committed } => ParsedResult::failed(error, is_committed),
     })
   }
 }

@@ -1,4 +1,5 @@
-use crate::core::{ParseError, ParseResult, ParseState, ParserMonad};
+use crate::core::{ParsedError, ParsedResult, ParseState};
+use crate::core::{ParserMonad};
 
 pub trait ParserRunner<'a> {
   type Input;
@@ -7,11 +8,11 @@ pub trait ParserRunner<'a> {
   where
     X: 'm;
 
-  fn parse(&self, input: &'a [Self::Input]) -> ParseResult<'a, Self::Input, Self::Output>;
+  fn parse(&self, input: &'a [Self::Input]) -> ParsedResult<'a, Self::Input, Self::Output>;
 
-  fn parse_as_result(&self, input: &'a [Self::Input]) -> Result<Self::Output, ParseError<'a, Self::Input>> {
+  fn parse_as_result(&self, input: &'a [Self::Input]) -> Result<Self::Output, ParsedError<'a, Self::Input>> {
     self.parse(input).to_result()
   }
 
-  fn run(&self, param: &ParseState<'a, Self::Input>) -> ParseResult<'a, Self::Input, Self::Output>;
+  fn run(&self, param: &ParseState<'a, Self::Input>) -> ParsedResult<'a, Self::Input, Self::Output>;
 }

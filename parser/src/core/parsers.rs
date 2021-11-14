@@ -1,4 +1,4 @@
-use crate::core::parse_error::ParseError;
+use crate::core::ParsedError;
 use crate::core::parser_monad::ParserMonad;
 
 pub trait Parsers {
@@ -7,7 +7,7 @@ pub trait Parsers {
     I: 'p,
     A: 'p;
 
-  fn parse<'a, 'b, I, A>(parser: &Self::P<'a, I, A>, input: &'b [I]) -> Result<A, ParseError<'a, I>>
+  fn parse<'a, 'b, I, A>(parser: &Self::P<'a, I, A>, input: &'b [I]) -> Result<A, ParsedError<'a, I>>
   where
     A: 'a,
     'b: 'a;
@@ -25,14 +25,14 @@ pub trait Parsers {
     F: Fn() -> A + 'a,
     A: 'a;
 
-  fn failed<'a, I, A>(value: ParseError<'a, I>, committed: bool) -> Self::P<'a, I, A>
+  fn failed<'a, I, A>(value: ParsedError<'a, I>, committed: bool) -> Self::P<'a, I, A>
   where
     I: Clone + 'a,
     A: 'a;
 
   fn failed_lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
   where
-    F: Fn() -> (ParseError<'a, I>, bool) + 'a,
+    F: Fn() -> (ParsedError<'a, I>, bool) + 'a,
     I: 'a,
     A: 'a;
 

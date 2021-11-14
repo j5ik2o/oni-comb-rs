@@ -181,7 +181,7 @@ pub mod prelude {
   /// assert!(result.is_failure());
   /// assert_eq!(result.failure().unwrap(), parse_error);
   /// ```
-  pub fn failed<'a, I, A>(value: ParsedError<'a, I>, commit: CommittedStatus) -> Parser<'a, I, A>
+  pub fn failed<'a, I, A>(value: ParsedError<'a, I>, commit: bool) -> Parser<'a, I, A>
   where
     I: Clone + 'a,
     A: 'a, {
@@ -216,7 +216,7 @@ pub mod prelude {
   where
     I: Clone + 'a,
     A: 'a, {
-    ParsersImpl::failed(value, CommittedStatus::Committed)
+    ParsersImpl::failed(value, true)
   }
 
   /// Returns a [Parser] that returns failed parsing results and does not commit.<br/>
@@ -247,7 +247,7 @@ pub mod prelude {
   where
     I: Clone + 'a,
     A: 'a, {
-    ParsersImpl::failed(value, CommittedStatus::Uncommitted)
+    ParsersImpl::failed(value, false)
   }
 
   /// Returns a Parser that represents the result of the failed parsing.<br/>
@@ -274,7 +274,7 @@ pub mod prelude {
   /// ```
   pub fn failed_lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
   where
-    F: Fn() -> (ParsedError<'a, I>, CommittedStatus) + 'a,
+    F: Fn() -> (ParsedError<'a, I>, bool) + 'a,
     I: 'a,
     A: 'a, {
     ParsersImpl::failed_lazy(f)

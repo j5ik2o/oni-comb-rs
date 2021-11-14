@@ -1,6 +1,4 @@
-use crate::core::ParseError;
-use crate::core::ParserRunner;
-use crate::core::{ParseResult, Parsers};
+use crate::core::{ParsedError, ParsedResult, ParserRunner, Parsers};
 use std::fmt::Debug;
 
 use crate::core::Parser;
@@ -12,8 +10,8 @@ impl OperatorParsers for ParsersImpl {
   where
     A: Debug + 'a, {
     Parser::new(move |parse_state| match parser.run(parse_state) {
-      ParseResult::Success { .. } => ParseResult::successful(true, 0),
-      ParseResult::Failure { .. } => ParseResult::successful(false, 0),
+      ParsedResult::Success { .. } => ParsedResult::successful(true, 0),
+      ParsedResult::Failure { .. } => ParsedResult::successful(false, 0),
     })
   }
 
@@ -21,17 +19,17 @@ impl OperatorParsers for ParsersImpl {
   where
     A: 'a, {
     Parser::new(move |parse_state| match parser.run(parse_state) {
-      ParseResult::Success { .. } => {
+      ParsedResult::Success { .. } => {
         let ps = parse_state.add_offset(0);
-        let parser_error = ParseError::of_mismatch(
+        let parser_error = ParsedError::of_mismatch(
           ps.input(),
           ps.last_offset().unwrap_or(0),
           0,
           "not predicate failed".to_string(),
         );
-        ParseResult::failed_with_un_commit(parser_error)
+        ParsedResult::failed_with_un_commit(parser_error)
       }
-      ParseResult::Failure { .. } => ParseResult::successful((), 0),
+      ParsedResult::Failure { .. } => ParsedResult::successful((), 0),
     })
   }
 
@@ -99,21 +97,21 @@ impl OperatorParsers for ParsersImpl {
       Parser::new(move |parse_state| {
         let mut ps = parse_state.add_offset(0);
         match op.run(&ps) {
-          ParseResult::Success { get: f, length: n1 } => {
+          ParsedResult::Success { value: f, length: n1 } => {
             ps = ps.add_offset(n1);
             (match p.run(&ps) {
-              ParseResult::Success { get: y, length: n2 } => {
+              ParsedResult::Success { value: y, length: n2 } => {
                 ps = ps.add_offset(n2);
                 Self::rest_left1(p.clone(), op.clone(), f(default_value.clone(), y))
                   .run(&ps)
                   .with_add_length(n2)
               }
-              ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+              ParsedResult::Failure { error, is_committed } => ParsedResult::failed(error, is_committed),
             })
             .with_committed_fallback(n1 != 0)
             .with_add_length(n1)
           }
-          ParseResult::Failure { get, is_committed } => ParseResult::failed(get, is_committed),
+          ParsedResult::Failure { error, is_committed } => ParsedResult::failed(error, is_committed),
         }
       }),
       Self::successful(x.clone()),

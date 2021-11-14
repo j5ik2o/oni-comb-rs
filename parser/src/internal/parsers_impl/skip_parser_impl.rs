@@ -1,4 +1,4 @@
-use crate::core::{ParseError, ParseResult, Parser};
+use crate::core::{ParsedError, ParsedResult, Parser};
 use crate::extension::parsers::SkipParsers;
 use crate::internal::ParsersImpl;
 
@@ -7,9 +7,9 @@ impl SkipParsers for ParsersImpl {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       if input.len() >= n {
-        ParseResult::successful((), n)
+        ParsedResult::successful((), n)
       } else {
-        ParseResult::failed_with_un_commit(ParseError::of_in_complete())
+        ParsedResult::failed_with_un_commit(ParsedError::of_in_complete())
       }
     })
   }
