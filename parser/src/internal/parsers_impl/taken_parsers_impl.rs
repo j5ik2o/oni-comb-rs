@@ -1,4 +1,4 @@
-use crate::core::{Element, ParseError, ParsedResult, Parser};
+use crate::core::{Element, ParseError, ParseResult, Parser};
 use std::fmt::Debug;
 
 use crate::extension::parsers::TakenParsers;
@@ -9,9 +9,9 @@ impl TakenParsers for ParsersImpl {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       if input.len() >= n {
-        ParsedResult::successful(parse_state.slice_with_len(n), n)
+        ParseResult::successful(parse_state.slice_with_len(n), n)
       } else {
-        ParsedResult::failed_with_uncommitted(ParseError::of_in_complete())
+        ParseResult::failed_with_uncommitted(ParseError::of_in_complete())
       }
     })
   }
@@ -35,8 +35,8 @@ impl TakenParsers for ParsersImpl {
         index += 1;
       }
       match start {
-        Some(s) => ParsedResult::successful(&input[s..s + len], 0),
-        None => ParsedResult::successful(parse_state.slice_with_len(0), 0),
+        Some(s) => ParseResult::successful(&input[s..s + len], 0),
+        None => ParseResult::successful(parse_state.slice_with_len(0), 0),
       }
     })
   }
@@ -60,8 +60,8 @@ impl TakenParsers for ParsersImpl {
         index += 1;
       }
       match start {
-        Some(s) => ParsedResult::successful(&input[s..s + len], 0),
-        None => ParsedResult::failed_with_uncommitted(ParseError::of_in_complete()),
+        Some(s) => ParseResult::successful(&input[s..s + len], 0),
+        None => ParseResult::failed_with_uncommitted(ParseError::of_in_complete()),
       }
     })
   }
@@ -88,12 +88,12 @@ impl TakenParsers for ParsersImpl {
         Some(s) => {
           let str = &input[s..s + len];
           if n <= str.len() && str.len() <= m {
-            ParsedResult::successful(str, 0)
+            ParseResult::successful(str, 0)
           } else {
-            ParsedResult::failed_with_uncommitted(ParseError::of_in_complete())
+            ParseResult::failed_with_uncommitted(ParseError::of_in_complete())
           }
         }
-        None => ParsedResult::failed_with_uncommitted(ParseError::of_in_complete()),
+        None => ParseResult::failed_with_uncommitted(ParseError::of_in_complete()),
       }
     })
   }
@@ -114,9 +114,9 @@ impl TakenParsers for ParsersImpl {
         index += 1;
       }
       if !b {
-        ParsedResult::successful(parse_state.slice_with_len(0), 0)
+        ParseResult::successful(parse_state.slice_with_len(0), 0)
       } else {
-        ParsedResult::successful(parse_state.slice_with_len(index + 1), index + 1)
+        ParseResult::successful(parse_state.slice_with_len(index + 1), index + 1)
       }
     })
   }
@@ -137,9 +137,9 @@ impl TakenParsers for ParsersImpl {
         index += 1;
       }
       if !b {
-        ParsedResult::failed_with_uncommitted(ParseError::of_in_complete())
+        ParseResult::failed_with_uncommitted(ParseError::of_in_complete())
       } else {
-        ParsedResult::successful(parse_state.slice_with_len(index + 1), index + 1)
+        ParseResult::successful(parse_state.slice_with_len(index + 1), index + 1)
       }
     })
   }

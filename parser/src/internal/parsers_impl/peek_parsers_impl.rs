@@ -1,4 +1,4 @@
-use crate::core::{ParsedResult, Parser, ParserRunner};
+use crate::core::{ParseResult, Parser, ParserRunner};
 use crate::internal::ParsersImpl;
 use crate::prelude::PeekParsers;
 use std::fmt::Debug;
@@ -8,8 +8,11 @@ impl PeekParsers for ParsersImpl {
   where
     A: Debug + 'a, {
     Parser::new(move |parse_state| match parser.run(parse_state) {
-      ParsedResult::Success { value, .. } => ParsedResult::successful(value, 0),
-      ParsedResult::Failure { error, is_committed } => ParsedResult::failed(error, is_committed),
+      ParseResult::Success { value, .. } => ParseResult::successful(value, 0),
+      ParseResult::Failure {
+        error,
+        committed_status: is_committed,
+      } => ParseResult::failed(error, is_committed),
     })
   }
 }

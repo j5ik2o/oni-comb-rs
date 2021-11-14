@@ -1,4 +1,4 @@
-use crate::core::{ParseError, ParsedResult, Parser, ParserRunner};
+use crate::core::{ParseError, ParseResult, Parser, ParserRunner};
 use crate::extension::parsers::RepeatParsers;
 use crate::internal::ParsersImpl;
 use crate::utils::{Bound, RangeArgument};
@@ -18,7 +18,7 @@ impl RepeatParsers for ParsersImpl {
       let mut all_length = 0;
       let mut items = vec![];
 
-      if let ParsedResult::Success { value, length } = parser.run(parse_state) {
+      if let ParseResult::Success { value, length } = parser.run(parse_state) {
         let mut current_parse_state = parse_state.add_offset(length);
         items.push(value);
         all_length += length;
@@ -38,14 +38,14 @@ impl RepeatParsers for ParsersImpl {
           }
 
           if let Some(sep) = &separator {
-            if let ParsedResult::Success { length, .. } = sep.run(&current_parse_state) {
+            if let ParseResult::Success { length, .. } = sep.run(&current_parse_state) {
               current_parse_state = current_parse_state.add_offset(length);
               all_length += length;
             } else {
               break;
             }
           }
-          if let ParsedResult::Success { value, length } = parser.run(&current_parse_state) {
+          if let ParseResult::Success { value, length } = parser.run(&current_parse_state) {
             current_parse_state = current_parse_state.add_offset(length);
             items.push(value);
             all_length += length;
@@ -68,10 +68,10 @@ impl RepeatParsers for ParsersImpl {
               items.len()
             ),
           );
-          return ParsedResult::failed_with_uncommitted(pe);
+          return ParseResult::failed_with_uncommitted(pe);
         }
       }
-      ParsedResult::successful(items, all_length)
+      ParseResult::successful(items, all_length)
     })
   }
 }

@@ -1,10 +1,10 @@
 use crate::core::parse_error::ParseError;
 use crate::core::CommittedStatus;
 
-/// A Parsed Result.<br/>
+/// A Parse Result.<br/>
 /// 解析された結果。
 #[derive(Debug, Clone)]
-pub enum ParsedResult<'a, I, A> {
+pub enum ParseResult<'a, I, A> {
   /// 成功
   Success {
     /// 成功の値
@@ -17,12 +17,12 @@ pub enum ParsedResult<'a, I, A> {
     /// 失敗の原因
     error: ParseError<'a, I>,
     /// コミット状態
-    is_committed: CommittedStatus,
+    committed_status: CommittedStatus,
   },
 }
 
-impl<'a, I, A> ParsedResult<'a, I, A> {
-  /// Returns the parsed result of success.<br/>
+impl<'a, I, A> ParseResult<'a, I, A> {
+  /// Returns the parse result of success.<br/>
   /// 成功の解析結果を返します。
   ///
   /// - value: a value
@@ -31,19 +31,22 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
   /// - value: 値
   /// - length: 値のサイズ
   pub fn successful(value: A, length: usize) -> Self {
-    ParsedResult::Success { value, length }
+    ParseResult::Success { value, length }
   }
 
-  /// Returns the parsed result of failure.<br/>
+  /// Returns the parse result of failure.<br/>
   /// 失敗の解析結果を返します。
   ///
   /// - error: a [ParsedError]
-  /// - is_committed: a [CommittedStatus]
-  pub fn failed(error: ParseError<'a, I>, is_committed: CommittedStatus) -> Self {
-    ParsedResult::Failure { error, is_committed }
+  /// - committed_status: a [CommittedStatus]
+  pub fn failed(error: ParseError<'a, I>, committed_status: CommittedStatus) -> Self {
+    ParseResult::Failure {
+      error,
+      committed_status,
+    }
   }
 
-  /// Returns the parsed result of failure.<br/>
+  /// Returns the parse result of failure.<br/>
   /// 失敗の解析結果を返します。
   ///
   /// - error: a [ParsedError]
@@ -60,42 +63,45 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
   /// [ParsedResult]を[Result]に変換する。
   pub fn to_result(self) -> Result<A, ParseError<'a, I>> {
     match self {
-      ParsedResult::Failure { error, .. } => Err(error),
-      ParsedResult::Success { value, .. } => Ok(value),
+      ParseResult::Failure { error, .. } => Err(error),
+      ParseResult::Success { value, .. } => Ok(value),
     }
   }
 
   pub fn is_success(&self) -> bool {
     match self {
-      ParsedResult::Failure { .. } => false,
-      ParsedResult::Success { .. } => true,
+      ParseResult::Failure { .. } => false,
+      ParseResult::Success { .. } => true,
     }
   }
 
   pub fn success(self) -> Option<A> {
     match self {
-      ParsedResult::Failure { .. } => None,
-      ParsedResult::Success { value, .. } => Some(value),
+      ParseResult::Failure { .. } => None,
+      ParseResult::Success { value, .. } => Some(value),
     }
   }
 
   pub fn failure(self) -> Option<ParseError<'a, I>> {
     match self {
-      ParsedResult::Failure { error, .. } => Some(error),
-      ParsedResult::Success { .. } => None,
+      ParseResult::Failure { error, .. } => Some(error),
+      ParseResult::Success { .. } => None,
     }
   }
 
   pub fn is_failure(&self) -> bool {
     match self {
-      ParsedResult::Failure { .. } => true,
-      ParsedResult::Success { .. } => false,
+      ParseResult::Failure { .. } => true,
+      ParseResult::Success { .. } => false,
     }
   }
 
   pub fn committed_status(&self) -> Option<CommittedStatus> {
     match self {
-      ParsedResult::Failure { is_committed, .. } => Some(is_committed.clone()),
+      ParseResult::Failure {
+        committed_status: is_committed,
+        ..
+      } => Some(is_committed.clone()),
       _ => None,
     }
   }
@@ -103,12 +109,12 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
   /// 失敗時のコミットを解除する
   pub fn with_uncommitted(self) -> Self {
     match self {
-      ParsedResult::Failure {
+      ParseResult::Failure {
         error,
-        is_committed: CommittedStatus::Committed,
-      } => ParsedResult::Failure {
+        committed_status: CommittedStatus::Committed,
+      } => ParseResult::Failure {
         error,
-        is_committed: CommittedStatus::Uncommitted,
+        committed_status: CommittedStatus::Uncommitted,
       },
       _ => self,
     }
@@ -116,9 +122,12 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
 
   pub fn with_committed_fallback(self, is_committed: bool) -> Self {
     match self {
-      ParsedResult::Failure { error, is_committed: c } => ParsedResult::Failure {
+      ParseResult::Failure {
         error,
-        is_committed: (c.or(&is_committed.into())),
+        committed_status: c,
+      } => ParseResult::Failure {
+        error,
+        committed_status: (c.or(&is_committed.into())),
       },
       _ => self,
     }
@@ -128,12 +137,12 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
   where
     F: Fn(ParseError<'a, I>) -> ParseError<'a, I>, {
     match self {
-      ParsedResult::Failure {
+      ParseResult::Failure {
         error: e,
-        is_committed: c,
-      } => ParsedResult::Failure {
+        committed_status: c,
+      } => ParseResult::Failure {
         error: f(e),
-        is_committed: c,
+        committed_status: c,
       },
       _ => self,
     }
@@ -141,7 +150,7 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
 
   pub fn with_add_length(self, n: usize) -> Self {
     match self {
-      ParsedResult::Success { value, length: m } => ParsedResult::Success { value, length: n + m },
+      ParseResult::Success { value, length: m } => ParseResult::Success { value, length: n + m },
       _ => self,
     }
   }

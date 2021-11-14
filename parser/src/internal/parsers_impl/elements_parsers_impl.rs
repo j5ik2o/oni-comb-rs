@@ -1,4 +1,4 @@
-use crate::core::{ParseError, ParseState, ParsedResult, Parser};
+use crate::core::{ParseError, ParseResult, ParseState, Parser};
 use crate::extension::parsers::ElementsParsers;
 use crate::internal::ParsersImpl;
 use regex::Regex;
@@ -15,17 +15,17 @@ impl ElementsParsers for ParsersImpl {
       let mut index = 0;
       loop {
         if index == seq.len() {
-          return ParsedResult::successful(seq, index);
+          return ParseResult::successful(seq, index);
         }
         if let Some(str) = input.get(index) {
           if seq[index] != *str {
             let msg = format!("seq {:?} expect: {:?}, found: {:?}", seq, seq[index], str);
             let ps = parse_state.add_offset(index);
             let pe = ParseError::of_mismatch(input, ps.next_offset(), index, msg);
-            return ParsedResult::failed(pe, (index != 0).into());
+            return ParseResult::failed(pe, (index != 0).into());
           }
         } else {
-          return ParsedResult::failed_with_uncommitted(ParseError::of_in_complete());
+          return ParseResult::failed_with_uncommitted(ParseError::of_in_complete());
         }
         index += 1;
       }
@@ -44,14 +44,14 @@ impl ElementsParsers for ParsersImpl {
             let msg = format!("tag {:?} expect: {:?}, found: {}", tag, c, actual);
             let ps = parse_state.add_offset(index);
             let pe = ParseError::of_mismatch(input, ps.next_offset(), index, msg);
-            return ParsedResult::failed(pe, (index != 0).into());
+            return ParseResult::failed(pe, (index != 0).into());
           }
         } else {
-          return ParsedResult::failed_with_uncommitted(ParseError::of_in_complete());
+          return ParseResult::failed_with_uncommitted(ParseError::of_in_complete());
         }
         index += 1;
       }
-      ParsedResult::successful(tag, index)
+      ParseResult::successful(tag, index)
     })
   }
 
@@ -67,14 +67,14 @@ impl ElementsParsers for ParsersImpl {
             let msg = format!("tag_no_case {:?} expect: {:?}, found: {}", tag, c, actual);
             let ps = parse_state.add_offset(index);
             let pe = ParseError::of_mismatch(input, ps.next_offset(), index, msg);
-            return ParsedResult::failed(pe, (index != 0).into());
+            return ParseResult::failed(pe, (index != 0).into());
           }
         } else {
-          return ParsedResult::failed_with_uncommitted(ParseError::of_in_complete());
+          return ParseResult::failed_with_uncommitted(ParseError::of_in_complete());
         }
         index += 1;
       }
-      ParsedResult::successful(tag, index)
+      ParseResult::successful(tag, index)
     })
   }
 
@@ -92,14 +92,14 @@ impl ElementsParsers for ParsersImpl {
       if let Some(captures) = regex.captures(&str).as_ref() {
         if let Some(m) = captures.get(0) {
           let str = m.as_str();
-          ParsedResult::successful(str.to_string(), str.len())
+          ParseResult::successful(str.to_string(), str.len())
         } else {
           let msg = format!("regex {:?} found: {:?}", regex, str);
           let pe = ParseError::of_mismatch(input, parse_state.next_offset(), str.len(), msg);
-          return ParsedResult::failed(pe, (captures.len() != 0).into());
+          return ParseResult::failed(pe, (captures.len() != 0).into());
         }
       } else {
-        return ParsedResult::failed_with_uncommitted(ParseError::of_in_complete());
+        return ParseResult::failed_with_uncommitted(ParseError::of_in_complete());
       }
     })
   }

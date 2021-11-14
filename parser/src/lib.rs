@@ -29,7 +29,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, ()> = unit();
   ///
-  /// let result: ParsedResult<char, ()> = parser.parse(&input);
+  /// let result: ParseResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), ());
@@ -51,7 +51,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, ()> = empty();
   ///
-  /// let result: ParsedResult<char, ()> = parser.parse(&input);
+  /// let result: ParseResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), ());
@@ -94,7 +94,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, ()> = end();
   ///
-  /// let result: ParsedResult<char, ()> = parser.parse(&input);
+  /// let result: ParseResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), ());
@@ -118,7 +118,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, char> = successful('a');
   ///
-  /// let result: ParsedResult<char, char> = parser.parse(&input);
+  /// let result: ParseResult<char, char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), 'a');
@@ -146,7 +146,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, char> = successful_lazy(|| 'a');
   ///
-  /// let result: ParsedResult<char, char> = parser.parse(&input);
+  /// let result: ParseResult<char, char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), 'a');
@@ -176,7 +176,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, ()> = failed(parse_error.clone(), CommittedStatus::Committed);
   ///
-  /// let result: ParsedResult<char, ()> = parser.parse(&input);
+  /// let result: ParseResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
   /// assert_eq!(result.failure().unwrap(), parse_error);
@@ -205,7 +205,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, ()> = failed_with_commit(parse_error.clone());
   ///
-  /// let result: ParsedResult<char, ()> = parser.parse(&input);
+  /// let result: ParseResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
   /// assert_eq!(result.committed_status().unwrap(), CommittedStatus::Committed);
@@ -236,7 +236,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, ()> = failed_with_uncommit(parse_error.clone());
   ///
-  /// let result: ParsedResult<char, ()> = parser.parse(&input);
+  /// let result: ParseResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
   /// assert_eq!(result.committed_status().unwrap(), CommittedStatus::Uncommitted);
@@ -267,7 +267,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, ()> = failed_lazy(|| (parse_error.clone(), CommittedStatus::Committed));
   ///
-  /// let result: ParsedResult<char, ()> = parser.parse(&input);
+  /// let result: ParseResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
   /// assert_eq!(result.failure().unwrap(), parse_error);
@@ -294,7 +294,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, &char> = elm_any_ref();
   ///
-  /// let result: ParsedResult<char, &char> = parser.parse(&input);
+  /// let result: ParseResult<char, &char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), &input[0]);
@@ -318,7 +318,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, char> = elm_any();
   ///
-  /// let result: ParsedResult<char, char> = parser.parse(&input);
+  /// let result: ParseResult<char, char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), input[0]);
@@ -347,7 +347,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, &char> = elm_ref('x');
   ///
-  /// let result: ParsedResult<char, &char> = parser.parse(&input);
+  /// let result: ParseResult<char, &char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), &input[0]);
@@ -363,7 +363,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, &char> = elm_ref('a');
   ///
-  /// let result: ParsedResult<char, &char> = parser.parse(&input);
+  /// let result: ParseResult<char, &char> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
   /// assert!(result.failure().unwrap().is_mismatch());
@@ -392,7 +392,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, char> = elm('x');
   ///
-  /// let result: ParsedResult<char, char> = parser.parse(&input);
+  /// let result: ParseResult<char, char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), input[0]);
@@ -408,7 +408,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, char> = elm('a');
   ///
-  /// let result: ParsedResult<char, char> = parser.parse(&input);
+  /// let result: ParseResult<char, char> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
   /// assert!(result.failure().unwrap().is_mismatch());
@@ -436,7 +436,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, &char> = elm_pred_ref(|c| *c == 'x');
   ///
-  /// let result: ParsedResult<char, &char> = parser.parse(&input);
+  /// let result: ParseResult<char, &char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), &input[0]);
@@ -452,7 +452,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, &char> = elm_pred_ref(|c| *c == 'a');
   ///
-  /// let result: ParsedResult<char, &char> = parser.parse(&input);
+  /// let result: ParseResult<char, &char> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
   /// assert!(result.failure().unwrap().is_mismatch());
@@ -482,7 +482,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, char> = elm_pred(|c| *c == 'x');
   ///
-  /// let result: ParsedResult<char, char> = parser.parse(&input);
+  /// let result: ParseResult<char, char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), input[0]);
@@ -498,7 +498,7 @@ pub mod prelude {
   ///
   /// let parser: Parser<char, char> = elm_pred(|c| *c == 'a');
   ///
-  /// let result: ParsedResult<char, char> = parser.parse(&input);
+  /// let result: ParseResult<char, char> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
   /// assert!(result.failure().unwrap().is_mismatch());

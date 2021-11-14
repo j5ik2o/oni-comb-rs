@@ -1,4 +1,4 @@
-use crate::core::{CommittedStatus, ParseError, ParseState, ParsedResult, Parser, ParserRunner, Parsers};
+use crate::core::{CommittedStatus, ParseError, ParseResult, ParseState, Parser, ParserRunner, Parsers};
 use crate::internal::ParsersImpl;
 
 mod cache_parsers_impl;
@@ -35,21 +35,21 @@ impl Parsers for ParsersImpl {
   fn successful<'a, I, A>(value: A) -> Self::P<'a, I, A>
   where
     A: Clone + 'a, {
-    Parser::new(move |_| ParsedResult::successful(value.clone(), 0))
+    Parser::new(move |_| ParseResult::successful(value.clone(), 0))
   }
 
   fn successful_lazy<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> A + 'a,
     A: 'a, {
-    Parser::new(move |_| ParsedResult::successful(value(), 0))
+    Parser::new(move |_| ParseResult::successful(value(), 0))
   }
 
   fn failed<'a, I, A>(value: ParseError<'a, I>, committed: CommittedStatus) -> Self::P<'a, I, A>
   where
     I: Clone + 'a,
     A: 'a, {
-    Parser::new(move |_| ParsedResult::failed(value.clone(), committed.clone()))
+    Parser::new(move |_| ParseResult::failed(value.clone(), committed.clone()))
   }
 
   fn failed_lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
@@ -59,7 +59,7 @@ impl Parsers for ParsersImpl {
     A: 'a, {
     Parser::new(move |_| {
       let (pe, committed) = f();
-      ParsedResult::failed(pe, committed)
+      ParseResult::failed(pe, committed)
     })
   }
 
@@ -69,19 +69,22 @@ impl Parsers for ParsersImpl {
     I: 'a,
     A: 'a, {
     Parser::new(move |parse_state| match parser.run(parse_state) {
-      ParsedResult::Success { value, length } => {
+      ParseResult::Success { value, length } => {
         if f(&value) {
-          ParsedResult::successful(value, length)
+          ParseResult::successful(value, length)
         } else {
           let input = parse_state.input();
           let offset = parse_state.last_offset().unwrap_or(0);
           let msg = format!("no matched to predicate: last offset: {}", offset);
           let ps = parse_state.add_offset(length);
           let pe = ParseError::of_mismatch(input, ps.next_offset(), length, msg);
-          ParsedResult::failed_with_uncommitted(pe)
+          ParseResult::failed_with_uncommitted(pe)
         }
       }
-      ParsedResult::Failure { error, is_committed } => ParsedResult::failed(error, is_committed),
+      ParseResult::Failure {
+        error,
+        committed_status: is_committed,
+      } => ParseResult::failed(error, is_committed),
     })
   }
 
@@ -91,11 +94,14 @@ impl Parsers for ParsersImpl {
     A: 'a,
     B: 'a, {
     Parser::new(move |parse_state| match parser.run(&parse_state) {
-      ParsedResult::Success { value: a, length: n } => {
+      ParseResult::Success { value: a, length: n } => {
         let ps = parse_state.add_offset(n);
         f(a).run(&ps).with_committed_fallback(n != 0).with_add_length(n)
       }
-      ParsedResult::Failure { error, is_committed } => ParsedResult::failed(error, is_committed),
+      ParseResult::Failure {
+        error,
+        committed_status: is_committed,
+      } => ParseResult::failed(error, is_committed),
     })
   }
 

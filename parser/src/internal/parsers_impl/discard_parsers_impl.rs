@@ -1,4 +1,4 @@
-use crate::core::{ParsedResult, Parser, ParserRunner};
+use crate::core::{ParseResult, Parser, ParserRunner};
 use crate::extension::parsers::DiscardParsers;
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;
@@ -8,8 +8,11 @@ impl DiscardParsers for ParsersImpl {
   where
     A: Debug + 'a, {
     Parser::new(move |parse_state| match parser.run(parse_state) {
-      ParsedResult::Success { length, .. } => ParsedResult::successful((), length),
-      ParsedResult::Failure { error, is_committed } => ParsedResult::failed(error, is_committed),
+      ParseResult::Success { length, .. } => ParseResult::successful((), length),
+      ParseResult::Failure {
+        error,
+        committed_status: is_committed,
+      } => ParseResult::failed(error, is_committed),
     })
   }
 }
