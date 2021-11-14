@@ -1,5 +1,5 @@
 use crate::core::parsed_error::ParsedError;
-use crate::core::ParseCommittedStatus;
+use crate::core::CommittedStatus;
 
 /// A Parsed Result.<br/>
 /// 解析された結果。
@@ -17,7 +17,7 @@ pub enum ParsedResult<'a, I, A> {
     /// 失敗の原因
     error: ParsedError<'a, I>,
     /// コミット状態
-    is_committed: ParseCommittedStatus,
+    is_committed: CommittedStatus,
   },
 }
 
@@ -39,7 +39,7 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
   ///
   /// - error: a [ParsedError]
   /// - is_committed: a [CommittedStatus]
-  pub fn failed(error: ParsedError<'a, I>, is_committed: ParseCommittedStatus) -> Self {
+  pub fn failed(error: ParsedError<'a, I>, is_committed: CommittedStatus) -> Self {
     ParsedResult::Failure { error, is_committed }
   }
 
@@ -48,11 +48,11 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
   ///
   /// - error: a [ParsedError]
   pub fn failed_with_un_commit(error: ParsedError<'a, I>) -> Self {
-    Self::failed(error, ParseCommittedStatus::Uncommitted)
+    Self::failed(error, CommittedStatus::Uncommitted)
   }
 
   pub fn failed_with_commit(error: ParsedError<'a, I>) -> Self {
-    Self::failed(error, ParseCommittedStatus::Committed)
+    Self::failed(error, CommittedStatus::Committed)
   }
 
   /// Convert [ParsedResult] to [Result].
@@ -93,7 +93,7 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
     }
   }
 
-  pub fn committed_status(&self) -> Option<ParseCommittedStatus> {
+  pub fn committed_status(&self) -> Option<CommittedStatus> {
     match self {
       ParsedResult::Failure { is_committed, .. } => Some(is_committed.clone()),
       _ => None,
@@ -105,10 +105,10 @@ impl<'a, I, A> ParsedResult<'a, I, A> {
     match self {
       ParsedResult::Failure {
         error,
-        is_committed: ParseCommittedStatus::Committed,
+        is_committed: CommittedStatus::Committed,
       } => ParsedResult::Failure {
         error,
-        is_committed: ParseCommittedStatus::Uncommitted,
+        is_committed: CommittedStatus::Uncommitted,
       },
       _ => self,
     }

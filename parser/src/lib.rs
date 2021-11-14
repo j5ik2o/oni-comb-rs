@@ -174,14 +174,14 @@ pub mod prelude {
   ///
   /// let parse_error: ParsedError<char> = ParsedError::of_in_complete();
   ///
-  /// let parser: Parser<char, ()> = failed(parse_error.clone(), ParseCommittedStatus::Committed);
+  /// let parser: Parser<char, ()> = failed(parse_error.clone(), CommittedStatus::Committed);
   ///
   /// let result: ParsedResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
   /// assert_eq!(result.failure().unwrap(), parse_error);
   /// ```
-  pub fn failed<'a, I, A>(value: ParsedError<'a, I>, commit: ParseCommittedStatus) -> Parser<'a, I, A>
+  pub fn failed<'a, I, A>(value: ParsedError<'a, I>, commit: CommittedStatus) -> Parser<'a, I, A>
   where
     I: Clone + 'a,
     A: 'a, {
@@ -208,7 +208,7 @@ pub mod prelude {
   /// let result: ParsedResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
-  /// assert_eq!(result.committed_status().unwrap(), ParseCommittedStatus::Committed);
+  /// assert_eq!(result.committed_status().unwrap(), CommittedStatus::Committed);
   ///
   /// assert_eq!(result.failure().unwrap(), parse_error);
   /// ```
@@ -216,7 +216,7 @@ pub mod prelude {
   where
     I: Clone + 'a,
     A: 'a, {
-    ParsersImpl::failed(value, ParseCommittedStatus::Committed)
+    ParsersImpl::failed(value, CommittedStatus::Committed)
   }
 
   /// Returns a [Parser] that returns failed parsing results and does not commit.<br/>
@@ -239,7 +239,7 @@ pub mod prelude {
   /// let result: ParsedResult<char, ()> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
-  /// assert_eq!(result.committed_status().unwrap(), ParseCommittedStatus::Uncommitted);
+  /// assert_eq!(result.committed_status().unwrap(), CommittedStatus::Uncommitted);
   ///
   /// assert_eq!(result.failure().unwrap(), parse_error);
   /// ```
@@ -247,7 +247,7 @@ pub mod prelude {
   where
     I: Clone + 'a,
     A: 'a, {
-    ParsersImpl::failed(value, ParseCommittedStatus::Uncommitted)
+    ParsersImpl::failed(value, CommittedStatus::Uncommitted)
   }
 
   /// Returns a Parser that represents the result of the failed parsing.<br/>
@@ -265,7 +265,7 @@ pub mod prelude {
   ///
   /// let parse_error: ParsedError<char> = ParsedError::of_in_complete();
   ///
-  /// let parser: Parser<char, ()> = failed_lazy(|| (parse_error.clone(), ParseCommittedStatus::Committed));
+  /// let parser: Parser<char, ()> = failed_lazy(|| (parse_error.clone(), CommittedStatus::Committed));
   ///
   /// let result: ParsedResult<char, ()> = parser.parse(&input);
   ///
@@ -274,7 +274,7 @@ pub mod prelude {
   /// ```
   pub fn failed_lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
   where
-    F: Fn() -> (ParsedError<'a, I>, ParseCommittedStatus) + 'a,
+    F: Fn() -> (ParsedError<'a, I>, CommittedStatus) + 'a,
     I: 'a,
     A: 'a, {
     ParsersImpl::failed_lazy(f)
