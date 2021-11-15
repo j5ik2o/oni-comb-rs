@@ -1,5 +1,0 @@
-sign-commit                = true
-sign-tag                   = true
-pre-release-replacements = [
-    {file ="Cargo.toml", search="version = \"[a-z0-9\\.-]+\"", replace="version = \"{{version}}\""},
-]
