@@ -1,6 +1,9 @@
-sign-commit                = true
-sign-tag                   = true
-tag-prefix                 = "crond-"
-pre-release-replacements = [
-    {file ="Cargo.toml", search="version = \"[a-z0-9\\.-]+\"", replace="version = \"{{version}}\""},
-]
+sign-commit                = false
+sign-tag                   = false
+pre-release-commit-message = "Prepare to release"
+dev-version                = false
+tag-message                = "{{tag_name}}"
+tag-name                   = "{{prefix}}v{{version}}"
+consolidate-commits        = false
+consolidate-pushes         = true
+allow-branch               = ["master"]

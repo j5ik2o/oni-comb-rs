@@ -1,5 +1,9 @@
-consolidate-commits        = true
+sign-commit                = false
+sign-tag                   = false
 pre-release-commit-message = "Prepare to release"
-tag-message                = "Bump version to v{{version}}"
-tag-prefix                 = "uri:"
-dependent-version          = "upgrade"
+dev-version                = false
+tag-message                = "{{tag_name}}"
+tag-name                   = "{{prefix}}v{{version}}"
+consolidate-commits        = false
+consolidate-pushes         = true
+allow-branch               = ["master"]
