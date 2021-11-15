@@ -1,7 +1,6 @@
-# sign-commit                = true
-# sign-tag                   = true
-tag-prefix                 = "uri-"
+no-dev-version             = true
+consolidate-commits        = true
+pre-release-commit-message = "Prepare to release"
 tag-message                = "Bump version to v{{version}}"
-pre-release-replacements = [
-    {file ="Cargo.toml", search="version = \"[a-z0-9\\.-]+\"", replace="version = \"{{version}}\""},
-]
+tag-prefix                 = "uri:"
+dependent-version          = "upgrade"
