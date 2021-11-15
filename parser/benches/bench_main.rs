@@ -38,11 +38,11 @@ fn criterion_benchmark(c: &mut Criterion) {
   let mut group = c.benchmark_group("hello_world");
   let op = 0u8;
   let data = "'hello world';";
-  group.bench_with_input(BenchmarkId::new("oni-combi-rs", op), &op, |b, i| {
-    b.iter(|| oni_comb_hello_world(data))
+  group.bench_with_input(BenchmarkId::new("pom", data), data, |b, i| {
+    b.iter(|| pom_hello_world(i))
   });
-  group.bench_with_input(BenchmarkId::new("pom", op), &op, |b, i| {
-    b.iter(|| pom_hello_world(data))
+  group.bench_with_input(BenchmarkId::new("oni-combi-rs", data), data, |b, i| {
+    b.iter(|| oni_comb_hello_world(i))
   });
   group.finish();
 }
