@@ -10,21 +10,21 @@ A Rust crate for LL(k) parser combinators.
 
 ## Main project
 
-- [oni-comb-parser-rs](/parser/)
+- [oni-comb-parser-rs](https://github.com/j5ik2o/oni-comb-rs/tree/main/parser) 
 
 ## Sub projects
 
 The following is projects implemented using `oni-comb-parser-rs`.
 
-- [oni-comb-crond-rs](/crond/)
-- [oni-comb-uri-rs](/uri/)
-- [oni-comb-toys-rs](/toys/)
+- [oni-comb-crond-rs](https://github.com/j5ik2o/oni-comb-rs/tree/main/crond/)
+- [oni-comb-uri-rs](https://github.com/j5ik2o/oni-comb-rs/tree/main/uri/)
+- [oni-comb-toys-rs](https://github.com/j5ik2o/oni-comb-rs/tree/main/toys/)
 
 ## Examples
 
-- [Hello World!](/parser/examples/hello_world.rs)
+- [Hello World!](https://github.com/j5ik2o/oni-comb-rs/tree/main/parser/examples/hello_world.rs)
 - JSON Parsers
-  - [Bytes](/parser/examples/json_byte.rs)
-  - [Characters](/parser/examples/json_char.rs)
-- [Calculator](/parser/examples/calculator.rs)
+  - [Bytes](https://github.com/j5ik2o/oni-comb-rs/tree/main/parser/examples/json_byte.rs)
+  - [Characters](https://github.com/j5ik2o/oni-comb-rs/tree/main/parser/examples/json_char.rs)
+- [Calculator](https://github.com/j5ik2o/oni-comb-rs/tree/main/parser/examples/calculator.rs)
 
