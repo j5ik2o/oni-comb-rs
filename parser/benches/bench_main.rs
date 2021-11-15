@@ -19,8 +19,8 @@ fn oni_comb_hello_world(s: &str) {
 
   let parser: Parser<u8, &str> = surround(
     elm_ref(b'\''),
-    (seq(b"hello") + elm_space() + seq(b"world")).collect(),
-    elm_ref(b'\'') + elm_ref(b';'),
+    (seq(b"hello") + elm_space_ref() + seq(b"world")).collect(),
+    seq(b"';"),
   )
   .map_res(std::str::from_utf8);
 

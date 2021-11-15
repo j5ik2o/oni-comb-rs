@@ -32,6 +32,7 @@ impl Parsers for ParsersImpl {
     parser.run(&parse_state).to_result()
   }
 
+  #[inline]
   fn successful<'a, I, A>(value: A) -> Self::P<'a, I, A>
   where
     A: Clone + 'a, {
@@ -63,6 +64,7 @@ impl Parsers for ParsersImpl {
     })
   }
 
+  #[inline]
   fn filter<'a, I, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
   where
     F: Fn(&A) -> bool + 'a,
@@ -88,6 +90,7 @@ impl Parsers for ParsersImpl {
     })
   }
 
+  #[inline]
   fn flat_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> Self::P<'a, I, B> + 'a,
@@ -105,11 +108,16 @@ impl Parsers for ParsersImpl {
     })
   }
 
+  #[inline]
   fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> B + 'a,
     A: Clone + 'a,
     B: Clone + 'a, {
-    Self::flat_map(parser, move |e| Self::successful(f(e)))
+    Parser::new(move |parse_state| match parser.run(parse_state) {
+      ParseResult::Success { value: a, length } => ParseResult::Success { value: f(a), length },
+      ParseResult::Failure { error, committed_status } => ParseResult::failed(error, committed_status),
+    })
+    //Self::flat_map(parser, move |e| Self::successful(f(e)))
   }
 }

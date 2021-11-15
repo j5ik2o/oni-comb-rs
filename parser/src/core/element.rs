@@ -1,10 +1,15 @@
 use std::fmt::Debug;
 
+/// A Element.
+/// 要素。
 pub trait Element: Debug {
+  /// 文字に変換する。
   fn to_char(self) -> char;
-  fn is_ascii_zero(&self) -> bool;
+  /// 空白かどうか。
   fn is_ascii_space(&self) -> bool;
+  /// 改行を含む空白かどうか。
   fn is_ascii_multi_space(&self) -> bool;
+  ///
   fn is_ascii_whitespace(&self) -> bool;
 
   fn is_ascii(&self) -> bool;
@@ -12,7 +17,11 @@ pub trait Element: Debug {
   fn is_ascii_alpha_lowercase(&self) -> bool;
 
   fn is_ascii_alpha(&self) -> bool;
+
   fn is_ascii_digit(&self) -> bool;
+  fn is_ascii_digit_zero(&self) -> bool;
+  fn is_ascii_digit_non_zero(&self) -> bool;
+
   fn is_ascii_alpha_digit(&self) -> bool;
 
   fn is_ascii_hex_digit(&self) -> bool;
@@ -28,20 +37,16 @@ impl Element for u8 {
     char::from(self)
   }
 
-  fn is_ascii_zero(&self) -> bool {
-    *self == b'0'
-  }
-
   fn is_ascii_space(&self) -> bool {
     matches!(*self, b' ' | b'\t')
   }
 
   fn is_ascii_multi_space(&self) -> bool {
-    matches!(*self, b' ' | b'\t' | b'\n' | b'\r')
+    self.is_ascii_space() || matches!(*self, b'\n' | b'\r')
   }
 
   fn is_ascii_whitespace(&self) -> bool {
-    matches!(*self, b'\t' | b'\n' | b'\x0C' | b'\r' | b' ')
+    self.is_ascii_multi_space() || *self == b'\x0C'
   }
 
   fn is_ascii(&self) -> bool {
@@ -62,6 +67,14 @@ impl Element for u8 {
 
   fn is_ascii_digit(&self) -> bool {
     matches!(*self, b'0'..=b'9')
+  }
+
+  fn is_ascii_digit_zero(&self) -> bool {
+    *self == b'0'
+  }
+
+  fn is_ascii_digit_non_zero(&self) -> bool {
+    !self.is_ascii_digit_zero()
   }
 
   fn is_ascii_alpha_digit(&self) -> bool {
@@ -94,20 +107,16 @@ impl Element for char {
     self
   }
 
-  fn is_ascii_zero(&self) -> bool {
-    *self == '0'
-  }
-
   fn is_ascii_space(&self) -> bool {
     matches!(*self, ' ' | '\t')
   }
 
   fn is_ascii_multi_space(&self) -> bool {
-    matches!(*self, ' ' | '\t' | '\n' | '\r')
+    self.is_ascii_space() || matches!(*self, '\n' | '\r')
   }
 
   fn is_ascii_whitespace(&self) -> bool {
-    matches!(*self, '\t' | '\n' | '\x0C' | '\r' | ' ')
+    self.is_ascii_multi_space() || *self == '\x0C'
   }
 
   fn is_ascii(&self) -> bool {
@@ -128,6 +137,14 @@ impl Element for char {
 
   fn is_ascii_digit(&self) -> bool {
     matches!(*self, '0'..='9')
+  }
+
+  fn is_ascii_digit_zero(&self) -> bool {
+    *self == '0'
+  }
+
+  fn is_ascii_digit_non_zero(&self) -> bool {
+    !self.is_ascii_digit_zero()
   }
 
   fn is_ascii_alpha_digit(&self) -> bool {

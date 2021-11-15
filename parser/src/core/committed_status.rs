@@ -15,7 +15,6 @@ impl From<bool> for CommittedStatus {
 }
 
 impl CommittedStatus {
-
   /// コミット済みかどうかを返す。
   pub fn is_committed(&self) -> bool {
     match self {

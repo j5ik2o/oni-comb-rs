@@ -718,7 +718,7 @@ pub mod prelude {
   pub fn elm_digit_1_9_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
-    elm_digit_ref().with_filter_not(|c: &&I| c.is_ascii_zero())
+    elm_digit_ref().with_filter_not(|c: &&I| c.is_ascii_digit_zero())
   }
 
   /// Returns a [Parser] that parses digits ('1'..='9').<br/>
