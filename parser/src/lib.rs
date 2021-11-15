@@ -515,6 +515,25 @@ pub mod prelude {
   ///
   /// - set: element of sets
   /// - set: 要素の集合
+  ///
+  /// # Example
+  ///
+  /// ## Success case
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "xyz";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_ref_of("xyz").of_many1().collect().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_ref_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
@@ -753,6 +772,46 @@ pub mod prelude {
     ParsersImpl::seq(seq)
   }
 
+  /// Returns a [Parser] that parses a string.
+  /// 文字列を解析する[Parser]を返す。
+  ///
+  /// - tag: a string
+  /// - tag: 文字列
+  ///
+  /// # Example
+  ///
+  /// ## Success case
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "abcdef";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, &str> = tag("abc");
+  ///
+  /// let result: ParseResult<char, &str> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), "abc");
+  /// ```
+  ///
+  /// ## Failure case
+  ///
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "defabc";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, &str> = tag("abc");
+  ///
+  /// let result: ParseResult<char, &str> = parser.parse(&input);
+  ///
+  /// assert!(result.is_failure());
+  /// assert!(result.failure().unwrap().is_mismatch());
+  /// ```
   pub fn tag<'a, 'b>(tag: &'b str) -> Parser<'a, char, &'a str>
   where
     'b: 'a, {
