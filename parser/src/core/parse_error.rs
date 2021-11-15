@@ -1,6 +1,7 @@
 use std::fmt;
 use std::fmt::Display;
 
+/// 解析エラー。
 #[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum ParseError<'a, I> {
   Mismatch {

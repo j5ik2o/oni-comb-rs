@@ -140,6 +140,30 @@ impl<'a, I, A> ParseResult<'a, I, A> {
     }
   }
 
+  pub fn flat_map<B, F>(self, f: F) -> ParseResult<'a, I, B>
+  where
+    F: Fn(A, usize) -> ParseResult<'a, I, B>, {
+    match self {
+      ParseResult::Success { value, length } => f(value, length),
+      ParseResult::Failure {
+        error: e,
+        committed_status: c,
+      } => ParseResult::Failure {
+        error: e,
+        committed_status: c,
+      },
+    }
+  }
+
+  pub fn map<B, F>(self, f: F) -> ParseResult<'a, I, B>
+  where
+    F: Fn(A, usize) -> (B, usize), {
+    self.flat_map(|value, length| {
+      let (v, l) = f(value, length);
+      ParseResult::successful(v, l)
+    })
+  }
+
   pub fn map_err<F>(self, f: F) -> Self
   where
     F: Fn(ParseError<'a, I>) -> ParseError<'a, I>, {
