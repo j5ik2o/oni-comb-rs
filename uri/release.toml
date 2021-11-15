@@ -1,5 +1,5 @@
-sign-commit                = true
-sign-tag                   = true
+# sign-commit                = true
+# sign-tag                   = true
 tag-prefix                 = "uri-"
 tag-message                = "Bump version to v{{version}}"
 pre-release-replacements = [
