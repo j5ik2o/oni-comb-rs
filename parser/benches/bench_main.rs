@@ -10,39 +10,29 @@
 #![allow(unused_variables)]
 #![allow(dead_code)]
 
-use criterion::*;
 use std::iter::FromIterator;
 
-fn oni_comb_hello_world(s: &str) {
-  use oni_comb_parser_rs::prelude::*;
-  let input = s.as_bytes();
+use criterion::*;
 
-  let parser: Parser<u8, &str> = surround(
-    elm_ref(b'\''),
-    (seq(b"hello") + elm_space_ref() + seq(b"world")).collect(),
-    seq(b"';"),
-  )
-  .map_res(std::str::from_utf8);
+use crate::nom_json::nom_parse_json;
+use crate::oni_comb_json::oni_comb_parse_json;
+use crate::pom_json::pom_parse_json;
 
-  let _ = parser.parse(input).to_result().unwrap();
-}
-
-fn pom_hello_world(s: &str) {
-  use pom::parser::*;
-  let parser =
-    (sym(b'\'') * (seq(b"hello") * one_of(b" \t") + seq(b"world")).collect() - seq(b"';")).convert(std::str::from_utf8);
-  let _ = parser.parse(s.as_bytes()).unwrap();
-}
+mod nom_json;
+mod oni_comb_json;
+mod pom_json;
 
 fn criterion_benchmark(c: &mut Criterion) {
-  let mut group = c.benchmark_group("hello_world");
-  let op = 0u8;
-  let data = "'hello world';";
-  group.bench_with_input(BenchmarkId::new("pom", data), data, |b, i| {
-    b.iter(|| pom_hello_world(i))
+  let mut group = c.benchmark_group("json");
+  let data = r#"{ "a" : 42, "b" : [ "x", "y", 12 ], "c": { "hello" : "world" } }"#;
+  group.bench_with_input(BenchmarkId::new("nom", "json"), data, |b, i| {
+    b.iter(|| nom_parse_json(i))
   });
-  group.bench_with_input(BenchmarkId::new("oni-combi-rs", data), data, |b, i| {
-    b.iter(|| oni_comb_hello_world(i))
+  group.bench_with_input(BenchmarkId::new("pom", "json"), data, |b, i| {
+    b.iter(|| pom_parse_json(i))
+  });
+  group.bench_with_input(BenchmarkId::new("oni-combi-rs", "json"), data, |b, i| {
+    b.iter(|| oni_comb_parse_json(i))
   });
   group.finish();
 }
