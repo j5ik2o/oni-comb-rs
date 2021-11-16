@@ -24,14 +24,16 @@ mod pom_json;
 
 fn criterion_benchmark(c: &mut Criterion) {
   let mut group = c.benchmark_group("json");
-  let data = r#"{ "a" : 42, "b" : [ "x", "y", 12 ], "c": { "hello" : "world" } }"#;
-  group.bench_with_input(BenchmarkId::new("nom", "json"), data, |b, i| {
+  // let data = r#"{ "a" : 42, "b" : [ "x", "y", 12 ], "c": { "hello" : "world" } }"#;
+  let data = r#"true"#;
+
+  group.bench_with_input(BenchmarkId::new("nom", "bool"), data, |b, i| {
     b.iter(|| nom_parse_json(i))
   });
-  group.bench_with_input(BenchmarkId::new("pom", "json"), data, |b, i| {
+  group.bench_with_input(BenchmarkId::new("pom", "bool"), data, |b, i| {
     b.iter(|| pom_parse_json(i))
   });
-  group.bench_with_input(BenchmarkId::new("oni-combi-rs", "json"), data, |b, i| {
+  group.bench_with_input(BenchmarkId::new("oni-combi-rs", "bool"), data, |b, i| {
     b.iter(|| oni_comb_parse_json(i))
   });
   group.finish();

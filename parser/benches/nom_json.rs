@@ -164,7 +164,7 @@ fn root<'a, E: ParseError<&'a str> + ContextError<&'a str>>(i: &'a str) -> IResu
 }
 
 pub fn nom_parse_json(s: &str) {
-  let ir = root::<(&str, ErrorKind)>(s);
+  let ir = boolean::<(&str, ErrorKind)>(s);
   let _ = ir.unwrap().1;
   //  println!("{:?}", r);
 }

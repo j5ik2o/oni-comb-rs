@@ -812,12 +812,14 @@ pub mod prelude {
   /// assert!(result.is_failure());
   /// assert!(result.failure().unwrap().is_mismatch());
   /// ```
+  #[inline(always)]
   pub fn tag<'a, 'b>(tag: &'b str) -> Parser<'a, char, &'a str>
   where
     'b: 'a, {
     ParsersImpl::tag(tag)
   }
 
+  #[inline(always)]
   pub fn tag_no_case<'a, 'b>(tag: &'b str) -> Parser<'a, char, &'a str>
   where
     'b: 'a, {

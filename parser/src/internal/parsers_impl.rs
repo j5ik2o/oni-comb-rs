@@ -39,6 +39,7 @@ impl Parsers for ParsersImpl {
     Parser::new(move |_| ParseResult::successful(value.clone(), 0))
   }
 
+  #[inline]
   fn successful_lazy<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> A + 'a,
@@ -46,6 +47,7 @@ impl Parsers for ParsersImpl {
     Parser::new(move |_| ParseResult::successful(value(), 0))
   }
 
+  #[inline]
   fn failed<'a, I, A>(value: ParseError<'a, I>, committed: CommittedStatus) -> Self::P<'a, I, A>
   where
     I: Clone + 'a,

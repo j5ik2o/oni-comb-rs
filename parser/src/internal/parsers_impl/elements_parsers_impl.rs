@@ -32,6 +32,7 @@ impl ElementsParsers for ParsersImpl {
     })
   }
 
+  #[inline(always)]
   fn tag<'a, 'b>(tag: &'b str) -> Self::P<'a, char, &'a str>
   where
     'b: 'a, {

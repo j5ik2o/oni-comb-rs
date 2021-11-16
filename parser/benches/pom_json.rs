@@ -64,10 +64,13 @@ fn object<'a>() -> Parser<'a, char, HashMap<String, JsonValue>> {
   obj.map(|members| members.into_iter().collect::<HashMap<_, _>>())
 }
 
+fn boolean<'a>() -> Parser<'a, char, bool> {
+  tag("true").map(|_| true) | tag("false").map(|_| false)
+}
+
 fn value<'a>() -> Parser<'a, char, JsonValue> {
   (tag("null").map(|_| JsonValue::Null)
-    | tag("true").map(|_| JsonValue::Bool(true))
-    | tag("false").map(|_| JsonValue::Bool(false))
+      | boolean().map(|b| JsonValue::Bool(b))
     | number().map(|num| JsonValue::Num(num))
     | string().map(|text| JsonValue::Str(text))
     | array().map(|arr| JsonValue::Array(arr))
@@ -81,6 +84,6 @@ pub fn json<'a>() -> Parser<'a, char, JsonValue> {
 
 pub fn pom_parse_json(s: &str) {
   let input: Vec<char> = s.chars().collect();
-  let _ = json().parse(&input).unwrap();
+  let _ = boolean().parse(&input).unwrap();
   // println!("{:?}", r);
 }
