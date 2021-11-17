@@ -47,3 +47,11 @@ fn main() {
   - [Bytes](/parser/examples/json_byte.rs)
   - [Characters](/parser/examples/json_char.rs)
 - [Calculator](/parser/examples/calculator.rs)
+
+## Alternative parsers
+
+- [Geal/nom](https://github.com/Geal/nom)
+- [J-F-Liu/pom](https://github.com/J-F-Liu/pom)
+- [Marwes/combine](https://github.com/Marwes/combine)
+- [zesterer/chumsky](https://github.com/zesterer/chumsky)
+- [zesterer/parze](https://github.com/zesterer/parze)
