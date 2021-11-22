@@ -19,8 +19,6 @@ pub mod prelude {
   ///
   /// # Example
   ///
-  /// ## Success case
-  ///
   /// ```rust
   /// # use oni_comb_parser_rs::prelude::*;
   ///
@@ -82,22 +80,6 @@ pub mod prelude {
   /// let result: Result<(), ParseError<char>> = parser.parse(&input).to_result();
   ///
   /// assert!(result.is_err());
-  /// ```
-  ///
-  /// ## Failure case
-  ///
-  /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
-  ///
-  /// let text: &str = "";
-  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
-  ///
-  /// let parser: Parser<char, ()> = end();
-  ///
-  /// let result: ParseResult<char, ()> = parser.parse(&input);
-  ///
-  /// assert!(result.is_success());
-  /// assert_eq!(result.success().unwrap(), ());
   /// ```
   pub fn end<'a, I>() -> Parser<'a, I, ()>
   where
@@ -337,8 +319,6 @@ pub mod prelude {
   ///
   /// # Example(例)
   ///
-  /// ## Success case
-  ///
   /// ```rust
   /// use oni_comb_parser_rs::prelude::*;
   ///
@@ -351,22 +331,6 @@ pub mod prelude {
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), &input[0]);
-  /// ```
-  ///
-  /// ## Failure case
-  ///
-  /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
-  ///
-  /// let text: &str = "x";
-  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
-  ///
-  /// let parser: Parser<char, &char> = elm_ref('a');
-  ///
-  /// let result: ParseResult<char, &char> = parser.parse(&input);
-  ///
-  /// assert!(result.is_failure());
-  /// assert!(result.failure().unwrap().is_mismatch());
   /// ```
   pub fn elm_ref<'a, I>(element: I) -> Parser<'a, I, &'a I>
   where
@@ -382,8 +346,6 @@ pub mod prelude {
   ///
   /// # Example
   ///
-  /// ## Success case
-  ///
   /// ```rust
   /// use oni_comb_parser_rs::prelude::*;
   ///
@@ -396,22 +358,6 @@ pub mod prelude {
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), input[0]);
-  /// ```
-  ///
-  /// ## Failure case
-  ///
-  /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
-  ///
-  /// let text: &str = "x";
-  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
-  ///
-  /// let parser: Parser<char, char> = elm('a');
-  ///
-  /// let result: ParseResult<char, char> = parser.parse(&input);
-  ///
-  /// assert!(result.is_failure());
-  /// assert!(result.failure().unwrap().is_mismatch());
   /// ```
   pub fn elm<'a, I>(element: I) -> Parser<'a, I, I>
   where
@@ -426,8 +372,6 @@ pub mod prelude {
   ///
   /// # Example
   ///
-  /// ## Success case
-  ///
   /// ```rust
   /// use oni_comb_parser_rs::prelude::*;
   ///
@@ -440,22 +384,6 @@ pub mod prelude {
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), &input[0]);
-  /// ```
-  ///
-  /// ## Failure case
-  ///
-  /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
-  ///
-  /// let text: &str = "x";
-  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
-  ///
-  /// let parser: Parser<char, &char> = elm_pred_ref(|c| *c == 'a');
-  ///
-  /// let result: ParseResult<char, &char> = parser.parse(&input);
-  ///
-  /// assert!(result.is_failure());
-  /// assert!(result.failure().unwrap().is_mismatch());
   /// ```
   pub fn elm_pred_ref<'a, I, F>(f: F) -> Parser<'a, I, &'a I>
   where
@@ -487,22 +415,6 @@ pub mod prelude {
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), input[0]);
   /// ```
-  ///
-  /// ## Failure case
-  ///
-  /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
-  ///
-  /// let text: &str = "x";
-  /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
-  ///
-  /// let parser: Parser<char, char> = elm_pred(|c| *c == 'a');
-  ///
-  /// let result: ParseResult<char, char> = parser.parse(&input);
-  ///
-  /// assert!(result.is_failure());
-  /// assert!(result.failure().unwrap().is_mismatch());
-  /// ```
   pub fn elm_pred<'a, I, F>(f: F) -> Parser<'a, I, I>
   where
     F: Fn(&I) -> bool + 'a,
@@ -517,8 +429,6 @@ pub mod prelude {
   /// - set: 要素の集合
   ///
   /// # Example
-  ///
-  /// ## Success case
   ///
   /// ```rust
   /// use std::iter::FromIterator;
@@ -546,6 +456,23 @@ pub mod prelude {
   ///
   /// - set: element of sets
   /// - set: 要素の集合
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "xyz";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_of("xyz").of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_of<'a, I, S>(set: &'a S) -> Parser<'a, I, I>
   where
     I: PartialEq + Display + Clone + Debug + 'a,
@@ -561,6 +488,23 @@ pub mod prelude {
   ///
   /// - start: 開始要素
   /// - end: 終了要素
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "xyz";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_in_ref('x', 'z').of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_in_ref<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
@@ -575,6 +519,23 @@ pub mod prelude {
   ///
   /// - start: 開始要素
   /// - end: 終了要素
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "xyz";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_in('x', 'z').of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_in<'a, I>(start: I, end: I) -> Parser<'a, I, I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
@@ -589,6 +550,23 @@ pub mod prelude {
   ///
   /// - start: 開始要素
   /// - end: 終了要素, end - 1の要素まで処理
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "wxy";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_from_until_ref('w', 'z').of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_from_until_ref<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
@@ -603,6 +581,23 @@ pub mod prelude {
   ///
   /// - start: 開始要素
   /// - end: 終了要素, end - 1の要素まで処理
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "wxy";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_from_until('w', 'z').of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_from_until<'a, I>(start: I, end: I) -> Parser<'a, I, I>
   where
     I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
@@ -614,6 +609,23 @@ pub mod prelude {
   ///
   /// - set: a element of sets
   /// - set: 要素の集合
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "xyz";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = none_ref_of("abc").of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn none_ref_of<'a, I, S>(set: &'a S) -> Parser<'a, I, &'a I>
   where
     I: PartialEq + Display + Debug + 'a,
@@ -626,6 +638,23 @@ pub mod prelude {
   ///
   /// - set: an element of sets
   /// - set: 要素の集合
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "xyz";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = none_of("abc").of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn none_of<'a, I, S>(set: &'a S) -> Parser<'a, I, I>
   where
     I: PartialEq + Display + Clone + Debug + 'a,
@@ -635,6 +664,23 @@ pub mod prelude {
 
   /// Returns a [Parser] that parses the space (' ', '\t'). (for reference)<br/>
   /// スペース(' ', '\t')を解析する[Parser]を返します。(参照版)
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "   ";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_space_ref().of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_space_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
@@ -643,6 +689,23 @@ pub mod prelude {
 
   /// Returns a [Parser] that parses the space (' ', '\t').<br/>
   /// スペース(' ', '\t')を解析する[Parser]を返します。
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "   ";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_space().of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_space<'a, I>() -> Parser<'a, I, I>
   where
     I: Element + Clone + PartialEq + 'a, {
@@ -651,6 +714,23 @@ pub mod prelude {
 
   /// Returns a [Parser] that parses spaces containing newlines (' ', '\t', '\n', '\r'). (for reference)<br/>
   /// 改行を含むスペース(' ', '\t', '\n', '\r')を解析する[Parser]を返します。(参照版)
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = " \n ";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_multi_space_ref().of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_multi_space_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
@@ -659,6 +739,23 @@ pub mod prelude {
 
   /// Returns a [Parser] that parses spaces containing newlines (' ', '\t', '\n', '\r').<br/>
   /// 改行を含むスペース(' ', '\t', '\n', '\r')を解析する[Parser]を返します。
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = " \n ";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_multi_space().of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_multi_space<'a, I>() -> Parser<'a, I, I>
   where
     I: Element + Clone + PartialEq + 'a, {
@@ -667,6 +764,23 @@ pub mod prelude {
 
   /// Returns a [Parser] that parses alphabets ('A'..='Z', 'a'..='z').(for reference)<br/>
   /// 英字('A'..='Z', 'a'..='z')を解析する[Parser]を返します。(参照版)
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "abcxyz";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_alpha_ref().of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_alpha_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
@@ -675,6 +789,23 @@ pub mod prelude {
 
   /// Returns a [Parser] that parses alphabets ('A'..='Z', 'a'..='z').<br/>
   /// 英字('A'..='Z', 'a'..='z')を解析する[Parser]を返します。
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "abcxyz";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_alpha().of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_alpha<'a, I>() -> Parser<'a, I, I>
   where
     I: Element + Clone + PartialEq + 'a, {
@@ -683,6 +814,23 @@ pub mod prelude {
 
   /// Returns a [Parser] that parses alphabets and digits ('0'..='9', 'A'..='Z', 'a'..='z').(for reference)<br/>
   /// 英数字('0'..='9', 'A'..='Z', 'a'..='z')を解析する[Parser]を返します。(参照版)
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "abc0123xyz";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_alpha_digit_ref().of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_alpha_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
@@ -691,6 +839,23 @@ pub mod prelude {
 
   /// Returns a [Parser] that parses alphabets and digits ('0'..='9', 'A'..='Z', 'a'..='z').<br/>
   /// 英数字('0'..='9', 'A'..='Z', 'a'..='z')を解析する[Parser]を返します。
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "abc0123xyz";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_alpha_digit().of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_alpha_digit<'a, I>() -> Parser<'a, I, I>
   where
     I: Element + Clone + PartialEq + 'a, {
@@ -780,8 +945,6 @@ pub mod prelude {
   ///
   /// # Example
   ///
-  /// ## Success case
-  ///
   /// ```rust
   /// use oni_comb_parser_rs::prelude::*;
   ///
@@ -794,23 +957,6 @@ pub mod prelude {
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), "abc");
-  /// ```
-  ///
-  /// ## Failure case
-  ///
-  ///
-  /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
-  ///
-  /// let text: &str = "defabc";
-  /// let input = text.chars().collect::<Vec<_>>();
-  ///
-  /// let parser: Parser<char, &str> = tag("abc");
-  ///
-  /// let result: ParseResult<char, &str> = parser.parse(&input);
-  ///
-  /// assert!(result.is_failure());
-  /// assert!(result.failure().unwrap().is_mismatch());
   /// ```
   #[inline(always)]
   pub fn tag<'a, 'b>(tag: &'b str) -> Parser<'a, char, &'a str>
