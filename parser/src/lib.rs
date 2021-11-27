@@ -864,6 +864,23 @@ pub mod prelude {
 
   /// Returns a [Parser] that parses digits ('0'..='9').(for reference)<br/>
   /// 数字('0'..='9')を解析する[Parser]を返します。(参照版)
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "0123456789";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_digit_ref().of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
@@ -872,6 +889,23 @@ pub mod prelude {
 
   /// Returns a [Parser] that parses digits ('0'..='9').<br/>
   /// 数字('0'..='9')を解析する[Parser]を返します。
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "0123456789";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_digit().of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_digit<'a, I>() -> Parser<'a, I, I>
   where
     I: Element + Clone + PartialEq + 'a, {
@@ -880,6 +914,23 @@ pub mod prelude {
 
   /// Returns a [Parser] that parses digits ('1'..='9').(for reference)<br/>
   /// 数字('1'..='9')を解析する[Parser]を返します。(参照版)
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "123456789";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_digit().of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_digit_1_9_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
@@ -888,6 +939,23 @@ pub mod prelude {
 
   /// Returns a [Parser] that parses digits ('1'..='9').<br/>
   /// 数字('1'..='9')を解析する[Parser]を返します。
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "123456789";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_digit_1_9().of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_digit_1_9<'a, I>() -> Parser<'a, I, I>
   where
     I: Element + Clone + PartialEq + 'a, {
@@ -896,6 +964,23 @@ pub mod prelude {
 
   /// Returns a [Parser] that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f').(for reference)<br/>
   /// 16進の数字('0'..='9', 'A'..='F', 'a'..='f')を解析する[Parser]を返します。(参照版)
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "0123456789ABCDEFabcdef";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_hex_digit_ref().of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_hex_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
@@ -904,6 +989,23 @@ pub mod prelude {
 
   /// Returns a [Parser] that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f').<br/>
   /// 16進の数字('0'..='9', 'A'..='F', 'a'..='f')を解析する[Parser]を返します。
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "0123456789ABCDEFabcdef";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_hex_digit().of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_hex_digit<'a, I>() -> Parser<'a, I, I>
   where
     I: Element + Clone + PartialEq + 'a, {
@@ -912,6 +1014,23 @@ pub mod prelude {
 
   /// Returns a [Parser] that parses oct digits ('0'..='8').(for reference)<br/>
   /// 8進の数字('0'..='8')を解析する[Parser]を返します。(参照版)
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "012345678";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_oct_digit_ref().of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_oct_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a, {
@@ -920,6 +1039,23 @@ pub mod prelude {
 
   /// Returns a [Parser] that parses oct digits ('0'..='8').<br/>
   /// 8進の数字('0'..='8')を解析する[Parser]を返します。
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "012345678";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = elm_oct_digit().of_many1().map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn elm_oct_digit<'a, I>() -> Parser<'a, I, I>
   where
     I: Element + PartialEq + Clone + 'a, {
@@ -928,8 +1064,25 @@ pub mod prelude {
 
   // --- Elements Parsers ---
 
-  /// Returns a [Parser] that parses a sequence of elements.
+  /// Returns a [Parser] that parses a sequence of elements.<br/>
   /// 要素の列を解析する[Parser]を返す。
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "abc";
+  /// let input = text.as_bytes();
+  ///
+  /// let parser: Parser<u8, &str> = seq(b"abc").collect().map_res(std::str::from_utf8);
+  ///
+  /// let result: ParseResult<u8, &str> = parser.parse(input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), text);
+  /// ```
   pub fn seq<'a, 'b, I>(seq: &'b [I]) -> Parser<'a, I, &'a [I]>
   where
     I: PartialEq + Debug + 'a,
@@ -937,7 +1090,7 @@ pub mod prelude {
     ParsersImpl::seq(seq)
   }
 
-  /// Returns a [Parser] that parses a string.
+  /// Returns a [Parser] that parses a string.<br/>
   /// 文字列を解析する[Parser]を返す。
   ///
   /// - tag: a string
@@ -958,24 +1111,86 @@ pub mod prelude {
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), "abc");
   /// ```
-  #[inline(always)]
   pub fn tag<'a, 'b>(tag: &'b str) -> Parser<'a, char, &'a str>
   where
     'b: 'a, {
     ParsersImpl::tag(tag)
   }
 
-  #[inline(always)]
+  /// Returns a [Parser] that parses a string. However, it is not case-sensitive.<br/>
+  /// 文字列を解析する[Parser]を返す。ただし大文字小文字を区別しない。
+  ///
+  /// - tag: a string
+  /// - tag: 文字列
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "abcdef";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, &str> = tag("abc");
+  ///
+  /// let result: ParseResult<char, &str> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), "abc");
+  /// ```
   pub fn tag_no_case<'a, 'b>(tag: &'b str) -> Parser<'a, char, &'a str>
   where
     'b: 'a, {
     ParsersImpl::tag_no_case(tag)
   }
 
+  /// Returns a [Parser] that parses a string that match a regular expression.<br/>
+  /// 正規表現に合致する文字列を解析する[Parser]を返す。
+  ///
+  /// - pattern: a regular expression
+  /// - pattern: 正規表現
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "abcdef";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, &str> = tag("abc");
+  ///
+  /// let result: ParseResult<char, &str> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), "abc");
+  /// ```
   pub fn regex<'a>(pattern: &str) -> Parser<'a, char, String> {
     ParsersImpl::regex(pattern)
   }
 
+  /// Returns a [Parser] that returns an element of the specified length.<br/>
+  /// 指定された長さの要素を返す[Parser]を返す。
+  ///
+  /// - n: Length of the reading element
+  /// - n: 読む要素の長さ
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  /// use oni_comb_parser_rs::prelude::CollectParser;
+  ///
+  /// let text: &str = "abcdef";
+  /// let input = text.as_bytes();
+  ///
+  /// let parser: Parser<u8, &str> = take(3).collect().map_res(std::str::from_utf8);
+  ///
+  /// let result: ParseResult<u8, &str> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), "abc");
+  /// ```
   pub fn take<'a, I>(n: usize) -> Parser<'a, I, &'a [I]> {
     ParsersImpl::take(n)
   }
