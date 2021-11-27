@@ -35,7 +35,7 @@ impl TakenParsers for ParsersImpl {
         index += 1;
       }
       match start {
-        Some(s) => ParseResult::successful(&input[s..s + len], 0),
+        Some(s) => ParseResult::successful(&input[s..s + len], len),
         None => ParseResult::successful(parse_state.slice_with_len(0), 0),
       }
     })

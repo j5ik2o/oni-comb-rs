@@ -118,8 +118,11 @@ impl Parsers for ParsersImpl {
     B: Clone + 'a, {
     Parser::new(move |parse_state| match parser.run(parse_state) {
       ParseResult::Success { value: a, length } => ParseResult::Success { value: f(a), length },
-      ParseResult::Failure { error, committed_status } => ParseResult::failed(error, committed_status),
+      ParseResult::Failure {
+        error,
+        committed_status,
+      } => ParseResult::failed(error, committed_status),
     })
-    //Self::flat_map(parser, move |e| Self::successful(f(e)))
+    // Self::flat_map(parser, move |e| Self::successful(f(e)))
   }
 }

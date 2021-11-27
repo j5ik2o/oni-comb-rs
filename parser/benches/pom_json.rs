@@ -70,7 +70,7 @@ fn boolean<'a>() -> Parser<'a, char, bool> {
 
 fn value<'a>() -> Parser<'a, char, JsonValue> {
   (tag("null").map(|_| JsonValue::Null)
-      | boolean().map(|b| JsonValue::Bool(b))
+    | boolean().map(|b| JsonValue::Bool(b))
     | number().map(|num| JsonValue::Num(num))
     | string().map(|text| JsonValue::Str(text))
     | array().map(|arr| JsonValue::Array(arr))

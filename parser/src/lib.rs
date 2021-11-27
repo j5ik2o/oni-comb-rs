@@ -1158,9 +1158,9 @@ pub mod prelude {
   /// let text: &str = "abcdef";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: Parser<char, &str> = tag("abc");
+  /// let parser: Parser<char, String> = regex("[abc]+");
   ///
-  /// let result: ParseResult<char, &str> = parser.parse(&input);
+  /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), "abc");
@@ -1178,15 +1178,15 @@ pub mod prelude {
   /// # Example
   ///
   /// ```rust
+  /// use std::iter::FromIterator;
   /// use oni_comb_parser_rs::prelude::*;
-  /// use oni_comb_parser_rs::prelude::CollectParser;
   ///
   /// let text: &str = "abcdef";
-  /// let input = text.as_bytes();
+  /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: Parser<u8, &str> = take(3).collect().map_res(std::str::from_utf8);
+  /// let parser: Parser<char, String> = take(3).map(String::from_iter);
   ///
-  /// let result: ParseResult<u8, &str> = parser.parse(&input);
+  /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), "abc");
@@ -1195,6 +1195,25 @@ pub mod prelude {
     ParsersImpl::take(n)
   }
 
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "abcdef";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = take_while0(|e| match *e {
+  ///  'a'..='c' => true,
+  ///   _ => false
+  /// }).map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), "abc");
+  /// ```
   pub fn take_while0<'a, I, F>(f: F) -> Parser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
