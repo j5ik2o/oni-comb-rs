@@ -1195,6 +1195,12 @@ pub mod prelude {
     ParsersImpl::take(n)
   }
 
+  /// クロージャの結果が真である間は要素を返す[Parser]を返す。<br/>
+  /// Returns a [Parser] that returns elements, while the result of the closure is true.
+  ///
+  /// 解析結果の長さは必須ではありません。<br/>
+  /// The length of the analysis result is not required.
+  ///
   /// # Example
   ///
   /// ```rust
@@ -1214,6 +1220,24 @@ pub mod prelude {
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), "abc");
   /// ```
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "def";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = take_while0(|e| match *e {
+  ///  'a'..='c' => true,
+  ///   _ => false
+  /// }).map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), "");
+  /// ```
   pub fn take_while0<'a, I, F>(f: F) -> Parser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
@@ -1221,6 +1245,49 @@ pub mod prelude {
     ParsersImpl::take_while0(f)
   }
 
+  /// クロージャの結果が真である間は要素を返す[Parser]を返す。<br/>
+  /// Returns a [Parser] that returns elements, while the result of the closure is true.
+  ///
+  /// 解析結果の長さは1要素以上必要です。<br/>
+  /// The length of the analysis result must be at least one element.
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "abcdef";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = take_while1(|e| match *e {
+  ///  'a'..='c' => true,
+  ///   _ => false
+  /// }).map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), "abc");
+  /// ```
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "def";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, String> = take_while1(|e| match *e {
+  ///  'a'..='c' => true,
+  ///   _ => false
+  /// }).map(String::from_iter);
+  ///
+  /// let result: ParseResult<char, String> = parser.parse(&input);
+  ///
+  /// assert!(result.is_failure());
+  /// assert_eq!(result.failure().unwrap(), ParseError::of_in_complete());
+  /// ```
   pub fn take_while1<'a, I, F>(f: F) -> Parser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
@@ -1228,6 +1295,7 @@ pub mod prelude {
     ParsersImpl::take_while1(f)
   }
 
+  /// クロージャの結果が真である間は要素を返す[Parser]を返す。<br/>
   pub fn take_while_n_m<'a, I, F>(n: usize, m: usize, f: F) -> Parser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,

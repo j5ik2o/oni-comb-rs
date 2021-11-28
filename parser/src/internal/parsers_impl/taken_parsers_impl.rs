@@ -60,7 +60,7 @@ impl TakenParsers for ParsersImpl {
         index += 1;
       }
       match start {
-        Some(s) => ParseResult::successful(&input[s..s + len], 0),
+        Some(s) => ParseResult::successful(&input[s..s + len], len),
         None => ParseResult::failed_with_uncommitted(ParseError::of_in_complete()),
       }
     })
@@ -88,7 +88,7 @@ impl TakenParsers for ParsersImpl {
         Some(s) => {
           let str = &input[s..s + len];
           if n <= str.len() && str.len() <= m {
-            ParseResult::successful(str, 0)
+            ParseResult::successful(str, len)
           } else {
             ParseResult::failed_with_uncommitted(ParseError::of_in_complete())
           }
