@@ -232,10 +232,11 @@ pub mod prelude {
     ParsersImpl::failed(value, CommittedStatus::Uncommitted)
   }
 
-  /// Returns a Parser that represents the result of the failed parsing.<br/>
-  /// 失敗した解析結果を表すParserを返します。
+  /// Returns a [Parser] that represents the result of the failed parsing.<br/>
+  /// 失敗した解析結果を表す[Parser]を返します。
   ///
   /// - f: 失敗した解析結果を返すクロージャ
+  /// - f: Closure that returns failed analysis results.
   ///
   /// # Example
   ///
@@ -365,7 +366,7 @@ pub mod prelude {
     ParsersImpl::elm(element)
   }
 
-  /// Returns a parser that parses the elements that satisfy the specified closure conditions.(for reference)<br/>
+  /// Returns a [Parser] that parses the elements that satisfy the specified closure conditions.(for reference)<br/>
   /// 指定されたクロージャの条件を満たす要素を解析する[Parser]を返します。(参照版)
   ///
   /// - f: Closure(クロージャ)
@@ -392,7 +393,7 @@ pub mod prelude {
     ParsersImpl::elm_pred_ref(f)
   }
 
-  /// Returns a parser that parses the elements that satisfy the specified closure conditions.<br/>
+  /// Returns a [Parser] that parses the elements that satisfy the specified closure conditions.<br/>
   /// 指定されたクロージャの条件を満たす要素を解析するパーサーを返します。
   ///
   /// - f: closure
