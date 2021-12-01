@@ -113,10 +113,11 @@ impl TakenParsers for ParsersImpl {
         }
         index += 1;
       }
-      if !b {
-        ParseResult::successful(parse_state.slice_with_len(0), 0)
-      } else {
+      if b {
         ParseResult::successful(parse_state.slice_with_len(index + 1), index + 1)
+      } else {
+        let input = parse_state.input();
+        ParseResult::successful(input, input.len())
       }
     })
   }
@@ -136,10 +137,10 @@ impl TakenParsers for ParsersImpl {
         }
         index += 1;
       }
-      if !b {
-        ParseResult::failed_with_uncommitted(ParseError::of_in_complete())
-      } else {
+      if b {
         ParseResult::successful(parse_state.slice_with_len(index + 1), index + 1)
+      } else {
+        ParseResult::failed_with_uncommitted(ParseError::of_in_complete())
       }
     })
   }
