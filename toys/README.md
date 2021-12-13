@@ -41,3 +41,4 @@ fn main() {
 
 - https://github.com/kmizu/toys
 - https://github.com/yuk1ty/toy-lang
+- https://github.com/pione30/toysrust
