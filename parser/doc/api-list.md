@@ -48,5 +48,7 @@
 | elm_digit_1_9 | Returns a Parser that parses digits ('1'..='9'). |
 | elm_hex_digit_ref | Returns a Parser that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f').(for reference) |
 | elm_hex_digit | Returns a Parser that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f'). |
+| elm_oct_digit_ref | Returns a Parser that parses oct digits ('0'..='8').(for reference) |
+| elm_oct_digit | Returns a Parser that parses oct digits ('0'..='8'). |
 
 ## combinators
