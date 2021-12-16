@@ -30,5 +30,11 @@
 | elm_of | Returns a Parser that parses the elements in the specified set. |
 | elm_in_ref | Returns a Parser that parses the elements in the specified range. (for reference) |
 | elm_in | Returns a Parser that parses the elements in the specified range. |
+| elm_from_until_ref | Returns a Parser that parses the elements in the specified range. (for reference) |
+| elm_from_until | Returns a Parser that parses the elements in the specified range. |
+| none_ref_of | Returns a Parser that parses elements that do not contain elements of the specified set.(for reference) |
+| none_of | Returns a Parser that parses elements that do not contain elements of the specified set. |
+| elm_space_ref | Returns a Parser that parses the space (' ', '\t'). (for reference) |
+| elm_space | Returns a Parser that parses the space (' ', '\t'). |
 
 ## combinators
