@@ -2,7 +2,7 @@
 
 ## factory methods
 
-### base
+### core
 
 | parser | description |
 | ------------- | ------------- |
@@ -36,5 +36,17 @@
 | none_of | Returns a Parser that parses elements that do not contain elements of the specified set. |
 | elm_space_ref | Returns a Parser that parses the space (' ', '\t'). (for reference) |
 | elm_space | Returns a Parser that parses the space (' ', '\t'). |
+| elm_multi_space_ref | Returns a Parser that parses spaces containing newlines (' ', '\t', '\n', '\r'). (for reference) |
+| elm_multi_space | Returns a Parser that parses spaces containing newlines (' ', '\t', '\n', '\r'). |
+| elm_alpha_ref | Returns a Parser that parses alphabets ('A'..='Z', 'a'..='z').(for reference) |
+| elm_alpha | Returns a Parser that parses alphabets ('A'..='Z', 'a'..='z'). |
+| elm_alpha_digit_ref | Returns a Parser that parses alphabets and digits ('0'..='9', 'A'..='Z', 'a'..='z').(for reference) |
+| elm_alpha_digit | Returns a Parser that parses alphabets and digits ('0'..='9', 'A'..='Z', 'a'..='z'). |
+| elm_digit_ref | Returns a Parser that parses digits ('0'..='9').(for reference) |
+| elm_digit | Returns a Parser that parses digits ('0'..='9'). |
+| elm_digit_1_9_ref | Returns a Parser that parses digits ('1'..='9').(for reference) |
+| elm_digit_1_9 | Returns a Parser that parses digits ('1'..='9'). |
+| elm_hex_digit_ref | Returns a Parser that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f').(for reference) |
+| elm_hex_digit | Returns a Parser that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f'). |
 
 ## combinators
