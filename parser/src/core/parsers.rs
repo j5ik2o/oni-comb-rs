@@ -51,6 +51,6 @@ pub trait Parsers {
   fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> B + 'a,
-    A: Clone + 'a,
+    A: 'a,
     B: Clone + 'a;
 }
