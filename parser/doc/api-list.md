@@ -50,5 +50,15 @@
 | elm_hex_digit | Returns a Parser that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f'). |
 | elm_oct_digit_ref | Returns a Parser that parses oct digits ('0'..='8').(for reference) |
 | elm_oct_digit | Returns a Parser that parses oct digits ('0'..='8'). |
+| seq | Returns a [Parser] that parses a sequence of elements. |
+| tag | Returns a [Parser] that parses a string. |
+| tag_no_case | Returns a [Parser] that parses a string. However, it is not case-sensitive. |
+| regex | Returns a [Parser] that parses a string that match a regular expression. |
+| take | Returns a [Parser] that returns an element of the specified length. |
+| take_while0 | Returns a [Parser] that returns elements, while the result of the closure is true. The length of the analysis result is not required. |
+| take_while1 | Returns a [Parser] that returns elements, while the result of the closure is true. The length of the analysis result must be at least one element. |
+| take_while_n_m | Returns a [Parser] that returns elements, while the result of the closure is true. The length of the analysis result should be between n and m elements. |
+| take_till0 |  Returns a [Parser] that returns a sequence up to either the end element or the element that matches the condition. The length of the analysis result must be at least one element. |
+| take_till1 | Returns a [Parser] that returns a sequence up to either the end element or the element that matches the condition. The length of the analysis result must be at least one element. |
 
 ## combinators
