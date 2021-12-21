@@ -91,28 +91,31 @@
 | parse | |
 | run | |
 
-### extension
+### logging
 
 | combinator | description |
 | ------------- | ------------- |
-| cache | |
-| collect | |
-| map_res | |
-| discard | |
 | log | |
 | debug | |
 | info | |
 | warn | |
 | error | |
 | name | |
+
+### offset
+
+| combinator | description |
+| ------------- | ------------- |
 | last_offset | |
 | next_offset | |
+
+### operator
+
 | and_then | |
 | or | |
 | exists | |
 | not | |
 | opt | |
-| attempt | |
 | scan_right1 | |
 | chain_right0 | |
 | chain_left0 | |
@@ -120,7 +123,15 @@
 | chain_left1 | |
 | rest_right1 | |
 | rest_left1 | |
-| peek | |
+
+### skip
+
+| skip_left | |
+| skip_right | |
+| surround | |
+
+### repeat
+
 | repeat | |
 | of_many0 | |
 | of_many1 | |
@@ -131,6 +142,17 @@
 | of_many1_sep | |
 | of_many_n_m_sep | |
 | of_count_sep | |
-| skip_left | |
-| skip_right | |
-| surround | |
+
+### extension
+
+| combinator | description |
+| ------------- | ------------- |
+| cache | |
+| collect | |
+| map_res | |
+| discard | |
+| attempt | |
+| peek | |
+
+
+
