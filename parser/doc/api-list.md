@@ -83,3 +83,48 @@
 | flat_map | |
 | map | |
 | filter | |
+
+### parse
+
+| combinator | description |
+| ------------- | ------------- |
+| parse | |
+| run | |
+
+### extension
+
+| combinator | description |
+| ------------- | ------------- |
+| cache | |
+| collect | |
+| map_res | |
+| discard | |
+| log | |
+| debug | |
+| info | |
+| warn | |
+| error | |
+| name | |
+| last_offset | |
+| next_offset | |
+| and_then | |
+| or | |
+| exists | |
+| not | |
+| opt | |
+| attempt | |
+| scan_right1 | |
+| chain_right0 | |
+| chain_left0 | |
+| chain_right1 | |
+| chain_left1 | |
+| rest_right1 | |
+| rest_left1 | |
+
+
+
+
+
+
+
+
