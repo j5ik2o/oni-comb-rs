@@ -120,11 +120,17 @@
 | chain_left1 | |
 | rest_right1 | |
 | rest_left1 | |
-
-
-
-
-
-
-
-
+| peek | |
+| repeat | |
+| of_many0 | |
+| of_many1 | |
+| of_many_n_m | |
+| of_count | |
+| of_rep_sep | |
+| of_many0_sep | |
+| of_many1_sep | |
+| of_many_n_m_sep | |
+| of_count_sep | |
+| skip_left | |
+| skip_right | |
+| surround | |
