@@ -111,6 +111,8 @@
 
 ### operator
 
+| combinator | description |
+| ------------- | ------------- |
 | and_then | |
 | or | |
 | exists | |
@@ -126,12 +128,16 @@
 
 ### skip
 
+| combinator | description |
+| ------------- | ------------- |
 | skip_left | |
 | skip_right | |
 | surround | |
 
 ### repeat
 
+| combinator | description |
+| ------------- | ------------- |
 | repeat | |
 | of_many0 | |
 | of_many1 | |
