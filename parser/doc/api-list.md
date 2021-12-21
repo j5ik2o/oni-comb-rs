@@ -88,26 +88,8 @@
 | combinator | description |
 | ------------- | ------------- |
 | flat_map | |
-| map | |
 | filter | |
 
-### logging
-
-| combinator | description |
-| ------------- | ------------- |
-| log | |
-| debug | |
-| info | |
-| warn | |
-| error | |
-| name | |
-
-### offset
-
-| combinator | description |
-| ------------- | ------------- |
-| last_offset | |
-| next_offset | |
 
 ### binary operator
 
@@ -116,8 +98,8 @@
 | and_then | |
 | or | |
 
-### unary operator
 
+### unary operator
 
 | combinator | description |
 | ------------- | ------------- |
@@ -125,8 +107,14 @@
 | opt | |
 
 
-### chain operator
+### conversion
 
+| combinator | description |
+| ------------- | ------------- |
+| map | |
+| map_res | |
+
+### chain operator
 
 | combinator | description |
 | ------------- | ------------- |
@@ -161,17 +149,34 @@
 | of_many_n_m_sep | |
 | of_count_sep | |
 
-### extension
+### logging
 
 | combinator | description |
 | ------------- | ------------- |
-| exists | |
-| cache | |
+| log | |
+| debug | |
+| info | |
+| warn | |
+| error | |
+| name | |
+
+### offset
+
+| combinator | description |
+| ------------- | ------------- |
+| last_offset | |
+| next_offset | |
+
+### misc
+
+| combinator | description |
+| ------------- | ------------- |
 | collect | |
-| map_res | |
 | discard | |
 | attempt | |
 | peek | |
+| exists | |
+| cache | |
 
 
 
