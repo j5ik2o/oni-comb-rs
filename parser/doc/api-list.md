@@ -60,5 +60,8 @@
 | take_while_n_m | Returns a [Parser] that returns elements, while the result of the closure is true. The length of the analysis result should be between n and m elements. |
 | take_till0 |  Returns a [Parser] that returns a sequence up to either the end element or the element that matches the condition. The length of the analysis result must be at least one element. |
 | take_till1 | Returns a [Parser] that returns a sequence up to either the end element or the element that matches the condition. The length of the analysis result must be at least one element. |
+| skip | Returns a [Parser] that skips the specified number of elements. |
+| surround | |
+| lazy | |
 
 ## combinators
