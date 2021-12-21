@@ -16,7 +16,7 @@
 | failed_with_uncommit | Returns a Parser that returns failed parsing results and does not commit. |
 | failed_lazy | Returns a Parser that represents the result of the failed parsing. |
 
-### basic
+### for element
 
 | parser | description |
 | ------------- | ------------- |
@@ -50,18 +50,28 @@
 | elm_hex_digit | Returns a Parser that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f'). |
 | elm_oct_digit_ref | Returns a Parser that parses oct digits ('0'..='8').(for reference) |
 | elm_oct_digit | Returns a Parser that parses oct digits ('0'..='8'). |
-| seq | Returns a [Parser] that parses a sequence of elements. |
-| tag | Returns a [Parser] that parses a string. |
-| tag_no_case | Returns a [Parser] that parses a string. However, it is not case-sensitive. |
-| regex | Returns a [Parser] that parses a string that match a regular expression. |
-| take | Returns a [Parser] that returns an element of the specified length. |
-| take_while0 | Returns a [Parser] that returns elements, while the result of the closure is true. The length of the analysis result is not required. |
-| take_while1 | Returns a [Parser] that returns elements, while the result of the closure is true. The length of the analysis result must be at least one element. |
-| take_while_n_m | Returns a [Parser] that returns elements, while the result of the closure is true. The length of the analysis result should be between n and m elements. |
-| take_till0 |  Returns a [Parser] that returns a sequence up to either the end element or the element that matches the condition. The length of the analysis result must be at least one element. |
-| take_till1 | Returns a [Parser] that returns a sequence up to either the end element or the element that matches the condition. The length of the analysis result must be at least one element. |
-| skip | Returns a [Parser] that skips the specified number of elements. |
-| surround | |
-| lazy | |
+
+### for elements
+
+| parser | description |
+| ------------- | ------------- |
+| seq | Returns a Parser that parses a sequence of elements. |
+| tag | Returns a Parser that parses a string. |
+| tag_no_case | Returns a Parser that parses a string. However, it is not case-sensitive. |
+| regex | Returns a Parser that parses a string that match a regular expression. |
+| take | Returns a Parser that returns an element of the specified length. |
+| take_while0 | Returns a Parser that returns elements, while the result of the closure is true. The length of the analysis result is not required. |
+| take_while1 | Returns a Parser that returns elements, while the result of the closure is true. The length of the analysis result must be at least one element. |
+| take_while_n_m | Returns a Parser that returns elements, while the result of the closure is true. The length of the analysis result should be between n and m elements. |
+| take_till0 |  Returns a Parser that returns a sequence up to either the end element or the element that matches the condition. The length of the analysis result must be at least one element. |
+| take_till1 | Returns a Parser that returns a sequence up to either the end element or the element that matches the condition. The length of the analysis result must be at least one element. |
+
+### misc
+
+| parser | description |
+| ------------- | ------------- |
+| skip | Returns a Parser that skips the specified number of elements. |
+| surround | Returns a parser that parses three enumrated parsers and then discards the parsed results of the previous and next parsers. |
+| lazy | Returns a parser that delays the initialization and evaluation of the parser passed as argument. |
 
 ## combinators
