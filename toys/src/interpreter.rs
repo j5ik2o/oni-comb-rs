@@ -147,7 +147,7 @@ impl Interpreter {
           let mut i = 0;
           for formal_param_name in formal_params {
             let mut bindings = self.variable_environment.as_bindings().clone();
-            bindings.insert(name.clone(), values[i].clone());
+            bindings.insert(formal_param_name.clone(), values[i].clone());
             i += 1;
           }
           let result = self.interpret(body.clone());
