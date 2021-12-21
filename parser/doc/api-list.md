@@ -118,12 +118,18 @@
 
 ### unary operator
 
+
+| combinator | description |
+| ------------- | ------------- |
 | not | |
 | opt | |
 
 
 ### chain operator
 
+
+| combinator | description |
+| ------------- | ------------- |
 | scan_right1 | |
 | chain_right0 | |
 | chain_left0 | |
