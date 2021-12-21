@@ -14,20 +14,21 @@ use crate::parsers::program;
 
 fn main() {
   let source = r#"
-    fn fizz_buzz(i) {
-      if ((i % 3 == 0) && (i % 5 == 0)) {
+    fn fizz_buzz(n) {
+      if ((n % 3 == 0) && (n % 5 == 0)) {
         println("FizzBuzz");
-      } else if (i % 3 == 0) {
+      } else if (n % 3 == 0) {
         println("Fizz");
-      } else if (i % 5 == 0) {
+      } else if (n % 5 == 0) {
         println("Buzz");
       } else {
-        println(i);
+        println(n);
       }
     }
     fn main() {
       println("----");
       for (i in 1 to 100) {
+        n = i;
         fizz_buzz(i);
       }
       println("----");

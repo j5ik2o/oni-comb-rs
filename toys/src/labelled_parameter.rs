@@ -3,8 +3,8 @@ use std::rc::Rc;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct LabelledParameter {
-  name: String,
-  parameter: Rc<Expr>,
+  pub(crate) name: String,
+  pub(crate) parameter: Rc<Expr>,
 }
 
 impl LabelledParameter {

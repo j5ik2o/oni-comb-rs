@@ -84,29 +84,6 @@ impl Interpreter {
         let v = bindings_opt.unwrap().get(name).unwrap();
         v.clone()
       }
-      Expr::FunctionCall(name, actual_params) => {
-        if let Expr::FunctionDefinition(_def_name, formal_parmas, body) =
-          &*self.function_environment.get(name).unwrap().clone()
-        {
-          let values = actual_params
-            .iter()
-            .map(|actual_param| self.interpret(actual_param.clone()))
-            .collect::<Vec<_>>();
-          let backup = self.variable_environment.clone();
-          self.variable_environment = Environment::new(HashMap::new(), Some(Rc::new(backup.clone())));
-          let mut i = 0;
-          for formal_param_name in formal_parmas {
-            let mut bindings = self.variable_environment.as_bindings().clone();
-            bindings.insert(formal_param_name.clone(), values[i].clone());
-            i += 1;
-          }
-          let result = self.interpret(body.clone());
-          self.variable_environment = backup.clone();
-          result
-        } else {
-          panic!("Function {} not defined", name);
-        }
-      }
       Expr::Assignment(name, expr) => {
         let bindings_opt = self.variable_environment.find_binding(name);
         if bindings_opt.is_some() {
@@ -157,6 +134,52 @@ impl Interpreter {
           }
         }
         Value::Bool(true)
+      }
+      Expr::FunctionCall(name, actual_params) => {
+        if let Expr::FunctionDefinition(_, formal_params, body) = &*self.function_environment.get(name).unwrap().clone()
+        {
+          let values = actual_params
+            .iter()
+            .map(|actual_param| self.interpret(actual_param.clone()))
+            .collect::<Vec<_>>();
+          let backup = self.variable_environment.clone();
+          self.variable_environment = Environment::new(HashMap::new(), Some(Rc::new(backup.clone())));
+          let mut i = 0;
+          for formal_param_name in formal_params {
+            let mut bindings = self.variable_environment.as_bindings().clone();
+            bindings.insert(name.clone(), values[i].clone());
+            i += 1;
+          }
+          let result = self.interpret(body.clone());
+          self.variable_environment = backup.clone();
+          result
+        } else {
+          panic!("Function {} not defined", name);
+        }
+      }
+      Expr::LabelledCall(name, actual_params) => {
+        if let Expr::FunctionDefinition(_, _, body) = &*self.function_environment.get(name).unwrap().clone() {
+          let name_with_values = actual_params
+            .iter()
+            .map(|actual_param| {
+              (
+                actual_param.name.clone(),
+                self.interpret(actual_param.parameter.clone()),
+              )
+            })
+            .collect::<Vec<_>>();
+          let backup = self.variable_environment.clone();
+          self.variable_environment = Environment::new(HashMap::new(), Some(Rc::new(backup.clone())));
+          for (param_name, param_value) in name_with_values {
+            let mut bindings = self.variable_environment.as_bindings().clone();
+            bindings.insert(param_name, param_value);
+          }
+          let result = self.interpret(body.clone());
+          self.variable_environment = backup.clone();
+          result
+        } else {
+          panic!("Function {} not defined", name);
+        }
       }
       expr => panic!("must not reach here: {:?}", expr),
     }
