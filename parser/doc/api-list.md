@@ -76,6 +76,13 @@
 
 ## combinators
 
+### parse
+
+| combinator | description |
+| ------------- | ------------- |
+| parse | |
+| run | |
+
 ### core
 
 | combinator | description |
@@ -83,13 +90,6 @@
 | flat_map | |
 | map | |
 | filter | |
-
-### parse
-
-| combinator | description |
-| ------------- | ------------- |
-| parse | |
-| run | |
 
 ### logging
 
@@ -109,15 +109,21 @@
 | last_offset | |
 | next_offset | |
 
-### operator
+### binary operator
 
 | combinator | description |
 | ------------- | ------------- |
 | and_then | |
 | or | |
-| exists | |
+
+### unary operator
+
 | not | |
 | opt | |
+
+
+### chain operator
+
 | scan_right1 | |
 | chain_right0 | |
 | chain_left0 | |
@@ -153,6 +159,7 @@
 
 | combinator | description |
 | ------------- | ------------- |
+| exists | |
 | cache | |
 | collect | |
 | map_res | |
