@@ -75,3 +75,11 @@
 | lazy | Returns a parser that delays the initialization and evaluation of the parser passed as argument. |
 
 ## combinators
+
+### core
+
+| combinator | description |
+| ------------- | ------------- |
+| flat_map | |
+| map | |
+| filter | |
