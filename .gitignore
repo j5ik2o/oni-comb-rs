@@ -3,3 +3,4 @@
 *.iml
 
 Cargo.lock
+.DS_Store
