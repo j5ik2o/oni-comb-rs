@@ -1,7 +1,9 @@
+cargo-features = ["edition2021"]
+
 [package]
 name = "oni-comb-uri-rs"
-version = "0.0.3"
-edition = "2018"
+version = "0.0.4"
+edition = "2021"
 description = "A Rust crate for uri parser"
 license = "MIT OR Apache-2.0"
 keywords = ["parser", "uri"]
@@ -12,7 +14,7 @@ repository = "https://github.com/j5ik2o/oni-comb-rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-oni-comb-parser-rs = { version = "0.0.4", path = "../parser" }
+oni-comb-parser-rs = { version = "0.0.5", path = "../parser" }
 
 [dev-dependencies]
 log = "0.4.14"

@@ -1,3 +1,4 @@
+#![warn(dead_code)]
 mod environment;
 mod expr;
 mod interpreter;

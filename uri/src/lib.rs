@@ -1,3 +1,4 @@
+#![warn(dead_code)]
 mod expr;
 pub mod models;
 mod parsers;
