@@ -10,8 +10,6 @@
 #![allow(unused_variables)]
 #![allow(dead_code)]
 
-use std::iter::FromIterator;
-
 use criterion::*;
 
 use crate::nom_json::nom_parse_json;

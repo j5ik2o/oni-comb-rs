@@ -1,3 +1,4 @@
+#![warn(dead_code)]
 #![feature(generic_associated_types)]
 #![feature(associated_type_defaults)]
 #![allow(incomplete_features)]

@@ -1,3 +1,4 @@
+#![warn(dead_code)]
 #![feature(box_patterns)]
 mod environment;
 mod evaluator;
