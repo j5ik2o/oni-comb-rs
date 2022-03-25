@@ -6,8 +6,8 @@ use crate::parsers::port_parsers::port;
 use crate::parsers::user_info_parsers::user_info;
 use oni_comb_parser_rs::prelude::*;
 
-pub fn authority<'a>() -> Parser<'a, char, Authority> {
-  ((user_info() - elm_ref('@')).opt() + host() + (elm_ref(':') * port()).opt())
+pub fn authority<'a>() -> Parser<'a, u8, Authority> {
+  ((user_info() - elm_ref(b'@')).opt() + host() + (elm_ref(b':') * port()).opt())
     .map(|((user_info, host_name), port)| Authority::new(host_name, port, user_info))
 }
 
@@ -64,8 +64,8 @@ mod tests {
     let prop = prop::for_all(authority_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, authority:string = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
-      let result = (authority() - end()).parse(&input).to_result();
+      let input = s.as_bytes();
+      let result = (authority() - end()).parse(input).to_result();
       let authority = result.unwrap();
       log::debug!("{:>03}, authority:object = {:?}", counter, authority);
       assert_eq!(authority.to_string(), s);

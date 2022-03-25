@@ -6,14 +6,14 @@ use crate::parsers::scheme_parsers::scheme;
 use oni_comb_parser_rs::prelude::*;
 
 //  absolute-URI  = scheme ":" hier-part [ "?" query ]
-pub fn absolute_uri<'a>() -> Parser<'a, char, Uri> {
-  ((scheme() - elm(':')) + hier_part() + (elm('?') * query()).opt()).map(|((a, b), c)| Uri::new(a, b, c, None))
+pub fn absolute_uri<'a>() -> Parser<'a, u8, Uri> {
+  ((scheme() - elm(b':')) + hier_part() + (elm(b'?') * query()).opt()).map(|((a, b), c)| Uri::new(a, b, c, None))
 }
 
 // URI = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
-pub fn uri<'a>() -> Parser<'a, char, Uri> {
-  ((scheme() - elm(':')) + hier_part() + (elm('?') * query()).opt() + (elm('#') * fragment()).opt())
-    .map(|(((a, b), c), d)| Uri::new(a, b, c, d))
+pub fn uri<'a>() -> Parser<'a, u8, Uri> {
+  ((scheme() - elm(b':')) + hier_part() + (elm(b'?') * query()).opt() + (elm(b'#') * fragment()).opt())
+    .map(|(((schema, hier_path), query), fragment)| Uri::new(schema, hier_path, query, fragment))
 }
 
 #[cfg(test)]
@@ -76,8 +76,8 @@ mod tests {
     let prop = prop::for_all(uri_gen, move |s| {
       counter += 1;
       log::debug!("{:>03}, uri:string = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
-      let uri = (uri() - end()).parse(&input).success().unwrap();
+      let input = s.as_bytes();
+      let uri = (uri() - end()).parse(input).success().unwrap();
       log::debug!("{:>03}, uri:object = {:?}", counter, uri);
       assert_eq!(uri.to_string(), s);
       true

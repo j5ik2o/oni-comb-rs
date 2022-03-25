@@ -3,11 +3,12 @@ use oni_comb_parser_rs::prelude::*;
 use std::iter::FromIterator;
 
 // fragment      = *( pchar / "/" / "?" )
-pub fn fragment<'a>() -> Parser<'a, char, String> {
-  (pchar() | elm_ref_of("/?").collect())
+pub fn fragment<'a>() -> Parser<'a, u8, String> {
+  (pchar() | elm_ref_of(b"/?").collect())
     .of_many0()
     .collect()
-    .map(String::from_iter)
+    .map(|e| e.to_vec())
+    .map_res(String::from_utf8)
     .name("fragment")
 }
 
@@ -54,11 +55,12 @@ mod tests {
     let prop = prop::for_all(fragment_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, fragment = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
+      let input = s.as_bytes();
       let result = (fragment() - end())
         .collect()
-        .map(String::from_iter)
-        .parse(&input)
+        .map(|e| e.to_vec())
+        .map_res(String::from_utf8)
+        .parse(input)
         .to_result();
       assert_eq!(result.unwrap(), s);
       true

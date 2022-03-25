@@ -4,7 +4,7 @@ use crate::models::path::Path;
 use crate::models::query::Query;
 use crate::models::scheme::Scheme;
 use crate::parsers::uri_parsers;
-use oni_comb_parser_rs::prelude::ParserRunner;
+use oni_comb_parser_rs::prelude::{ParseError, ParserRunner};
 use std::fmt::Formatter;
 
 pub type Fragment = String;
@@ -63,10 +63,8 @@ impl std::fmt::Display for Uri {
 }
 
 impl Uri {
-  pub fn parse(text: &str) -> Result<Uri, String> {
-    let input = text.chars().collect::<Vec<_>>();
-    let p = uri_parsers::uri().parse(&input).to_result();
-    p.map_err(|e| e.to_string())
+  pub fn parse(text: &str) -> Result<Uri, ParseError<u8>> {
+    uri_parsers::uri().parse(text.as_bytes()).to_result()
   }
 
   pub fn new(schema: Scheme, hier_path: Option<HierPart>, query: Option<Query>, fragment: Option<Fragment>) -> Self {
@@ -108,6 +106,10 @@ impl Uri {
 
   pub fn fragment(&self) -> Option<&Fragment> {
     self.fragment.as_ref()
+  }
+
+  pub fn is_absolute(&self) -> bool {
+    self.fragment.is_none()
   }
 }
 

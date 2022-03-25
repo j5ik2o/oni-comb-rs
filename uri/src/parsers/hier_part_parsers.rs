@@ -7,8 +7,8 @@ use oni_comb_parser_rs::prelude::*;
 //                / path-absolute
 //                / path-rootless
 //                / path-empty
-pub fn hier_part<'a>() -> Parser<'a, char, Option<HierPart>> {
-  let p1 = (tag("//") * authority() + path_abempty(true)).map(|(a, b)| HierPart::new(Some(a), b));
+pub fn hier_part<'a>() -> Parser<'a, u8, Option<HierPart>> {
+  let p1 = (seq(b"//") * authority() + path_abempty(true)).map(|(a, b)| HierPart::new(Some(a), b));
   let p2 = (path_abempty(true).attempt() | path_rootless()).map(|e| HierPart::of_path(e));
   (p1.attempt() | p2).opt()
 }
@@ -64,8 +64,8 @@ mod tests {
     let prop = prop::for_all(hier_part_gen(), move |Pair(s, _b)| {
       counter += 1;
       log::debug!("{:>03}, hier_part:string = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
-      let result = (hier_part() - end()).parse(&input).to_result();
+      let input = s.as_bytes();
+      let result = (hier_part() - end()).parse(input).to_result();
       let hier_port = result.unwrap();
       log::debug!("{:>03}, hier_part:object = {:?}", counter, hier_port);
       assert_eq!(hier_port.map(|e| e.to_string()).unwrap_or("".to_string()), s);

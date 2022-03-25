@@ -7,35 +7,37 @@ use crate::parsers::ip_v4_address_parsers::ip_v4_address;
 use crate::parsers::ip_v6_address_parsers::ip_v6_address;
 
 // host          = IP-literal / IPv4address / reg-name
-pub fn host<'a>() -> Parser<'a, char, HostName> {
+pub fn host<'a>() -> Parser<'a, u8, HostName> {
   (ip_literal().map(HostName::IpLiteral).attempt() | ip_v4_address().map(HostName::Ipv4Address).attempt() | reg_name())
     .name("host")
 }
 
 // IP-literal    = "[" ( IPv6address / IPvFuture  ) "]"
-pub fn ip_literal<'a>() -> Parser<'a, char, IpLiteral> {
-  (elm_ref('[') * (ip_v6_address().map(IpLiteral::Ipv6Address).attempt() | ip_v_future().map(IpLiteral::IpvFuture))
-    - elm_ref(']'))
+pub fn ip_literal<'a>() -> Parser<'a, u8, IpLiteral> {
+  (elm_ref(b'[') * (ip_v6_address().map(IpLiteral::Ipv6Address).attempt() | ip_v_future().map(IpLiteral::IpvFuture))
+    - elm_ref(b']'))
   .name("ip-literal")
 }
 
 // "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
-pub fn ip_v_future<'a>() -> Parser<'a, char, String> {
-  (elm_ref('v')
+pub fn ip_v_future<'a>() -> Parser<'a, u8, String> {
+  (elm_ref(b'v')
     + elm_hex_digit().of_many1()
-    + elm('.')
-    + (unreserved() | sub_delims() | elm_ref(':').collect()).of_many1())
+    + elm(b'.')
+    + (unreserved() | sub_delims() | elm_ref(b':').collect()).of_many1())
   .collect()
-  .map(String::from_iter)
+  .map(|e| e.to_vec())
+  .map_res(String::from_utf8)
   .name("ipv-future")
 }
 
 //  reg-name      = *( unreserved / pct-encoded / sub-delims )
-pub fn reg_name<'a>() -> Parser<'a, char, HostName> {
+pub fn reg_name<'a>() -> Parser<'a, u8, HostName> {
   (unreserved().attempt() | pct_encoded().attempt() | sub_delims())
     .of_many0()
     .collect()
-    .map(String::from_iter)
+    .map(|e| e.to_vec())
+    .map_res(String::from_utf8)
     .map(HostName::RegName)
     .name("reg-name")
 }
@@ -119,8 +121,8 @@ mod tests {
     let prop = prop::for_all(gens::ip_v_future_gen(), move |s| {
       counter += 1;
       log::debug!("{}, ip_v_future = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_v_future() - end()).parse(&input).to_result();
+      let input = s.as_bytes();
+      let result = (ip_v_future() - end()).parse(input).to_result();
       let ip_v_future = result.unwrap();
       log::debug!("{}, ip_v_future = {}", counter, ip_v_future);
       assert_eq!(ip_v_future.to_string(), s);
@@ -136,8 +138,8 @@ mod tests {
     let prop = prop::for_all(gens::reg_name_gen(), move |s| {
       counter += 1;
       log::debug!("{}, reg_name = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
-      let result = (reg_name() - end()).parse(&input).to_result();
+      let input = s.as_bytes();
+      let result = (reg_name() - end()).parse(input).to_result();
       let reg_name = result.unwrap();
       log::debug!("{}, reg_name = {}", counter, reg_name);
       assert_eq!(reg_name.to_string(), s);
@@ -153,8 +155,8 @@ mod tests {
     let prop = prop::for_all(gens::ip_literal_gen(), move |s| {
       counter += 1;
       log::debug!("{}, ip_literal = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
-      let result = (ip_literal() - end()).parse(&input).to_result();
+      let input = s.as_bytes();
+      let result = (ip_literal() - end()).parse(input).to_result();
       let ip_literal = result.unwrap();
       log::debug!("{}, ip_literal = {}", counter, ip_literal);
       assert_eq!(ip_literal.to_string(), s);
@@ -170,8 +172,8 @@ mod tests {
     let prop = prop::for_all(gens::host_gen(), move |s| {
       counter += 1;
       log::debug!("{}, host = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
-      let result = (host() - end()).parse(&input).to_result();
+      let input = s.as_bytes();
+      let result = (host() - end()).parse(input).to_result();
       let host_name = result.unwrap();
       log::debug!("{}, host = {}", counter, host_name);
       assert_eq!(host_name.to_string(), s);

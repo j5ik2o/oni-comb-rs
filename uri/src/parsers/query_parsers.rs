@@ -4,15 +4,16 @@ use oni_comb_parser_rs::prelude::*;
 use std::iter::FromIterator;
 
 //  query         = *( pchar / "/" / "?" )
-pub fn query<'a>() -> Parser<'a, char, Query> {
+pub fn query<'a>() -> Parser<'a, u8, Query> {
   let code_point = || {
-    (pchar_without_eq_amp() | elm_of("/?").collect())
+    (pchar_without_eq_amp() | elm_of(b"/?").collect())
       .of_many0()
       .collect()
-      .map(String::from_iter)
+      .map(|e| e.to_vec())
+      .map_res(String::from_utf8)
   };
-  let key_values = || (code_point() + (elm('=') * code_point()).opt());
-  (key_values() + (elm('&') * key_values()).of_many0()).map(|(a, b)| {
+  let key_values = || (code_point() + (elm(b'=') * code_point()).opt());
+  (key_values() + (elm(b'&') * key_values()).of_many0()).map(|(a, b)| {
     let mut m = vec![a];
     m.extend(b);
     Query::new(m)
@@ -85,8 +86,8 @@ mod tests {
     let prop = prop::for_all(pchar_without_eq_amp_gen(1, u8::MAX - 1), move |s| {
       counter += 1;
       log::debug!("{:>03}, query:string = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
-      let result = (query() - end()).parse(&input).to_result();
+      let input = s.as_bytes();
+      let result = (query() - end()).parse(input).to_result();
       let query = result.unwrap();
       log::debug!("{:>03}, query:object = {:?}", counter, query);
       assert_eq!(query.to_string(), s);
@@ -102,8 +103,8 @@ mod tests {
     let prop = prop::for_all(query_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, query:string = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
-      let result = (query() - end()).parse(&input).to_result();
+      let input = s.as_bytes();
+      let result = (query() - end()).parse(input).to_result();
       let query = result.unwrap();
       log::debug!("{:>03}, query:object = {:?}", counter, query);
       assert_eq!(query.to_string(), s);
