@@ -4,11 +4,12 @@ use oni_comb_parser_rs::prelude::*;
 use std::iter::FromIterator;
 
 //  userinfo      = *( unreserved / pct-encoded / sub-delims / ":" )
-pub fn user_info<'a>() -> Parser<'a, char, UserInfo> {
+pub fn user_info<'a>() -> Parser<'a, u8, UserInfo> {
   let p = || (unreserved().attempt() | pct_encoded().attempt() | sub_delims());
-  (p().of_many0().collect().map(String::from_iter) + (elm(':') * p().of_many1().collect().map(String::from_iter)).opt())
-    .map(|(user_name, password)| UserInfo::new(user_name, password))
-    .name("user_info")
+  (p().of_many0().collect().map(|e| e.to_vec()).map_res(String::from_utf8)
+    + (elm(b':') * p().of_many1().collect().map(|e| e.to_vec()).map_res(String::from_utf8)).opt())
+  .map(|(user_name, password)| UserInfo::new(user_name, password))
+  .name("user_info")
 }
 
 #[cfg(test)]
@@ -67,8 +68,8 @@ mod tests {
     let prop = prop::for_all(user_info_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, user_info:string = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
-      let result = (user_info() - end()).parse(&input).to_result();
+      let input = s.as_bytes();
+      let result = (user_info() - end()).parse(input).to_result();
       let user_info = result.unwrap();
       log::debug!("{:>03}, user_info:object = {:?}", counter, user_info);
       assert_eq!(user_info.to_string(), s);

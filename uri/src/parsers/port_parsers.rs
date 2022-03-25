@@ -1,10 +1,10 @@
 use oni_comb_parser_rs::prelude::*;
 use std::iter::FromIterator;
 
-pub fn port<'a>() -> Parser<'a, char, u16> {
+pub fn port<'a>() -> Parser<'a, u8, u16> {
   elm_digit()
     .of_many0()
-    .map(String::from_iter)
+    .map_res(String::from_utf8)
     .map_res(|s| s.parse::<u16>())
     .name("port")
 }
@@ -43,8 +43,8 @@ mod tests {
     let prop = prop::for_all(gens::port_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, port:string = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
-      let result = (port() - end()).parse(&input).to_result();
+      let input = s.as_bytes();
+      let result = (port() - end()).parse(input).to_result();
       let port = result.unwrap();
       log::debug!("{:>03}, port:object = {:?}", counter, port);
       assert_eq!(port.to_string(), s);

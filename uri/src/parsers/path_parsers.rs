@@ -8,32 +8,33 @@ use std::iter::FromIterator;
 //                / path-noscheme   ; begins with a non-colon segment
 //                / path-rootless   ; begins with a segment
 //                / path-empty      ; zero characters
-pub fn path<'a>() -> Parser<'a, char, Option<Path>> {
+pub fn path<'a>() -> Parser<'a, u8, Option<Path>> {
   (path_rootless().attempt() | path_abempty(true).attempt() | path_absolute().attempt() | path_noscheme())
     .opt()
     .name("path")
 }
 
 //  path-abempty  = *( "/" segment )
-pub fn path_abempty<'a>(required: bool) -> Parser<'a, char, Path> {
+pub fn path_abempty<'a>(required: bool) -> Parser<'a, u8, Path> {
   let n = if required { 1 } else { 0 };
-  ((elm('/') + segment()).collect())
-    .map(String::from_iter)
+  ((elm(b'/') + segment()).collect())
+    .map(|e| e.to_vec())
+    .map_res(String::from_utf8)
     .repeat(n..)
     .map(|e| Path::of_abempty_from_strings(&e))
     .name("path-abempty")
 }
 
 //  path-absolute = "/" [ segment-nz *( "/" segment ) ]
-pub fn path_absolute<'a>() -> Parser<'a, char, Path> {
-  let p = (seqment_nz() + ((elm('/') + segment()).collect()).of_many0())
+pub fn path_absolute<'a>() -> Parser<'a, u8, Path> {
+  let p = (seqment_nz() + ((elm(b'/') + segment()).collect()).of_many0())
     .map(|(a, b)| {
       let mut l = vec![a];
       l.extend_from_slice(&b);
       l
     })
     .opt();
-  (elm('/').collect() + p)
+  (elm(b'/').collect() + p)
     .map(|(a, b_opt)| match b_opt {
       None => vec![a],
       Some(b) => {
@@ -42,51 +43,66 @@ pub fn path_absolute<'a>() -> Parser<'a, char, Path> {
         l
       }
     })
-    .map(|e| e.into_iter().map(String::from_iter).collect::<Vec<_>>())
+    .map(|e| {
+      e.into_iter()
+        .map(|e| e.to_vec())
+        .map(|v| String::from_utf8(v).unwrap())
+        .collect::<Vec<_>>()
+    })
     .map(|e| Path::of_absolute_from_strings(&e))
     .name("path-absolute")
 }
 
 //  path-rootless = segment-nz *( "/" segment )
-pub fn path_rootless<'a>() -> Parser<'a, char, Path> {
-  (seqment_nz() + ((elm('/') + segment()).collect()).of_many0())
+pub fn path_rootless<'a>() -> Parser<'a, u8, Path> {
+  (seqment_nz() + ((elm(b'/') + segment()).collect()).of_many0())
     .map(|(a, b)| {
       let mut l = vec![a];
       l.extend_from_slice(&b);
       l
     })
-    .map(|e| e.into_iter().map(String::from_iter).collect::<Vec<_>>())
+    .map(|e| {
+      e.into_iter()
+        .map(|e| e.to_vec())
+        .map(|v| String::from_utf8(v).unwrap())
+        .collect::<Vec<_>>()
+    })
     .map(|e| Path::of_rootless_from_strings(&e))
     .name("path-rootless")
 }
 
 //  path-noscheme = segment-nz-nc *( "/" segment )
-pub fn path_noscheme<'a>() -> Parser<'a, char, Path> {
-  (seqment_nz_nc() + ((elm('/') + segment()).collect()).of_many0())
+pub fn path_noscheme<'a>() -> Parser<'a, u8, Path> {
+  (seqment_nz_nc() + ((elm(b'/') + segment()).collect()).of_many0())
     .map(|(a, b)| {
       let mut l = vec![a];
       l.extend_from_slice(&b);
       l
     })
-    .map(|e| e.into_iter().map(String::from_iter).collect::<Vec<_>>())
+    .map(|e| {
+      e.into_iter()
+        .map(|e| e.to_vec())
+        .map(|v| String::from_utf8(v).unwrap())
+        .collect::<Vec<_>>()
+    })
     .map(|e| Path::of_rootless_from_strings(&e))
     .name("path-noscheme")
 }
 
 // segment       = *pchar
-fn segment<'a>() -> Parser<'a, char, &'a [char]> {
+fn segment<'a>() -> Parser<'a, u8, &'a [u8]> {
   pchar().of_many0().collect().name("segment")
 }
 
 // segment-nz    = 1*pchar
-fn seqment_nz<'a>() -> Parser<'a, char, &'a [char]> {
+fn seqment_nz<'a>() -> Parser<'a, u8, &'a [u8]> {
   pchar().of_many1().collect().name("segment-nz")
 }
 
 // segment-nz-nc = 1*( unreserved / pct-encoded / sub-delims / "@" )
 // ; non-zero-length segment without any colon ":"
-fn seqment_nz_nc<'a>() -> Parser<'a, char, &'a [char]> {
-  (unreserved() | pct_encoded() | sub_delims() | elm('@').collect())
+fn seqment_nz_nc<'a>() -> Parser<'a, u8, &'a [u8]> {
+  (unreserved() | pct_encoded() | sub_delims() | elm(b'@').collect())
     .of_many1()
     .collect()
     .name("segment-nz-nc")
@@ -202,8 +218,8 @@ mod tests {
     let prop = prop::for_all(gens::path_with_abempty_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, path_str_with_abempty:string = {}", counter, s);
-      let input = s.1.chars().collect::<Vec<_>>();
-      let result = (path() - end()).parse(&input).to_result();
+      let input = s.1.as_bytes();
+      let result = (path() - end()).parse(input).to_result();
       let path = result.unwrap();
       log::debug!("{:>03}, path_str_with_abempty:object = {:?}", counter, path);
       assert_eq!(path.map(|e| e.to_string()).unwrap_or("".to_string()), s.1);
@@ -219,8 +235,8 @@ mod tests {
     let prop = prop::for_all(gens::path_abempty_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, path_abempty:string = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
-      let result = (path_abempty(true) - end()).parse(&input).to_result();
+      let input = s.as_bytes();
+      let result = (path_abempty(true) - end()).parse(input).to_result();
       let path = result.unwrap();
       log::debug!("{:>03}, path_abempty:object = {:?}", counter, path);
       assert_eq!(path.to_string(), s);
@@ -236,8 +252,8 @@ mod tests {
     let prop = prop::for_all(gens::path_absolute_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, path_absolute:string = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
-      let result = (path_absolute() - end()).parse(&input).to_result();
+      let input = s.as_bytes();
+      let result = (path_absolute() - end()).parse(input).to_result();
       let path = result.unwrap();
       log::debug!("{:>03}, path_absolute:object = {:?}", counter, path);
       assert_eq!(path.to_string(), s);
@@ -253,8 +269,8 @@ mod tests {
     let prop = prop::for_all(gens::path_no_scheme_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, path_noscheme:string = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
-      let result = (path_noscheme() - end()).parse(&input).to_result();
+      let input = s.as_bytes();
+      let result = (path_noscheme() - end()).parse(input).to_result();
       let path = result.unwrap();
       log::debug!("{:>03}, path_noscheme:object = {:?}", counter, path);
       assert_eq!(path.to_string(), s);
@@ -270,8 +286,8 @@ mod tests {
     let prop = prop::for_all(gens::path_rootless_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, path_rootless:string = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
-      let result = (path_rootless() - end()).parse(&input).to_result();
+      let input = s.as_bytes();
+      let result = (path_rootless() - end()).parse(input).to_result();
       let path = result.unwrap();
       log::debug!("{:>03}, path_rootless:object = {:?}", counter, path);
       assert_eq!(path.to_string(), s);

@@ -1,49 +1,49 @@
 use oni_comb_parser_rs::prelude::*;
 
 // pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
-pub(crate) fn pchar<'a>() -> Parser<'a, char, &'a [char]> {
-  (unreserved() | pct_encoded() | sub_delims() | elm_ref_of(":@").collect())
+pub(crate) fn pchar<'a>() -> Parser<'a, u8, &'a [u8]> {
+  (unreserved() | pct_encoded() | sub_delims() | elm_ref_of(b":@").collect())
     .collect()
     .name("pchar")
 }
 
-pub(crate) fn pchar_without_eq_amp<'a>() -> Parser<'a, char, &'a [char]> {
-  (unreserved() | pct_encoded() | sub_delims_without_eq_ampersand() | elm_ref_of(":@").collect())
+pub(crate) fn pchar_without_eq_amp<'a>() -> Parser<'a, u8, &'a [u8]> {
+  (unreserved() | pct_encoded() | sub_delims_without_eq_ampersand() | elm_ref_of(b":@").collect())
     .collect()
     .name("pchar")
 }
 
 //  pct-encoded   = "%" HEXDIG HEXDIG
-pub(crate) fn pct_encoded<'a>() -> Parser<'a, char, &'a [char]> {
-  (elm_ref('%') + elm_hex_digit_ref() + elm_hex_digit_ref())
+pub(crate) fn pct_encoded<'a>() -> Parser<'a, u8, &'a [u8]> {
+  (elm_ref(b'%') + elm_hex_digit_ref() + elm_hex_digit_ref())
     .collect()
     .name("pct-encoded")
 }
 
 //  unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
-pub(crate) fn unreserved<'a>() -> Parser<'a, char, &'a [char]> {
-  (elm_alpha_ref() | elm_digit_ref() | elm_ref_of("-._~"))
+pub(crate) fn unreserved<'a>() -> Parser<'a, u8, &'a [u8]> {
+  (elm_alpha_ref() | elm_digit_ref() | elm_ref_of(b"-._~"))
     .collect()
     .name("unreserved")
 }
 
 //  reserved      = gen-delims / sub-delims
-pub(crate) fn reserved<'a>() -> Parser<'a, char, &'a [char]> {
+pub(crate) fn reserved<'a>() -> Parser<'a, u8, &'a [u8]> {
   (gen_delims() | sub_delims()).name("reserved")
 }
 
 // gen-delims    = ":" / "/" / "?" / "#" / "[" / "]" / "@"
-pub(crate) fn gen_delims<'a>() -> Parser<'a, char, &'a [char]> {
-  elm_ref_of(":/?#[]@").name("gen-delims").collect()
+pub(crate) fn gen_delims<'a>() -> Parser<'a, u8, &'a [u8]> {
+  elm_ref_of(b":/?#[]@").name("gen-delims").collect()
 }
 
 // sub-delims    = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
-pub(crate) fn sub_delims<'a>() -> Parser<'a, char, &'a [char]> {
-  elm_ref_of("!$&'()*+,;=").name("sub-delims").collect()
+pub(crate) fn sub_delims<'a>() -> Parser<'a, u8, &'a [u8]> {
+  elm_ref_of(b"!$&'()*+,;=").name("sub-delims").collect()
 }
 
-pub(crate) fn sub_delims_without_eq_ampersand<'a>() -> Parser<'a, char, &'a [char]> {
-  elm_ref_of("!$'()*+,;").name("sub-delims").collect()
+pub(crate) fn sub_delims_without_eq_ampersand<'a>() -> Parser<'a, u8, &'a [u8]> {
+  elm_ref_of(b"!$'()*+,;").name("sub-delims").collect()
 }
 
 #[cfg(test)]
@@ -54,7 +54,7 @@ pub mod gens {
     Gens::one_bool().flat_map(move |b| {
       if b {
         let g = gen.clone();
-        g.map(|v| Some(v))
+        g.map(Some)
       } else {
         Gen::<String>::unit(|| None)
       }
@@ -201,11 +201,12 @@ mod tests {
     let prop = prop::for_all(gens::pchar_gen(1, u8::MAX - 1), move |s| {
       counter += 1;
       log::debug!("{:>03}, value = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
+      let input = s.as_bytes();
       let result = (pchar().of_many1() - end())
         .collect()
-        .map(String::from_iter)
-        .parse(&input)
+        .map(|e| e.to_vec())
+        .map_res(String::from_utf8)
+        .parse(input)
         .to_result();
       assert_eq!(result.unwrap(), s);
       true
@@ -220,10 +221,11 @@ mod tests {
     let prop = prop::for_all(gens::pct_encoded_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, value = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
+      let input = s.as_bytes();
       let result = (pct_encoded().of_many1() - end())
         .collect()
-        .map(String::from_iter)
+        .map(|e| e.to_vec())
+        .map_res(String::from_utf8)
         .parse(&input)
         .to_result();
       assert_eq!(result.unwrap(), s);
@@ -239,11 +241,12 @@ mod tests {
     let prop = prop::for_all(gens::unreserved_gen(u8::MAX - 1), move |s| {
       counter += 1;
       log::debug!("{:>03}, value = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
+      let input = s.as_bytes();
       let result = (unreserved().of_many1() - end())
         .collect()
-        .map(String::from_iter)
-        .parse(&input)
+        .map(|e| e.to_vec())
+        .map_res(String::from_utf8)
+        .parse(input)
         .to_result();
       assert_eq!(result.unwrap(), s);
       true
@@ -258,11 +261,12 @@ mod tests {
     let prop = prop::for_all(gens::reserved_gen(u8::MAX - 1), move |s| {
       counter += 1;
       log::debug!("{:>03}, value = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
+      let input = s.as_bytes();
       let result = (reserved().of_many1() - end())
         .collect()
-        .map(String::from_iter)
-        .parse(&input)
+        .map(|e| e.to_vec())
+        .map_res(String::from_utf8)
+        .parse(input)
         .to_result();
       assert_eq!(result.unwrap(), s);
       true
@@ -277,11 +281,12 @@ mod tests {
     let prop = prop::for_all(gens::gen_delims_gen(u8::MAX - 1), move |s| {
       counter += 1;
       log::debug!("{:>03}, value = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
+      let input = s.as_bytes();
       let result = (gen_delims().of_many1() - end())
         .collect()
-        .map(String::from_iter)
-        .parse(&input)
+        .map(|e| e.to_vec())
+        .map_res(String::from_utf8)
+        .parse(input)
         .to_result();
       assert_eq!(result.unwrap(), s);
       true
@@ -296,11 +301,11 @@ mod tests {
     let prop = prop::for_all(gens::sub_delims_gen(u8::MAX - 1), move |s| {
       counter += 1;
       log::debug!("{:>03}, value = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
+      let input = s.as_bytes();
       let result = (sub_delims().of_many1() - end())
         .collect()
-        .map(String::from_iter)
-        .parse(&input)
+        .map_res(std::str::from_utf8)
+        .parse(input)
         .to_result();
       assert_eq!(result.unwrap(), s);
       true

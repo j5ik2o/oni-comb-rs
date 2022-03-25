@@ -4,9 +4,10 @@ use crate::models::scheme::Scheme;
 use oni_comb_parser_rs::prelude::*;
 use std::iter::FromIterator;
 
-pub fn scheme<'a>() -> Parser<'a, char, Scheme> {
-  ((elm_alpha_ref() + (elm_alpha_ref() | elm_digit_ref() | elm_ref_of("+-.")).of_many0()).collect())
-    .map(String::from_iter)
+pub fn scheme<'a>() -> Parser<'a, u8, Scheme> {
+  ((elm_alpha_ref() + (elm_alpha_ref() | elm_digit_ref() | elm_ref_of(b"+-.")).of_many0()).collect())
+    .map(|e| e.to_vec())
+    .map_res(String::from_utf8)
     .map(Scheme::new)
 }
 
@@ -57,8 +58,8 @@ mod tests {
     let prop = prop::for_all(scheme_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, scheme:string = {}", counter, s);
-      let input = s.chars().collect::<Vec<_>>();
-      let result = (scheme() - end()).parse(&input).to_result();
+      let input = s.as_bytes();
+      let result = (scheme() - end()).parse(input).to_result();
       let scheme = result.unwrap();
       log::debug!("{:>03}, scheme:object = {:?}", counter, scheme);
       assert_eq!(scheme.to_string(), s);
