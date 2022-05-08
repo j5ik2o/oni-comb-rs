@@ -294,7 +294,9 @@ fn string_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
       .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
       .collect::<String>()
   });
-  let string = surround(elm_ref('"'), (char_string | utf16_string).of_many0(), elm_ref('"'));
+  let string = (char_string | utf16_string)
+    .of_many0()
+    .surround(elm_ref('"'), elm_ref('"'));
   string
     .map(|strings| Expr::of_string_literal(strings.concat()))
     .attempt()

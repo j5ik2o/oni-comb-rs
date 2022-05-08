@@ -606,7 +606,7 @@ pub mod prelude {
     ParsersImpl::elm_from_until(start, end)
   }
 
-  /// Returns a [Parser] that parses elements that do not contain elements of the specified set.(for reference)
+  /// Returns a [Parser] that parses elements that do not contain elements of the specified set.(for reference)<br/>
   /// 指定した集合の要素を含まない要素を解析する[Parser]を返します。(参照版)
   ///
   /// - set: a element of sets
@@ -635,7 +635,7 @@ pub mod prelude {
     ParsersImpl::none_ref_of(set)
   }
 
-  /// Returns a [Parser] that parses elements that do not contain elements of the specified set.
+  /// Returns a [Parser] that parses elements that do not contain elements of the specified set.<br/>
   /// 指定した集合の要素を含まない要素を解析する[Parser]を返します。
   ///
   /// - set: an element of sets
@@ -1465,6 +1465,29 @@ pub mod prelude {
 
   // --- Enhanced Parsers ---
 
+  /// Return a [Parser] that skips the previous and following [Parser]s.<br/>
+  /// 前後のパーサーをスキップするパーサーを返す。
+  ///
+  /// - lp: 左側のパーサー
+  /// - parser: 中央のパーサー
+  /// - rp: 右側のパーサー
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "(abc)";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: Parser<char, &str> = surround(elm('('), tag("abc"), elm(')'));
+  ///
+  /// let result: ParseResult<char, &str> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), "abc");
+  /// ```
   pub fn surround<'a, I, A, B, C>(
     lp: Parser<'a, I, A>,
     parser: Parser<'a, I, B>,
@@ -1477,6 +1500,31 @@ pub mod prelude {
     ParsersImpl::surround(lp, parser, rp)
   }
 
+  /// Returns a [Parser] that lazily evaluates the specified [Parser].<br/>
+  /// 指定した[Parser]を遅延評価する[Parser]を返す。
+  ///
+  /// - f: Function to generate parser
+  /// - f: パーサーを生成する関数
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let text: &str = "abc";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// fn value<'a>() -> Parser<'a, char, &'a str> {
+  ///   tag("abc")
+  /// }
+  /// let parser: Parser<char, &str> = lazy(value);
+  ///
+  /// let result: ParseResult<char, &str> = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), "abc");
+  /// ```
   pub fn lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
   where
     F: Fn() -> Parser<'a, I, A> + 'a,

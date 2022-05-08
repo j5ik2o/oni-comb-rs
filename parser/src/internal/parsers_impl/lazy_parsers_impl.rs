@@ -9,9 +9,5 @@ impl LazyParsers for ParsersImpl {
     F: Fn() -> Self::P<'a, I, A> + 'a,
     A: Debug + 'a, {
     Self::unit().flat_map(move |_| f())
-    // Parser::new(move |parse_state| {
-    //   let parser = f();
-    //   parser.run(parse_state)
-    // })
   }
 }
