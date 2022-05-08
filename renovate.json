@@ -2,5 +2,25 @@
   "extends": [
     "config:base"
   ],
-  "automerge": true
+  "cargo": {
+    "enabled": true
+  },
+  "platformAutomerge": true,
+  "packageRules": [
+    {
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
+      "automerge": true
+    },
+    {
+      "matchDepTypes": [
+        "devDependencies"
+      ],
+      "automerge": true
+    }
+  ]
 }
