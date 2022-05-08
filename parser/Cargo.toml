@@ -1,5 +1,3 @@
-cargo-features = ["edition2021"]
-
 [package]
 name = "oni-comb-parser-rs"
 version = "0.0.5"

@@ -11,13 +11,16 @@ pub enum ParseError<'a, I> {
     length: usize,
     message: String,
   },
+  /// 変換に失敗した際のエラー
   Conversion {
     input: &'a [I],
     offset: usize,
     length: usize,
     message: String,
   },
+  /// 解析中断のエラー
   Incomplete,
+  /// 期待から逸れた際のエラー
   Expect {
     offset: usize,
     inner: Box<ParseError<'a, I>>,

@@ -5,17 +5,23 @@ use crate::core::CommittedStatus;
 /// 解析結果。
 #[derive(Debug, Clone)]
 pub enum ParseResult<'a, I, A> {
+  /// Success.<br/>
   /// 成功
   Success {
+    /// The value when success.<br/>
     /// 成功の値
     value: A,
+    /// The size of the value.
     /// valueのサイズ
     length: usize,
   },
+  /// Failure.<br/>
   /// 失敗
   Failure {
+    /// The cause when failure.<br/>
     /// 失敗の原因
     error: ParseError<'a, I>,
+    /// The commit status.<br/>
     /// コミット状態
     committed_status: CommittedStatus,
   },
@@ -103,6 +109,8 @@ impl<'a, I, A> ParseResult<'a, I, A> {
     }
   }
 
+  /// Return the committed status.<br/>
+  /// コミット状態を返す。
   pub fn committed_status(&self) -> Option<CommittedStatus> {
     match self {
       ParseResult::Failure {

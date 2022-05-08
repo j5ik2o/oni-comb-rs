@@ -1,6 +1,8 @@
 use crate::core::{ParseResult, ParseState};
 use std::rc::Rc;
 
+pub struct Name(String);
+
 type Parse<'a, I, A> = dyn Fn(&ParseState<'a, I>) -> ParseResult<'a, I, A> + 'a;
 
 pub struct Parser<'a, I, A> {
