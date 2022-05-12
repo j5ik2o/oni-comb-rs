@@ -78,18 +78,17 @@
 
 ### parse
 
-| combinator | description |
-|------------|-------------|
-| parse      |             |
-| run        |             |
+| combinator      | description                                                         |
+|-----------------|---------------------------------------------------------------------|
+| parse           | Analyze input value(for ParseResult)                                |
+| parse_as_result | Analyze input value(for Result).                                    |
+| run             | Analyze input value(for ParseResult), requires ParseState argument. |
 
 ### core
 
-| combinator | description |
-|------------|-------------|
-| flat_map   |             |
-| filter     |             |
-
+| combinator      | description                                                         |
+|-----------------|---------------------------------------------------------------------|
+| flat_map        | Returns a Parser that somehow combines the calculations of Parsers. |
 
 ### binary operator
 
@@ -113,6 +112,13 @@
 |------------|-------------|
 | map        |             |
 | map_res    |             |
+
+### filter
+
+| combinator      | description |
+|-----------------|-------------|
+| with_filter     |             |
+| with_filter_not |             |
 
 ### chain operator
 
