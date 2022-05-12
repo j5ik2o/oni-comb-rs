@@ -1,9 +1,9 @@
 sign-commit                = false
 sign-tag                   = false
-pre-release-commit-message = "Prepare to release"
+pre-release-commit-message = "chore: Prepare to release"
 dev-version                = false
 tag-message                = "{{tag_name}}"
 tag-name                   = "{{prefix}}v{{version}}"
 consolidate-commits        = false
 consolidate-pushes         = true
-allow-branch               = ["master"]
+allow-branch               = ["main"]
