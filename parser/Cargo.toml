@@ -14,7 +14,7 @@ github = { repository = "j5ik2o/oni-comb-rs", workflow = "Rust" }
 
 [dependencies]
 log = "0.4.17"
-regex = "1.5"
+regex = "1.6"
 
 [dev-dependencies]
 anyhow = "1.0.58"
