@@ -13,7 +13,7 @@ repository = "https://github.com/j5ik2o/oni-comb-rs"
 
 [dependencies]
 oni-comb-parser-rs = { version =  "0.0.5", path = "../parser" }
-chrono = "0.4.21"
+chrono = "0.4.22"
 
 [dev-dependencies]
 env_logger = "0.9.0"
