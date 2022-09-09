@@ -1,7 +1,6 @@
 use crate::models::query::Query;
 use crate::parsers::basic_parsers::pchar_without_eq_amp;
 use oni_comb_parser_rs::prelude::*;
-use std::iter::FromIterator;
 
 //  query         = *( pchar / "/" / "?" )
 pub fn query<'a>() -> Parser<'a, u8, Query> {

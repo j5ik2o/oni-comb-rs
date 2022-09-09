@@ -1,5 +1,4 @@
 use oni_comb_parser_rs::prelude::*;
-use std::iter::FromIterator;
 
 pub fn port<'a>() -> Parser<'a, u8, u16> {
   elm_digit()

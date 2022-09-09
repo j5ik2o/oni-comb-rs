@@ -1,7 +1,7 @@
 use crate::parsers::ip_v4_address_parsers::ip_v4_address;
 use oni_comb_parser_rs::prelude::*;
 use std::fmt::Formatter;
-use std::iter::FromIterator;
+
 use std::net::{Ipv4Addr, Ipv6Addr};
 
 //  IPv6address   =                            6( h16 ":" ) ls32

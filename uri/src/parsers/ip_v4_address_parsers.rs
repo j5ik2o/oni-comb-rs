@@ -1,4 +1,3 @@
-use std::iter::FromIterator;
 use std::net::Ipv4Addr;
 
 use oni_comb_parser_rs::prelude::*;

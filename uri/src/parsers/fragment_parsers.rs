@@ -1,6 +1,5 @@
 use crate::parsers::basic_parsers::pchar;
 use oni_comb_parser_rs::prelude::*;
-use std::iter::FromIterator;
 
 // fragment      = *( pchar / "/" / "?" )
 pub fn fragment<'a>() -> Parser<'a, u8, String> {
@@ -31,7 +30,6 @@ pub mod gens {
 #[cfg(test)]
 mod tests {
   use std::env;
-  use std::iter::FromIterator;
 
   use anyhow::Result;
   use prop_check_rs::prop;

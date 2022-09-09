@@ -4,9 +4,8 @@ impl<'a, I, A> ParserRunner<'a> for Parser<'a, I, A> {
   type Input = I;
   type Output = A;
   type P<'m, X, Y>
-  where
-    X: 'm,
-  = Parser<'m, X, Y>;
+  
+  = Parser<'m, X, Y> where X: 'm;
 
   fn parse(&self, input: &'a [Self::Input]) -> ParseResult<'a, Self::Input, Self::Output> {
     let parse_state = ParseState::new(input, 0);

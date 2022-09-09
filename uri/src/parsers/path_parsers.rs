@@ -1,7 +1,6 @@
 use crate::models::path::Path;
 use crate::parsers::basic_parsers::*;
 use oni_comb_parser_rs::prelude::*;
-use std::iter::FromIterator;
 
 //  path          = path-abempty    ; begins with "/" or is empty
 //                / path-absolute   ; begins with "/" but not "//"

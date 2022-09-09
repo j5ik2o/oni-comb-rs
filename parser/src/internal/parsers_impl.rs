@@ -19,10 +19,8 @@ mod taken_parsers_impl;
 
 impl Parsers for ParsersImpl {
   type P<'p, I, A>
-  where
-    I: 'p,
-    A: 'p,
-  = Parser<'p, I, A>;
+  
+  = Parser<'p, I, A> where I: 'p, A: 'p;
 
   fn parse<'a, 'b, I, A>(parser: &Self::P<'a, I, A>, input: &'b [I]) -> Result<A, ParseError<'a, I>>
   where

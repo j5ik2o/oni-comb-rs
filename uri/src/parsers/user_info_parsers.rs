@@ -1,7 +1,6 @@
 use crate::models::user_info::UserInfo;
 use crate::parsers::basic_parsers::*;
 use oni_comb_parser_rs::prelude::*;
-use std::iter::FromIterator;
 
 //  userinfo      = *( unreserved / pct-encoded / sub-delims / ":" )
 pub fn user_info<'a>() -> Parser<'a, u8, UserInfo> {

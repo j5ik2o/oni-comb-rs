@@ -1,6 +1,5 @@
 use crate::models::host_name::{HostName, IpLiteral};
 use oni_comb_parser_rs::prelude::*;
-use std::iter::FromIterator;
 
 use crate::parsers::basic_parsers::{pct_encoded, sub_delims, unreserved};
 use crate::parsers::ip_v4_address_parsers::ip_v4_address;
