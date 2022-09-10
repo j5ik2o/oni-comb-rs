@@ -1,4 +1,4 @@
-name: release-parser
+name: release-uri
 on:
   workflow_dispatch:
 env:
