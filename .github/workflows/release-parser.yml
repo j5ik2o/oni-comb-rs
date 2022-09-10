@@ -1,0 +1,28 @@
+name: Rust
+on:
+  workflow_dispatch:
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: nightly
+        override: true
+    - uses: baptiste0928/cargo-install@v1
+      with:
+        crate: cargo-release
+        version: "0.21.1"
+    - name: release
+      run: |
+        cargo release \
+          --token ${secrets.CARGO_TOKEN} \
+          --execute \
+          --verbose \
+          --no-confirm \
+          -p oni-comb-parser-rs \
+          patch
