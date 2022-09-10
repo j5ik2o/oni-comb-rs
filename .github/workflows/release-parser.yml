@@ -1,4 +1,4 @@
-name: Rust
+name: release-parser
 on:
   workflow_dispatch:
 env:
@@ -20,7 +20,7 @@ jobs:
     - name: release
       run: |
         cargo release \
-          --token ${secrets.CARGO_TOKEN} \
+          --token ${{ secrets.CARGO_TOKEN }} \
           --execute \
           --verbose \
           --no-confirm \
