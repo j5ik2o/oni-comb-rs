@@ -24,7 +24,7 @@ rust_decimal = "1.26.1"
 chrono = "0.4.22"
 pom = "3.2.0"
 nom = "7.1.1"
-criterion = "0.3"
+criterion = "0.4"
 
 [[bench]]
 name = "bench_main"
