@@ -23,6 +23,8 @@ jobs:
         version: "0.21.1"
     - name: release
       run: |
+        git config user.name "Junichi Kato"
+        git config user.email j5ik2o@gmail.com
         cargo release \
           --token ${{ secrets.CARGO_TOKEN }} \
           --execute \
