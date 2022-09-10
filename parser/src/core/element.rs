@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-/// A Element.
+/// A Element.<br/>
 /// 要素。
 pub trait Element: Debug {
   /// 文字に変換する。
