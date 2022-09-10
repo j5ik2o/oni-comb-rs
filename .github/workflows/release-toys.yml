@@ -1,4 +1,4 @@
-name: release-parser
+name: release-toys
 on:
   workflow_dispatch:
 env:
@@ -21,10 +21,10 @@ jobs:
       with:
         crate: cargo-release
         version: "0.21.1"
-    - name: release the crate
+    - name: release
       run: |
         git config user.name "Junichi Kato"
         git config user.email j5ik2o@gmail.com
         cargo release --token ${{ secrets.CARGO_TOKEN }} \
           --execute --verbose --no-confirm \
-          -p oni-comb-parser-rs patch
+          -p oni-comb-toys-rs patch
