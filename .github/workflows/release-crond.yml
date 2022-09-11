@@ -1,4 +1,4 @@
-name: release-uri
+name: release-crond
 on:
   workflow_dispatch:
 env:
