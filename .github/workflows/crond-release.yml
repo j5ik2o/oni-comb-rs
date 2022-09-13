@@ -1,4 +1,4 @@
-name: parser-release
+name: crond-release
 on:
   workflow_dispatch:
   push:
