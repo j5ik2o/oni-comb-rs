@@ -22,7 +22,7 @@ jobs:
           python-version: '3.10'
       - run: pip install semver
       - id: target_dir
-        run: "::set-output name=value::$TARGET_DIR"
+        run: echo "::set-output name=value::$TARGET_DIR"
       - name: Calculate changes from the latest tag to HEAD
         id: changes
         run: |
