@@ -36,8 +36,10 @@ jobs:
           echo "::set-output name=version::$NEXT_VERSION"
         if: steps.changes.outputs.count > 0
       - uses: ciiiii/toml-editor@1.0.0
+        env:
+          TARGET_FILE: $TARGET_DIR/Cargo.toml
         with:
-          file: "$TARGET_DIR/Cargo.toml"
+          file: $TARGET_FILE
           key: "package.version"
           value: ${{ steps.version.outputs.version }}
         if: steps.changes.outputs.count > 0
