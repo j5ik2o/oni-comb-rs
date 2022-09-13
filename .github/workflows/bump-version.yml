@@ -47,13 +47,15 @@ jobs:
           git diff
           git add .
           git commit -m "parser's version up to ${{ steps.version.outputs.version }}"
-          git tag "oni-comb-parser-rs-v${{ steps.version.outputs.version }}"
           git push origin main
-          git push origin "oni-comb-parser-rs-v${{ steps.version.outputs.version }}"
+          COMMIT_SHA=$(git rev-parse HEAD)
+          echo "::set-output name=commit_sha::$COMMIT_SHA"
         if: steps.changes.outputs.count > 0
       - name: Bump version and push tag
         id: tag_version
         run: |
+          git tag -a "oni-comb-parser-rs-v${{ steps.version.outputs.version }}" ${{ steps.git_commit_push.outputs.commit_sha }} -m "oni-comb-parser-rs-v${{ steps.version.outputs.version }}"
+          git push origin "oni-comb-parser-rs-v${{ steps.version.outputs.version }}"
           CHANGE_LOG=$(git log oni-comb-parser-rs-v${{ steps.version.outputs.prev_version }}..oni-comb-parser-rs-v${{ steps.version.outputs.version }} --pretty=format:"%h%x09%H%x09%s" \
             -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(.*)?:.*$' \
             --no-merges --full-history -- 'parser/*' | python3 "${GITHUB_WORKSPACE}"/.github/create-release-note.py)
