@@ -1,4 +1,4 @@
-name: parser-release
+name: uri-release
 on:
   workflow_dispatch:
   push:
