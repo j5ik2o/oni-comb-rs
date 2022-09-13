@@ -29,6 +29,7 @@ jobs:
         run: |
           LATEST_TAG=$(git tag -l --sort -refname | grep parser | head -n 1)
           NEXT_VERSION=$(echo $LATEST_TAG | python3 "${GITHUB_WORKSPACE}"/.github/next_semver.py)
+          echo "NEXT_VERSION=$NEXT_VERSION"
           echo "::set-output name=prev_version::$LATEST_TAG"
           echo "::set-output name=version::$NEXT_VERSION"
         if: steps.changes.outputs.count > 0
