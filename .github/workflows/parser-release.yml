@@ -1,0 +1,25 @@
+name: parser-release
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'oni-comb-parser-rs-v[0-9]+.[0-9]+.[0-9]+'
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+      - name: release the crate
+        run: |
+          cargo publish --token ${{ secrets.CARGO_TOKEN }} -p oni-comb-parser-rs
