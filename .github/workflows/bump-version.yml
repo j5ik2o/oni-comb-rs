@@ -56,7 +56,7 @@ jobs:
         run: |
           git tag -a "oni-comb-parser-rs-v${{ steps.version.outputs.version }}" ${{ steps.git_commit_push.outputs.commit_sha }} -m "oni-comb-parser-rs-v${{ steps.version.outputs.version }}"
           git push origin "oni-comb-parser-rs-v${{ steps.version.outputs.version }}"
-          CHANGE_LOG=$(git log oni-comb-parser-rs-v${{ steps.version.outputs.prev_version }}..oni-comb-parser-rs-v${{ steps.version.outputs.version }} --pretty=format:"%h%x09%H%x09%s" \
+          CHANGE_LOG=$(git log ${{ steps.version.outputs.prev_version }}..oni-comb-parser-rs-v${{ steps.version.outputs.version }} --pretty=format:"%h%x09%H%x09%s" \
             -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(.*)?:.*$' \
             --no-merges --full-history -- 'parser/*' | python3 "${GITHUB_WORKSPACE}"/.github/create-release-note.py)
           echo "::set-output name=changelog::$CHANGE_LOG"
