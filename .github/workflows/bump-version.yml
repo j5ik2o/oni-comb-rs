@@ -14,6 +14,9 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - uses: baptiste0928/cargo-install@v1
+        with:
+          crate: cargo-edit
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
@@ -35,13 +38,7 @@ jobs:
           echo "::set-output name=prev_version::$LATEST_TAG"
           echo "::set-output name=version::$NEXT_VERSION"
         if: steps.changes.outputs.count > 0
-      - uses: ciiiii/toml-editor@1.0.0
-        env:
-          TARGET_FILE: $TARGET_DIR/Cargo.toml
-        with:
-          file: $TARGET_FILE
-          key: "package.version"
-          value: ${{ steps.version.outputs.version }}
+      - run: cargo set-version -p oni-comb-$TARGET_DIR-rs ${{ steps.version.outputs.version }}
         if: steps.changes.outputs.count > 0
       - name: git commit & tag & push
         id: git_commit_push
