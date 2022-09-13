@@ -28,7 +28,7 @@ jobs:
         id: version
         run: |
           LATEST_TAG=$(git describe --abbrev=0)
-          NEXT_VERSION=$(echo $LATEST_TAG | "${GITHUB_WORKSPACE}"/.github/next_semver.py)
+          NEXT_VERSION=$(echo $LATEST_TAG | python3 "${GITHUB_WORKSPACE}"/.github/next_semver.py)
           echo "::set-output name=prev_version::$LATEST_TAG"
           echo "::set-output name=version::$NEXT_VERSION"
         if: steps.changes.outputs.count > 0
@@ -55,7 +55,7 @@ jobs:
         run: |
           CHANGE_LOG=$(git log ${{ steps.version.outputs.prev_version }}..${{ steps.version.outputs.version }} --pretty=format:"%h%x09%H%x09%s" \
             -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(.*)?:.*$' \
-            --no-merges --full-history -- 'parser/*' | "${GITHUB_WORKSPACE}"/.github/create-release-note.py)
+            --no-merges --full-history -- 'parser/*' | python3 "${GITHUB_WORKSPACE}"/.github/create-release-note.py)
           echo "::set-output name=changelog::$CHANGE_LOG"
         if: steps.changes.outputs.count > 0
       - name: Create a GitHub release
