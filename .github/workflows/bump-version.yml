@@ -24,9 +24,7 @@ jobs:
       - name: Calculate changes from the latest tag to HEAD
         id: changes
         run: |
-          TAG_LIST=$(git tag -l --sort=-taggerdate)
-          echo $TAG_LIST
-          LATEST_TAG=$(echo $TAG_LIST | grep parser | head -n 1)
+          LATEST_TAG=$(git tag -l --sort=-taggerdate | grep $TARGET_DIR | head -n 1)
           echo "latest-tag = $LATEST_TAG"
           COUNT=$(git log $LATEST_TAG..HEAD --pretty=format:"%s" --no-merges -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(\(.*\))?:' -- "$TARGET_DIR/*" | awk 'END{print NR}')
           echo "steps.changes.outputs.count = $COUNT"
@@ -34,8 +32,9 @@ jobs:
       - name: Get the next version
         id: version
         run: |
-          LATEST_TAG=$(git tag -l --sort=-taggerdate | grep $TARGET_DIR | head -n 1)
-          NEXT_VERSION=$(echo $LATEST_TAG | python3 "${GITHUB_WORKSPACE}"/.github/next_semver.py)
+          CUR_VERSION=$(git tag -l --sort=-taggerdate | grep $TARGET_DIR | head -n 1)
+          echo "CUR_VERSION=$CUR_VERSION"
+          NEXT_VERSION=$(echo $CUR_VERSION | python3 "${GITHUB_WORKSPACE}"/.github/next_semver.py)
           echo "NEXT_VERSION=$NEXT_VERSION"
           echo "::set-output name=prev_version::$LATEST_TAG"
           echo "::set-output name=version::$NEXT_VERSION"
