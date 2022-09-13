@@ -5,7 +5,7 @@ import semver
 import re
 
 for s in sys.stdin:
-    r = re.match('.*v(\d\.\d\.\d)', s)
+    r = re.match('.*v?(\d\.\d\.\d)', s)
     print(r)
     if r:
         cur_ver = semver.VersionInfo.parse(r.group(0))
