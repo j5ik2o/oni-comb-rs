@@ -1,0 +1,69 @@
+name: Bump Version
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: pip install semver
+      - name: Calculate changes from the latest tag to HEAD
+        id: changes
+        run: |
+          LATEST_TAG=$(git describe --abbrev=0)
+          echo "latest-tag = $LATEST_TAG"
+          COUNT=$(git log $LATEST_TAG..HEAD --pretty=format:"%s" --no-merges -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(\(.*\))?:' -- 'parser/*' | awk 'END{print NR}')
+          echo "steps.changes.outputs.count = $COUNT"
+          echo "::set-output name=count::$COUNT"
+      - name: Get the next version
+        id: version
+        run: |
+          LATEST_TAG=$(git describe --abbrev=0)
+          NEXT_VERSION=$(echo $LATEST_TAG | "${GITHUB_WORKSPACE}"/.github/next_semver.py)
+          echo "::set-output name=prev_version::$LATEST_TAG"
+          echo "::set-output name=version::$NEXT_VERSION"
+        if: steps.changes.outputs.count > 0
+      - uses: ciiiii/toml-editor@1.0.0
+        with:
+          file: "Cargo.toml"
+          key: "package.version"
+          value: ${{ steps.version.outputs.version }}
+        if: steps.changes.outputs.count > 0
+      - name: git commit & tag & push
+        id: git_commit_push
+        run: |
+          git config --global user.email "j5ik2o@gmail.com"
+          git config --global user.name "Junichi Kato"
+          git diff
+          git add .
+          git commit -m 'parser's version up to ${{ steps.version.outputs.version }}'
+          git tag "parser-${{ steps.version.outputs.version }}"
+          git push origin main
+          git push origin "parser-${{ steps.version.outputs.version }}"
+        if: steps.changes.outputs.count > 0
+      - name: Bump version and push tag
+        id: tag_version
+        run: |
+          CHANGE_LOG=$(git log ${{ steps.version.outputs.prev_version }}..${{ steps.version.outputs.version }} --pretty=format:"%h%x09%H%x09%s" \
+            -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(.*)?:.*$' \
+            --no-merges --full-history -- 'parser/*' | "${GITHUB_WORKSPACE}"/.github/create-release-note.py)
+          echo "::set-output name=changelog::$CHANGE_LOG"
+        if: steps.changes.outputs.count > 0
+      - name: Create a GitHub release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: Release ${{ steps.version.outputs.version }}
+          body: ${{ steps.tag_version.outputs.changelog }}
+        if: steps.changes.outputs.count > 0
