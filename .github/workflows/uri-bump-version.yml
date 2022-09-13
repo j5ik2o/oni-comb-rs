@@ -1,4 +1,4 @@
-name: parser-bump-version
+name: uri-bump-version
 on:
   workflow_dispatch:
   schedule:
