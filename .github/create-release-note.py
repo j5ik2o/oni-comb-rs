@@ -23,7 +23,7 @@ for row in cin:
 
 for k,v in tiles.items():
     if d[k]:
-        print(f"{v}\n")
+        print(f"### {v}\n")
     for messages in d[k]:
         print(f"* {messages[0]} ({messages[1][0]})")
     if d[k]:

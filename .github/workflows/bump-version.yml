@@ -6,6 +6,8 @@ on:
 jobs:
   bump-version:
     runs-on: ubuntu-latest
+    env:
+      TARGET_DIR: parser
     steps:
       - uses: actions/checkout@v3
         with:
@@ -21,13 +23,13 @@ jobs:
         run: |
           LATEST_TAG=$(git tag -l --sort -refname | grep parser | head -n 1)
           echo "latest-tag = $LATEST_TAG"
-          COUNT=$(git log $LATEST_TAG..HEAD --pretty=format:"%s" --no-merges -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(\(.*\))?:' -- 'parser/*' | awk 'END{print NR}')
+          COUNT=$(git log $LATEST_TAG..HEAD --pretty=format:"%s" --no-merges -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(\(.*\))?:' -- '$TARGET_DIR/*' | awk 'END{print NR}')
           echo "steps.changes.outputs.count = $COUNT"
           echo "::set-output name=count::$COUNT"
       - name: Get the next version
         id: version
         run: |
-          LATEST_TAG=$(git tag -l --sort -refname | grep parser | head -n 1)
+          LATEST_TAG=$(git tag -l --sort -refname | grep $TARGET_DIR | head -n 1)
           NEXT_VERSION=$(echo $LATEST_TAG | python3 "${GITHUB_WORKSPACE}"/.github/next_semver.py)
           echo "NEXT_VERSION=$NEXT_VERSION"
           echo "::set-output name=prev_version::$LATEST_TAG"
@@ -35,7 +37,7 @@ jobs:
         if: steps.changes.outputs.count > 0
       - uses: ciiiii/toml-editor@1.0.0
         with:
-          file: "parser/Cargo.toml"
+          file: "$TARGET_DIR"/Cargo.toml
           key: "package.version"
           value: ${{ steps.version.outputs.version }}
         if: steps.changes.outputs.count > 0
@@ -46,7 +48,7 @@ jobs:
           git config --global user.name "Junichi Kato"
           git diff
           git add .
-          git commit -m "parser's version up to ${{ steps.version.outputs.version }}"
+          git commit -m "$TARGET_DIR's version up to ${{ steps.version.outputs.version }}"
           git push origin main
           COMMIT_SHA=$(git rev-parse HEAD)
           echo "::set-output name=commit_sha::$COMMIT_SHA"
@@ -54,18 +56,18 @@ jobs:
       - name: Bump version and push tag
         id: tag_version
         run: |
-          git tag -a "oni-comb-parser-rs-v${{ steps.version.outputs.version }}" ${{ steps.git_commit_push.outputs.commit_sha }} -m "oni-comb-parser-rs-v${{ steps.version.outputs.version }}"
-          git push origin "oni-comb-parser-rs-v${{ steps.version.outputs.version }}"
-          git log ${{ steps.version.outputs.prev_version }}..oni-comb-parser-rs-v${{ steps.version.outputs.version }} --pretty=format:"%h%x09%H%x09%s" \
+          git tag -a "oni-comb-$TARGET_DIR-rs-v${{ steps.version.outputs.version }}" ${{ steps.git_commit_push.outputs.commit_sha }} -m "oni-comb-$TARGET_DIR-rs-v${{ steps.version.outputs.version }}"
+          git push origin "oni-comb-$TARGET_DIR-rs-v${{ steps.version.outputs.version }}"
+          git log ${{ steps.version.outputs.prev_version }}..oni-comb-$TARGET_DIR-rs-v${{ steps.version.outputs.version }} --pretty=format:"%h%x09%H%x09%s" \
             -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(.*)?:.*$' \
-            --no-merges --full-history -- 'parser/*' | python3 "${GITHUB_WORKSPACE}"/.github/create-release-note.py > changelog.txt
+            --no-merges --full-history -- "$TARGET_DIR/*" | python3 "${GITHUB_WORKSPACE}"/.github/create-release-note.py > changelog.txt
         if: steps.changes.outputs.count > 0
       - name: Create a GitHub release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
-          tag_name: oni-comb-parser-rs-v${{ steps.version.outputs.version }}
-          release_name: Release oni-comb-parser-rs-v${{ steps.version.outputs.version }}
+          tag_name: oni-comb-$TARGET_DIR-rs-v${{ steps.version.outputs.version }}
+          release_name: Release oni-comb-$TARGET_DIR-rs-v${{ steps.version.outputs.version }}
           body_path: changelog.txt
         if: steps.changes.outputs.count > 0
