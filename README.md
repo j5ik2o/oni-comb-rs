@@ -1,5 +1,9 @@
 # oni-comb-rs (鬼昆布,おにこんぶ)
 
+## Status
+
+WIP
+
 A Rust crate for LL(k) parser combinators.
 
 [![Workflow Status](https://github.com/j5ik2o/oni-comb-rs/workflows/ci/badge.svg)](https://github.com/j5ik2o/oni-comb-rs/actions?query=workflow%3A%22ci%22)
