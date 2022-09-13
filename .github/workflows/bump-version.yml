@@ -19,7 +19,7 @@ jobs:
       - name: Calculate changes from the latest tag to HEAD
         id: changes
         run: |
-          LATEST_TAG=$(git describe --abbrev=0)
+          LATEST_TAG=$(git tag -l --sort -refname | grep parser | head -n 1)
           echo "latest-tag = $LATEST_TAG"
           COUNT=$(git log $LATEST_TAG..HEAD --pretty=format:"%s" --no-merges -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(\(.*\))?:' -- 'parser/*' | awk 'END{print NR}')
           echo "steps.changes.outputs.count = $COUNT"
@@ -27,7 +27,7 @@ jobs:
       - name: Get the next version
         id: version
         run: |
-          LATEST_TAG=$(git describe --abbrev=0)
+          LATEST_TAG=$(git tag -l --sort -refname | grep parser | head -n 1)
           NEXT_VERSION=$(echo $LATEST_TAG | python3 "${GITHUB_WORKSPACE}"/.github/next_semver.py)
           echo "::set-output name=prev_version::$LATEST_TAG"
           echo "::set-output name=version::$NEXT_VERSION"
@@ -45,15 +45,15 @@ jobs:
           git config --global user.name "Junichi Kato"
           git diff
           git add .
-          git commit -m 'parser's version up to ${{ steps.version.outputs.version }}'
-          git tag "parser-${{ steps.version.outputs.version }}"
+          git commit -m "parser's version up to ${{ steps.version.outputs.version }}"
+          git tag "oni-comb-parser-rs-v${{ steps.version.outputs.version }}"
           git push origin main
-          git push origin "parser-${{ steps.version.outputs.version }}"
+          git push origin "oni-comb-parser-rs-v${{ steps.version.outputs.version }}"
         if: steps.changes.outputs.count > 0
       - name: Bump version and push tag
         id: tag_version
         run: |
-          CHANGE_LOG=$(git log ${{ steps.version.outputs.prev_version }}..${{ steps.version.outputs.version }} --pretty=format:"%h%x09%H%x09%s" \
+          CHANGE_LOG=$(git log oni-comb-parser-rs-v${{ steps.version.outputs.prev_version }}..oni-comb-parser-rs-v${{ steps.version.outputs.version }} --pretty=format:"%h%x09%H%x09%s" \
             -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(.*)?:.*$' \
             --no-merges --full-history -- 'parser/*' | python3 "${GITHUB_WORKSPACE}"/.github/create-release-note.py)
           echo "::set-output name=changelog::$CHANGE_LOG"
@@ -63,7 +63,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
-          tag_name: ${{ steps.version.outputs.version }}
+          tag_name: oni-comb-parser-rs-v${{ steps.version.outputs.version }}
           release_name: Release ${{ steps.version.outputs.version }}
           body: ${{ steps.tag_version.outputs.changelog }}
         if: steps.changes.outputs.count > 0
