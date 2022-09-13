@@ -21,25 +21,27 @@ jobs:
         with:
           python-version: '3.10'
       - run: pip install semver
+      - id: target_dir
+        run: "::set-output name=value::$TARGET_DIR"
       - name: Calculate changes from the latest tag to HEAD
         id: changes
         run: |
-          LATEST_TAG=$(git tag -l --sort=-taggerdate | grep $TARGET_DIR | head -n 1)
+          LATEST_TAG=$(git tag -l --sort=-taggerdate | grep ${{ steps.target_dir.outputs.value }} | head -n 1)
           echo "latest-tag = $LATEST_TAG"
-          COUNT=$(git log $LATEST_TAG..HEAD --pretty=format:"%s" --no-merges -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(\(.*\))?:' -- "$TARGET_DIR/*" | awk 'END{print NR}')
+          COUNT=$(git log $LATEST_TAG..HEAD --pretty=format:"%s" --no-merges -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(\(.*\))?:' -- "${{ steps.target_dir.outputs.value }}/*" | awk 'END{print NR}')
           echo "steps.changes.outputs.count = $COUNT"
           echo "::set-output name=count::$COUNT"
       - name: Get the next version
         id: version
         run: |
-          CUR_VERSION=$(git tag -l --sort=-taggerdate | grep $TARGET_DIR | head -n 1)
+          CUR_VERSION=$(git tag -l --sort=-taggerdate | grep ${{ steps.target_dir.outputs.value }} | head -n 1)
           echo "CUR_VERSION=$CUR_VERSION"
           NEXT_VERSION=$(echo $CUR_VERSION | python3 "${GITHUB_WORKSPACE}"/.github/next_semver.py)
           echo "NEXT_VERSION=$NEXT_VERSION"
           echo "::set-output name=prev_version::$LATEST_TAG"
           echo "::set-output name=version::$NEXT_VERSION"
         if: steps.changes.outputs.count > 0
-      - run: cargo set-version -p oni-comb-$TARGET_DIR-rs ${{ steps.version.outputs.version }}
+      - run: cargo set-version -p oni-comb-${{ steps.target_dir.outputs.value }}-rs ${{ steps.version.outputs.version }}
         if: steps.changes.outputs.count > 0
       - name: git commit & tag & push
         id: git_commit_push
@@ -48,7 +50,7 @@ jobs:
           git config --global user.name "Junichi Kato"
           git diff
           git add .
-          git commit -m "$TARGET_DIR's version up to ${{ steps.version.outputs.version }}"
+          git commit -m "${{ steps.target_dir.outputs.value }}'s version up to ${{ steps.version.outputs.version }}"
           git push origin main
           COMMIT_SHA=$(git rev-parse HEAD)
           echo "::set-output name=commit_sha::$COMMIT_SHA"
@@ -56,18 +58,18 @@ jobs:
       - name: Bump version and push tag
         id: tag_version
         run: |
-          git tag -a "oni-comb-$TARGET_DIR-rs-v${{ steps.version.outputs.version }}" ${{ steps.git_commit_push.outputs.commit_sha }} -m "oni-comb-$TARGET_DIR-rs-v${{ steps.version.outputs.version }}"
-          git push origin "oni-comb-$TARGET_DIR-rs-v${{ steps.version.outputs.version }}"
-          git log ${{ steps.version.outputs.prev_version }}..oni-comb-$TARGET_DIR-rs-v${{ steps.version.outputs.version }} --pretty=format:"%h%x09%H%x09%s" \
+          git tag -a "oni-comb-${{ steps.target_dir.outputs.value }}-rs-v${{ steps.version.outputs.version }}" ${{ steps.git_commit_push.outputs.commit_sha }} -m "oni-comb-${{ steps.target_dir.outputs.value }}-rs-v${{ steps.version.outputs.version }}"
+          git push origin "oni-comb-${{ steps.target_dir.outputs.value }}-rs-v${{ steps.version.outputs.version }}"
+          git log ${{ steps.version.outputs.prev_version }}..oni-comb-${{ steps.target_dir.outputs.value }}-rs-v${{ steps.version.outputs.version }} --pretty=format:"%h%x09%H%x09%s" \
             -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(.*)?:.*$' \
-            --no-merges --full-history -- "$TARGET_DIR/*" | python3 "${GITHUB_WORKSPACE}"/.github/create-release-note.py > changelog.txt
+            --no-merges --full-history -- "${{ steps.target_dir.outputs.value }}/*" | python3 "${GITHUB_WORKSPACE}"/.github/create-release-note.py > changelog.txt
         if: steps.changes.outputs.count > 0
       - name: Create a GitHub release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
-          tag_name: oni-comb-$TARGET_DIR-rs-v${{ steps.version.outputs.version }}
-          release_name: Release oni-comb-$TARGET_DIR-rs-v${{ steps.version.outputs.version }}
+          tag_name: oni-comb-${{ steps.target_dir.outputs.value }}-rs-v${{ steps.version.outputs.version }}
+          release_name: Release oni-comb-${{ steps.target_dir.outputs.value }}-rs-v${{ steps.version.outputs.version }}
           body_path: changelog.txt
         if: steps.changes.outputs.count > 0
