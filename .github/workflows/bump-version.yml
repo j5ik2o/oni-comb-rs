@@ -23,7 +23,7 @@ jobs:
         run: |
           LATEST_TAG=$(git tag -l --sort -refname | grep parser | head -n 1)
           echo "latest-tag = $LATEST_TAG"
-          COUNT=$(git log $LATEST_TAG..HEAD --pretty=format:"%s" --no-merges -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(\(.*\))?:' -- '$TARGET_DIR/*' | awk 'END{print NR}')
+          COUNT=$(git log $LATEST_TAG..HEAD --pretty=format:"%s" --no-merges -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(\(.*\))?:' -- "$TARGET_DIR/*" | awk 'END{print NR}')
           echo "steps.changes.outputs.count = $COUNT"
           echo "::set-output name=count::$COUNT"
       - name: Get the next version
