@@ -43,7 +43,7 @@ jobs:
         if: steps.changes.outputs.count > 0
       - run: cargo set-version -p oni-comb-${{ steps.target_dir.outputs.value }}-rs ${{ steps.version.outputs.version }}
         if: steps.changes.outputs.count > 0
-      - name: git commit & tag & push
+      - name: git commit & push
         id: git_commit_push
         run: |
           git config --global user.email "j5ik2o@gmail.com"
