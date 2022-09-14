@@ -37,7 +37,7 @@ jobs:
           echo "COUNT=$COUNT"
           echo "::set-output name=count::$COUNT"
       - name: Calculate semver level
-        id: semver
+        id: semver_level
         run: |
           SEMVER_LEVEL=$(git log ${{ steps.defines.outputs.prev_tag }}..HEAD --pretty=format:"%h%x09%H%x09%s" \
             --no-merges -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(\(.*\))?:' \
@@ -48,7 +48,7 @@ jobs:
       - name: Get the next version
         id: versions
         run: |
-          NEXT_VERSION=$(echo ${{ steps.defines.outputs.prev_tag }} | python3 "${GITHUB_WORKSPACE}"/.github/next-semver.py ${{ steps.semver.outputs.value }})
+          NEXT_VERSION=$(echo ${{ steps.defines.outputs.prev_tag }} | python3 "${GITHUB_WORKSPACE}"/.github/next-semver.py ${{ steps.semver_level.outputs.value }})
           echo "NEXT_VERSION=$NEXT_VERSION"
           echo "::set-output name=next_version::$NEXT_VERSION"
           echo "::set-output name=next_tag::oni-comb-${{ steps.defines.outputs.target_dir }}-rs-v$NEXT_VERSION"
