@@ -19,10 +19,13 @@ for row in cin:
     for key in commit_messages.keys():
         match_append(key, row)
 
-for k,v in rules.items():
-    sum = 0
-    for t in v:
-        sum += commit_messages[t]
-    if sum > 0:
-        print(k)
-        break
+if sum(commit_messages.values()) > 0:
+    for k,v in rules.items():
+        sum = 0
+        for t in v:
+            sum += commit_messages[t]
+        if sum > 0:
+            print(k)
+            break
+else:
+    sys.exit(-1)
