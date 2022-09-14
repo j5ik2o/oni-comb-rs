@@ -8,7 +8,7 @@ commit_messages = {'build': 0, 'ci': 0, 'feat': 0, 'fix': 0, 'docs': 0, 'style':
 
 rules = {'major': ['perf'], 'minor': ['feat', 'revert'], 'patch': ['build', 'ci', 'fix', 'docs', 'style', 'refactor', 'chore']}
 
-cin = csv.reader(sys.stdin, delimiter="\t") # 補足: 開く対象がファイルのときは newline='' をパラメータに追加
+cin = csv.reader(sys.stdin, delimiter="\t")
 
 def match_append(key, row):
     r = re.match(f"^{key}(.*)?\: (.*)", row[2])
