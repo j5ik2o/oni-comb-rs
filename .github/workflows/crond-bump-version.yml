@@ -41,7 +41,7 @@ jobs:
         run: |
           SEMVER_LEVEL=$(git log ${{ steps.defines.outputs.prev_tag }}..HEAD --pretty=format:"%s" \
             --no-merges -P --grep='^(build|ci|feat|fix|docs|style|refactor|perf|test|revert|chore)(\(.*\))?:' \
-            -- "${{ steps.defines.outputs.target_dir }}/*" | python3 "${GITHUB_WORKSPACE}"/.github/semver_level.py)
+            -- "${{ steps.defines.outputs.target_dir }}/*" | python3 "${GITHUB_WORKSPACE}"/.github/semver-level.py)
           echo "SEMVER_LEVEL=$SEMVER_LEVEL"
           echo "::set-output name=value::$SEMVER_LEVEL"
         if: steps.changes.outputs.count > 0
