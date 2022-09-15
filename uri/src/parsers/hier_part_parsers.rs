@@ -8,7 +8,7 @@ use oni_comb_parser_rs::prelude::*;
 //                / path-rootless
 //                / path-empty
 pub fn hier_part<'a>() -> Parser<'a, u8, Option<HierPart>> {
-  let p1 = (seq(b"//") * authority() + path_abempty(true)).map(|(a, b)| HierPart::new(Some(a), b));
+  let p1 = (seq(b"//") * authority() + path_abempty(false)).map(|(a, b)| HierPart::new(Some(a), b));
   let p2 = (path_abempty(true).attempt() | path_rootless()).map(|e| HierPart::of_path(e));
   (p1.attempt() | p2).opt()
 }
