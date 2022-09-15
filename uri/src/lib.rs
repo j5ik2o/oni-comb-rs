@@ -9,7 +9,7 @@ mod tests {
   use http::Uri as HttpUri;
 
   #[test]
-  fn it_works() {
+  fn compare_uri_parsing() {
     let text = "http://localhost";
     let http_uri = text.parse::<HttpUri>().unwrap();
     println!("{:?}", http_uri.host());
