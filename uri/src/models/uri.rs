@@ -1,12 +1,12 @@
 use crate::models::authority::Authority;
 use crate::models::hier_part::HierPart;
+use crate::models::host_name::HostName;
 use crate::models::path::Path;
 use crate::models::query::Query;
 use crate::models::scheme::Scheme;
 use crate::parsers::uri_parsers;
 use oni_comb_parser_rs::prelude::{ParseError, ParserRunner};
 use std::fmt::Formatter;
-use crate::models::host_name::HostName;
 
 pub type Fragment = String;
 
