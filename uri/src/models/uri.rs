@@ -4,6 +4,7 @@ use crate::models::host_name::HostName;
 use crate::models::path::Path;
 use crate::models::query::Query;
 use crate::models::scheme::Scheme;
+use crate::models::user_info::UserInfo;
 use crate::parsers::uri_parsers;
 use oni_comb_parser_rs::prelude::{ParseError, ParserRunner};
 use std::fmt::Formatter;
@@ -101,17 +102,12 @@ impl Uri {
     self.authority().and_then(|a| a.port())
   }
 
+  pub fn user_info(&self) -> Option<&UserInfo> {
+    self.authority().and_then(|a| a.user_info())
+  }
+
   pub fn path(&self) -> Option<&Path> {
-    match self.hier_path {
-      Some(ref hp) => {
-        if hp.path.is_empty() {
-          None
-        } else {
-          Some(&hp.path)
-        }
-      }
-      None => None,
-    }
+    self.hier_path.as_ref().map(|h| &h.path)
   }
 
   pub fn query(&self) -> Option<&Query> {
