@@ -6,6 +6,7 @@ use crate::models::scheme::Scheme;
 use crate::parsers::uri_parsers;
 use oni_comb_parser_rs::prelude::{ParseError, ParserRunner};
 use std::fmt::Formatter;
+use crate::models::host_name::HostName;
 
 pub type Fragment = String;
 
@@ -90,6 +91,14 @@ impl Uri {
       Some(ref hp) => hp.authority.as_ref(),
       None => None,
     }
+  }
+
+  pub fn host_name(&self) -> Option<&HostName> {
+    self.authority().map(|a| a.host_name())
+  }
+
+  pub fn port(&self) -> Option<u16> {
+    self.authority().and_then(|a| a.port())
   }
 
   pub fn path(&self) -> Option<&Path> {
