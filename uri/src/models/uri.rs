@@ -1,5 +1,6 @@
 use crate::models::authority::Authority;
 use crate::models::hier_part::HierPart;
+use crate::models::host_name::HostName;
 use crate::models::path::Path;
 use crate::models::query::Query;
 use crate::models::scheme::Scheme;
@@ -90,6 +91,14 @@ impl Uri {
       Some(ref hp) => hp.authority.as_ref(),
       None => None,
     }
+  }
+
+  pub fn host_name(&self) -> Option<&HostName> {
+    self.authority().map(|a| a.host_name())
+  }
+
+  pub fn port(&self) -> Option<u16> {
+    self.authority().and_then(|a| a.port())
   }
 
   pub fn path(&self) -> Option<&Path> {
