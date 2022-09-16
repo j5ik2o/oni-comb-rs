@@ -33,7 +33,7 @@ pub fn ip_v_future<'a>() -> Parser<'a, u8, String> {
 //  reg-name      = *( unreserved / pct-encoded / sub-delims )
 pub fn reg_name<'a>() -> Parser<'a, u8, HostName> {
   (unreserved().attempt() | pct_encoded().attempt() | sub_delims())
-    .of_many0()
+    .of_many1()
     .collect()
     .map(|e| e.to_vec())
     .map_res(String::from_utf8)
