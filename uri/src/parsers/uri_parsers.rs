@@ -7,12 +7,12 @@ use oni_comb_parser_rs::prelude::*;
 
 //  absolute-URI  = scheme ":" hier-part [ "?" query ]
 pub fn absolute_uri<'a>() -> Parser<'a, u8, Uri> {
-  ((scheme() - elm(b':')) + hier_part() + (elm(b'?') * query()).opt()).map(|((a, b), c)| Uri::new(a, b, c, None))
+  ((scheme().opt() - elm(b':')) + hier_part() + (elm(b'?') * query()).opt()).map(|((a, b), c)| Uri::new(a, b, c, None))
 }
 
 // URI = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
 pub fn uri<'a>() -> Parser<'a, u8, Uri> {
-  ((scheme() - elm(b':')) + hier_part() + (elm(b'?') * query()).opt() + (elm(b'#') * fragment()).opt())
+  ((scheme().opt() - elm(b':')) + hier_part() + (elm(b'?') * query()).opt() + (elm(b'#') * fragment()).opt())
     .map(|(((schema, hier_path), query), fragment)| Uri::new(schema, hier_path, query, fragment))
 }
 

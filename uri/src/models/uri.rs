@@ -11,7 +11,7 @@ pub type Fragment = String;
 
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub struct Uri {
-  schema: Scheme,
+  schema: Option<Scheme>,
   hier_path: Option<HierPart>,
   query: Option<Query>,
   fragment: Option<String>,
@@ -20,7 +20,7 @@ pub struct Uri {
 impl Default for Uri {
   fn default() -> Self {
     Uri {
-      schema: Scheme::default(),
+      schema: Option::default(),
       hier_path: Option::default(),
       query: Option::default(),
       fragment: Option::default(),
@@ -33,7 +33,7 @@ impl std::fmt::Display for Uri {
     write!(
       f,
       "{}:{}{}{}{}",
-      self.schema.to_string(),
+      self.schema.as_ref().map(|s| s.to_string()).unwrap_or("".to_string()),
       self
         .hier_path
         .as_ref()
@@ -67,7 +67,12 @@ impl Uri {
     uri_parsers::uri().parse(text.as_bytes()).to_result()
   }
 
-  pub fn new(schema: Scheme, hier_path: Option<HierPart>, query: Option<Query>, fragment: Option<Fragment>) -> Self {
+  pub fn new(
+    schema: Option<Scheme>,
+    hier_path: Option<HierPart>,
+    query: Option<Query>,
+    fragment: Option<Fragment>,
+  ) -> Self {
     Self {
       schema,
       hier_path,
@@ -76,8 +81,8 @@ impl Uri {
     }
   }
 
-  pub fn schema(&self) -> &Scheme {
-    &self.schema
+  pub fn schema(&self) -> Option<&Scheme> {
+    self.schema.as_ref()
   }
 
   pub fn authority(&self) -> Option<&Authority> {
@@ -127,7 +132,7 @@ mod test {
   #[test]
   fn test_parse() {
     init();
-    let s = "http://user1:pass1@localhost:8080/example?key1=value1&key2=value2&key1=value2#f1";
+    let s = "://user1:pass1@localhost:8080/example?key1=value1&key2=value2&key1=value2#f1";
     match Uri::parse(s) {
       Ok(uri) => println!("{:?}", uri),
       Err(e) => println!("{:?}", e),
