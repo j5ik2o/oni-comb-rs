@@ -1,6 +1,5 @@
 name: parser-release
 on:
-  workflow_dispatch:
   push:
     tags:
       - 'oni-comb-parser-rs-v[0-9]+.[0-9]+.[0-9]+'
