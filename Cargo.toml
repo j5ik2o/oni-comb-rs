@@ -3,5 +3,6 @@ members = [
     "parser",
     "toys",
     "crond",
-    "uri"
+    "uri",
+    "hocon"
 ]
