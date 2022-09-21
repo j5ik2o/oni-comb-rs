@@ -161,8 +161,8 @@ fn property<'a>() -> Parser<'a, u8, (String, ConfigValue)> {
   key() + ((kv() * lazy(config_value)).attempt() | object_config_value().attempt() | array_config_value())
 }
 
-fn property_config<'a>() -> Parser<'a, u8, ConfigValue> {
-  property().map(|(k, v)| ConfigValue::Object(ConfigObjectValue::from((k, v))))
+fn property_config_value<'a>() -> Parser<'a, u8, (String, ConfigValues)> {
+  property().map(|(k, v)| (k, ConfigValues::of_single(v)))
 }
 
 fn object_left_bracket<'a>() -> Parser<'a, u8, &'a u8> {
@@ -248,12 +248,29 @@ fn config_value<'a>() -> Parser<'a, u8, ConfigValue> {
     .surround(space_or_comment(), space_or_comment())
 }
 
-fn config<'a>() -> Parser<'a, u8, ConfigValue> {
-  property_config() | object_config_value() | array_config_value()
+fn config<'a>() -> Parser<'a, u8, Vec<ConfigValue>> {
+  property_config_value()
+    .of_many0()
+    .map(|values: Vec<(String, ConfigValues)>| {
+      let map = values.into_iter().fold(HashMap::new(), |mut r, (k, v)| {
+        match r.get_mut(&k) {
+          None => {
+            r.insert(k, v);
+          }
+          Some(m) => {
+            m.with_fallback(v);
+          }
+        }
+        r
+      });
+      vec![ConfigValue::Object(ConfigObjectValue::new(map))]
+    })
+    | object_config_value().of_many0()
+    | array_config_value().of_many0()
 }
 
 pub fn hocon<'a>() -> Parser<'a, u8, Vec<ConfigValue>> {
-  space_or_comment() * config().of_many0() - end()
+  space_or_comment() * config() - end()
 }
 
 #[cfg(test)]

@@ -104,6 +104,8 @@ mod tests {
     println!("{:?}", config);
     let a_value = config.get_value("foo.test.a");
     assert_eq!(a_value, Some(ConfigValue::String("biz".to_string())));
+    let baz_value = config.get_value("foo.baz");
+    println!("{:?}", baz_value);
   }
 
   #[test]
