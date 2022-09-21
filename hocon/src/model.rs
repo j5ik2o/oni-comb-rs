@@ -1,163 +1,24 @@
-use crate::parsers::hocon;
-use oni_comb_parser_rs::prelude::ParserRunner;
 use std::collections::HashMap;
 use std::env;
 use std::fs::File;
 use std::io::Read;
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum ConfigNumberValue {
-  SignedLong(i64),
-  UnsignedLong(u64),
-  Float(f64),
-}
+use oni_comb_parser_rs::prelude::ParserRunner;
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum ConfigValue {
-  Null,
-  Bool(bool),
-  String(String),
-  Number(ConfigNumberValue),
-  Duration(ConfigNumberValue, TimeUnit),
-  Array(Vec<ConfigValue>),
-  Object(HashMap<String, ConfigValues>),
-  Reference(String, bool),
-}
+use crate::model::config_value::ConfigValue;
+use crate::model::config_values::ConfigValues;
+use crate::parsers::hocon;
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum ConfigValues {
-  Single(ConfigValue),
-  Multi(Vec<ConfigValue>),
-}
-
-impl ConfigValues {
-  pub fn of_single(cv: ConfigValue) -> Self {
-    ConfigValues::Single(cv)
-  }
-
-  pub fn of_multi(cvs: Vec<ConfigValue>) -> Self {
-    ConfigValues::Multi(cvs)
-  }
-
-  pub fn push(&mut self, cv: ConfigValue) {
-    match self {
-      ConfigValues::Single(v) => *self = Self::of_multi(vec![v.clone(), cv]),
-      ConfigValues::Multi(v) => v.push(cv),
-    }
-  }
-
-  pub fn head(&self) -> &ConfigValue {
-    match self {
-      ConfigValues::Single(v) => v,
-      ConfigValues::Multi(v) => v.first().unwrap(),
-    }
-  }
-
-  pub fn index(&self, idx: usize) -> &ConfigValue {
-    match self {
-      ConfigValues::Single(v) => v,
-      ConfigValues::Multi(v) => &v[idx],
-    }
-  }
-
-  pub fn last(&self) -> &ConfigValue {
-    match self {
-      ConfigValues::Single(v) => v,
-      ConfigValues::Multi(v) => v.last().unwrap(),
-    }
-  }
-
-  pub fn last_index(&self) -> usize {
-    match self {
-      ConfigValues::Single(_v) => 0,
-      ConfigValues::Multi(v) => v.len() - 1,
-    }
-  }
-
-  pub fn prev_last(&self) -> Option<&ConfigValue> {
-    match self {
-      ConfigValues::Single(_v) => None,
-      ConfigValues::Multi(v) => Some(&v[v.len() - 2]),
-    }
-  }
-}
-
-impl ConfigValue {
-  pub fn has_child(&self) -> bool {
-    match self {
-      ConfigValue::Object(..) => true,
-      ConfigValue::Array(..) => true,
-      _ => false,
-    }
-  }
-
-  pub fn get_value(&self, key: &str) -> Option<&ConfigValue> {
-    self.get_values(key).map(|v| v.last())
-  }
-
-  pub fn get_values(&self, path: &str) -> Option<&ConfigValues> {
-    let keys = path.split(".").collect::<Vec<_>>();
-    let key = keys[0];
-    let child_count = keys.len() - 1;
-    match self {
-      ConfigValue::Object(map) => match map.get(key) {
-        Some(cv) if child_count > 0 => cv.last().get_values(&path[(key.len() + 1) as usize..]),
-        Some(cv) => Some(cv),
-        None => None,
-      },
-      _ => None,
-    }
-  }
-
-  pub fn contains(&self, key: &str) -> bool {
-    match self {
-      ConfigValue::Object(map) => map.contains_key(key),
-      _ => false,
-    }
-  }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum TimeUnit {
-  Days,
-  Hours,
-  Microseconds,
-  Milliseconds,
-  Minutes,
-  Nanoseconds,
-  Seconds,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum ConfigObject {
-  Object(HashMap<String, ConfigValues>),
-  Array(Vec<ConfigValue>),
-  KeyValue(String, ConfigValue),
-}
-
-impl ConfigObject {
-  pub fn get_value(&self, key: &str) -> Option<&ConfigValue> {
-    match self {
-      ConfigObject::Object(map) => map.get(key).map(|v| v.last()),
-      ConfigObject::Array(array) => array.iter().find(|value| value.contains(key)),
-      ConfigObject::KeyValue(k, value) if key == k => Some(value),
-      _ => None,
-    }
-  }
-
-  pub fn contains(&self, key: &str) -> bool {
-    match self {
-      ConfigObject::Object(map) => map.contains_key(key),
-      ConfigObject::Array(array) => array.iter().any(|p| p.contains(key)),
-      ConfigObject::KeyValue(k, _value) if key == k => true,
-      _ => false,
-    }
-  }
-}
+pub mod config_array_value;
+pub mod config_number_value;
+pub mod config_object_value;
+pub mod config_value;
+pub mod config_values;
+pub mod time_unit;
 
 #[derive(Debug, Clone)]
 pub struct Config {
-  configs: Vec<ConfigObject>,
+  configs: Vec<ConfigValue>,
 }
 
 #[derive(Debug)]
@@ -191,7 +52,7 @@ impl Config {
       if ref_value.is_some() {
         ref_value
       } else {
-        cvs.prev_last().map(Clone::clone)
+        cvs.prev_latest().map(Clone::clone)
       }
     } else {
       ref_value
@@ -210,9 +71,9 @@ impl Config {
     match config_value {
       Some(cv) if child_count > 0 => {
         let next_key = &path[(key.len() + 1) as usize..];
-        cv.get_values(next_key).and_then(|cvs| match cvs.last() {
+        cv.get_values(next_key).and_then(|cvs| match cvs.latest() {
           ConfigValue::Reference(ref_name, missing) => self.eval_reference(cvs, &ref_name, *missing),
-          _ => Some(cvs.last().clone()),
+          _ => Some(cvs.latest().clone()),
         })
       }
       Some(cv) => Some(cv.clone()),

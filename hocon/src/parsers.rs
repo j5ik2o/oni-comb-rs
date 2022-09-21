@@ -2,7 +2,12 @@ use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use crate::model::*;
+use crate::model::config_array_value::ConfigArrayValue;
+use crate::model::config_number_value::ConfigNumberValue;
+use crate::model::config_object_value::ConfigObjectValue;
+use crate::model::config_value::ConfigValue;
+use crate::model::config_values::ConfigValues;
+use crate::model::time_unit::TimeUnit;
 use oni_comb_parser_rs::prelude::*;
 
 fn space_or_comment<'a>() -> Parser<'a, u8, ()> {
@@ -156,8 +161,8 @@ fn property<'a>() -> Parser<'a, u8, (String, ConfigValue)> {
   key() + ((kv() * lazy(config_value)).attempt() | object_config_value().attempt() | array_config_value())
 }
 
-fn property_config<'a>() -> Parser<'a, u8, ConfigObject> {
-  property().map(|(k, v)| ConfigObject::KeyValue(k, v))
+fn property_config<'a>() -> Parser<'a, u8, ConfigValue> {
+  property().map(|(k, v)| ConfigValue::Object(ConfigObjectValue::from((k, v))))
 }
 
 fn object_left_bracket<'a>() -> Parser<'a, u8, &'a u8> {
@@ -227,11 +232,11 @@ fn simple_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
 }
 
 fn object_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
-  object().map(ConfigValue::Object)
+  object().map(|v| ConfigValue::Object(ConfigObjectValue::new(v)))
 }
 
 fn array_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
-  array().map(ConfigValue::Array)
+  array().map(|v| ConfigValue::Array(ConfigArrayValue::new(v)))
 }
 
 fn reference_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
@@ -243,11 +248,11 @@ fn config_value<'a>() -> Parser<'a, u8, ConfigValue> {
     .surround(space_or_comment(), space_or_comment())
 }
 
-fn config<'a>() -> Parser<'a, u8, ConfigObject> {
-  property_config() | object().map(ConfigObject::Object) | array().map(ConfigObject::Array)
+fn config<'a>() -> Parser<'a, u8, ConfigValue> {
+  property_config() | object_config_value() | array_config_value()
 }
 
-pub fn hocon<'a>() -> Parser<'a, u8, Vec<ConfigObject>> {
+pub fn hocon<'a>() -> Parser<'a, u8, Vec<ConfigValue>> {
   space_or_comment() * config().of_many0() - end()
 }
 
@@ -281,7 +286,10 @@ mod tests {
     let ast = result.clone().to_result().ok().unwrap();
     assert_eq!(
       ast[0],
-      ConfigObject::KeyValue("a".to_string(), ConfigValue::Number(ConfigNumberValue::UnsignedLong(1)))
+      ConfigValue::Object(ConfigObjectValue::from((
+        "a".to_string(),
+        ConfigValue::Number(ConfigNumberValue::UnsignedLong(1))
+      )))
     );
   }
 
@@ -295,7 +303,10 @@ mod tests {
     let ast = result.clone().to_result().ok().unwrap();
     assert_eq!(
       ast[0],
-      ConfigObject::KeyValue("b".to_string(), ConfigValue::Number(ConfigNumberValue::UnsignedLong(1)))
+      ConfigValue::Object(ConfigObjectValue::from((
+        "b".to_string(),
+        ConfigValue::Number(ConfigNumberValue::UnsignedLong(1))
+      )))
     );
   }
 
@@ -310,7 +321,10 @@ mod tests {
     let ast = result.clone().to_result().ok().unwrap();
     assert_eq!(
       ast.first().unwrap().clone(),
-      ConfigObject::KeyValue("foo".to_string(), ConfigValue::String("bar".to_string()))
+      ConfigValue::Object(ConfigObjectValue::from((
+        "foo".to_string(),
+        ConfigValue::String("bar".to_string())
+      )))
     );
   }
 
@@ -325,16 +339,16 @@ mod tests {
     let ast = result.clone().to_result().ok().unwrap();
     assert_eq!(
       ast.first().unwrap().clone(),
-      ConfigObject::KeyValue(
+      ConfigValue::Object(ConfigObjectValue::from((
         "foo".to_string(),
-        ConfigValue::Array(vec![
+        ConfigValue::Array(ConfigArrayValue::new(vec![
           ConfigValue::Duration(ConfigNumberValue::UnsignedLong(1), TimeUnit::Seconds),
           ConfigValue::Number(ConfigNumberValue::Float(2.1)),
           ConfigValue::Number(ConfigNumberValue::UnsignedLong(3)),
           ConfigValue::Number(ConfigNumberValue::UnsignedLong(4)),
           ConfigValue::Number(ConfigNumberValue::UnsignedLong(5))
-        ])
-      )
+        ]))
+      )))
     );
   }
 
