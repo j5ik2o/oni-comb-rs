@@ -6,6 +6,13 @@ use std::fs::File;
 use std::io::Read;
 
 #[derive(Clone, Debug, PartialEq)]
+pub enum ConfigNumberValue {
+  SignedLong(i64),
+  UnsignedLong(u64),
+  Float(f64),
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum ConfigValue {
   Null,
   Bool(bool),
@@ -88,13 +95,13 @@ impl ConfigValue {
     self.get_values(key).map(|v| v.last())
   }
 
-  pub fn get_values(&self, key: &str) -> Option<&ConfigValues> {
-    let keys = key.split(".").collect::<Vec<_>>();
-    let current_key = keys[0];
+  pub fn get_values(&self, path: &str) -> Option<&ConfigValues> {
+    let keys = path.split(".").collect::<Vec<_>>();
+    let key = keys[0];
     let child_count = keys.len() - 1;
     match self {
-      ConfigValue::Object(map) => match map.get(current_key) {
-        Some(cv) if child_count > 0 => cv.last().get_values(&key[(current_key.len() + 1) as usize..]),
+      ConfigValue::Object(map) => match map.get(key) {
+        Some(cv) if child_count > 0 => cv.last().get_values(&path[(key.len() + 1) as usize..]),
         Some(cv) => Some(cv),
         None => None,
       },
@@ -119,13 +126,6 @@ pub enum TimeUnit {
   Minutes,
   Nanoseconds,
   Seconds,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum ConfigNumberValue {
-  SignedLong(i64),
-  UnsignedLong(u64),
-  Float(f64),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -198,18 +198,18 @@ impl Config {
     }
   }
 
-  pub fn get_value(&self, key: &str) -> Option<ConfigValue> {
-    let keys = key.split(".").collect::<Vec<_>>();
-    let current_key = keys[0];
-    let child_level = keys.len() - 1;
+  pub fn get_value(&self, path: &str) -> Option<ConfigValue> {
+    let keys = path.split(".").collect::<Vec<_>>();
+    let key = keys[0];
+    let child_count = keys.len() - 1;
     let config_value = self
       .configs
       .iter()
-      .find(|cv| cv.contains(current_key))
-      .and_then(|cv| cv.get_value(current_key));
+      .find(|cv| cv.contains(key))
+      .and_then(|cv| cv.get_value(key));
     match config_value {
-      Some(cv) if child_level > 0 => {
-        let next_key = &key[(current_key.len() + 1) as usize..];
+      Some(cv) if child_count > 0 => {
+        let next_key = &path[(key.len() + 1) as usize..];
         cv.get_values(next_key).and_then(|cvs| match cvs.last() {
           ConfigValue::Reference(ref_name, missing) => self.eval_reference(cvs, &ref_name, *missing),
           _ => Some(cvs.last().clone()),
