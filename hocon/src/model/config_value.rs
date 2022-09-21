@@ -1,4 +1,5 @@
 use crate::model::config_array_value::ConfigArrayValue;
+use crate::model::config_duration_value::ConfigDurationValue;
 use crate::model::config_number_value::ConfigNumberValue;
 use crate::model::config_object_value::ConfigObjectValue;
 use crate::model::config_values::ConfigValues;
@@ -10,7 +11,7 @@ pub enum ConfigValue {
   Bool(bool),
   String(String),
   Number(ConfigNumberValue),
-  Duration(ConfigNumberValue, TimeUnit),
+  Duration(ConfigDurationValue),
   Array(ConfigArrayValue),
   Object(ConfigObjectValue),
   Reference(String, bool),

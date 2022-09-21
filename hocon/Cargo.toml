@@ -14,6 +14,9 @@ repository = "https://github.com/j5ik2o/oni-comb-rs"
 [dependencies]
 oni-comb-parser-rs = { version = "0.0.*", path = "../parser" }
 envy = "0.4"
+rust_decimal = "1.26"
+rust_decimal_macros = "1.26"
+
 
 [dev-dependencies]
 log = "0.4.17"

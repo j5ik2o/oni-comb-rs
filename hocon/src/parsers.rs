@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use crate::model::config_array_value::ConfigArrayValue;
+use crate::model::config_duration_value::ConfigDurationValue;
 use crate::model::config_number_value::ConfigNumberValue;
 use crate::model::config_object_value::ConfigObjectValue;
 use crate::model::config_value::ConfigValue;
@@ -62,31 +63,23 @@ fn duration<'a>() -> Parser<'a, u8, (ConfigNumberValue, TimeUnit)> {
 }
 
 fn duration_value<'a>() -> Parser<'a, u8, ConfigValue> {
-  duration().map(|(nv, u)| ConfigValue::Duration(nv, u))
+  duration().map(|(nv, u)| ConfigValue::Duration(ConfigDurationValue::new(nv, u)))
 }
 
 fn number_value<'a>() -> Parser<'a, u8, ConfigNumberValue> {
   number().map(|(s, i, f, e)| match (s, i, f, e) {
-    (None, i, None, None) => {
-      let n = u64::from_str(&i).unwrap();
-      ConfigNumberValue::UnsignedLong(n)
-    }
-    (Some(_), i, None, None) => {
-      let n = i64::from_str(&i).unwrap();
-      ConfigNumberValue::SignedLong(n)
-    }
+    (None, i, None, None) => ConfigNumberValue::new(&i),
+    (Some(_), i, None, None) => ConfigNumberValue::new(&i),
     (_, i, Some(f), None) => {
       let mut s = i;
       s.push_str(&f);
-      let n = f64::from_str(&s).unwrap();
-      ConfigNumberValue::Float(n)
+      ConfigNumberValue::new(&s)
     }
     (_, i, Some(f), Some(e)) => {
       let mut s = i;
       s.push_str(&f);
       s.push_str(&e);
-      let n = f64::from_str(&s).unwrap();
-      ConfigNumberValue::Float(n)
+      ConfigNumberValue::new(&s)
     }
     _ => panic!("no match !!!"),
   })
@@ -306,7 +299,7 @@ mod tests {
       ast[0],
       ConfigValue::Object(ConfigObjectValue::from((
         "a".to_string(),
-        ConfigValue::Number(ConfigNumberValue::UnsignedLong(1))
+        ConfigValue::Number(ConfigNumberValue::new("1"))
       )))
     );
   }
@@ -323,7 +316,7 @@ mod tests {
       ast[0],
       ConfigValue::Object(ConfigObjectValue::from((
         "b".to_string(),
-        ConfigValue::Number(ConfigNumberValue::UnsignedLong(1))
+        ConfigValue::Number(ConfigNumberValue::new("1"))
       )))
     );
   }
@@ -360,11 +353,11 @@ mod tests {
       ConfigValue::Object(ConfigObjectValue::from((
         "foo".to_string(),
         ConfigValue::Array(ConfigArrayValue::new(vec![
-          ConfigValue::Duration(ConfigNumberValue::UnsignedLong(1), TimeUnit::Seconds),
-          ConfigValue::Number(ConfigNumberValue::Float(2.1)),
-          ConfigValue::Number(ConfigNumberValue::UnsignedLong(3)),
-          ConfigValue::Number(ConfigNumberValue::UnsignedLong(4)),
-          ConfigValue::Number(ConfigNumberValue::UnsignedLong(5))
+          ConfigValue::Duration(ConfigDurationValue::new(ConfigNumberValue::new("1"), TimeUnit::Seconds)),
+          ConfigValue::Number(ConfigNumberValue::new("2.1")),
+          ConfigValue::Number(ConfigNumberValue::new("3")),
+          ConfigValue::Number(ConfigNumberValue::new("4")),
+          ConfigValue::Number(ConfigNumberValue::new("5"))
         ]))
       )))
     );

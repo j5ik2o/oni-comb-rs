@@ -9,6 +9,7 @@ use crate::model::config_values::ConfigValues;
 use crate::parsers::hocon;
 
 pub mod config_array_value;
+pub mod config_duration_value;
 pub mod config_number_value;
 pub mod config_object_value;
 pub mod config_value;
