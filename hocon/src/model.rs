@@ -94,13 +94,13 @@ mod tests {
     foo {
       bar: "baz"
       bar: "biz"
-      test: {
+      test {
         a: "aaaa"
         a: ${foo.bar} 
       }
     }
     foo {
-      test: {
+      test {
         b: "bbbb"
       }
     }
@@ -117,9 +117,9 @@ mod tests {
   fn test_environment_value_exists() {
     let input = r#"
     foo {
-      bar : "baz",
-      bar : "biz",
-      test : {
+      bar = "baz",
+      bar = "biz",
+      test {
         a: "aaaa",
         a: ${TEST_VAR} 
       }
@@ -140,7 +140,7 @@ mod tests {
     foo {
       bar : "baz",
       bar : "biz",
-      test : {
+      test {
         a: "aaaa",
         a: ${TEST_VAR} 
       }
@@ -158,7 +158,7 @@ mod tests {
     foo {
       bar : "baz",
       bar : "biz",
-      test : {
+      test {
         a: "aaaa",
         a: ${?TEST_VAR} 
       }
@@ -179,7 +179,7 @@ mod tests {
     foo {
       bar : "baz",
       bar : "biz",
-      test : {
+      test {
         a: "aaaa",
         a: ${?TEST_VAR} 
       }

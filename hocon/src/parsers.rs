@@ -267,7 +267,7 @@ fn config<'a>() -> Parser<'a, u8, Vec<ConfigValue>> {
       vec![ConfigValue::Object(ConfigObjectValue::new(map))]
     })
     .attempt()
-    | (object_config_value().attempt() | array_config_value().attempt()).of_many0()
+    | (object_config_value().attempt() | array_config_value()).of_many0()
 }
 
 pub fn hocon<'a>() -> Parser<'a, u8, Vec<ConfigValue>> {
