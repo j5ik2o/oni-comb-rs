@@ -249,23 +249,24 @@ fn config_value<'a>() -> Parser<'a, u8, ConfigValue> {
 }
 
 fn config<'a>() -> Parser<'a, u8, Vec<ConfigValue>> {
-  property_config_value()
-    .of_many0()
-    .map(|values: Vec<(String, ConfigValues)>| {
-      let map = values.into_iter().fold(HashMap::new(), |mut r, (k, v)| {
-        match r.get_mut(&k) {
-          None => {
-            r.insert(k, v);
+  object_config_value().of_many0().attempt()
+    | property_config_value()
+      .of_many0()
+      .map(|values: Vec<(String, ConfigValues)>| {
+        let map = values.into_iter().fold(HashMap::new(), |mut r, (k, v)| {
+          match r.get_mut(&k) {
+            None => {
+              r.insert(k, v);
+            }
+            Some(m) => {
+              m.with_fallback(v);
+            }
           }
-          Some(m) => {
-            m.with_fallback(v);
-          }
-        }
-        r
-      });
-      vec![ConfigValue::Object(ConfigObjectValue::new(map))]
-    })
-    | object_config_value().of_many0()
+          r
+        });
+        vec![ConfigValue::Object(ConfigObjectValue::new(map))]
+      })
+      .attempt()
     | array_config_value().of_many0()
 }
 
