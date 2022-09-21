@@ -96,8 +96,12 @@ mod tests {
         a: ${foo.bar} 
       }
     }
+    foo {
+      baz: 123
+    }
     "#;
     let config = Config::parse_from_string(input).unwrap();
+    println!("{:?}", config);
     let a_value = config.get_value("foo.test.a");
     assert_eq!(a_value, Some(ConfigValue::String("biz".to_string())));
   }
