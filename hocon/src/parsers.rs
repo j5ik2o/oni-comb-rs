@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -249,25 +250,24 @@ fn config_value<'a>() -> Parser<'a, u8, ConfigValue> {
 }
 
 fn config<'a>() -> Parser<'a, u8, Vec<ConfigValue>> {
-  object_config_value().of_many0().attempt()
-    | property_config_value()
-      .of_many0()
-      .map(|values: Vec<(String, ConfigValues)>| {
-        let map = values.into_iter().fold(HashMap::new(), |mut r, (k, v)| {
-          match r.get_mut(&k) {
-            None => {
-              r.insert(k, v);
-            }
-            Some(m) => {
-              m.with_fallback(v);
-            }
+  property_config_value()
+    .of_many1()
+    .map(|values: Vec<(String, ConfigValues)>| {
+      let map = values.into_iter().fold(HashMap::new(), |mut r, (k, v)| {
+        match r.get_mut(&k) {
+          None => {
+            r.insert(k, v);
           }
-          r
-        });
-        vec![ConfigValue::Object(ConfigObjectValue::new(map))]
-      })
-      .attempt()
-    | array_config_value().of_many0()
+          Some(m) => {
+            m.with_fallback(v);
+          }
+        }
+        r
+      });
+      vec![ConfigValue::Object(ConfigObjectValue::new(map))]
+    })
+    .attempt()
+    | (object_config_value().attempt() | array_config_value().attempt()).of_many0()
 }
 
 pub fn hocon<'a>() -> Parser<'a, u8, Vec<ConfigValue>> {
