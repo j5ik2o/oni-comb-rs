@@ -3,6 +3,19 @@ use crate::model::config_duration_value::ConfigDurationValue;
 use crate::model::config_number_value::ConfigNumberValue;
 use crate::model::config_object_value::ConfigObjectValue;
 use crate::model::config_values::ConfigValues;
+use crate::model::Config;
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ConfigIncludeValue {
+  method: String,
+  file_name: String,
+}
+
+impl ConfigIncludeValue {
+  pub fn new(method: String, file_name: String) -> Self {
+    Self { method, file_name }
+  }
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum ConfigValue {
@@ -14,6 +27,7 @@ pub enum ConfigValue {
   Array(ConfigArrayValue),
   Object(ConfigObjectValue),
   Reference(String, bool),
+  Include(ConfigIncludeValue),
 }
 
 impl ConfigValue {
@@ -22,6 +36,30 @@ impl ConfigValue {
       ConfigValue::Object(..) => true,
       ConfigValue::Array(..) => true,
       _ => false,
+    }
+  }
+
+  pub fn is_include(&self) -> bool {
+    match self {
+      ConfigValue::Include(m) => true,
+      _ => false,
+    }
+  }
+
+  pub fn include(&self) -> Option<&ConfigIncludeValue> {
+    match self {
+      ConfigValue::Include(m) => Some(m),
+      _ => None,
+    }
+  }
+
+  pub fn render_include(&self) -> Option<ConfigValue> {
+    match self {
+      ConfigValue::Include(m) => {
+        let c = Config::load_from_file(&m.file_name);
+        c.ok().map(|c| c.to_config_value().clone())
+      }
+      _ => None,
     }
   }
 

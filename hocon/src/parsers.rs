@@ -5,7 +5,7 @@ use crate::model::config_array_value::ConfigArrayValue;
 use crate::model::config_duration_value::ConfigDurationValue;
 use crate::model::config_number_value::ConfigNumberValue;
 use crate::model::config_object_value::ConfigObjectValue;
-use crate::model::config_value::ConfigValue;
+use crate::model::config_value::{ConfigIncludeValue, ConfigValue};
 use crate::model::config_values::ConfigValues;
 use crate::model::time_unit::TimeUnit;
 use oni_comb_parser_rs::prelude::*;
@@ -18,6 +18,18 @@ fn space_or_comment<'a>() -> Parser<'a, u8, ()> {
   let comment = (sp_tab_cr_lf.clone().opt() * head + tail).collect();
 
   (comment.opt() + sp_tab_cr_lf).discard()
+}
+
+fn include_method<'a>() -> Parser<'a, u8, String> {
+  (seq(b"file") | seq(b"url"))
+    .collect()
+    .map_res(std::str::from_utf8)
+    .map(String::from)
+}
+
+fn include_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
+  (seq(b"include") * elm(b' ') * include_method() + path().surround(seq(b"(\""), seq(b"\")")))
+    .map(|(method, path)| ConfigValue::Include(ConfigIncludeValue::new(method, path)))
 }
 
 fn number<'a>() -> Parser<'a, u8, (Option<&'a u8>, String, Option<String>, Option<String>)> {
@@ -146,7 +158,7 @@ fn kv<'a>() -> Parser<'a, u8, ()> {
 }
 
 fn key<'a>() -> Parser<'a, u8, String> {
-  (path().map_res(std::str::from_utf8).map(String::from) | string()).surround(space_or_comment(), space_or_comment())
+  (path() | string()).surround(space_or_comment(), space_or_comment())
 }
 
 fn property<'a>() -> Parser<'a, u8, (String, ConfigValue)> {
@@ -191,8 +203,12 @@ fn path_element<'a>() -> Parser<'a, u8, &'a [u8]> {
   (elm_alpha() | elm_of(b"-_")).of_many1().collect()
 }
 
-fn path<'a>() -> Parser<'a, u8, &'a [u8]> {
-  path_element().of_many1_sep(elm(b'.')).collect()
+fn path<'a>() -> Parser<'a, u8, String> {
+  path_element()
+    .of_many1_sep(elm(b'.'))
+    .collect()
+    .map_res(std::str::from_utf8)
+    .map(String::from)
 }
 
 fn reference_left_bracket<'a>() -> Parser<'a, u8, &'a [u8]> {
@@ -258,6 +274,7 @@ fn config<'a>() -> Parser<'a, u8, Vec<ConfigValue>> {
       vec![ConfigValue::Object(ConfigObjectValue::new(map))]
     })
     .attempt()
+    | include_config_value().of_many1().attempt()
     | (object_config_value().attempt() | array_config_value()).of_many0()
 }
 
@@ -268,6 +285,13 @@ pub fn hocon<'a>() -> Parser<'a, u8, Vec<ConfigValue>> {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[test]
+  fn include_test() {
+    let input = br#"include file("abc.conf")"#;
+    let result = hocon().parse(input).to_result();
+    println!("{:?}", result);
+  }
 
   #[test]
   fn string_single_quote() {
@@ -322,7 +346,7 @@ mod tests {
   #[test]
   fn bom() {
     let input = br#"
-        #
+        # test abc
         foo = "bar"
         "#;
     let result = hocon().parse(input);
@@ -366,9 +390,9 @@ mod tests {
     let result = hocon().parse(
       br#"
     foo {
-      bar : "baz",
-      test : {
-        a: "b"
+      bar = "baz",
+      test {
+        a = "b"
       }
     }
     "#,

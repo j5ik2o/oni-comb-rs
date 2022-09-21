@@ -42,8 +42,9 @@ impl Config {
       .to_result()
       .map(|configs| {
         let mut cur = configs[0].clone();
+        cur = cur.render_include().unwrap_or(cur).clone();
         for cv in &configs[1..] {
-          cur.with_fallback(cv.clone());
+          cur.with_fallback(cv.render_include().unwrap_or(cv.clone()).clone());
         }
         cur
       })
@@ -67,6 +68,10 @@ impl Config {
       }
       ref_value
     }
+  }
+
+  pub fn to_config_value(&self) -> &ConfigValue {
+    &self.config
   }
 
   pub fn get_value(&self, path: &str) -> Option<ConfigValue> {
@@ -96,16 +101,16 @@ mod tests {
   fn test_eval_reference() {
     let input = r#"
     foo {
-      bar: "baz"
-      bar: "biz"
+      bar = "baz"
+      bar = "biz"
       test {
-        a: "aaaa"
-        a: ${foo.bar} 
+        a = "aaaa"
+        a = ${foo.bar} 
       }
     }
     foo {
       test {
-        b: "bbbb"
+        b = "bbbb"
       }
     }
     "#;
@@ -124,8 +129,8 @@ mod tests {
       bar = "baz",
       bar = "biz",
       test {
-        a: "aaaa",
-        a: ${TEST_VAR} 
+        a = "aaaa",
+        a = ${TEST_VAR} 
       }
     }
     "#;
@@ -143,11 +148,11 @@ mod tests {
   fn test_environment_value_not_exists() {
     let input = r#"
     foo {
-      bar : "baz",
-      bar : "biz",
+      bar = "baz",
+      bar = "biz",
       test {
-        a: "aaaa",
-        a: ${TEST_VAR} 
+        a = "aaaa",
+        a = ${TEST_VAR} 
       }
     }
     "#;
@@ -160,11 +165,11 @@ mod tests {
   fn test_environment_value_exists_fallback() {
     let input = r#"
     foo {
-      bar : "baz",
-      bar : "biz",
+      bar = "baz"
+      bar = "biz"
       test {
-        a: "aaaa",
-        a: ${?TEST_VAR} 
+        a = "aaaa"
+        a = ${?TEST_VAR} 
       }
     }
     "#;
@@ -181,11 +186,11 @@ mod tests {
   fn test_environment_value_not_exists_fallback() {
     let input = r#"
     foo {
-      bar : "baz",
-      bar : "biz",
+      bar = "baz"
+      bar = "biz"
       test {
-        a: "aaaa",
-        a: ${?TEST_VAR} 
+        a = "aaaa"
+        a = ${?TEST_VAR} 
       }
     }
     "#;
