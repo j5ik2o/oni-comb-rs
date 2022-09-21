@@ -106,11 +106,10 @@ mod tests {
     }
     "#;
     let config = Config::parse_from_string(input).unwrap();
-    println!("{:?}", config);
     let a_value = config.get_value("foo.test.a");
     assert_eq!(a_value, Some(ConfigValue::String("biz".to_string())));
-    let baz_value = config.get_value("foo.test.b");
-    println!("{:?}", baz_value);
+    let b_value = config.get_value("foo.test.b");
+    assert_eq!(b_value, Some(ConfigValue::String("bbbb".to_string())));
   }
 
   #[test]
