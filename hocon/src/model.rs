@@ -17,7 +17,7 @@ pub mod time_unit;
 
 #[derive(Debug, Clone)]
 pub struct Config {
-  configs: Vec<ConfigValue>,
+  config: ConfigValue,
 }
 
 #[derive(Debug)]
@@ -39,7 +39,14 @@ impl Config {
     hocon()
       .parse(text.as_bytes())
       .to_result()
-      .map(|configs| Self { configs })
+      .map(|configs| {
+        let mut cur = configs[0].clone();
+        for cv in &configs[1..] {
+          cur.with_fallback(cv.clone());
+        }
+        cur
+      })
+      .map(|config| Self { config })
       .map_err(|pe| ConfigError::ParseError(pe.to_string()))
   }
 
@@ -62,11 +69,7 @@ impl Config {
     let keys = path.split(".").collect::<Vec<_>>();
     let key = keys[0];
     let child_count = keys.len() - 1;
-    let config_value = self
-      .configs
-      .iter()
-      .find(|cv| cv.contains(key))
-      .and_then(|cv| cv.get_value(key));
+    let config_value = self.config.get_value(key);
     match config_value {
       Some(cv) if child_count > 0 => {
         let next_key = &path[(key.len() + 1) as usize..];
@@ -89,22 +92,24 @@ mod tests {
   fn test_eval_reference() {
     let input = r#"
     foo {
-      bar : "baz",
-      bar : "biz",
-      test : {
-        a: "aaaa",
+      bar: "baz"
+      bar: "biz"
+      test: {
+        a: "aaaa"
         a: ${foo.bar} 
       }
     }
     foo {
-      baz: 123
+      test: {
+        b: "bbbb"
+      }
     }
     "#;
     let config = Config::parse_from_string(input).unwrap();
     println!("{:?}", config);
     let a_value = config.get_value("foo.test.a");
     assert_eq!(a_value, Some(ConfigValue::String("biz".to_string())));
-    let baz_value = config.get_value("foo.baz");
+    let baz_value = config.get_value("foo.test.b");
     println!("{:?}", baz_value);
   }
 
