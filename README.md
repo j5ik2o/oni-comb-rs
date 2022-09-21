@@ -22,6 +22,7 @@ The following is projects implemented using `oni-comb-parser-rs`.
 
 - [oni-comb-crond-rs](https://github.com/j5ik2o/oni-comb-rs/tree/main/crond/)
 - [oni-comb-uri-rs](https://github.com/j5ik2o/oni-comb-rs/tree/main/uri/)
+- [oni-comb-hocon-rs](https://github.com/j5ik2o/oni-comb-rs/tree/main/hocon/)
 - [oni-comb-toys-rs](https://github.com/j5ik2o/oni-comb-rs/tree/main/toys/)
 
 ## Examples
