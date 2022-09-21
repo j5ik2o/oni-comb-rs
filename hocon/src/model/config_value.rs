@@ -4,7 +4,6 @@ use crate::model::config_number_value::ConfigNumberValue;
 use crate::model::config_object_value::ConfigObjectValue;
 use crate::model::config_values::ConfigValues;
 
-
 #[derive(Clone, Debug, PartialEq)]
 pub enum ConfigValue {
   Null,
@@ -36,7 +35,10 @@ impl ConfigValue {
     let child_count = keys.len() - 1;
     match self {
       ConfigValue::Object(map) => match map.0.get(key) {
-        Some(cv) if child_count > 0 => cv.latest().get_values(&path[(key.len() + 1) as usize..]),
+        Some(cv) if child_count > 0 => {
+          let next_path = &path[(key.len() + 1) as usize..];
+          cv.latest().get_values(next_path)
+        }
         Some(cv) => Some(cv),
         None => None,
       },

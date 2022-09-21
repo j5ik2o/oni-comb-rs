@@ -50,7 +50,7 @@ impl ConfigValues {
     }
   }
 
-  pub fn head(&self) -> &ConfigValue {
+  pub fn oldest(&self) -> &ConfigValue {
     match self {
       ConfigValues::Single(v) => v,
       ConfigValues::Multi(v) => v.first().unwrap(),

@@ -62,6 +62,9 @@ impl Config {
         cvs.prev_latest().map(Clone::clone)
       }
     } else {
+      if ref_value.is_none() {
+        panic!("Cannot resolve the reference: {}", ref_name)
+      }
       ref_value
     }
   }
@@ -135,6 +138,7 @@ mod tests {
   }
 
   #[test]
+  #[should_panic]
   #[serial]
   fn test_environment_value_not_exists() {
     let input = r#"
@@ -148,8 +152,7 @@ mod tests {
     }
     "#;
     let config = Config::parse_from_string(input).unwrap();
-    let a_value = config.get_value("foo.test.a");
-    assert_eq!(a_value, None);
+    let _ = config.get_value("foo.test.a");
   }
 
   #[test]

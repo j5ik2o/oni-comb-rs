@@ -1,8 +1,15 @@
 use rust_decimal::prelude::ToPrimitive;
 use rust_decimal::Decimal;
+use std::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ConfigNumberValue(Decimal);
+
+impl Display for ConfigNumberValue {
+  fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{}", self.0)
+  }
+}
 
 impl ConfigNumberValue {
   pub fn new(text: &str) -> Self {
