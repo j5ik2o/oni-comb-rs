@@ -16,11 +16,6 @@ pub mod config_value;
 pub mod config_values;
 pub mod time_unit;
 
-#[derive(Debug, Clone)]
-pub struct Config {
-  config: ConfigValue,
-}
-
 #[derive(Debug)]
 pub enum ConfigError {
   FileNotFoundError,
@@ -28,11 +23,34 @@ pub enum ConfigError {
   ParseError(String),
 }
 
-impl Config {
-  pub fn load_from_file(filename: &str) -> Result<Config, ConfigError> {
-    let mut f = File::open(filename).map_err(|_| ConfigError::FileNotFoundError)?;
+pub trait FileReader {
+  fn read_to_string(&mut self, filename: &str, text: &mut String) -> Result<(), ConfigError>;
+}
+
+pub struct DefaultFileReader;
+
+impl FileReader for DefaultFileReader {
+  fn read_to_string(&mut self, filename: &str, text: &mut String) -> Result<(), ConfigError> {
+    let mut file = File::open(filename).map_err(|_| ConfigError::FileNotFoundError)?;
+    file.read_to_string(text).map_err(|_| ConfigError::FileReadError)?;
+    Ok(())
+  }
+}
+
+pub struct ConfigFactory {
+  file_reader: Box<dyn FileReader>,
+}
+
+impl ConfigFactory {
+  pub fn new() -> Self {
+    Self {
+      file_reader: Box::new(DefaultFileReader),
+    }
+  }
+
+  pub fn load_from_file(&mut self, filename: &str) -> Result<Config, ConfigError> {
     let mut text = String::new();
-    f.read_to_string(&mut text).map_err(|_| ConfigError::FileReadError)?;
+    let _ = self.file_reader.read_to_string(filename, &mut text);
     Self::parse_from_string(&text)
   }
 
@@ -42,16 +60,23 @@ impl Config {
       .to_result()
       .map(|configs| {
         let mut cur = configs[0].clone();
-        cur = cur.render_include().unwrap_or(cur).clone();
+        cur = cur.resolve(None, None).unwrap();
         for cv in &configs[1..] {
-          cur.with_fallback(cv.render_include().unwrap_or(cv.clone()).clone());
+          cur.with_fallback(cv.clone().resolve(None, None).unwrap());
         }
         cur
       })
-      .map(|config| Self { config })
+      .map(|config| Config { config })
       .map_err(|pe| ConfigError::ParseError(pe.to_string()))
   }
+}
 
+#[derive(Debug, Clone)]
+pub struct Config {
+  config: ConfigValue,
+}
+
+impl Config {
   fn eval_reference(&self, cvs: &ConfigValues, ref_name: &str, missing: bool) -> Option<ConfigValue> {
     let ref_value = self
       .get_value(ref_name)
@@ -114,7 +139,7 @@ mod tests {
       }
     }
     "#;
-    let config = Config::parse_from_string(input).unwrap();
+    let config = ConfigFactory::parse_from_string(input).unwrap();
     let a_value = config.get_value("foo.test.a");
     assert_eq!(a_value, Some(ConfigValue::String("biz".to_string())));
     let b_value = config.get_value("foo.test.b");
@@ -136,7 +161,7 @@ mod tests {
     "#;
     let s = "12345";
     env::set_var("TEST_VAR", s);
-    let config = Config::parse_from_string(input).unwrap();
+    let config = ConfigFactory::parse_from_string(input).unwrap();
     let a_value = config.get_value("foo.test.a");
     assert_eq!(a_value, Some(ConfigValue::String(s.to_string())));
     env::remove_var("TEST_VAR");
@@ -156,7 +181,7 @@ mod tests {
       }
     }
     "#;
-    let config = Config::parse_from_string(input).unwrap();
+    let config = ConfigFactory::parse_from_string(input).unwrap();
     let _ = config.get_value("foo.test.a");
   }
 
@@ -175,7 +200,7 @@ mod tests {
     "#;
     let s = "12345";
     env::set_var("TEST_VAR", s);
-    let config = Config::parse_from_string(input).unwrap();
+    let config = ConfigFactory::parse_from_string(input).unwrap();
     let a_value = config.get_value("foo.test.a");
     assert_eq!(a_value, Some(ConfigValue::String(s.to_string())));
     env::remove_var("TEST_VAR");
@@ -194,7 +219,7 @@ mod tests {
       }
     }
     "#;
-    let config = Config::parse_from_string(input).unwrap();
+    let config = ConfigFactory::parse_from_string(input).unwrap();
     let a_value = config.get_value("foo.test.a");
     assert_eq!(a_value, Some(ConfigValue::String("aaaa".to_string())));
   }

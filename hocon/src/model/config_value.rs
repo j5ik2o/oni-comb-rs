@@ -3,7 +3,8 @@ use crate::model::config_duration_value::ConfigDurationValue;
 use crate::model::config_number_value::ConfigNumberValue;
 use crate::model::config_object_value::ConfigObjectValue;
 use crate::model::config_values::ConfigValues;
-use crate::model::Config;
+use crate::model::{Config, ConfigFactory};
+use std::env;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ConfigIncludeValue {
@@ -53,13 +54,32 @@ impl ConfigValue {
     }
   }
 
-  pub fn render_include(&self) -> Option<ConfigValue> {
-    match self {
-      ConfigValue::Include(m) => {
-        let c = Config::load_from_file(&m.file_name);
+  pub fn resolve(self, source: Option<&Self>, prev_value: Option<Self>) -> Option<ConfigValue> {
+    match (&self, source) {
+      (ConfigValue::Include(m), ..) => {
+        let mut config_factory = ConfigFactory::new();
+        let c = config_factory.load_from_file(&m.file_name);
         c.ok().map(|c| c.to_config_value().clone())
       }
-      _ => None,
+      (ConfigValue::Reference(ref_name, missing), Some(src)) => {
+        let ref_value = src
+          .get_value(ref_name)
+          .cloned()
+          .or_else(|| env::var(ref_name).ok().map(|s| ConfigValue::String(s)));
+        if *missing {
+          if ref_value.is_some() {
+            ref_value
+          } else {
+            prev_value
+          }
+        } else {
+          if ref_value.is_none() {
+            panic!("Cannot resolve the reference: {}", ref_name)
+          }
+          ref_value
+        }
+      }
+      _ => Some(self),
     }
   }
 
@@ -100,6 +120,31 @@ impl ConfigValue {
         l.with_fallback(r);
       }
       (..) => {}
+    }
+  }
+
+  fn eval_reference(
+    &self,
+    cvs: &ConfigValues,
+    source: &ConfigValue,
+    ref_name: &str,
+    missing: bool,
+  ) -> Option<ConfigValue> {
+    let ref_value = source
+      .get_value(ref_name)
+      .cloned()
+      .or_else(|| env::var(ref_name).ok().map(|s| ConfigValue::String(s)));
+    if missing {
+      if ref_value.is_some() {
+        ref_value
+      } else {
+        cvs.prev_latest().map(Clone::clone)
+      }
+    } else {
+      if ref_value.is_none() {
+        panic!("Cannot resolve the reference: {}", ref_name)
+      }
+      ref_value
     }
   }
 }
