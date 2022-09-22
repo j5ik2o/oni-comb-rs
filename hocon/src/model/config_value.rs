@@ -3,7 +3,7 @@ use crate::model::config_duration_value::ConfigDurationValue;
 use crate::model::config_number_value::ConfigNumberValue;
 use crate::model::config_object_value::ConfigObjectValue;
 use crate::model::config_values::ConfigValues;
-use crate::model::{Config, ConfigFactory};
+use crate::model::ConfigFactory;
 use std::env;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -42,7 +42,7 @@ impl ConfigValue {
 
   pub fn is_include(&self) -> bool {
     match self {
-      ConfigValue::Include(m) => true,
+      ConfigValue::Include(_m) => true,
       _ => false,
     }
   }
