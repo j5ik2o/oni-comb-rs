@@ -163,6 +163,13 @@ impl ConfigValue {
     }
   }
 
+  pub fn get_value_link(&self) -> Option<&ConfigValueLink> {
+    match self {
+      ConfigValue::Link(cvl) => Some(&*cvl),
+      _ => None,
+    }
+  }
+
   pub fn resolve(&mut self, source: Option<&Self>, parent: Option<&Self>) {
     match (self, source) {
       (cvi @ ConfigValue::Include(..), ..) => {
@@ -173,24 +180,14 @@ impl ConfigValue {
         *cvi = c.to_config_value().clone();
       }
       (cvl @ ConfigValue::Link(..), Some(..)) => {
-        let lv = cvl.link_rc().unwrap();
-        let mut cur = lv.clone();
-        let mut cv = cur.value.clone();
-        cv.resolve(source, Some(cvl));
-        let mut result = vec![cv];
-        while let ConfigValue::Link(prev_cur) = &*cur.prev {
-          cur = prev_cur.clone();
-          let mut cv = cur.value.clone();
-          cv.resolve(source, Some(cvl));
-          result.push(cv);
-        }
-        result.reverse();
-
-        let mut head = (*cur.prev).clone();
+        let cvs = cvl.to_vec();
+        let mut head = cvs[0].clone();
         head.resolve(source, Some(cvl));
 
-        for e in result.into_iter() {
-          head.push(e.clone());
+        for e in &cvs[1..] {
+          let mut ee = e.clone();
+          ee.resolve(source, Some(cvl));
+          head.push(ee.clone());
         }
 
         *cvl = head;
@@ -198,18 +195,18 @@ impl ConfigValue {
       (cva @ ConfigValue::Array(..), Some(..)) => {
         let av = cva.get_array_value().unwrap();
         let mut m = vec![];
-        for mut v in av.0.clone().into_iter() {
-          v.resolve(source, None);
-          m.push(v);
+        for mut cv in av.0.clone().into_iter() {
+          cv.resolve(source, None);
+          m.push(cv);
         }
         *cva = ConfigValue::Array(ConfigArrayValue::new(m));
       }
       (cvo @ ConfigValue::Object(..), Some(..)) => {
         let ov = cvo.get_object_value().unwrap();
         let mut m = HashMap::new();
-        for (k, mut v) in ov.0.clone().into_iter() {
-          v.resolve(source, None);
-          m.insert(k, v);
+        for (k, mut cv) in ov.0.clone().into_iter() {
+          cv.resolve(source, None);
+          m.insert(k, cv);
         }
         *cvo = ConfigValue::Object(ConfigObjectValue::new(m));
       }
@@ -259,13 +256,6 @@ impl ConfigValue {
     }
   }
 
-  pub fn link(&self) -> Option<&ConfigValueLink> {
-    match self {
-      ConfigValue::Link(cvl) => Some(&*cvl),
-      _ => None,
-    }
-  }
-
   fn link_rc(&self) -> Option<Rc<ConfigValueLink>> {
     match self {
       ConfigValue::Link(cvl) => Some(cvl.clone()),
@@ -283,7 +273,7 @@ impl ConfigValue {
       }
       (ConfigValue::Link(..), ConfigValue::Link(..)) => {}
       (re @ ConfigValue::Link(..), r) => {
-        let mut n = re.link().unwrap().value.clone();
+        let mut n = re.get_value_link().unwrap().value.clone();
         n.with_fallback(r);
         re.push(n);
       }
