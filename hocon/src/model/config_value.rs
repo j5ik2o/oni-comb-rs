@@ -5,6 +5,7 @@ use crate::model::config_object_value::ConfigObjectValue;
 use crate::model::config_values::ConfigValues;
 use crate::model::ConfigFactory;
 use std::env;
+use std::rc::Rc;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ConfigIncludeValue {
@@ -29,9 +30,81 @@ pub enum ConfigValue {
   Object(ConfigObjectValue),
   Reference(String, bool),
   Include(ConfigIncludeValue),
+  Link(Rc<ConfigValueLink>),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ConfigValueLink {
+  prev: Rc<ConfigValue>,
+  value: ConfigValue,
+}
+
+impl ConfigValueLink {
+  pub fn new(prev: Rc<ConfigValue>, value: ConfigValue) -> Self {
+    Self { prev, value }
+  }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum ConfigValueList {
+  Cons(ConfigValue, Rc<ConfigValueList>),
+  Nil,
 }
 
 impl ConfigValue {
+  pub fn push(&mut self, cv: ConfigValue) {
+    let cvl = ConfigValueLink::new(Rc::new(self.clone()), cv);
+    *self = ConfigValue::Link(Rc::new(cvl))
+  }
+
+  pub fn to_vec(&self) -> Vec<ConfigValue> {
+    match self {
+      ConfigValue::Link(cv) => {
+        let mut cur = cv.clone();
+        let mut result = vec![cur.value.clone()];
+        while let ConfigValue::Link(prev_cur) = &*cur.prev {
+          cur = prev_cur.clone();
+          result.push(cur.value.clone());
+        }
+        result.push((*cur.prev).clone());
+        result.reverse();
+        result
+      }
+      cv => vec![cv.clone()],
+    }
+  }
+
+  pub fn combine(&mut self, other: Self) {
+    match &other {
+      o @ ConfigValue::Link(cv) => {
+        for e in o.to_vec() {
+          self.clone().push(e);
+        }
+      }
+      _ => {}
+    }
+  }
+
+  pub fn latest(&self) -> &Self {
+    match self {
+      ConfigValue::Link(cv) => &cv.value,
+      cv => cv,
+    }
+  }
+
+  pub fn prev_latest(&self) -> &Self {
+    match self {
+      ConfigValue::Link(cv) => match &*(cv.prev) {
+        ConfigValue::Link(prev_cv) => {
+          let ret = &(prev_cv.value);
+          ret
+        }
+        cv => cv,
+      },
+      cv => cv,
+    }
+  }
+
   pub fn has_child(&self) -> bool {
     match self {
       ConfigValue::Object(..) => true,
@@ -54,7 +127,7 @@ impl ConfigValue {
     }
   }
 
-  pub fn resolve(self, source: Option<&Self>, prev_value: Option<Self>) -> Option<ConfigValue> {
+  pub fn resolve(self, source: Option<&Self>) -> Option<ConfigValue> {
     match (&self, source) {
       (ConfigValue::Include(m), ..) => {
         let mut config_factory = ConfigFactory::new();
@@ -70,7 +143,7 @@ impl ConfigValue {
           if ref_value.is_some() {
             ref_value
           } else {
-            prev_value
+            Some(self.prev_latest().clone())
           }
         } else {
           if ref_value.is_none() {
@@ -111,6 +184,13 @@ impl ConfigValue {
     }
   }
 
+  pub fn link(&self) -> Option<&ConfigValueLink> {
+    match self {
+      ConfigValue::Link(cvl) => Some(&*cvl),
+      _ => None,
+    }
+  }
+
   pub fn with_fallback(&mut self, other: Self) {
     match (self, other) {
       (ConfigValue::Object(l), ConfigValue::Object(r)) => {
@@ -118,6 +198,12 @@ impl ConfigValue {
       }
       (ConfigValue::Array(l), ConfigValue::Array(r)) => {
         l.with_fallback(r);
+      }
+      (ConfigValue::Link(..), ConfigValue::Link(..)) => {}
+      (re @ ConfigValue::Link(..), r) => {
+        let mut n = re.link().unwrap().value.clone();
+        n.with_fallback(r);
+        re.push(n);
       }
       (..) => {}
     }
@@ -146,5 +232,45 @@ impl ConfigValue {
       }
       ref_value
     }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use crate::model::config_value::{ConfigValue, ConfigValueLink};
+  use std::rc::Rc;
+
+  #[test]
+  fn test_push() {
+    let mut config_value = ConfigValue::Bool(true);
+    config_value.push(ConfigValue::String("ABC".to_string()));
+    config_value.push(ConfigValue::Null);
+
+    println!("{:?}", config_value);
+    println!("{:?}", config_value.to_vec());
+
+    assert_eq!(config_value.latest().clone(), ConfigValue::Null);
+    assert_eq!(
+      config_value.prev_latest().clone(),
+      ConfigValue::String("ABC".to_string())
+    );
+  }
+
+  #[test]
+  fn test_combine() {
+    let mut first = ConfigValue::Bool(true);
+    first.push(ConfigValue::String("ABC".to_string()));
+    first.push(ConfigValue::Null);
+    let mut second = ConfigValue::Bool(false);
+    second.push(ConfigValue::String("XYZ".to_string()));
+    second.push(ConfigValue::Reference("ABC".to_string(), false));
+
+    let mut t = first.clone();
+
+    t.combine(second);
+
+    // [Bool(true), "ABC", Null]
+    println!("{:?}", t);
+    println!("{:?}", t.to_vec());
   }
 }

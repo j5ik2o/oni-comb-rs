@@ -60,9 +60,9 @@ impl ConfigFactory {
       .to_result()
       .map(|configs| {
         let mut cur = configs[0].clone();
-        cur = cur.resolve(None, None).unwrap();
+        cur = cur.resolve(None).unwrap();
         for cv in &configs[1..] {
-          cur.with_fallback(cv.clone().resolve(None, None).unwrap());
+          cur.with_fallback(cv.clone().resolve(None).unwrap());
         }
         cur
       })
