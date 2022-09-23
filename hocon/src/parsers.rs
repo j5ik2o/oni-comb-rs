@@ -6,7 +6,6 @@ use crate::model::config_duration_value::ConfigDurationValue;
 use crate::model::config_number_value::ConfigNumberValue;
 use crate::model::config_object_value::ConfigObjectValue;
 use crate::model::config_value::{ConfigIncludeValue, ConfigValue};
-use crate::model::config_values::ConfigValues;
 use crate::model::time_unit::TimeUnit;
 use oni_comb_parser_rs::prelude::*;
 
@@ -165,8 +164,8 @@ fn property<'a>() -> Parser<'a, u8, (String, ConfigValue)> {
   key() + ((kv() * lazy(config_value)).attempt() | object_config_value().attempt() | array_config_value())
 }
 
-fn property_config_value<'a>() -> Parser<'a, u8, (String, ConfigValues)> {
-  property().map(|(k, v)| (k, ConfigValues::of_single(v)))
+fn property_config_value<'a>() -> Parser<'a, u8, (String, ConfigValue)> {
+  property().map(|(k, v)| (k, v))
 }
 
 fn object_left_bracket<'a>() -> Parser<'a, u8, &'a u8> {
@@ -181,17 +180,17 @@ fn comma<'a>() -> Parser<'a, u8, &'a u8> {
   elm_ref(b',').surround(space_or_comment(), space_or_comment())
 }
 
-fn object<'a>() -> Parser<'a, u8, HashMap<String, ConfigValues>> {
+fn object<'a>() -> Parser<'a, u8, HashMap<String, ConfigValue>> {
   let properties: Parser<'a, u8, Vec<(String, ConfigValue)>> = lazy(property).of_many0_sep(comma().opt());
   let obj: Parser<'a, u8, Vec<(String, ConfigValue)>> =
     properties.surround(object_left_bracket(), object_right_bracket());
   obj.map(|properties| {
-    let m: HashMap<String, ConfigValues> = HashMap::new();
+    let m: HashMap<String, ConfigValue> = HashMap::new();
     properties.into_iter().fold(m, |mut r, e| {
       match r.get_mut(&e.0) {
         Some(v) => v.push(e.1),
         None => {
-          r.insert(e.0, ConfigValues::of_single(e.1));
+          r.insert(e.0, e.1);
         }
       };
       r
@@ -259,7 +258,7 @@ fn config_value<'a>() -> Parser<'a, u8, ConfigValue> {
 fn config<'a>() -> Parser<'a, u8, Vec<ConfigValue>> {
   property_config_value()
     .of_many1()
-    .map(|values: Vec<(String, ConfigValues)>| {
+    .map(|values: Vec<(String, ConfigValue)>| {
       let map = values.into_iter().fold(HashMap::new(), |mut r, (k, v)| {
         match r.get_mut(&k) {
           None => {

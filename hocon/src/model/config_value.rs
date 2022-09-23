@@ -2,8 +2,8 @@ use crate::model::config_array_value::ConfigArrayValue;
 use crate::model::config_duration_value::ConfigDurationValue;
 use crate::model::config_number_value::ConfigNumberValue;
 use crate::model::config_object_value::ConfigObjectValue;
-use crate::model::config_values::ConfigValues;
 use crate::model::ConfigFactory;
+use std::collections::HashMap;
 use std::env;
 use std::rc::Rc;
 
@@ -93,6 +93,7 @@ impl ConfigValue {
   }
 
   pub fn prev_latest(&self) -> &Self {
+    println!("self = {:?}", self);
     match self {
       ConfigValue::Link(cv) => match &*(cv.prev) {
         ConfigValue::Link(prev_cv) => {
@@ -127,40 +128,121 @@ impl ConfigValue {
     }
   }
 
-  pub fn resolve(self, source: Option<&Self>) -> Option<ConfigValue> {
-    match (&self, source) {
-      (ConfigValue::Include(m), ..) => {
-        let mut config_factory = ConfigFactory::new();
-        let c = config_factory.load_from_file(&m.file_name);
-        c.ok().map(|c| c.to_config_value().clone())
-      }
-      (ConfigValue::Reference(ref_name, missing), Some(src)) => {
-        let ref_value = src
-          .get_value(ref_name)
-          .cloned()
-          .or_else(|| env::var(ref_name).ok().map(|s| ConfigValue::String(s)));
-        if *missing {
-          if ref_value.is_some() {
-            ref_value
-          } else {
-            Some(self.prev_latest().clone())
-          }
-        } else {
-          if ref_value.is_none() {
-            panic!("Cannot resolve the reference: {}", ref_name)
-          }
-          ref_value
-        }
-      }
-      _ => Some(self),
+  pub fn ref_name(&self) -> Option<&String> {
+    match self {
+      ConfigValue::Reference(ref_name, ..) => Some(ref_name),
+      _ => None,
     }
   }
 
-  pub fn get_value(&self, key: &str) -> Option<&ConfigValue> {
-    self.get_values(key).map(|v| v.latest())
+  pub fn ref_missing(&self) -> Option<bool> {
+    match self {
+      ConfigValue::Reference(.., missing) => Some(*missing),
+      _ => None,
+    }
   }
 
-  pub fn get_values(&self, path: &str) -> Option<&ConfigValues> {
+  pub fn get_include_value(&self) -> Option<&ConfigIncludeValue> {
+    match self {
+      ConfigValue::Include(civ) => Some(civ),
+      _ => None,
+    }
+  }
+
+  pub fn get_object_value(&self) -> Option<&ConfigObjectValue> {
+    match self {
+      ConfigValue::Object(cov) => Some(cov),
+      _ => None,
+    }
+  }
+
+  pub fn get_array_value(&self) -> Option<&ConfigArrayValue> {
+    match self {
+      ConfigValue::Array(cav) => Some(cav),
+      _ => None,
+    }
+  }
+
+  pub fn resolve(&mut self, source: Option<&Self>, parent: Option<&Self>) {
+    match (self, source) {
+      (cvi @ ConfigValue::Include(..), ..) => {
+        let mut config_factory = ConfigFactory::new();
+        let c = config_factory
+          .load_from_file(&cvi.get_include_value().unwrap().file_name)
+          .unwrap();
+        *cvi = c.to_config_value().clone();
+      }
+      (cvl @ ConfigValue::Link(..), Some(..)) => {
+        println!("old = {:?}", cvl);
+        let lv = cvl.link_rc().unwrap();
+        let mut cur = lv.clone();
+        let mut cv = cur.value.clone();
+        cv.resolve(source, Some(cvl));
+        let mut result = vec![cv];
+        while let ConfigValue::Link(prev_cur) = &*cur.prev {
+          cur = prev_cur.clone();
+          let mut cv = cur.value.clone();
+          cv.resolve(source, Some(cvl));
+          result.push(cv);
+        }
+        result.reverse();
+
+        let mut head = (*cur.prev).clone();
+        head.resolve(source, Some(cvl));
+
+        println!("head = {:?}, tail = {:?}", head, result);
+
+        for e in result.into_iter() {
+          head.push(e.clone());
+        }
+
+        println!("new = {:?}", head);
+
+        *cvl = head;
+      }
+      (cva @ ConfigValue::Array(..), Some(..)) => {
+        let av = cva.get_array_value().unwrap();
+        let mut m = vec![];
+        for mut v in av.0.clone().into_iter() {
+          v.resolve(source, None);
+          m.push(v);
+        }
+        *cva = ConfigValue::Array(ConfigArrayValue::new(m));
+      }
+      (cvo @ ConfigValue::Object(..), Some(..)) => {
+        let ov = cvo.get_object_value().unwrap();
+        let mut m = HashMap::new();
+        for (k, mut v) in ov.0.clone().into_iter() {
+          println!("resolve: k = {:?}, v = {:?}", k, v);
+          v.resolve(source, None);
+          m.insert(k, v);
+        }
+        *cvo = ConfigValue::Object(ConfigObjectValue::new(m));
+      }
+      (cvr @ ConfigValue::Reference(..), Some(src)) => {
+        let ref_value = src
+          .get_value(cvr.ref_name().unwrap())
+          .cloned()
+          .or_else(|| env::var(cvr.ref_name().unwrap()).ok().map(|s| ConfigValue::String(s)));
+        if cvr.ref_missing().unwrap() {
+          if ref_value.is_some() {
+            *cvr = ref_value.unwrap();
+          } else {
+            println!("------");
+            *cvr = parent.unwrap().prev_latest().clone();
+          }
+        } else {
+          if ref_value.is_none() {
+            panic!("Cannot resolve the reference: {}", cvr.ref_name().unwrap())
+          }
+          *cvr = ref_value.unwrap();
+        }
+      }
+      _ => {}
+    }
+  }
+
+  pub fn get_value(&self, path: &str) -> Option<&ConfigValue> {
     let keys = path.split(".").collect::<Vec<_>>();
     let key = keys[0];
     let child_count = keys.len() - 1;
@@ -168,9 +250,9 @@ impl ConfigValue {
       ConfigValue::Object(map) => match map.0.get(key) {
         Some(cv) if child_count > 0 => {
           let next_path = &path[(key.len() + 1) as usize..];
-          cv.latest().get_values(next_path)
+          cv.latest().get_value(next_path)
         }
-        Some(cv) => Some(cv),
+        Some(cv) => Some(cv.latest()),
         None => None,
       },
       _ => None,
@@ -187,6 +269,13 @@ impl ConfigValue {
   pub fn link(&self) -> Option<&ConfigValueLink> {
     match self {
       ConfigValue::Link(cvl) => Some(&*cvl),
+      _ => None,
+    }
+  }
+
+  pub fn link_rc(&self) -> Option<Rc<ConfigValueLink>> {
+    match self {
+      ConfigValue::Link(cvl) => Some(cvl.clone()),
       _ => None,
     }
   }
@@ -209,30 +298,30 @@ impl ConfigValue {
     }
   }
 
-  fn eval_reference(
-    &self,
-    cvs: &ConfigValues,
-    source: &ConfigValue,
-    ref_name: &str,
-    missing: bool,
-  ) -> Option<ConfigValue> {
-    let ref_value = source
-      .get_value(ref_name)
-      .cloned()
-      .or_else(|| env::var(ref_name).ok().map(|s| ConfigValue::String(s)));
-    if missing {
-      if ref_value.is_some() {
-        ref_value
-      } else {
-        cvs.prev_latest().map(Clone::clone)
-      }
-    } else {
-      if ref_value.is_none() {
-        panic!("Cannot resolve the reference: {}", ref_name)
-      }
-      ref_value
-    }
-  }
+  // fn eval_reference(
+  //   &self,
+  //   cvs: &ConfigValues,
+  //   source: &ConfigValue,
+  //   ref_name: &str,
+  //   missing: bool,
+  // ) -> Option<ConfigValue> {
+  //   let ref_value = source
+  //     .get_value(ref_name)
+  //     .cloned()
+  //     .or_else(|| env::var(ref_name).ok().map(|s| ConfigValue::String(s)));
+  //   if missing {
+  //     if ref_value.is_some() {
+  //       ref_value
+  //     } else {
+  //       cvs.prev_latest().map(Clone::clone)
+  //     }
+  //   } else {
+  //     if ref_value.is_none() {
+  //       panic!("Cannot resolve the reference: {}", ref_name)
+  //     }
+  //     ref_value
+  //   }
+  // }
 }
 
 #[cfg(test)]

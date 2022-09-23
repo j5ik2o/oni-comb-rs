@@ -1,7 +1,7 @@
 use crate::model::config_value::ConfigValue;
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct ConfigArrayValue(Vec<ConfigValue>);
+pub struct ConfigArrayValue(pub(crate) Vec<ConfigValue>);
 
 impl ConfigArrayValue {
   pub fn new(value: Vec<ConfigValue>) -> Self {
