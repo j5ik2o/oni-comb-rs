@@ -173,7 +173,6 @@ impl ConfigValue {
         *cvi = c.to_config_value().clone();
       }
       (cvl @ ConfigValue::Link(..), Some(..)) => {
-        println!("old = {:?}", cvl);
         let lv = cvl.link_rc().unwrap();
         let mut cur = lv.clone();
         let mut cv = cur.value.clone();
@@ -190,13 +189,9 @@ impl ConfigValue {
         let mut head = (*cur.prev).clone();
         head.resolve(source, Some(cvl));
 
-        println!("head = {:?}, tail = {:?}", head, result);
-
         for e in result.into_iter() {
           head.push(e.clone());
         }
-
-        println!("new = {:?}", head);
 
         *cvl = head;
       }
@@ -213,7 +208,6 @@ impl ConfigValue {
         let ov = cvo.get_object_value().unwrap();
         let mut m = HashMap::new();
         for (k, mut v) in ov.0.clone().into_iter() {
-          println!("resolve: k = {:?}, v = {:?}", k, v);
           v.resolve(source, None);
           m.insert(k, v);
         }
@@ -228,7 +222,6 @@ impl ConfigValue {
           if ref_value.is_some() {
             *cvr = ref_value.unwrap();
           } else {
-            println!("------");
             *cvr = parent.unwrap().prev_latest().clone();
           }
         } else {
@@ -273,7 +266,7 @@ impl ConfigValue {
     }
   }
 
-  pub fn link_rc(&self) -> Option<Rc<ConfigValueLink>> {
+  fn link_rc(&self) -> Option<Rc<ConfigValueLink>> {
     match self {
       ConfigValue::Link(cvl) => Some(cvl.clone()),
       _ => None,
@@ -297,31 +290,6 @@ impl ConfigValue {
       (..) => {}
     }
   }
-
-  // fn eval_reference(
-  //   &self,
-  //   cvs: &ConfigValues,
-  //   source: &ConfigValue,
-  //   ref_name: &str,
-  //   missing: bool,
-  // ) -> Option<ConfigValue> {
-  //   let ref_value = source
-  //     .get_value(ref_name)
-  //     .cloned()
-  //     .or_else(|| env::var(ref_name).ok().map(|s| ConfigValue::String(s)));
-  //   if missing {
-  //     if ref_value.is_some() {
-  //       ref_value
-  //     } else {
-  //       cvs.prev_latest().map(Clone::clone)
-  //     }
-  //   } else {
-  //     if ref_value.is_none() {
-  //       panic!("Cannot resolve the reference: {}", ref_name)
-  //     }
-  //     ref_value
-  //   }
-  // }
 }
 
 #[cfg(test)]

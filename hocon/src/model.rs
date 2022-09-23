@@ -11,7 +11,6 @@ pub mod config_duration_value;
 pub mod config_number_value;
 pub mod config_object_value;
 pub mod config_value;
-pub mod config_values;
 pub mod time_unit;
 
 #[derive(Debug)]
@@ -105,6 +104,7 @@ impl Config {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use std::env;
   #[test]
   fn test_simple() {
     let input = r#"
