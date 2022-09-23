@@ -379,7 +379,7 @@ mod tests {
             ConfigNumberValue::from("1".to_owned()),
             TimeUnit::Seconds
           )),
-          ConfigValue::Number(ConfigNumberValue::from(2.1)),
+          ConfigValue::Number(ConfigNumberValue::from("2.1".to_string())),
           ConfigValue::Number(ConfigNumberValue::from(3)),
           ConfigValue::Number(ConfigNumberValue::from(4)),
           ConfigValue::Number(ConfigNumberValue::from(5))
