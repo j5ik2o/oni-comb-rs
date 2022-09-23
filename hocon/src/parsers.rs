@@ -78,18 +78,18 @@ fn duration_value<'a>() -> Parser<'a, u8, ConfigValue> {
 
 fn number_value<'a>() -> Parser<'a, u8, ConfigNumberValue> {
   number().map(|(s, i, f, e)| match (s, i, f, e) {
-    (None, i, None, None) => ConfigNumberValue::new(&i),
-    (Some(_), i, None, None) => ConfigNumberValue::new(&i),
+    (None, i, None, None) => ConfigNumberValue::from(i),
+    (Some(_), i, None, None) => ConfigNumberValue::from(i),
     (_, i, Some(f), None) => {
       let mut s = i;
       s.push_str(&f);
-      ConfigNumberValue::new(&s)
+      ConfigNumberValue::from(s)
     }
     (_, i, Some(f), Some(e)) => {
       let mut s = i;
       s.push_str(&f);
       s.push_str(&e);
-      ConfigNumberValue::new(&s)
+      ConfigNumberValue::from(s)
     }
     _ => panic!("no match !!!"),
   })
@@ -321,7 +321,7 @@ mod tests {
       ast[0],
       ConfigValue::Object(ConfigObjectValue::from((
         "a".to_string(),
-        ConfigValue::Number(ConfigNumberValue::new("1"))
+        ConfigValue::Number(ConfigNumberValue::from("1".to_owned()))
       )))
     );
   }
@@ -338,7 +338,7 @@ mod tests {
       ast[0],
       ConfigValue::Object(ConfigObjectValue::from((
         "b".to_string(),
-        ConfigValue::Number(ConfigNumberValue::new("1"))
+        ConfigValue::Number(ConfigNumberValue::from("1".to_owned()))
       )))
     );
   }
@@ -375,11 +375,14 @@ mod tests {
       ConfigValue::Object(ConfigObjectValue::from((
         "foo".to_string(),
         ConfigValue::Array(ConfigArrayValue::new(vec![
-          ConfigValue::Duration(ConfigDurationValue::new(ConfigNumberValue::new("1"), TimeUnit::Seconds)),
-          ConfigValue::Number(ConfigNumberValue::new("2.1")),
-          ConfigValue::Number(ConfigNumberValue::new("3")),
-          ConfigValue::Number(ConfigNumberValue::new("4")),
-          ConfigValue::Number(ConfigNumberValue::new("5"))
+          ConfigValue::Duration(ConfigDurationValue::new(
+            ConfigNumberValue::from("1".to_owned()),
+            TimeUnit::Seconds
+          )),
+          ConfigValue::Number(ConfigNumberValue::from(2.1)),
+          ConfigValue::Number(ConfigNumberValue::from(3)),
+          ConfigValue::Number(ConfigNumberValue::from(4)),
+          ConfigValue::Number(ConfigNumberValue::from(5))
         ]))
       )))
     );

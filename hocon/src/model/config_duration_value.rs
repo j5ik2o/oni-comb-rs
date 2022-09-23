@@ -8,6 +8,13 @@ pub struct ConfigDurationValue {
   unit: TimeUnit,
 }
 
+impl From<Duration> for ConfigDurationValue {
+  fn from(value: Duration) -> Self {
+    let config_number_value = ConfigNumberValue::from(value.as_nanos());
+    Self::new(config_number_value, TimeUnit::Nanoseconds)
+  }
+}
+
 impl ConfigDurationValue {
   pub fn new(value: ConfigNumberValue, unit: TimeUnit) -> Self {
     Self { value, unit }
@@ -24,4 +31,10 @@ impl ConfigDurationValue {
       TimeUnit::Days => Duration::from_secs(self.value.to_u64().unwrap() * 60 * 60 * 24),
     }
   }
+}
+
+#[cfg(test)]
+mod tests {
+  #[test]
+  fn test() {}
 }
