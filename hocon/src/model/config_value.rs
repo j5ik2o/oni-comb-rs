@@ -76,7 +76,7 @@ impl ConfigValue {
 
   pub fn combine(&mut self, other: Self) {
     match &other {
-      o @ ConfigValue::Link(cv) => {
+      o @ ConfigValue::Link(_cv) => {
         for e in o.to_vec() {
           self.clone().push(e);
         }
@@ -326,8 +326,7 @@ impl ConfigValue {
 
 #[cfg(test)]
 mod tests {
-  use crate::model::config_value::{ConfigValue, ConfigValueLink};
-  use std::rc::Rc;
+  use crate::model::config_value::ConfigValue;
 
   #[test]
   fn test_push() {
