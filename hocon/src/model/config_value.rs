@@ -1,23 +1,14 @@
-use crate::model::config_array_value::ConfigArrayValue;
-use crate::model::config_duration_value::ConfigDurationValue;
-use crate::model::config_number_value::ConfigNumberValue;
-use crate::model::config_object_value::ConfigObjectValue;
-use crate::model::ConfigFactory;
 use std::collections::HashMap;
 use std::env;
 use std::rc::Rc;
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct ConfigIncludeValue {
-  method: String,
-  file_name: String,
-}
-
-impl ConfigIncludeValue {
-  pub fn new(method: String, file_name: String) -> Self {
-    Self { method, file_name }
-  }
-}
+use crate::model::config_array_value::ConfigArrayValue;
+use crate::model::config_duration_value::ConfigDurationValue;
+use crate::model::config_include_value::ConfigIncludeValue;
+use crate::model::config_number_value::ConfigNumberValue;
+use crate::model::config_object_value::ConfigObjectValue;
+use crate::model::config_value_link::ConfigValueLink;
+use crate::model::ConfigFactory;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum ConfigValue {
@@ -35,24 +26,6 @@ pub enum ConfigValue {
   },
   Include(ConfigIncludeValue),
   Link(Rc<ConfigValueLink>),
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct ConfigValueLink {
-  prev: Rc<ConfigValue>,
-  value: ConfigValue,
-}
-
-impl ConfigValueLink {
-  pub fn new(prev: Rc<ConfigValue>, value: ConfigValue) -> Self {
-    Self { prev, value }
-  }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum ConfigValueList {
-  Cons(ConfigValue, Rc<ConfigValueList>),
-  Nil,
 }
 
 impl ConfigValue {
@@ -102,6 +75,24 @@ impl ConfigValue {
     }
   }
 
+  pub fn with_fallback(&mut self, other: Self) {
+    match (self, other) {
+      (ConfigValue::Object(l), ConfigValue::Object(r)) => {
+        l.with_fallback(r);
+      }
+      (ConfigValue::Array(l), ConfigValue::Array(r)) => {
+        l.with_fallback(r);
+      }
+      (ConfigValue::Link(..), ConfigValue::Link(..)) => {}
+      (re @ ConfigValue::Link(..), r) => {
+        let mut n = re.get_value_link().unwrap().value.clone();
+        n.with_fallback(r);
+        re.push(n);
+      }
+      (..) => {}
+    }
+  }
+
   pub fn latest(&self) -> &Self {
     match self {
       ConfigValue::Link(cv) => &cv.value,
@@ -145,49 +136,49 @@ impl ConfigValue {
     }
   }
 
-  pub fn ref_prev(&self) -> &Option<Rc<ConfigValue>> {
+  fn ref_prev(&self) -> &Option<Rc<ConfigValue>> {
     match self {
       ConfigValue::Reference { prev, .. } => prev,
       _ => &None,
     }
   }
 
-  pub fn ref_name(&self) -> Option<&String> {
+  fn ref_name(&self) -> Option<&String> {
     match self {
       ConfigValue::Reference { path: ref_name, .. } => Some(ref_name),
       _ => None,
     }
   }
 
-  pub fn ref_missing(&self) -> Option<bool> {
+  fn ref_missing(&self) -> Option<bool> {
     match self {
       ConfigValue::Reference { missing, .. } => Some(*missing),
       _ => None,
     }
   }
 
-  pub fn get_include_value(&self) -> Option<&ConfigIncludeValue> {
+  fn get_include_value(&self) -> Option<&ConfigIncludeValue> {
     match self {
       ConfigValue::Include(civ) => Some(civ),
       _ => None,
     }
   }
 
-  pub fn get_object_value(&self) -> Option<&ConfigObjectValue> {
+  fn get_object_value(&self) -> Option<&ConfigObjectValue> {
     match self {
       ConfigValue::Object(cov) => Some(cov),
       _ => None,
     }
   }
 
-  pub fn get_array_value(&self) -> Option<&ConfigArrayValue> {
+  fn get_array_value(&self) -> Option<&ConfigArrayValue> {
     match self {
       ConfigValue::Array(cav) => Some(cav),
       _ => None,
     }
   }
 
-  pub fn get_value_link(&self) -> Option<&ConfigValueLink> {
+  fn get_value_link(&self) -> Option<&ConfigValueLink> {
     match self {
       ConfigValue::Link(cvl) => Some(&*cvl),
       _ => None,
@@ -284,24 +275,6 @@ impl ConfigValue {
     match self {
       ConfigValue::Link(cvl) => Some(cvl.clone()),
       _ => None,
-    }
-  }
-
-  pub fn with_fallback(&mut self, other: Self) {
-    match (self, other) {
-      (ConfigValue::Object(l), ConfigValue::Object(r)) => {
-        l.with_fallback(r);
-      }
-      (ConfigValue::Array(l), ConfigValue::Array(r)) => {
-        l.with_fallback(r);
-      }
-      (ConfigValue::Link(..), ConfigValue::Link(..)) => {}
-      (re @ ConfigValue::Link(..), r) => {
-        let mut n = re.get_value_link().unwrap().value.clone();
-        n.with_fallback(r);
-        re.push(n);
-      }
-      (..) => {}
     }
   }
 }

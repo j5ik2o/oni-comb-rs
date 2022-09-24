@@ -8,9 +8,11 @@ use crate::parsers::hocon;
 
 pub mod config_array_value;
 pub mod config_duration_value;
+pub mod config_include_value;
 pub mod config_number_value;
 pub mod config_object_value;
 pub mod config_value;
+pub mod config_value_link;
 pub mod time_unit;
 
 #[derive(Debug)]
