@@ -22,6 +22,14 @@ pub enum ConfigError {
   ParseError(String),
 }
 
+pub trait Monoid {
+  fn combine(&mut self, other: &Self);
+}
+
+pub trait ConfigMergeable {
+  fn merge_with(&mut self, other: Self);
+}
+
 pub trait FileReader {
   fn read_to_string(&mut self, filename: &str, text: &mut String) -> Result<(), ConfigError>;
 }
@@ -63,7 +71,7 @@ impl ConfigFactory {
         for cv in &configs[1..] {
           let mut t = cv.clone();
           t.resolve(None);
-          cur.with_fallback(t);
+          cur.merge_with(t);
         }
         cur
       })

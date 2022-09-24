@@ -8,7 +8,7 @@ use crate::model::config_include_value::ConfigIncludeValue;
 use crate::model::config_number_value::ConfigNumberValue;
 use crate::model::config_object_value::ConfigObjectValue;
 use crate::model::config_value_link::ConfigValueLink;
-use crate::model::ConfigFactory;
+use crate::model::{ConfigFactory, ConfigMergeable, Monoid};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum ConfigValue {
@@ -26,6 +26,39 @@ pub enum ConfigValue {
   },
   Include(ConfigIncludeValue),
   Link(Rc<ConfigValueLink>),
+}
+
+impl Monoid for ConfigValue {
+  fn combine(&mut self, other: &Self) {
+    match other {
+      cv @ ConfigValue::Link(..) => {
+        for child_cv in cv.to_vec() {
+          self.push(child_cv);
+        }
+      }
+      _ => {}
+    }
+  }
+}
+
+impl ConfigMergeable for ConfigValue {
+  fn merge_with(&mut self, other: Self) {
+    match (self, other) {
+      (ConfigValue::Object(l), ConfigValue::Object(r)) => {
+        l.merge_with(r);
+      }
+      (ConfigValue::Array(l), ConfigValue::Array(r)) => {
+        l.merge_with(r);
+      }
+      (ConfigValue::Link(..), ConfigValue::Link(..)) => {}
+      (re @ ConfigValue::Link(..), r) => {
+        let mut n = re.get_value_link().unwrap().value.clone();
+        n.merge_with(r);
+        re.push(n);
+      }
+      (..) => {}
+    }
+  }
 }
 
 impl ConfigValue {
@@ -62,35 +95,6 @@ impl ConfigValue {
     };
     let cvl = ConfigValueLink::new(to, cv);
     *self = ConfigValue::Link(Rc::new(cvl))
-  }
-
-  pub fn combine(&mut self, other: &Self) {
-    match other {
-      cv @ ConfigValue::Link(..) => {
-        for child in cv.to_vec() {
-          self.push(child);
-        }
-      }
-      _ => {}
-    }
-  }
-
-  pub fn with_fallback(&mut self, other: Self) {
-    match (self, other) {
-      (ConfigValue::Object(l), ConfigValue::Object(r)) => {
-        l.with_fallback(r);
-      }
-      (ConfigValue::Array(l), ConfigValue::Array(r)) => {
-        l.with_fallback(r);
-      }
-      (ConfigValue::Link(..), ConfigValue::Link(..)) => {}
-      (re @ ConfigValue::Link(..), r) => {
-        let mut n = re.get_value_link().unwrap().value.clone();
-        n.with_fallback(r);
-        re.push(n);
-      }
-      (..) => {}
-    }
   }
 
   pub fn latest(&self) -> &Self {
@@ -253,6 +257,7 @@ impl ConfigValue {
 #[cfg(test)]
 mod tests {
   use crate::model::config_value::ConfigValue;
+  use crate::model::Monoid;
 
   #[test]
   fn test_push() {

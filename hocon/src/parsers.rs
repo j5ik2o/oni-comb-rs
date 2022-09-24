@@ -8,6 +8,7 @@ use crate::model::config_number_value::ConfigNumberValue;
 use crate::model::config_object_value::ConfigObjectValue;
 use crate::model::config_value::ConfigValue;
 use crate::model::time_unit::TimeUnit;
+use crate::model::ConfigMergeable;
 use oni_comb_parser_rs::prelude::*;
 
 fn space_or_comment<'a>() -> Parser<'a, u8, ()> {
@@ -270,7 +271,7 @@ fn config<'a>() -> Parser<'a, u8, Vec<ConfigValue>> {
             r.insert(k, v);
           }
           Some(m) => {
-            m.with_fallback(v);
+            m.merge_with(v);
           }
         }
         r
