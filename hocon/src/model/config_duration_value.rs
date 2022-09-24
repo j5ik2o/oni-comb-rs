@@ -2,7 +2,7 @@ use crate::model::config_number_value::ConfigNumberValue;
 use crate::model::time_unit::TimeUnit;
 use std::time::Duration;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ConfigDurationValue {
