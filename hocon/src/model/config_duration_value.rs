@@ -2,7 +2,7 @@ use crate::model::config_number_value::ConfigNumberValue;
 use crate::model::time_unit::TimeUnit;
 use std::time::Duration;
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ConfigDurationValue {
@@ -32,7 +32,7 @@ impl ConfigDurationValue {
   pub fn to_std_duration(self) -> Result<Duration> {
     let value = match self.clone().value.to_u64() {
       Some(v) => v,
-      None => Err(anyhow!("Occurred convert error: {:?}", self.value))?,
+      None => anyhow!("Occurred convert error: {:?}", self.value)?,
     };
     match self.unit {
       TimeUnit::Nanoseconds => Ok(Duration::from_nanos(value)),
@@ -48,7 +48,7 @@ impl ConfigDurationValue {
   pub fn to_duration(self) -> Result<chrono::Duration> {
     let value = match self.clone().value.to_i64() {
       Some(v) => v,
-      None => Err(anyhow!("Occurred convert error: {:?}", self.value))?,
+      None => anyhow!("Occurred convert error: {:?}", self.value)?,
     };
     match self.unit {
       TimeUnit::Nanoseconds => Ok(chrono::Duration::nanoseconds(value)),
