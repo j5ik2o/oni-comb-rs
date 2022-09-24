@@ -28,7 +28,11 @@ pub enum ConfigValue {
   Duration(ConfigDurationValue),
   Array(ConfigArrayValue),
   Object(ConfigObjectValue),
-  Reference(String, bool),
+  Reference {
+    prev: Option<Rc<ConfigValue>>,
+    path: String,
+    missing: bool,
+  },
   Include(ConfigIncludeValue),
   Link(Rc<ConfigValueLink>),
 }
@@ -53,7 +57,20 @@ pub enum ConfigValueList {
 
 impl ConfigValue {
   pub fn push(&mut self, cv: ConfigValue) {
-    let cvl = ConfigValueLink::new(Rc::new(self.clone()), cv);
+    let to = Rc::new(self.clone());
+    let cv = match cv {
+      ConfigValue::Reference {
+        path: ref_name,
+        missing,
+        ..
+      } => ConfigValue::Reference {
+        prev: Some(to.clone()),
+        path: ref_name.clone(),
+        missing,
+      },
+      _ => cv,
+    };
+    let cvl = ConfigValueLink::new(to, cv);
     *self = ConfigValue::Link(Rc::new(cvl))
   }
 
@@ -128,16 +145,23 @@ impl ConfigValue {
     }
   }
 
+  pub fn ref_prev(&self) -> &Option<Rc<ConfigValue>> {
+    match self {
+      ConfigValue::Reference { prev, .. } => prev,
+      _ => &None,
+    }
+  }
+
   pub fn ref_name(&self) -> Option<&String> {
     match self {
-      ConfigValue::Reference(ref_name, ..) => Some(ref_name),
+      ConfigValue::Reference { path: ref_name, .. } => Some(ref_name),
       _ => None,
     }
   }
 
   pub fn ref_missing(&self) -> Option<bool> {
     match self {
-      ConfigValue::Reference(.., missing) => Some(*missing),
+      ConfigValue::Reference { missing, .. } => Some(*missing),
       _ => None,
     }
   }
@@ -170,7 +194,7 @@ impl ConfigValue {
     }
   }
 
-  pub fn resolve(&mut self, source: Option<&Self>, parent: Option<&Self>) {
+  pub fn resolve(&mut self, source: Option<&Self>) {
     match (self, source) {
       (cvi @ ConfigValue::Include(..), ..) => {
         let mut config_factory = ConfigFactory::new();
@@ -182,11 +206,11 @@ impl ConfigValue {
       (cvl @ ConfigValue::Link(..), Some(..)) => {
         let cvs = cvl.to_vec();
         let mut head = cvs[0].clone();
-        head.resolve(source, Some(cvl));
+        head.resolve(source);
 
         for e in &cvs[1..] {
           let mut ee = e.clone();
-          ee.resolve(source, Some(cvl));
+          ee.resolve(source);
           head.push(ee.clone());
         }
 
@@ -196,7 +220,7 @@ impl ConfigValue {
         let av = cva.get_array_value().unwrap();
         let mut m = vec![];
         for mut cv in av.0.clone().into_iter() {
-          cv.resolve(source, None);
+          cv.resolve(source);
           m.push(cv);
         }
         *cva = ConfigValue::Array(ConfigArrayValue::new(m));
@@ -205,12 +229,12 @@ impl ConfigValue {
         let ov = cvo.get_object_value().unwrap();
         let mut m = HashMap::new();
         for (k, mut cv) in ov.0.clone().into_iter() {
-          cv.resolve(source, None);
+          cv.resolve(source);
           m.insert(k, cv);
         }
         *cvo = ConfigValue::Object(ConfigObjectValue::new(m));
       }
-      (cvr @ ConfigValue::Reference(..), Some(src)) => {
+      (cvr @ ConfigValue::Reference { .. }, Some(src)) => {
         let ref_value = src
           .get_value(cvr.ref_name().unwrap())
           .cloned()
@@ -219,7 +243,7 @@ impl ConfigValue {
           if ref_value.is_some() {
             *cvr = ref_value.unwrap();
           } else {
-            *cvr = parent.unwrap().prev_latest().clone();
+            *cvr = cvr.ref_prev().clone().unwrap().prev_latest().clone();
           }
         } else {
           if ref_value.is_none() {
@@ -309,7 +333,11 @@ mod tests {
     first.push(ConfigValue::Null);
     let mut second = ConfigValue::Bool(false);
     second.push(ConfigValue::String("XYZ".to_string()));
-    second.push(ConfigValue::Reference("ABC".to_string(), false));
+    second.push(ConfigValue::Reference {
+      prev: None,
+      path: "ABC".to_string(),
+      missing: false,
+    });
 
     let mut t = first.clone();
 

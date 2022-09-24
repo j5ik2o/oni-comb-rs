@@ -247,7 +247,11 @@ fn array_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
 }
 
 fn reference_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
-  reference().map(|(missing, ref_name)| ConfigValue::Reference(ref_name, missing))
+  reference().map(|(missing, ref_name)| ConfigValue::Reference {
+    prev: None,
+    path: ref_name,
+    missing,
+  })
 }
 
 fn config_value<'a>() -> Parser<'a, u8, ConfigValue> {

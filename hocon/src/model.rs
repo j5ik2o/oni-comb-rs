@@ -57,17 +57,17 @@ impl ConfigFactory {
       .to_result()
       .map(|configs| {
         let mut cur = configs[0].clone();
-        cur.resolve(None, None);
+        cur.resolve(None);
         for cv in &configs[1..] {
           let mut t = cv.clone();
-          t.resolve(None, None);
+          t.resolve(None);
           cur.with_fallback(t);
         }
         cur
       })
       .map(|config| {
         let mut c = config.clone();
-        c.resolve(Some(&config), None);
+        c.resolve(Some(&config));
         c
       })
       .map(|config| Config { config })
