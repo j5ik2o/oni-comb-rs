@@ -2,7 +2,7 @@ use crate::model::config_number_value::ConfigNumberValue;
 use crate::model::time_unit::TimeUnit;
 use std::time::Duration;
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ConfigDurationValue {
@@ -30,11 +30,10 @@ impl ConfigDurationValue {
   }
 
   pub fn to_std_duration(self) -> Result<Duration> {
-    let value = self
-      .clone()
-      .value
-      .to_u64()
-      .with_context(|| format!("Occurred convert error: {:?}", self.value))?;
+    let value = match self.clone().value.to_u64() {
+      Some(v) => v,
+      None => Err(anyhow!("Occurred convert error: {:?}", self.value))?,
+    };
     match self.unit {
       TimeUnit::Nanoseconds => Ok(Duration::from_nanos(value)),
       TimeUnit::Microseconds => Ok(Duration::from_micros(value)),
@@ -47,11 +46,10 @@ impl ConfigDurationValue {
   }
 
   pub fn to_duration(self) -> Result<chrono::Duration> {
-    let value = self
-      .clone()
-      .value
-      .to_i64()
-      .with_context(|| format!("Occurred convert error: {:?}", self.value))?;
+    let value = match self.clone().value.to_i64() {
+      Some(v) => v,
+      None => Err(anyhow!("Occurred convert error: {:?}", self.value))?,
+    };
     match self.unit {
       TimeUnit::Nanoseconds => Ok(chrono::Duration::nanoseconds(value)),
       TimeUnit::Microseconds => Ok(chrono::Duration::microseconds(value)),
