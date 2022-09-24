@@ -256,8 +256,14 @@ impl ConfigValue {
 
 #[cfg(test)]
 mod tests {
-  use crate::model::config_value::ConfigValue;
-  use crate::model::Monoid;
+  use super::*;
+  use std::env;
+
+  #[ctor::ctor]
+  fn init_logger() {
+    env::set_var("RUST_LOG", "debug");
+    let _ = env_logger::try_init();
+  }
 
   #[test]
   fn test_push() {

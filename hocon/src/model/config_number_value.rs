@@ -52,6 +52,10 @@ impl ConfigNumberValue {
     Self(value)
   }
 
+  pub fn as_decimal(&self) -> &Decimal {
+    &self.0
+  }
+
   pub fn to_i128(self) -> Option<i128> {
     self.0.to_i128()
   }

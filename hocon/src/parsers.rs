@@ -265,16 +265,16 @@ fn config<'a>() -> Parser<'a, u8, Vec<ConfigValue>> {
   property_config_value()
     .of_many1()
     .map(|values: Vec<(String, ConfigValue)>| {
-      let map = values.into_iter().fold(HashMap::new(), |mut r, (k, v)| {
-        match r.get_mut(&k) {
+      let map = values.into_iter().fold(HashMap::new(), |mut key_values, (k, v)| {
+        match key_values.get_mut(&k) {
           None => {
-            r.insert(k, v);
+            key_values.insert(k, v);
           }
-          Some(m) => {
-            m.merge_with(v);
+          Some(cv) => {
+            cv.merge_with(v);
           }
         }
-        r
+        key_values
       });
       vec![ConfigValue::Object(ConfigObjectValue::new(map))]
     })
@@ -290,19 +290,30 @@ pub fn hocon<'a>() -> Parser<'a, u8, Vec<ConfigValue>> {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use std::env;
+
+  #[ctor::ctor]
+  fn init_logger() {
+    env::set_var("RUST_LOG", "debug");
+    let _ = env_logger::try_init();
+  }
 
   #[test]
   fn include_test() {
     let input = br#"include file("abc.conf")"#;
-    let result = hocon().parse(input).to_result();
-    println!("{:?}", result);
+    let binding = hocon().parse(input).to_result().unwrap();
+    let result = binding[0].clone();
+    assert_eq!(
+      result,
+      ConfigValue::Include(ConfigIncludeValue::new("file".to_string(), "abc.conf".to_string()))
+    )
   }
 
   #[test]
   fn string_single_quote() {
     let result = string_config_value().parse(br#"'abc'"#);
     assert!(result.is_success());
-    let ast = result.clone().to_result().ok().unwrap();
+    let ast = result.to_result().ok().unwrap();
     assert_eq!(ast, ConfigValue::String("abc".to_string()));
   }
 
@@ -310,7 +321,7 @@ mod tests {
   fn string_double_quote() {
     let result = string_config_value().parse(br#""abc""#);
     assert!(result.is_success());
-    let ast = result.clone().to_result().ok().unwrap();
+    let ast = result.to_result().ok().unwrap();
     assert_eq!(ast, ConfigValue::String("abc".to_string()));
   }
 
@@ -321,7 +332,7 @@ mod tests {
         "#;
     let result = hocon().parse(input);
     assert!(result.is_success());
-    let ast = result.clone().to_result().ok().unwrap();
+    let ast = result.to_result().ok().unwrap();
     assert_eq!(
       ast[0],
       ConfigValue::Object(ConfigObjectValue::from((
@@ -338,7 +349,7 @@ mod tests {
         "#;
     let result = hocon().parse(input);
     assert!(result.is_success());
-    let ast = result.clone().to_result().ok().unwrap();
+    let ast = result.to_result().ok().unwrap();
     assert_eq!(
       ast[0],
       ConfigValue::Object(ConfigObjectValue::from((
@@ -356,7 +367,7 @@ mod tests {
         "#;
     let result = hocon().parse(input);
     assert!(result.is_success());
-    let ast = result.clone().to_result().ok().unwrap();
+    let ast = result.to_result().ok().unwrap();
     assert_eq!(
       ast.first().unwrap().clone(),
       ConfigValue::Object(ConfigObjectValue::from((
@@ -374,7 +385,7 @@ mod tests {
     "#,
     );
     assert!(result.is_success());
-    let ast = result.clone().to_result().ok().unwrap();
+    let ast = result.to_result().ok().unwrap();
     assert_eq!(
       ast.first().unwrap().clone(),
       ConfigValue::Object(ConfigObjectValue::from((

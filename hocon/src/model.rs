@@ -115,6 +115,13 @@ impl Config {
 mod tests {
   use super::*;
   use std::env;
+
+  #[ctor::ctor]
+  fn init_logger() {
+    env::set_var("RUST_LOG", "debug");
+    let _ = env_logger::try_init();
+  }
+
   #[test]
   fn test_simple() {
     let input = r#"
