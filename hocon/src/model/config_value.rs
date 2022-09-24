@@ -29,22 +29,8 @@ pub enum ConfigValue {
 }
 
 impl ConfigValue {
-  pub fn push(&mut self, cv: ConfigValue) {
-    let to = Rc::new(self.clone());
-    let cv = match cv {
-      ConfigValue::Reference {
-        path: ref_name,
-        missing,
-        ..
-      } => ConfigValue::Reference {
-        prev: Some(to.clone()),
-        path: ref_name.clone(),
-        missing,
-      },
-      _ => cv,
-    };
-    let cvl = ConfigValueLink::new(to, cv);
-    *self = ConfigValue::Link(Rc::new(cvl))
+  pub fn of_reference(prev: Option<Rc<ConfigValue>>, path: String, missing: bool) -> Self {
+    ConfigValue::Reference { prev, path, missing }
   }
 
   pub fn to_vec(&self) -> Vec<ConfigValue> {
@@ -64,11 +50,25 @@ impl ConfigValue {
     }
   }
 
-  pub fn combine(&mut self, other: Self) {
-    match &other {
-      o @ ConfigValue::Link(_cv) => {
-        for e in o.to_vec() {
-          self.clone().push(e);
+  pub fn push(&mut self, cv: ConfigValue) {
+    let to = Rc::new(self.clone());
+    let cv = match cv {
+      ConfigValue::Reference {
+        path: ref_name,
+        missing,
+        ..
+      } => ConfigValue::of_reference(Some(to.clone()), ref_name.clone(), missing),
+      _ => cv,
+    };
+    let cvl = ConfigValueLink::new(to, cv);
+    *self = ConfigValue::Link(Rc::new(cvl))
+  }
+
+  pub fn combine(&mut self, other: &Self) {
+    match other {
+      cv @ ConfigValue::Link(..) => {
+        for child in cv.to_vec() {
+          self.push(child);
         }
       }
       _ => {}
@@ -111,28 +111,6 @@ impl ConfigValue {
         cv => cv,
       },
       cv => cv,
-    }
-  }
-
-  pub fn has_child(&self) -> bool {
-    match self {
-      ConfigValue::Object(..) => true,
-      ConfigValue::Array(..) => true,
-      _ => false,
-    }
-  }
-
-  pub fn is_include(&self) -> bool {
-    match self {
-      ConfigValue::Include(_m) => true,
-      _ => false,
-    }
-  }
-
-  pub fn include(&self) -> Option<&ConfigIncludeValue> {
-    match self {
-      ConfigValue::Include(m) => Some(m),
-      _ => None,
     }
   }
 
@@ -270,13 +248,6 @@ impl ConfigValue {
       _ => false,
     }
   }
-
-  fn link_rc(&self) -> Option<Rc<ConfigValueLink>> {
-    match self {
-      ConfigValue::Link(cvl) => Some(cvl.clone()),
-      _ => None,
-    }
-  }
 }
 
 #[cfg(test)]
@@ -314,7 +285,7 @@ mod tests {
 
     let mut t = first.clone();
 
-    t.combine(second);
+    t.combine(&second);
 
     // [Bool(true), "ABC", Null]
     println!("{:?}", t);

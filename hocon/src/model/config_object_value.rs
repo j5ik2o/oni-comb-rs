@@ -23,11 +23,11 @@ impl ConfigObjectValue {
     Self(value)
   }
 
-  pub fn combine(&mut self, other: Self) {
-    for (k, v) in other.0 {
-      match self.0.get_mut(&k) {
+  pub fn combine(&mut self, other: &Self) {
+    for (k, v) in &other.0 {
+      match self.0.get_mut(k) {
         None => {
-          self.0.insert(k, v);
+          self.0.insert(k.clone(), v.clone());
         }
         Some(m) => {
           m.combine(v);
