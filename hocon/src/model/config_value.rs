@@ -39,7 +39,7 @@ impl Display for ConfigValue {
       ConfigValue::Duration(cdv) => cdv.to_string(),
       ConfigValue::Array(cav) => cav.to_string(),
       ConfigValue::Object(cov) => cov.to_string(),
-      ConfigValue::Reference { path, missing, .. } => format!("${{{}{}}}", if *missing { "$" } else { "" }, path),
+      ConfigValue::Reference { path, missing, .. } => format!("${{{}{}}}", if *missing { "?" } else { "" }, path),
       ConfigValue::Include(civ) => civ.to_string(),
       ConfigValue::Link(cvl) => (&*cvl).to_string(),
     };
