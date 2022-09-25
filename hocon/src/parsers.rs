@@ -158,7 +158,7 @@ fn kv<'a>() -> Parser<'a, u8, ()> {
   elm_ref_of(b"=:").discard()
 }
 
-fn key<'a>() -> Parser<'a, u8, String> {
+pub fn key<'a>() -> Parser<'a, u8, String> {
   (path() | string()).surround(space_or_comment(), space_or_comment())
 }
 

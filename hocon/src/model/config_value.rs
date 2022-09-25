@@ -1,3 +1,4 @@
+use oni_comb_parser_rs::prelude::ParserRunner;
 use std::collections::HashMap;
 use std::env;
 use std::fmt::{Display, Formatter};
@@ -9,7 +10,8 @@ use crate::model::config_include_value::ConfigIncludeValue;
 use crate::model::config_number_value::ConfigNumberValue;
 use crate::model::config_object_value::ConfigObjectValue;
 use crate::model::config_value_link::ConfigValueLink;
-use crate::model::{ConfigFactory, ConfigMergeable, Monoid};
+use crate::model::{ConfigFactory, ConfigMergeable, ConfigResolver, Monoid};
+use crate::parsers::key;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum ConfigValue {
@@ -80,113 +82,8 @@ impl ConfigMergeable for ConfigValue {
   }
 }
 
-impl ConfigValue {
-  pub fn of_reference(prev: Option<Rc<ConfigValue>>, path: String, missing: bool) -> Self {
-    ConfigValue::Reference { prev, path, missing }
-  }
-
-  pub fn to_vec(&self) -> Vec<ConfigValue> {
-    match self {
-      ConfigValue::Link(cv) => {
-        let mut cur = cv.clone();
-        let mut result = vec![cur.value.clone()];
-        while let ConfigValue::Link(prev_cur) = &*cur.prev {
-          cur = prev_cur.clone();
-          result.push(cur.value.clone());
-        }
-        result.push((*cur.prev).clone());
-        result.reverse();
-        result
-      }
-      cv => vec![cv.clone()],
-    }
-  }
-
-  pub fn push(&mut self, cv: ConfigValue) {
-    let to = Rc::new(self.clone());
-    let cv = match cv {
-      ConfigValue::Reference {
-        path: ref_name,
-        missing,
-        ..
-      } => ConfigValue::of_reference(Some(to.clone()), ref_name.clone(), missing),
-      _ => cv,
-    };
-    let cvl = ConfigValueLink::new(to, cv);
-    *self = ConfigValue::Link(Rc::new(cvl))
-  }
-
-  pub fn latest(&self) -> &Self {
-    match self {
-      ConfigValue::Link(cv) => &cv.value,
-      cv => cv,
-    }
-  }
-
-  pub fn prev_latest(&self) -> &Self {
-    println!("self = {:?}", self);
-    match self {
-      ConfigValue::Link(cv) => match &*(cv.prev) {
-        ConfigValue::Link(prev_cv) => {
-          let ret = &(prev_cv.value);
-          ret
-        }
-        cv => cv,
-      },
-      cv => cv,
-    }
-  }
-
-  fn ref_prev(&self) -> &Option<Rc<ConfigValue>> {
-    match self {
-      ConfigValue::Reference { prev, .. } => prev,
-      _ => &None,
-    }
-  }
-
-  fn ref_name(&self) -> Option<&String> {
-    match self {
-      ConfigValue::Reference { path: ref_name, .. } => Some(ref_name),
-      _ => None,
-    }
-  }
-
-  fn ref_missing(&self) -> Option<bool> {
-    match self {
-      ConfigValue::Reference { missing, .. } => Some(*missing),
-      _ => None,
-    }
-  }
-
-  fn get_include_value(&self) -> Option<&ConfigIncludeValue> {
-    match self {
-      ConfigValue::Include(civ) => Some(civ),
-      _ => None,
-    }
-  }
-
-  fn get_object_value(&self) -> Option<&ConfigObjectValue> {
-    match self {
-      ConfigValue::Object(cov) => Some(cov),
-      _ => None,
-    }
-  }
-
-  fn get_array_value(&self) -> Option<&ConfigArrayValue> {
-    match self {
-      ConfigValue::Array(cav) => Some(cav),
-      _ => None,
-    }
-  }
-
-  fn get_value_link(&self) -> Option<&ConfigValueLink> {
-    match self {
-      ConfigValue::Link(cvl) => Some(&*cvl),
-      _ => None,
-    }
-  }
-
-  pub fn resolve(&mut self, source: Option<&Self>) {
+impl ConfigResolver for ConfigValue {
+  fn resolve(&mut self, source: Option<&Self>) {
     match (self, source) {
       (cvi @ ConfigValue::Include(..), ..) => {
         let mut config_factory = ConfigFactory::new();
@@ -282,13 +179,21 @@ impl ConfigValue {
       _ => {}
     }
   }
+}
+
+impl ConfigValue {
+  pub fn of_reference(prev: Option<Rc<ConfigValue>>, path: String, missing: bool) -> Self {
+    ConfigValue::Reference { prev, path, missing }
+  }
 
   pub fn get_value(&self, path: &str) -> Option<&ConfigValue> {
+    let _ = key().parse(path.as_bytes()).to_result().expect("Illegal path format.");
+
     let keys = path.split(".").collect::<Vec<_>>();
     let key = keys[0];
     let child_count = keys.len() - 1;
     match self {
-      ConfigValue::Object(map) => match map.0.get(key) {
+      ConfigValue::Object(cov) => match cov.0.get(key) {
         Some(cv) if child_count > 0 => {
           let next_path = &path[(key.len() + 1) as usize..];
           cv.latest().get_value(next_path)
@@ -300,10 +205,111 @@ impl ConfigValue {
     }
   }
 
+  pub fn latest(&self) -> &Self {
+    match self {
+      ConfigValue::Link(cv) => &cv.value,
+      cv => cv,
+    }
+  }
+
+  pub fn prev_latest(&self) -> &Self {
+    println!("self = {:?}", self);
+    match self {
+      ConfigValue::Link(cv) => match &*(cv.prev) {
+        ConfigValue::Link(prev_cv) => {
+          let ret = &(prev_cv.value);
+          ret
+        }
+        cv => cv,
+      },
+      cv => cv,
+    }
+  }
+
   pub fn contains(&self, key: &str) -> bool {
     match self {
       ConfigValue::Object(map) => map.0.contains_key(key),
       _ => false,
+    }
+  }
+
+  pub fn to_vec(&self) -> Vec<ConfigValue> {
+    match self {
+      ConfigValue::Link(cv) => {
+        let mut cur = cv.clone();
+        let mut result = vec![cur.value.clone()];
+        while let ConfigValue::Link(prev_cur) = &*cur.prev {
+          cur = prev_cur.clone();
+          result.push(cur.value.clone());
+        }
+        result.push((*cur.prev).clone());
+        result.reverse();
+        result
+      }
+      cv => vec![cv.clone()],
+    }
+  }
+
+  pub fn push(&mut self, cv: ConfigValue) {
+    let to = Rc::new(self.clone());
+    let cv = match cv {
+      ConfigValue::Reference {
+        path: ref_name,
+        missing,
+        ..
+      } => ConfigValue::of_reference(Some(to.clone()), ref_name.clone(), missing),
+      _ => cv,
+    };
+    let cvl = ConfigValueLink::new(to, cv);
+    *self = ConfigValue::Link(Rc::new(cvl))
+  }
+
+  fn ref_prev(&self) -> &Option<Rc<ConfigValue>> {
+    match self {
+      ConfigValue::Reference { prev, .. } => prev,
+      _ => &None,
+    }
+  }
+
+  fn ref_name(&self) -> Option<&String> {
+    match self {
+      ConfigValue::Reference { path: ref_name, .. } => Some(ref_name),
+      _ => None,
+    }
+  }
+
+  fn ref_missing(&self) -> Option<bool> {
+    match self {
+      ConfigValue::Reference { missing, .. } => Some(*missing),
+      _ => None,
+    }
+  }
+
+  fn get_include_value(&self) -> Option<&ConfigIncludeValue> {
+    match self {
+      ConfigValue::Include(civ) => Some(civ),
+      _ => None,
+    }
+  }
+
+  fn get_object_value(&self) -> Option<&ConfigObjectValue> {
+    match self {
+      ConfigValue::Object(cov) => Some(cov),
+      _ => None,
+    }
+  }
+
+  fn get_array_value(&self) -> Option<&ConfigArrayValue> {
+    match self {
+      ConfigValue::Array(cav) => Some(cav),
+      _ => None,
+    }
+  }
+
+  fn get_value_link(&self) -> Option<&ConfigValueLink> {
+    match self {
+      ConfigValue::Link(cvl) => Some(&*cvl),
+      _ => None,
     }
   }
 }

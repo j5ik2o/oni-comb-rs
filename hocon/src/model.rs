@@ -31,6 +31,10 @@ pub trait ConfigMergeable {
   fn merge_with(&mut self, other: Self);
 }
 
+pub trait ConfigResolver {
+  fn resolve(&mut self, source: Option<&Self>);
+}
+
 pub trait FileReader {
   fn read_to_string(&mut self, filename: &str, text: &mut String) -> Result<(), ConfigError>;
 }
@@ -66,22 +70,22 @@ impl ConfigFactory {
     hocon()
       .parse(text.as_bytes())
       .to_result()
-      .map(|configs| Self::resolve_stage0(&configs))
-      .map(|config| Self::resolve_stage1(&config))
-      .map(|config| Config { config })
+      .map(|config_values| Self::resolve_stage0(&config_values))
+      .map(|config_value| Self::resolve_stage1(&config_value))
+      .map(|config_value| Config { config_value })
       .map_err(|pe| ConfigError::ParseError(pe.to_string()))
   }
 
-  fn resolve_stage1(config: &ConfigValue) -> ConfigValue {
-    let mut c = config.clone();
-    c.resolve(Some(&config));
+  fn resolve_stage1(config_value: &ConfigValue) -> ConfigValue {
+    let mut c = config_value.clone();
+    c.resolve(Some(&config_value));
     c
   }
 
-  fn resolve_stage0(configs: &Vec<ConfigValue>) -> ConfigValue {
-    let mut cur = configs[0].clone();
+  fn resolve_stage0(config_values: &Vec<ConfigValue>) -> ConfigValue {
+    let mut cur = config_values[0].clone();
     cur.resolve(None);
-    for cv in &configs[1..] {
+    for cv in &config_values[1..] {
       let mut t = cv.clone();
       t.resolve(None);
       cur.merge_with(t);
@@ -92,22 +96,26 @@ impl ConfigFactory {
 
 #[derive(Debug, Clone)]
 pub struct Config {
-  config: ConfigValue,
+  config_value: ConfigValue,
 }
 
 impl Display for Config {
   fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-    write!(f, "{}", self.config.to_string())
+    write!(f, "{}", self.config_value.to_string())
   }
 }
 
 impl Config {
+  fn new(config_value: ConfigValue) -> Self {
+    Self { config_value }
+  }
+
   pub fn to_config_value(&self) -> &ConfigValue {
-    &self.config
+    &self.config_value
   }
 
   pub fn get_value(&self, path: &str) -> Option<&ConfigValue> {
-    self.config.get_value(path)
+    self.config_value.get_value(path)
   }
 }
 
