@@ -197,16 +197,16 @@ impl ConfigValue {
       }
       (cvl @ ConfigValue::Link(..), Some(..)) => {
         let cvs = cvl.to_vec();
-        let mut head = cvs[0].clone();
-        head.resolve(source);
-
-        for e in &cvs[1..] {
-          let mut ee = e.clone();
-          ee.resolve(source);
-          head.push(ee.clone());
+        if !cvs.is_empty() {
+          let mut head = cvs[0].clone();
+          head.resolve(source);
+          for e in &cvs[1..] {
+            let mut ee = e.clone();
+            ee.resolve(source);
+            head.push(ee.clone());
+          }
+          *cvl = head;
         }
-
-        *cvl = head;
       }
       (cva @ ConfigValue::Array(..), Some(..)) => {
         let av = cva.get_array_value().unwrap();
@@ -215,7 +215,9 @@ impl ConfigValue {
           cv.resolve(source);
           m.push(cv);
         }
-        *cva = ConfigValue::Array(ConfigArrayValue::new(m));
+        if !av.0.is_empty() {
+          *cva = ConfigValue::Array(ConfigArrayValue::new(m));
+        }
       }
       (ConfigValue::Object(o), None) => {
         let mut new_key_values = HashMap::new();
@@ -255,7 +257,9 @@ impl ConfigValue {
           cv.resolve(source);
           m.insert(k, cv);
         }
-        *cvo = ConfigValue::Object(ConfigObjectValue::new(m));
+        if !m.is_empty() {
+          *cvo = ConfigValue::Object(ConfigObjectValue::new(m));
+        }
       }
       (cvr @ ConfigValue::Reference { .. }, Some(src)) => {
         let ref_value = src
