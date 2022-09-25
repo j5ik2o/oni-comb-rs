@@ -66,23 +66,27 @@ impl ConfigFactory {
     hocon()
       .parse(text.as_bytes())
       .to_result()
-      .map(|configs| {
-        let mut cur = configs[0].clone();
-        cur.resolve(None);
-        for cv in &configs[1..] {
-          let mut t = cv.clone();
-          t.resolve(None);
-          cur.merge_with(t);
-        }
-        cur
-      })
-      .map(|config| {
-        let mut c = config.clone();
-        c.resolve(Some(&config));
-        c
-      })
+      .map(|configs| Self::resolve_stage0(&configs))
+      .map(|config| Self::resolve_stage1(&config))
       .map(|config| Config { config })
       .map_err(|pe| ConfigError::ParseError(pe.to_string()))
+  }
+
+  fn resolve_stage1(config: &ConfigValue) -> ConfigValue {
+    let mut c = config.clone();
+    c.resolve(Some(&config));
+    c
+  }
+
+  fn resolve_stage0(configs: &Vec<ConfigValue>) -> ConfigValue {
+    let mut cur = configs[0].clone();
+    cur.resolve(None);
+    for cv in &configs[1..] {
+      let mut t = cv.clone();
+      t.resolve(None);
+      cur.merge_with(t);
+    }
+    cur
   }
 }
 
@@ -102,19 +106,8 @@ impl Config {
     &self.config
   }
 
-  pub fn get_value(&self, path: &str) -> Option<ConfigValue> {
-    let keys = path.split(".").collect::<Vec<_>>();
-    let key = keys[0];
-    let child_count = keys.len() - 1;
-    let config_value = self.config.get_value(key);
-    match config_value {
-      Some(cv) if child_count > 0 => {
-        let next_key = &path[(key.len() + 1) as usize..];
-        cv.get_value(next_key).cloned()
-      }
-      Some(cv) => Some(cv.clone()),
-      None => None,
-    }
+  pub fn get_value(&self, path: &str) -> Option<&ConfigValue> {
+    self.config.get_value(path)
   }
 }
 
@@ -148,9 +141,9 @@ mod tests {
     let config = ConfigFactory::parse_from_string(input).unwrap();
     println!("{:?}", config);
     let a_value = config.get_value("foo.test.a");
-    assert_eq!(a_value, Some(ConfigValue::String("aaaa".to_string())));
+    assert_eq!(a_value, Some(&ConfigValue::String("aaaa".to_string())));
     let b_value = config.get_value("foo.test.b");
-    assert_eq!(b_value, Some(ConfigValue::String("xxxx".to_string())));
+    assert_eq!(b_value, Some(&ConfigValue::String("xxxx".to_string())));
   }
 
   #[test]
@@ -166,7 +159,7 @@ mod tests {
     let config = ConfigFactory::parse_from_string(input).unwrap();
     println!("{}", config);
     let x_value = config.get_value("x.x.x").unwrap();
-    assert_eq!(x_value, ConfigValue::String("a".to_string()));
+    assert_eq!(x_value, &ConfigValue::String("a".to_string()));
   }
 
   #[test]
@@ -188,9 +181,9 @@ mod tests {
     "#;
     let config = ConfigFactory::parse_from_string(input).unwrap();
     let a_value = config.get_value("foo.test.a");
-    assert_eq!(a_value, Some(ConfigValue::String("biz".to_string())));
+    assert_eq!(a_value, Some(&ConfigValue::String("biz".to_string())));
     let b_value = config.get_value("foo.test.b");
-    assert_eq!(b_value, Some(ConfigValue::String("bbbb".to_string())));
+    assert_eq!(b_value, Some(&ConfigValue::String("bbbb".to_string())));
   }
 
   #[test]
@@ -210,7 +203,7 @@ mod tests {
     env::set_var("TEST_VAR", s);
     let config = ConfigFactory::parse_from_string(input).unwrap();
     let a_value = config.get_value("foo.test.a");
-    assert_eq!(a_value, Some(ConfigValue::String(s.to_string())));
+    assert_eq!(a_value, Some(&ConfigValue::String(s.to_string())));
     env::remove_var("TEST_VAR");
   }
 
@@ -249,7 +242,7 @@ mod tests {
     env::set_var("TEST_VAR", s);
     let config = ConfigFactory::parse_from_string(input).unwrap();
     let a_value = config.get_value("foo.test.a");
-    assert_eq!(a_value, Some(ConfigValue::String(s.to_string())));
+    assert_eq!(a_value, Some(&ConfigValue::String(s.to_string())));
     env::remove_var("TEST_VAR");
   }
 
@@ -268,6 +261,6 @@ mod tests {
     "#;
     let config = ConfigFactory::parse_from_string(input).unwrap();
     let a_value = config.get_value("foo.test.a");
-    assert_eq!(a_value, Some(ConfigValue::String("aaaa".to_string())));
+    assert_eq!(a_value, Some(&ConfigValue::String("aaaa".to_string())));
   }
 }
