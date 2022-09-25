@@ -219,18 +219,16 @@ impl ConfigValue {
           *cva = ConfigValue::Array(ConfigArrayValue::new(m));
         }
       }
-      (ConfigValue::Object(o), None) => {
+      (ConfigValue::Object(cov), None) => {
         let mut new_key_values = HashMap::new();
-        for (k, v) in &o.0 {
-          if k.contains(".") {
-            let mut keys = k.split(".").collect::<Vec<_>>();
+        for (key, cv) in &cov.0 {
+          if key.contains(".") {
+            let mut keys = key.split(".").collect::<Vec<_>>();
             keys.reverse();
             let mut leaf_map = HashMap::new();
-            println!("key = {:?}, value = {:?}", keys[0], v);
-            leaf_map.insert(keys[0].to_string(), v.clone());
+            leaf_map.insert(keys[0].to_string(), cv.clone());
             let mut new_object = ConfigValue::Object(ConfigObjectValue::new(leaf_map));
             for key in &keys[1..(keys.len() - 1)] {
-              println!("key = {:?}", key);
               let mut node_map = HashMap::new();
               node_map.insert(key.to_string(), new_object.clone());
               new_object = ConfigValue::Object(ConfigObjectValue::new(node_map));
@@ -247,18 +245,18 @@ impl ConfigValue {
           }
         }
         if !new_key_values.is_empty() {
-          *o = ConfigObjectValue::new(new_key_values);
+          *cov = ConfigObjectValue::new(new_key_values);
         }
       }
       (cvo @ ConfigValue::Object(..), Some(..)) => {
         let ov = cvo.get_object_value().unwrap();
-        let mut m = HashMap::new();
-        for (k, mut cv) in ov.0.clone().into_iter() {
+        let mut key_values = HashMap::new();
+        for (key, mut cv) in ov.0.clone() {
           cv.resolve(source);
-          m.insert(k, cv);
+          key_values.insert(key, cv);
         }
-        if !m.is_empty() {
-          *cvo = ConfigValue::Object(ConfigObjectValue::new(m));
+        if !key_values.is_empty() {
+          *cvo = ConfigValue::Object(ConfigObjectValue::new(key_values));
         }
       }
       (cvr @ ConfigValue::Reference { .. }, Some(src)) => {
