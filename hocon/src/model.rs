@@ -152,6 +152,7 @@ mod tests {
         x.y.a=1s
         x.y {
           c=3
+          c.d.e = 5
         }
         x.y.b=[2.1, 10, 30]
         x.x.x="a"

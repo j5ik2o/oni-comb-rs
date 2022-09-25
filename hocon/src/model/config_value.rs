@@ -226,7 +226,9 @@ impl ConfigValue {
             let mut keys = key.split(".").collect::<Vec<_>>();
             keys.reverse();
             let mut leaf_map = HashMap::new();
-            leaf_map.insert(keys[0].to_string(), cv.clone());
+            let mut mcv = cv.clone();
+            mcv.resolve(None);
+            leaf_map.insert(keys[0].to_string(), mcv);
             let mut new_object = ConfigValue::Object(ConfigObjectValue::new(leaf_map));
             for key in &keys[1..(keys.len() - 1)] {
               let mut node_map = HashMap::new();
