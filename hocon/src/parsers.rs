@@ -378,6 +378,23 @@ mod tests {
   }
 
   #[test]
+  fn path_as_key() {
+    let input = br#"
+        a.b.c=1
+        "#;
+    let result = hocon().parse(input);
+    assert!(result.is_success());
+    let ast = result.to_result().ok().unwrap();
+    assert_eq!(
+      ast[0],
+      ConfigValue::Object(ConfigObjectValue::from((
+        "a.b.c".to_string(),
+        ConfigValue::Number(ConfigNumberValue::from("1".to_owned()))
+      )))
+    );
+  }
+
+  #[test]
   fn test_array() {
     let result = hocon().parse(
       br#"

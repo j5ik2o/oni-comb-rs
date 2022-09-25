@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use std::fs::File;
 use std::io::Read;
 
@@ -90,6 +91,12 @@ pub struct Config {
   config: ConfigValue,
 }
 
+impl Display for Config {
+  fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{}", self.config.to_string())
+  }
+}
+
 impl Config {
   pub fn to_config_value(&self) -> &ConfigValue {
     &self.config
@@ -143,6 +150,22 @@ mod tests {
     assert_eq!(a_value, Some(ConfigValue::String("aaaa".to_string())));
     let b_value = config.get_value("foo.test.b");
     assert_eq!(b_value, Some(ConfigValue::String("xxxx".to_string())));
+  }
+
+  #[test]
+  fn path_as_key() {
+    let input = r#"
+        x.y.a=1s
+        x.y {
+          c=3
+        }
+        x.y.b=[2.1, 10, 30]
+        x.x.x="a"
+        "#;
+    let config = ConfigFactory::parse_from_string(input).unwrap();
+    println!("{}", config);
+    let x_value = config.get_value("x.x.x");
+    println!("{:?}", x_value);
   }
 
   #[test]

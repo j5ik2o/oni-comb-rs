@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::env;
+use std::fmt::{Display, Formatter};
 use std::rc::Rc;
 
 use crate::model::config_array_value::ConfigArrayValue;
@@ -28,6 +29,24 @@ pub enum ConfigValue {
   Link(Rc<ConfigValueLink>),
 }
 
+impl Display for ConfigValue {
+  fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    let s = match self {
+      ConfigValue::Null => "null".to_string(),
+      ConfigValue::Bool(value) => value.to_string(),
+      ConfigValue::String(value) => format!("\"{}\"", value.to_string()),
+      ConfigValue::Number(cnv) => cnv.to_string(),
+      ConfigValue::Duration(cdv) => cdv.to_string(),
+      ConfigValue::Array(cav) => cav.to_string(),
+      ConfigValue::Object(cov) => cov.to_string(),
+      ConfigValue::Reference { path, missing, .. } => format!("${{{}{}}}", if *missing { "$" } else { "" }, path),
+      ConfigValue::Include(civ) => civ.to_string(),
+      ConfigValue::Link(cvl) => (&*cvl).to_string(),
+    };
+    write!(f, "{}", s)
+  }
+}
+
 impl Monoid for ConfigValue {
   fn combine(&mut self, other: &Self) {
     match other {
@@ -51,10 +70,10 @@ impl ConfigMergeable for ConfigValue {
         l.merge_with(r);
       }
       (ConfigValue::Link(..), ConfigValue::Link(..)) => {}
-      (re @ ConfigValue::Link(..), r) => {
-        let mut n = re.get_value_link().unwrap().value.clone();
-        n.merge_with(r);
-        re.push(n);
+      (l @ ConfigValue::Link(..), r) => {
+        let mut cv = l.get_value_link().unwrap().value.clone();
+        cv.merge_with(r);
+        l.push(cv);
       }
       (..) => {}
     }
@@ -197,6 +216,33 @@ impl ConfigValue {
           m.push(cv);
         }
         *cva = ConfigValue::Array(ConfigArrayValue::new(m));
+      }
+      (ConfigValue::Object(o), None) => {
+        let mut new_key_values = HashMap::new();
+        for (k, v) in &o.0 {
+          if k.contains(".") {
+            let mut keys = k.split(".").collect::<Vec<_>>();
+            keys.reverse();
+            let mut leaf_map = HashMap::new();
+            leaf_map.insert(keys[0].to_string(), v.clone());
+            let mut new_object = ConfigValue::Object(ConfigObjectValue::new(leaf_map));
+            for key in &keys[1..(keys.len() - 1)] {
+              let mut node_map = HashMap::new();
+              node_map.insert(key.to_string(), new_object.clone());
+              new_object = ConfigValue::Object(ConfigObjectValue::new(node_map));
+            }
+            let last_key = keys.last().unwrap().to_string();
+            match new_key_values.get_mut(&last_key) {
+              None => {
+                new_key_values.insert(last_key, new_object);
+              }
+              Some(entry) => {
+                entry.merge_with(new_object);
+              }
+            }
+          }
+        }
+        *o = ConfigObjectValue::new(new_key_values);
       }
       (cvo @ ConfigValue::Object(..), Some(..)) => {
         let ov = cvo.get_object_value().unwrap();

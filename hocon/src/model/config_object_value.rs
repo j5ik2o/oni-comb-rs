@@ -1,19 +1,35 @@
 use crate::model::config_value::ConfigValue;
 use crate::model::{ConfigMergeable, Monoid};
 use std::collections::HashMap;
+use std::fmt::{Display, Formatter};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ConfigObjectValue(pub(crate) HashMap<String, ConfigValue>);
 
+impl Display for ConfigObjectValue {
+  fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    let mut s = String::new();
+    let map = &self.0;
+    for (k, v) in map {
+      if !s.is_empty() {
+        s.push_str(", ");
+      }
+      let line = format!("{} = {}", k, v);
+      s.push_str(&line);
+    }
+    write!(f, "{{ {} }}", s)
+  }
+}
+
 impl Monoid for ConfigObjectValue {
   fn combine(&mut self, other: &Self) {
-    for (k, v) in &other.0 {
-      match self.0.get_mut(k) {
+    for (key, cv) in &other.0 {
+      match self.0.get_mut(key) {
         None => {
-          self.0.insert(k.clone(), v.clone());
+          self.0.insert(key.clone(), cv.clone());
         }
-        Some(m) => {
-          m.combine(v);
+        Some(entry) => {
+          entry.combine(cv);
         }
       }
     }
@@ -22,13 +38,13 @@ impl Monoid for ConfigObjectValue {
 
 impl ConfigMergeable for ConfigObjectValue {
   fn merge_with(&mut self, other: Self) {
-    for (k, v) in other.0 {
-      match self.0.get_mut(&k) {
+    for (key, cv) in other.0 {
+      match self.0.get_mut(&key) {
         None => {
-          self.0.insert(k, v);
+          self.0.insert(key, cv);
         }
-        Some(m) => {
-          m.merge_with(v);
+        Some(entry) => {
+          entry.merge_with(cv);
         }
       }
     }

@@ -1,5 +1,6 @@
 use crate::model::config_number_value::ConfigNumberValue;
 use crate::model::time_unit::TimeUnit;
+use std::fmt::{Display, Formatter};
 use std::time::Duration;
 
 use anyhow::{bail, Result};
@@ -8,6 +9,12 @@ use anyhow::{bail, Result};
 pub struct ConfigDurationValue {
   value: ConfigNumberValue,
   unit: TimeUnit,
+}
+
+impl Display for ConfigDurationValue {
+  fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{} {}", self.value, self.unit)
+  }
 }
 
 impl From<Duration> for ConfigDurationValue {
@@ -77,6 +84,7 @@ mod tests {
   fn test_to_std_duration() {
     let duration = Duration::from_secs(60);
     let cdv: ConfigDurationValue = duration.into();
+    println!("{}", cdv);
     assert_eq!(cdv.to_std_duration().unwrap(), duration);
   }
 
