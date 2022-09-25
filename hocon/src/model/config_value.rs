@@ -224,9 +224,11 @@ impl ConfigValue {
             let mut keys = k.split(".").collect::<Vec<_>>();
             keys.reverse();
             let mut leaf_map = HashMap::new();
+            println!("key = {:?}, value = {:?}", keys[0], v);
             leaf_map.insert(keys[0].to_string(), v.clone());
             let mut new_object = ConfigValue::Object(ConfigObjectValue::new(leaf_map));
             for key in &keys[1..(keys.len() - 1)] {
+              println!("key = {:?}", key);
               let mut node_map = HashMap::new();
               node_map.insert(key.to_string(), new_object.clone());
               new_object = ConfigValue::Object(ConfigObjectValue::new(node_map));
@@ -242,7 +244,9 @@ impl ConfigValue {
             }
           }
         }
-        *o = ConfigObjectValue::new(new_key_values);
+        if !new_key_values.is_empty() {
+          *o = ConfigObjectValue::new(new_key_values);
+        }
       }
       (cvo @ ConfigValue::Object(..), Some(..)) => {
         let ov = cvo.get_object_value().unwrap();

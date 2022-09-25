@@ -140,12 +140,13 @@ mod tests {
     }
     foo {
       test {
-        b = "bbbb"
+        b = "aaaa"
         b = "xxxx"
       }
     }
     "#;
     let config = ConfigFactory::parse_from_string(input).unwrap();
+    println!("{:?}", config);
     let a_value = config.get_value("foo.test.a");
     assert_eq!(a_value, Some(ConfigValue::String("aaaa".to_string())));
     let b_value = config.get_value("foo.test.b");
@@ -164,8 +165,8 @@ mod tests {
         "#;
     let config = ConfigFactory::parse_from_string(input).unwrap();
     println!("{}", config);
-    let x_value = config.get_value("x.x.x");
-    println!("{:?}", x_value);
+    let x_value = config.get_value("x.x.x").unwrap();
+    assert_eq!(x_value, ConfigValue::String("a".to_string()));
   }
 
   #[test]
