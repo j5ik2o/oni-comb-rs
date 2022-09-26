@@ -131,7 +131,6 @@ impl Config {
 mod tests {
   use super::*;
 
-  use rust_decimal::prelude::ToPrimitive;
   use std::env;
 
   #[ctor::ctor]
