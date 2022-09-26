@@ -1,6 +1,6 @@
 # oni-comb-parser-rs
 
-## WIP
+A Rust crate for LL(k) parser combinators.
 
 ## Install to Cargo.toml
 
@@ -31,7 +31,7 @@ fn main() {
 }
 ```
 
-## Influenced by the following parsers implementations.
+## Influenced by the following parsers implementations
 
 - Rust
   - [J-F-Liu/pom](https://github.com/J-F-Liu/pom)
