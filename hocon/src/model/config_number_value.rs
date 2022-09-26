@@ -56,27 +56,51 @@ impl ConfigNumberValue {
     &self.0
   }
 
-  pub fn to_i128(self) -> Option<i128> {
+  pub fn to_i128(&self) -> Option<i128> {
     self.0.to_i128()
   }
 
-  pub fn to_u128(self) -> Option<u128> {
+  pub fn to_u128(&self) -> Option<u128> {
     self.0.to_u128()
   }
 
-  pub fn to_i64(self) -> Option<i64> {
+  pub fn to_i64(&self) -> Option<i64> {
     self.0.to_i64()
   }
 
-  pub fn to_u64(self) -> Option<u64> {
+  pub fn to_u64(&self) -> Option<u64> {
     self.0.to_u64()
   }
 
-  pub fn to_f64(self) -> Option<f64> {
+  pub fn to_i32(&self) -> Option<i32> {
+    self.0.to_i32()
+  }
+
+  pub fn to_u32(&self) -> Option<u32> {
+    self.0.to_u32()
+  }
+
+  pub fn to_i16(&self) -> Option<i16> {
+    self.0.to_i16()
+  }
+
+  pub fn to_u16(&self) -> Option<u16> {
+    self.0.to_u16()
+  }
+
+  pub fn to_i8(&self) -> Option<i8> {
+    self.0.to_i8()
+  }
+
+  pub fn to_u8(&self) -> Option<u8> {
+    self.0.to_u8()
+  }
+
+  pub fn to_f64(&self) -> Option<f64> {
     self.0.to_f64()
   }
 
-  pub fn to_f32(self) -> Option<f32> {
+  pub fn to_f32(&self) -> Option<f32> {
     self.0.to_f32()
   }
 }

@@ -72,7 +72,7 @@ impl ConfigFactory {
       .to_result()
       .map(|config_values| Self::resolve_stage0(&config_values))
       .map(|config_value| Self::resolve_stage1(&config_value))
-      .map(|config_value| Config { config_value })
+      .map(|config_value| Config::new(config_value))
       .map_err(|pe| ConfigError::ParseError(pe.to_string()))
   }
 
@@ -122,6 +122,8 @@ impl Config {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use crate::model::config_number_value::ConfigNumberValue;
+  use rust_decimal::prelude::ToPrimitive;
   use std::env;
 
   #[ctor::ctor]
@@ -167,8 +169,27 @@ mod tests {
         "#;
     let config = ConfigFactory::parse_from_string(input).unwrap();
     println!("{}", config);
-    let x_value = config.get_value("x.x.x").unwrap();
-    assert_eq!(x_value, &ConfigValue::String("a".to_string()));
+
+    let a_value = config.get_value("x.y.a").unwrap();
+    let duration = a_value.as_duration().unwrap().to_duration().unwrap();
+    assert_eq!(duration.num_seconds(), 1);
+
+    let b_value = config.get_value("x.y.b").unwrap();
+    let array = b_value
+      .as_array()
+      .unwrap()
+      .as_array()
+      .iter()
+      .map(|e| e.as_number().unwrap().as_decimal().to_string())
+      .collect::<Vec<_>>();
+    assert_eq!(array, vec!["2.1".to_string(), "10".to_string(), "30".to_string()]);
+
+    let e_value = config.get_value("x.y.c.d.e").unwrap();
+    let number = e_value.as_number().unwrap().to_u32().unwrap();
+    assert_eq!(number, 5);
+
+    let x_value = config.get_value("x.x.x").unwrap().as_string().unwrap();
+    assert_eq!(x_value, "a");
   }
 
   #[test]

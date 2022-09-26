@@ -36,7 +36,7 @@ impl ConfigDurationValue {
     Self { value, unit }
   }
 
-  pub fn to_std_duration(self) -> Result<Duration> {
+  pub fn to_std_duration(&self) -> Result<Duration> {
     let value = match self.clone().value.to_u64() {
       Some(v) => v,
       None => bail!("Occurred convert error: {:?}", self.value),
@@ -52,7 +52,7 @@ impl ConfigDurationValue {
     }
   }
 
-  pub fn to_duration(self) -> Result<chrono::Duration> {
+  pub fn to_duration(&self) -> Result<chrono::Duration> {
     let value = match self.clone().value.to_i64() {
       Some(v) => v,
       None => bail!("Occurred convert error: {:?}", self.value),

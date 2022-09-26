@@ -28,4 +28,8 @@ impl ConfigArrayValue {
   pub fn new(value: Vec<ConfigValue>) -> Self {
     Self(value)
   }
+
+  pub fn as_array(&self) -> &Vec<ConfigValue> {
+    &self.0
+  }
 }

@@ -186,6 +186,55 @@ impl ConfigValue {
     ConfigValue::Reference { prev, path, missing }
   }
 
+  pub fn is_null(&self) -> bool {
+    match self {
+      ConfigValue::Null => true,
+      _ => false,
+    }
+  }
+
+  pub fn as_bool(&self) -> Option<&bool> {
+    match self {
+      ConfigValue::Bool(result) => Some(result),
+      _ => None,
+    }
+  }
+
+  pub fn as_string(&self) -> Option<&String> {
+    match self {
+      ConfigValue::String(result) => Some(result),
+      _ => None,
+    }
+  }
+
+  pub fn as_number(&self) -> Option<&ConfigNumberValue> {
+    match self {
+      ConfigValue::Number(result) => Some(result),
+      _ => None,
+    }
+  }
+
+  pub fn as_duration(&self) -> Option<&ConfigDurationValue> {
+    match self {
+      ConfigValue::Duration(result) => Some(result),
+      _ => None,
+    }
+  }
+
+  pub fn as_array(&self) -> Option<&ConfigArrayValue> {
+    match self {
+      ConfigValue::Array(result) => Some(result),
+      _ => None,
+    }
+  }
+
+  pub fn as_object(&self) -> Option<&ConfigObjectValue> {
+    match self {
+      ConfigValue::Object(result) => Some(result),
+      _ => None,
+    }
+  }
+
   pub fn get_value(&self, path: &str) -> Option<&ConfigValue> {
     let _ = key().parse(path.as_bytes()).to_result().expect("Illegal path format.");
 
