@@ -235,6 +235,25 @@ impl ConfigValue {
     }
   }
 
+  pub fn has_path(&self, path: &str) -> Option<bool> {
+    let _ = key().parse(path.as_bytes()).to_result().expect("Illegal path format.");
+
+    let keys = path.split(".").collect::<Vec<_>>();
+    let key = keys[0];
+    let child_count = keys.len() - 1;
+    match self {
+      ConfigValue::Object(cov) => match cov.0.get(key) {
+        Some(cv) if child_count > 0 => {
+          let next_path = &path[(key.len() + 1) as usize..];
+          cv.latest().has_path(next_path)
+        }
+        Some(..) => Some(true),
+        None => Some(false),
+      },
+      _ => None,
+    }
+  }
+
   pub fn get_value(&self, path: &str) -> Option<&ConfigValue> {
     let _ = key().parse(path.as_bytes()).to_result().expect("Illegal path format.");
 

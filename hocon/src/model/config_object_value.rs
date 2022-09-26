@@ -69,4 +69,8 @@ impl ConfigObjectValue {
   pub fn new(values: HashMap<String, ConfigValue>) -> Self {
     Self(values)
   }
+
+  pub fn has_path(&self, path: &str) -> bool {
+    self.0.contains_key(path)
+  }
 }
