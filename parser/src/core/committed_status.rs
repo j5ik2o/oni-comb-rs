@@ -1,3 +1,5 @@
+/// A structure representing the commit status of the parser.<br/>
+/// パーサのコミット状態を表す構造体。
 #[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum CommittedStatus {
   Committed,
@@ -15,6 +17,7 @@ impl From<bool> for CommittedStatus {
 }
 
 impl CommittedStatus {
+  /// Returns whether committed or not.</br>
   /// コミット済みかどうかを返す。
   pub fn is_committed(&self) -> bool {
     match self {
@@ -23,15 +26,17 @@ impl CommittedStatus {
     }
   }
 
+  /// Returns whether uncommitted or not.<br/>
   /// アンコミット済みかどうかを返す。
   pub fn is_uncommitted(&self) -> bool {
     !self.is_committed()
   }
 
+  /// Compose [CommittedStatus].<br/>
   /// [CommittedStatus]を合成します。
   ///
-  /// どちらか一方がコミット済みであれば、それを返します。
-  /// そうでなければ、アンコミット済みを返します。
+  /// If either one is already committed, it returns it. Otherwise, it returns uncommitted.<br/>
+  /// どちらか一方がコミット済みであれば、それを返します。そうでなければ、アンコミット済みを返します。
   pub fn or(&self, other: &Self) -> Self {
     match (self, other) {
       (CommittedStatus::Committed, _) => CommittedStatus::Committed,

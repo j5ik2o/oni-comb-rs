@@ -9,19 +9,26 @@ pub trait Element: Debug {
   fn is_ascii_space(&self) -> bool;
   /// 改行を含む空白かどうか。
   fn is_ascii_multi_space(&self) -> bool;
-  ///
+  /// 空白かどうか。
   fn is_ascii_whitespace(&self) -> bool;
 
+  /// アスキー文字かどうか。
   fn is_ascii(&self) -> bool;
+  /// アルファベットの大文字かどうか。
   fn is_ascii_alpha_uppercase(&self) -> bool;
+  /// アルファベットの小文字かどうか。
   fn is_ascii_alpha_lowercase(&self) -> bool;
 
+  /// アルファベットかどうか。
   fn is_ascii_alpha(&self) -> bool;
 
+  /// 数字かどうか。
   fn is_ascii_digit(&self) -> bool;
+  /// 数字のゼロかどうか。
   fn is_ascii_digit_zero(&self) -> bool;
+  /// 数字の非ゼロかどうか。
   fn is_ascii_digit_non_zero(&self) -> bool;
-
+  /// 英数文字かどうか。
   fn is_ascii_alpha_digit(&self) -> bool;
 
   fn is_ascii_hex_digit(&self) -> bool;

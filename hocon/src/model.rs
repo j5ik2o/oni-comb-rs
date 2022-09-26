@@ -122,8 +122,8 @@ impl Config {
     &self.config_value
   }
 
-  pub fn has_path(&self, path: &str) -> bool {
-    self.config_value.has_vpath(path)
+  pub fn has_path(&self, path: &str) -> Option<bool> {
+    self.config_value.has_path(path)
   }
 
   pub fn get_value(&self, path: &str) -> Option<&ConfigValue> {

@@ -1,3 +1,4 @@
+/// 現在の解析状態を示す構造体。
 #[derive(Clone)]
 pub struct ParseState<'a, I> {
   input: &'a [I],

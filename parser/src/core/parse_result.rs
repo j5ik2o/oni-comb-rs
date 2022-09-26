@@ -1,8 +1,8 @@
 use crate::core::parse_error::ParseError;
 use crate::core::CommittedStatus;
 
-/// A Parse Result.<br/>
-/// 解析結果。
+/// The enum type representing the parse result.<br/>
+/// 解析結果を示す列挙型。
 #[derive(Debug, Clone)]
 pub enum ParseResult<'a, I, A> {
   /// Success.<br/>

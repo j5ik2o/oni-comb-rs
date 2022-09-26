@@ -1,7 +1,8 @@
 use std::fmt;
 use std::fmt::Display;
 
-/// 解析エラー。
+/// The enum type representing the parsing error.<br/>
+/// 解析エラーを示す列挙型。
 #[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum ParseError<'a, I> {
   /// パーサの条件にマッチしなかった場合のエラー
