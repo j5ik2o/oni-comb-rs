@@ -4,17 +4,25 @@ use std::io::Read;
 
 use oni_comb_parser_rs::prelude::ParserRunner;
 
-use crate::model::config_value::ConfigValue;
 use crate::parsers::hocon;
 
-pub mod config_array_value;
-pub mod config_duration_value;
-pub mod config_include_value;
-pub mod config_number_value;
-pub mod config_object_value;
-pub mod config_value;
-pub mod config_value_link;
-pub mod time_unit;
+mod config_array_value;
+mod config_duration_value;
+mod config_include_value;
+mod config_number_value;
+mod config_object_value;
+mod config_value;
+mod config_value_link;
+mod time_unit;
+
+pub use config_array_value::*;
+pub use config_duration_value::*;
+pub use config_include_value::*;
+pub use config_number_value::*;
+pub use config_object_value::*;
+pub use config_value::*;
+pub use config_value_link::*;
+pub use time_unit::*;
 
 #[derive(Debug)]
 pub enum ConfigError {
