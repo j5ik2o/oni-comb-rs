@@ -130,7 +130,7 @@ impl Config {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use crate::model::config_number_value::ConfigNumberValue;
+
   use rust_decimal::prelude::ToPrimitive;
   use std::env;
 
