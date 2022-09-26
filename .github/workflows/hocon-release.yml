@@ -1,4 +1,4 @@
-name: uri-release
+name: hocon-release
 on:
   push:
     tags:
