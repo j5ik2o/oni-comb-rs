@@ -1,4 +1,6 @@
+use chrono::Duration;
 use oni_comb_parser_rs::prelude::ParserRunner;
+use rust_decimal::Decimal;
 use std::collections::HashMap;
 use std::env;
 use std::fmt::{Display, Formatter};
@@ -159,10 +161,16 @@ impl ConfigResolver for ConfigValue {
         }
       }
       (cvr @ ConfigValue::Reference { .. }, Some(src)) => {
-        let ref_value = src
+        let mut ref_value = src
           .get_value(cvr.ref_name().unwrap())
           .cloned()
           .or_else(|| env::var(cvr.ref_name().unwrap()).ok().map(|s| ConfigValue::String(s)));
+        match ref_value.as_mut() {
+          Some(ref_value_mut) => {
+            ref_value_mut.resolve(source);
+          }
+          _ => {}
+        }
         if cvr.ref_missing().unwrap() {
           if ref_value.is_some() {
             *cvr = ref_value.unwrap();
@@ -193,51 +201,70 @@ impl ConfigValue {
     }
   }
 
-  pub fn as_bool(&self) -> Option<&bool> {
+  pub fn as_bool(&self) -> Option<bool> {
     match self {
-      ConfigValue::Bool(result) => Some(result),
+      ConfigValue::Bool(result) => Some(*result),
       _ => None,
     }
   }
 
-  pub fn as_string(&self) -> Option<&String> {
+  pub fn as_string(&self) -> Option<&str> {
     match self {
       ConfigValue::String(result) => Some(result),
       _ => None,
     }
   }
 
-  pub fn as_number(&self) -> Option<&ConfigNumberValue> {
+  pub fn as_config_number_value(&self) -> Option<&ConfigNumberValue> {
     match self {
       ConfigValue::Number(result) => Some(result),
       _ => None,
     }
   }
 
-  pub fn as_duration(&self) -> Option<&ConfigDurationValue> {
+  pub fn as_number(&self) -> Option<&Decimal> {
+    self.as_config_number_value().map(|e| e.as_decimal())
+  }
+
+  pub fn as_config_duration_value(&self) -> Option<&ConfigDurationValue> {
     match self {
       ConfigValue::Duration(result) => Some(result),
       _ => None,
     }
   }
 
-  pub fn as_array(&self) -> Option<&ConfigArrayValue> {
+  pub fn as_duration(&self) -> Option<Duration> {
+    self.as_config_duration_value().map(|e| e.to_duration().unwrap())
+  }
+
+  pub fn as_std_duration(&self) -> Option<std::time::Duration> {
+    self.as_config_duration_value().map(|e| e.to_std_duration().unwrap())
+  }
+
+  pub fn as_config_array_value(&self) -> Option<&ConfigArrayValue> {
     match self {
       ConfigValue::Array(result) => Some(result),
       _ => None,
     }
   }
 
-  pub fn as_object(&self) -> Option<&ConfigObjectValue> {
+  pub fn as_array(&self) -> Option<&[ConfigValue]> {
+    self.as_config_array_value().map(|e| e.as_array().as_slice())
+  }
+
+  pub fn as_config_object_value(&self) -> Option<&ConfigObjectValue> {
     match self {
       ConfigValue::Object(result) => Some(result),
       _ => None,
     }
   }
 
-  pub fn has_path(&self, path: &str) -> Option<bool> {
-    let _ = key().parse(path.as_bytes()).to_result().expect("Illegal path format.");
+  pub fn as_object(&self) -> Option<&HashMap<String, ConfigValue>> {
+    self.as_config_object_value().map(|e| e.as_map())
+  }
 
+  pub fn has_path(&self, path: &str) -> bool {
+    let _ = key().parse(path.as_bytes()).to_result().expect("Illegal path format.");
     let keys = path.split(".").collect::<Vec<_>>();
     let key = keys[0];
     let child_count = keys.len() - 1;
@@ -247,10 +274,10 @@ impl ConfigValue {
           let next_path = &path[(key.len() + 1) as usize..];
           cv.latest().has_path(next_path)
         }
-        Some(..) => Some(true),
-        None => Some(false),
+        Some(..) => true,
+        None => false,
       },
-      _ => None,
+      _ => false,
     }
   }
 

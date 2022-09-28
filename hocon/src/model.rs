@@ -122,7 +122,7 @@ impl Config {
     &self.config_value
   }
 
-  pub fn has_path(&self, path: &str) -> Option<bool> {
+  pub fn has_path(&self, path: &str) -> bool {
     self.config_value.has_path(path)
   }
 
@@ -135,6 +135,7 @@ impl Config {
 mod tests {
   use super::*;
 
+  use rust_decimal::prelude::ToPrimitive;
   use std::env;
 
   #[ctor::ctor]
@@ -182,16 +183,15 @@ mod tests {
     println!("{}", config);
 
     let a_value = config.get_value("x.y.a").unwrap();
-    let duration = a_value.as_duration().unwrap().to_duration().unwrap();
+    let duration = a_value.as_config_duration_value().unwrap().to_duration().unwrap();
     assert_eq!(duration.num_seconds(), 1);
 
     let b_value = config.get_value("x.y.b").unwrap();
     let array = b_value
       .as_array()
       .unwrap()
-      .as_array()
       .iter()
-      .map(|e| e.as_number().unwrap().as_decimal().to_string())
+      .map(|e| e.as_number().unwrap().to_string())
       .collect::<Vec<_>>();
     assert_eq!(array, vec!["2.1".to_string(), "10".to_string(), "30".to_string()]);
 
@@ -207,8 +207,9 @@ mod tests {
   fn test_eval_reference() {
     let input = r#"
     foo {
+      xyz = "aaaa"
       bar = "baz"
-      bar = "biz"
+      bar = ${foo.xyz}
       test {
         a = "aaaa"
         a = ${foo.bar} 
@@ -222,7 +223,7 @@ mod tests {
     "#;
     let config = ConfigFactory::parse_from_string(input).unwrap();
     let a_value = config.get_value("foo.test.a");
-    assert_eq!(a_value, Some(&ConfigValue::String("biz".to_string())));
+    assert_eq!(a_value, Some(&ConfigValue::String("aaaa".to_string())));
     let b_value = config.get_value("foo.test.b");
     assert_eq!(b_value, Some(&ConfigValue::String("bbbb".to_string())));
   }
