@@ -107,7 +107,7 @@ fn string<'a>() -> Parser<'a, u8, String> {
     | elm_ref(b'r').map(|_| &b'\r')
     | elm_ref(b't').map(|_| &b'\t');
   let escape_sequence = elm_ref(b'\\') * special_char;
-  let char_string = (none_ref_of(b"\\\"'") | escape_sequence)
+  let char_string = (none_ref_of(b"\r\n\\\"'") | escape_sequence)
     .map(Clone::clone)
     .of_many1()
     .map_res(String::from_utf8);
@@ -121,13 +121,14 @@ fn string<'a>() -> Parser<'a, u8, String> {
       .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
       .collect::<String>()
   });
+  let string_surround0 = (char_string.clone().attempt() | utf16_string.clone()).of_many0();
   let string_surround1 = (char_string.clone().attempt() | utf16_string.clone())
     .of_many0()
     .surround(string_double_quote_bracket(), string_double_quote_bracket());
   let string_surround2 = (char_string.clone().attempt() | utf16_string.clone())
     .of_many0()
     .surround(string_single_quote_bracket(), string_single_quote_bracket());
-  (string_surround2.attempt() | string_surround1).map(|strings| strings.concat())
+  (string_surround1.attempt() | string_surround2.attempt() | string_surround0).map(|strings| strings.concat())
 }
 
 fn string_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
