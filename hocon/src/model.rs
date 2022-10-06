@@ -81,7 +81,11 @@ impl ConfigFactory {
       .map(|config_values| Self::resolve_stage0(&config_values))
       .map(|config_value| Self::resolve_stage1(&config_value))
       .map(|config_value| Config::new(config_value))
-      .map_err(|pe| ConfigError::ParseError(pe.to_string()))
+      .map_err(|pe| {
+        let msg = pe.to_string();
+        let input_string = pe.input_string();
+        ConfigError::ParseError(format!("{}: {:?}", msg, input_string))
+      })
   }
 
   fn resolve_stage1(config_value: &ConfigValue) -> ConfigValue {

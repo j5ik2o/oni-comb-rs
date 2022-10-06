@@ -4,14 +4,18 @@ use std::collections::HashMap;
 use crate::model::*;
 use oni_comb_parser_rs::prelude::*;
 
-fn space_or_comment<'a>() -> Parser<'a, u8, ()> {
-  let sp_tab_cr_lf = elm_of(b" \t\r\n").of_many0();
-
-  let head = elm_ref(b'#').collect() | seq(b"//");
+fn comment<'a>() -> Parser<'a, u8, &'a [u8]> {
+  let head = seq(b"//").collect().attempt() | elm_ref(b'#').collect();
   let tail = take_till0(|c| matches!(*c, b'\r' | b'\n'));
-  let comment = (sp_tab_cr_lf.clone().opt() * head + tail).collect();
+  (space() + (head + tail).of_many1()).collect()
+}
 
-  (comment.opt() + sp_tab_cr_lf).discard()
+fn space<'a>() -> Parser<'a, u8, &'a [u8]> {
+  elm_ref_of(b" \t\r\n").of_many0().collect()
+}
+
+fn space_or_comment<'a>() -> Parser<'a, u8, ()> {
+  (comment().attempt() | space()).discard()
 }
 
 fn include_method<'a>() -> Parser<'a, u8, String> {
@@ -107,7 +111,8 @@ fn string<'a>() -> Parser<'a, u8, String> {
     | elm_ref(b'r').map(|_| &b'\r')
     | elm_ref(b't').map(|_| &b'\t');
   let escape_sequence = elm_ref(b'\\') * special_char;
-  let char_string = (none_ref_of(b"\r\n\\\"'") | escape_sequence)
+  // let char_string = (none_ref_of(b"\r\n\\\"'") | escape_sequence)
+  let char_string = (none_ref_of(b"[]\r\n\\\"'") | escape_sequence)
     .map(Clone::clone)
     .of_many1()
     .map_res(String::from_utf8);
@@ -121,18 +126,45 @@ fn string<'a>() -> Parser<'a, u8, String> {
       .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
       .collect::<String>()
   });
-  let string_surround0 = (char_string.clone().attempt() | utf16_string.clone()).of_many0();
-  let string_surround1 = (char_string.clone().attempt() | utf16_string.clone())
-    .of_many0()
-    .surround(string_double_quote_bracket(), string_double_quote_bracket());
-  let string_surround2 = (char_string.clone().attempt() | utf16_string.clone())
-    .of_many0()
-    .surround(string_single_quote_bracket(), string_single_quote_bracket());
-  (string_surround1.attempt() | string_surround2.attempt() | string_surround0).map(|strings| strings.concat())
+  let string_surround = || (char_string.clone().attempt() | utf16_string.clone()).of_many1();
+  let string_surround1 = string_surround().surround(string_double_quote_bracket(), string_double_quote_bracket());
+  let string_surround2 = string_surround().surround(string_single_quote_bracket(), string_single_quote_bracket());
+  (string_surround1.attempt() | string_surround2.attempt() | string_surround()).map(|strings| strings.concat())
+}
+
+fn string_zero<'a>() -> Parser<'a, u8, String> {
+  let special_char = elm_ref(b'\\')
+    | elm_ref(b'/')
+    | elm_ref(b'"')
+    | elm_ref(b'b').map(|_| &b'\x08')
+    | elm_ref(b'f').map(|_| &b'\x0C')
+    | elm_ref(b'n').map(|_| &b'\n')
+    | elm_ref(b'r').map(|_| &b'\r')
+    | elm_ref(b't').map(|_| &b'\t');
+  let escape_sequence = elm_ref(b'\\') * special_char;
+  // let char_string = (none_ref_of(b"\r\n\\\"'") | escape_sequence)
+  let char_string = (none_ref_of(b"[]\r\n\\\"'") | escape_sequence)
+    .map(Clone::clone)
+    .of_many1()
+    .map_res(String::from_utf8);
+  let utf16_char = seq(b"\\u")
+    * elm_hex_digit()
+      .of_count(4)
+      .map_res(String::from_utf8)
+      .map_res(|digits| u16::from_str_radix(&digits, 16));
+  let utf16_string = utf16_char.of_many1().map(|chars| {
+    decode_utf16(chars)
+      .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
+      .collect::<String>()
+  });
+  let string_surround = || (char_string.clone().attempt() | utf16_string.clone()).of_many0();
+  let string_surround1 = string_surround().surround(string_double_quote_bracket(), string_double_quote_bracket());
+  let string_surround2 = string_surround().surround(string_single_quote_bracket(), string_single_quote_bracket());
+  (string_surround1.attempt() | string_surround2.attempt() | string_surround()).map(|strings| strings.concat())
 }
 
 fn string_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
-  string().map(ConfigValue::String)
+  string_zero().map(ConfigValue::String)
 }
 
 fn array_left_bracket<'a>() -> Parser<'a, u8, &'a u8> {
@@ -153,7 +185,7 @@ fn kv<'a>() -> Parser<'a, u8, ()> {
 }
 
 pub fn key<'a>() -> Parser<'a, u8, String> {
-  (path() | string()).surround(space_or_comment(), space_or_comment())
+  (path().attempt() | string()).surround(space_or_comment(), space_or_comment())
 }
 
 fn property<'a>() -> Parser<'a, u8, (String, ConfigValue)> {
@@ -251,8 +283,11 @@ fn reference_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
 }
 
 fn config_value<'a>() -> Parser<'a, u8, ConfigValue> {
-  (simple_config_value() | object_config_value() | array_config_value() | reference_config_value())
-    .surround(space_or_comment(), space_or_comment())
+  (array_config_value().attempt()
+    | object_config_value().attempt()
+    | reference_config_value().attempt()
+    | simple_config_value())
+  .surround(space_or_comment(), space_or_comment())
 }
 
 fn config<'a>() -> Parser<'a, u8, Vec<ConfigValue>> {
@@ -290,6 +325,37 @@ mod tests {
   fn init_logger() {
     env::set_var("RUST_LOG", "debug");
     let _ = env_logger::try_init();
+  }
+
+  #[test]
+  fn space_or_comment_test() {
+    let input = br#"
+    //  {
+    //
+    //  }
+    "#;
+    let _ = space_or_comment().parse(input).to_result().unwrap();
+    let input = br#"
+    #
+    "#;
+    let _ = space_or_comment().parse(input).to_result().unwrap();
+    let input = br#"
+    # #
+    "#;
+    let _ = space_or_comment().parse(input).to_result().unwrap();
+    let input = br#"
+    //"#;
+    let _ = space_or_comment().parse(input).to_result().unwrap();
+    let input = br#"
+    //
+    //
+    "#;
+    let _ = space_or_comment().parse(input).to_result().unwrap();
+    let input = br#"
+    // #
+    //
+    "#;
+    let _ = space_or_comment().parse(input).to_result().unwrap();
   }
 
   #[test]
@@ -416,9 +482,27 @@ mod tests {
   }
 
   #[test]
+  fn test_comments_in_object() {
+    let result = hocon().parse(
+      br#"
+      //
+{
+//
+//
+//
+}
+    "#,
+    );
+    let parse_result = result.clone().to_result();
+    println!("{:?}", parse_result.map_err(|e| e.input_string().unwrap()));
+    assert!(result.is_success());
+  }
+
+  #[test]
   fn test_object() {
     let result = hocon().parse(
       br#"
+    //
     foo {
       bar = "baz",
       test {
@@ -427,8 +511,8 @@ mod tests {
     }
     "#,
     );
-    println!("{:?}", result.clone().to_result().ok().unwrap());
     assert!(result.is_success());
+    //    println!("{:?}", result.clone().to_result());
   }
 
   #[test]

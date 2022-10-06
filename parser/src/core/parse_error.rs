@@ -67,7 +67,42 @@ impl<'a, I> Display for ParseError<'a, I> {
   }
 }
 
+impl<'a> ParseError<'a, char> {
+  pub fn input_string(&self) -> Option<String> {
+    self.input().map(|chars| String::from_iter(chars))
+  }
+}
+
+impl<'a> ParseError<'a, u8> {
+  pub fn input_string(&self) -> Option<String> {
+    match self.input() {
+      Some(bytes) => match std::str::from_utf8(bytes) {
+        Ok(s) => Some(s.to_string()),
+        Err(_) => Some("".to_string()),
+      },
+      None => None,
+    }
+  }
+}
+
 impl<'a, I> ParseError<'a, I> {
+  pub fn input(&self) -> Option<&'a [I]> {
+    match self {
+      ParseError::Incomplete => None,
+      ParseError::Mismatch {
+        input, offset, length, ..
+      } => Some(&input[*offset..(*offset + length)]),
+      ParseError::Conversion {
+        input, offset, length, ..
+      } => Some(&input[*offset..(*offset + length)]),
+      ParseError::Expect { ref inner, .. } => inner.input(),
+      ParseError::Custom {
+        inner: Some(ref inner), ..
+      } => inner.input(),
+      ParseError::Custom { inner: None, .. } => None,
+    }
+  }
+
   pub fn is_expect(&self) -> bool {
     match self {
       ParseError::Expect { .. } => true,
