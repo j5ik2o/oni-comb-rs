@@ -24,6 +24,10 @@ pub enum ConfigValue {
   Duration(ConfigDurationValue),
   Array(ConfigArrayValue),
   Object(ConfigObjectValue),
+  Enumeration {
+    prev: Option<Rc<ConfigValue>>,
+    values: ConfigArrayValue,
+  },
   Reference {
     prev: Option<Rc<ConfigValue>>,
     path: String,
@@ -43,6 +47,7 @@ impl Display for ConfigValue {
       ConfigValue::Duration(cdv) => cdv.to_string(),
       ConfigValue::Array(cav) => cav.to_string(),
       ConfigValue::Object(cov) => cov.to_string(),
+      ConfigValue::Enumeration { values, .. } => values.to_string(),
       ConfigValue::Reference { path, missing, .. } => format!("${{{}{}}}", if *missing { "?" } else { "" }, path),
       ConfigValue::Include(civ) => civ.to_string(),
       ConfigValue::Link(cvl) => (&*cvl).to_string(),
@@ -160,6 +165,24 @@ impl ConfigResolver for ConfigValue {
           *cvo = ConfigValue::Object(ConfigObjectValue::new(key_values));
         }
       }
+      (cvr @ ConfigValue::Enumeration { .. }, Some(src)) => match cvr {
+        ConfigValue::Enumeration { prev, values, .. } => {
+          let mut result = String::new();
+          for cv in &mut values.0 {
+            cv.resolve(source);
+            match cv {
+              ConfigValue::String(s) => result.push_str(s),
+              _ => {}
+            }
+          }
+          if result.is_empty() {
+            *cvr = prev.clone().unwrap().prev_latest().clone();
+          } else {
+            *cvr = ConfigValue::String(result);
+          }
+        }
+        _ => {}
+      },
       (cvr @ ConfigValue::Reference { .. }, Some(src)) => {
         let mut ref_value = src
           .get_value(cvr.ref_name().unwrap())
