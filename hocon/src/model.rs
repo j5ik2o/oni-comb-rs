@@ -71,10 +71,10 @@ impl ConfigFactory {
   pub fn load_from_file(&mut self, filename: &str) -> Result<Config, ConfigError> {
     let mut text = String::new();
     let _ = self.file_reader.read_to_string(filename, &mut text);
-    Self::parse_from_string(&text)
+    self.parse_from_string(&text)
   }
 
-  pub fn parse_from_string(text: &str) -> Result<Config, ConfigError> {
+  pub fn parse_from_string(&self, text: &str) -> Result<Config, ConfigError> {
     hocon()
       .parse(text.as_bytes())
       .to_result()
@@ -164,7 +164,7 @@ mod tests {
       }
     }
     "#;
-    let config = ConfigFactory::parse_from_string(input).unwrap();
+    let config = ConfigFactory::new().parse_from_string(input).unwrap();
     println!("{:?}", config);
     let a_value = config.get_value("foo.test.a");
     assert_eq!(a_value, Some(&ConfigValue::String("aaaa".to_string())));
@@ -183,7 +183,7 @@ mod tests {
         x.y.b=[2.1, 10, 30]
         x.x.x="a"
         "#;
-    let config = ConfigFactory::parse_from_string(input).unwrap();
+    let config = ConfigFactory::new().parse_from_string(input).unwrap();
     println!("{}", config);
 
     let a_value = config.get_value("x.y.a").unwrap();
@@ -225,7 +225,7 @@ mod tests {
       }
     }
     "#;
-    let config = ConfigFactory::parse_from_string(input).unwrap();
+    let config = ConfigFactory::new().parse_from_string(input).unwrap();
     let a_value = config.get_value("foo.test.a");
     assert_eq!(a_value, Some(&ConfigValue::String("aaaa".to_string())));
     let b_value = config.get_value("foo.test.b");
@@ -247,7 +247,7 @@ mod tests {
     "#;
     let s = "12345";
     env::set_var("TEST_VAR", s);
-    let config = ConfigFactory::parse_from_string(input).unwrap();
+    let config = ConfigFactory::new().parse_from_string(input).unwrap();
     let a_value = config.get_value("foo.test.a");
     assert_eq!(a_value, Some(&ConfigValue::String(s.to_string())));
     env::remove_var("TEST_VAR");
@@ -267,7 +267,7 @@ mod tests {
       }
     }
     "#;
-    let config = ConfigFactory::parse_from_string(input).unwrap();
+    let config = ConfigFactory::new().parse_from_string(input).unwrap();
     let _ = config.get_value("foo.test.a");
   }
 
@@ -286,7 +286,7 @@ mod tests {
     "#;
     let s = "12345";
     env::set_var("TEST_VAR", s);
-    let config = ConfigFactory::parse_from_string(input).unwrap();
+    let config = ConfigFactory::new().parse_from_string(input).unwrap();
     let a_value = config.get_value("foo.test.a");
     assert_eq!(a_value, Some(&ConfigValue::String(s.to_string())));
     env::remove_var("TEST_VAR");
@@ -305,7 +305,7 @@ mod tests {
       }
     }
     "#;
-    let config = ConfigFactory::parse_from_string(input).unwrap();
+    let config = ConfigFactory::new().parse_from_string(input).unwrap();
     let a_value = config.get_value("foo.test.a");
     assert_eq!(a_value, Some(&ConfigValue::String("aaaa".to_string())));
   }

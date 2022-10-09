@@ -1,8 +1,16 @@
+use prop_check_rs::prop;
+use prop_check_rs::rng::RNG;
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::collections::HashMap;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::model::*;
+use crate::parsers::gens::{comment_gen, comment_space_gen, space_gen};
+use anyhow::Result;
 use oni_comb_parser_rs::prelude::*;
+use prop_check_rs::prop::TestCases;
+
+const TEST_COUNT: TestCases = 100;
 
 fn comment<'a>() -> Parser<'a, u8, &'a [u8]> {
   let head = seq(b"//").collect().attempt() | elm_ref(b'#').collect();
@@ -164,7 +172,11 @@ fn string_zero<'a>() -> Parser<'a, u8, String> {
 }
 
 fn string_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
-  string_zero().map(ConfigValue::String)
+  string().map(ConfigValue::String)
+}
+
+fn string_config_value2<'a>() -> Parser<'a, u8, ConfigValue> {
+  string().map(ConfigValue::String)
 }
 
 fn array_left_bracket<'a>() -> Parser<'a, u8, &'a u8> {
@@ -256,16 +268,6 @@ fn reference<'a>() -> Parser<'a, u8, (bool, String)> {
   .surround(reference_left_bracket(), reference_right_bracket())
 }
 
-fn simple_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
-  (seq(b"null").map(|_| ConfigValue::Null)
-    | seq(b"true").map(|_| ConfigValue::Bool(true))
-    | seq(b"false").map(|_| ConfigValue::Bool(false))
-    | duration_value().attempt()
-    | number_value().map(ConfigValue::Number).attempt()
-    | string_config_value())
-  .surround(space_or_comment(), space_or_comment())
-}
-
 fn object_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
   object().map(|v| ConfigValue::Object(ConfigObjectValue::new(v)))
 }
@@ -282,11 +284,31 @@ fn reference_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
   })
 }
 
+fn enumeration_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
+  (string_config_value().attempt() | reference_config_value())
+    .of_many1()
+    .map(|values| ConfigValue::Enumeration {
+      prev: None,
+      values: ConfigArrayValue(values),
+    })
+}
+
+fn simple_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
+  (seq(b"null").map(|_| ConfigValue::Null).attempt()
+    | seq(b"true").map(|_| ConfigValue::Bool(true)).attempt()
+    | seq(b"false").map(|_| ConfigValue::Bool(false)).attempt()
+    | duration_value().attempt()
+    | number_value().map(ConfigValue::Number).attempt()
+    | string_config_value())
+  .surround(space_or_comment(), space_or_comment())
+}
+
 fn config_value<'a>() -> Parser<'a, u8, ConfigValue> {
   (array_config_value().attempt()
     | object_config_value().attempt()
     | reference_config_value().attempt()
-    | simple_config_value())
+    | simple_config_value().attempt()
+    | enumeration_config_value())
   .surround(space_or_comment(), space_or_comment())
 }
 
@@ -317,6 +339,55 @@ pub fn hocon<'a>() -> Parser<'a, u8, Vec<ConfigValue>> {
 }
 
 #[cfg(test)]
+mod gens {
+  use super::*;
+  use prop_check_rs::gen::{Gen, Gens};
+
+  pub fn comment_gen() -> Gen<String> {
+    let tail = Gens::choose_u8(0, 128).flat_map(|n| {
+      let char_gen = Gens::choose_u8(1, 4).flat_map(|e| match e {
+        1 => Gens::choose_char('a', 'z'),
+        2 => Gens::choose_char('A', 'Z'),
+        3 => Gens::choose_char('0', '9'),
+        4 => Gens::one_char().map(|_| ' '),
+        n => panic!("n = {}", n),
+      });
+      Gens::list_of_n(n as usize, char_gen).map(|e| e.into_iter().collect::<String>())
+    });
+    let head = Gens::choose_u8(1, 2).map(|n| match n {
+      1 => "#".to_string(),
+      2 => "//".to_string(),
+      n => panic!("n = {}", n),
+    });
+    head.flat_map(move |h| tail.clone().map(move |t| format!("{}{}", h, t)))
+  }
+
+  pub fn space_gen() -> Gen<String> {
+    Gens::choose_u8(1, 128).flat_map(|n| {
+      Gens::list_of_n(
+        n as usize,
+        Gens::choose_u8(1, 4).map(|n| match n {
+          1 => ' ',
+          2 => '\r',
+          3 => '\n',
+          4 => '\t',
+          n => panic!("n = {}", n),
+        }),
+      )
+      .map(|chars| chars.into_iter().collect::<String>())
+    })
+  }
+
+  pub fn comment_space_gen() -> Gen<String> {
+    Gens::choose_u8(1, 2).flat_map(|n| match n {
+      1 => comment_gen(),
+      2 => space_gen(),
+      n => panic!("n = {}", n),
+    })
+  }
+}
+
+#[cfg(test)]
 mod tests {
   use super::*;
   use std::env;
@@ -327,214 +398,54 @@ mod tests {
     let _ = env_logger::try_init();
   }
 
-  #[test]
-  fn space_or_comment_test() {
-    let input = br#"
-    //  {
-    //
-    //  }
-    "#;
-    let _ = space_or_comment().parse(input).to_result().unwrap();
-    let input = br#"
-    #
-    "#;
-    let _ = space_or_comment().parse(input).to_result().unwrap();
-    let input = br#"
-    # #
-    "#;
-    let _ = space_or_comment().parse(input).to_result().unwrap();
-    let input = br#"
-    //"#;
-    let _ = space_or_comment().parse(input).to_result().unwrap();
-    let input = br#"
-    //
-    //
-    "#;
-    let _ = space_or_comment().parse(input).to_result().unwrap();
-    let input = br#"
-    // #
-    //
-    "#;
-    let _ = space_or_comment().parse(input).to_result().unwrap();
+  fn new_rng() -> RNG {
+    let mut rng = RNG::new();
+    let s = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+    rng.with_seed(s as i64);
+    rng
   }
 
   #[test]
-  fn include_test() {
-    let input = br#"include file("abc.conf")"#;
-    let binding = hocon().parse(input).to_result().unwrap();
-    let result = binding[0].clone();
-    assert_eq!(
-      result,
-      ConfigValue::Include(ConfigIncludeValue::new("file".to_string(), "abc.conf".to_string()))
-    )
+  fn comment_test() -> Result<()> {
+    // let mut counter = 0;
+    let prop = prop::for_all(comment_gen(), move |input| {
+      // counter += 1;
+      // log::debug!("{:>03}, comment:string = {}", counter, input);
+      let input_bytes = input.as_bytes();
+      let result = (comment() - end()).parse(input_bytes).to_result();
+      let comment = std::str::from_utf8(result.unwrap()).unwrap();
+      assert_eq!(comment.to_string(), input);
+      true
+    });
+    prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
   }
 
   #[test]
-  fn string_single_quote() {
-    let result = string_config_value().parse(br#"'abc'"#);
-    assert!(result.is_success());
-    let ast = result.to_result().ok().unwrap();
-    assert_eq!(ast, ConfigValue::String("abc".to_string()));
+  fn space_test() -> Result<()> {
+    // let mut counter = 0;
+    let prop = prop::for_all(space_gen(), move |input| {
+      // counter += 1;
+      // log::debug!("{:>03}, comment:string = {}", counter, input);
+      let input_bytes = input.as_bytes();
+      let result = (space() - end()).parse(input_bytes).to_result();
+      let comment = std::str::from_utf8(result.unwrap()).unwrap();
+      assert_eq!(comment.to_string(), input);
+      true
+    });
+    prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
   }
 
   #[test]
-  fn string_double_quote() {
-    let result = string_config_value().parse(br#""abc""#);
-    assert!(result.is_success());
-    let ast = result.to_result().ok().unwrap();
-    assert_eq!(ast, ConfigValue::String("abc".to_string()));
-  }
-
-  #[test]
-  fn a_1() {
-    let input = br#"
-        a=1
-        "#;
-    let result = hocon().parse(input);
-    assert!(result.is_success());
-    let ast = result.to_result().ok().unwrap();
-    assert_eq!(
-      ast[0],
-      ConfigValue::Object(ConfigObjectValue::from((
-        "a".to_string(),
-        ConfigValue::Number(ConfigNumberValue::from("1".to_owned()))
-      )))
-    );
-  }
-
-  #[test]
-  fn b_1() {
-    let input = br#"
-        b=1
-        "#;
-    let result = hocon().parse(input);
-    assert!(result.is_success());
-    let ast = result.to_result().ok().unwrap();
-    assert_eq!(
-      ast[0],
-      ConfigValue::Object(ConfigObjectValue::from((
-        "b".to_string(),
-        ConfigValue::Number(ConfigNumberValue::from("1".to_owned()))
-      )))
-    );
-  }
-
-  #[test]
-  fn bom() {
-    let input = br#"
-        # test abc
-        foo = "bar"
-        "#;
-    let result = hocon().parse(input);
-    assert!(result.is_success());
-    let ast = result.to_result().ok().unwrap();
-    assert_eq!(
-      ast.first().unwrap().clone(),
-      ConfigValue::Object(ConfigObjectValue::from((
-        "foo".to_string(),
-        ConfigValue::String("bar".to_string())
-      )))
-    );
-  }
-
-  #[test]
-  fn path_as_key() {
-    let input = br#"
-        a.b.c=1
-        "#;
-    let result = hocon().parse(input);
-    assert!(result.is_success());
-    let ast = result.to_result().ok().unwrap();
-    assert_eq!(
-      ast[0],
-      ConfigValue::Object(ConfigObjectValue::from((
-        "a.b.c".to_string(),
-        ConfigValue::Number(ConfigNumberValue::from("1".to_owned()))
-      )))
-    );
-  }
-
-  #[test]
-  fn test_array() {
-    let result = hocon().parse(
-      br#"
-    foo: [ 1s, 2.1, 3, 4, 5 ]
-    "#,
-    );
-    assert!(result.is_success());
-    let ast = result.to_result().ok().unwrap();
-    assert_eq!(
-      ast.first().unwrap().clone(),
-      ConfigValue::Object(ConfigObjectValue::from((
-        "foo".to_string(),
-        ConfigValue::Array(ConfigArrayValue::new(vec![
-          ConfigValue::Duration(ConfigDurationValue::new(
-            ConfigNumberValue::from("1".to_owned()),
-            TimeUnit::Seconds
-          )),
-          ConfigValue::Number(ConfigNumberValue::from("2.1".to_string())),
-          ConfigValue::Number(ConfigNumberValue::from(3)),
-          ConfigValue::Number(ConfigNumberValue::from(4)),
-          ConfigValue::Number(ConfigNumberValue::from(5))
-        ]))
-      )))
-    );
-  }
-
-  #[test]
-  fn test_comments_in_object() {
-    let result = hocon().parse(
-      br#"
-      //
-{
-//
-//
-//
-}
-    "#,
-    );
-    let parse_result = result.clone().to_result();
-    println!("{:?}", parse_result.map_err(|e| e.input_string().unwrap()));
-    assert!(result.is_success());
-  }
-
-  #[test]
-  fn test_object() {
-    let result = hocon().parse(
-      br#"
-    //
-    foo {
-      bar = "baz",
-      test {
-        a = "b"
-      }
-    }
-    "#,
-    );
-    assert!(result.is_success());
-    //    println!("{:?}", result.clone().to_result());
-  }
-
-  #[test]
-  fn test_json() {
-    let input = br#"
-	{
-        "Image": {
-            "Width":  800,
-            "Height": 600,
-            "Title":  "View from 15th Floor",
-            "Thumbnail": {
-                "Url":    "http://www.example.com/image/481989943",
-                "Height": 125,
-                "Width":  100
-            },
-            "Animated" : false,
-            "IDs": [116, 943, 234, 38793]
-        },
-        "escaped characters": "\u2192\uD83D\uDE00\"\t\uD834\uDD1E"
-    }"#;
-    let result = hocon().parse(input);
-    println!("{:?}", result.clone().to_result().ok().unwrap());
-    assert!(result.is_success());
+  fn space_or_comment_test() -> Result<()> {
+    // let mut counter = 0;
+    let prop = prop::for_all(comment_space_gen(), move |input| {
+      // counter += 1;
+      // log::debug!("{:>03}, comment:string = {}", counter, input);
+      let input_bytes = input.as_bytes();
+      let result = (space_or_comment() - end()).parse(input_bytes).to_result();
+      assert!(result.is_ok());
+      true
+    });
+    prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
   }
 }

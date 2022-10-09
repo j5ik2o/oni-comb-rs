@@ -165,13 +165,18 @@ impl ConfigResolver for ConfigValue {
           *cvo = ConfigValue::Object(ConfigObjectValue::new(key_values));
         }
       }
-      (cvr @ ConfigValue::Enumeration { .. }, Some(src)) => match cvr {
+      (cvr @ ConfigValue::Enumeration { .. }, Some(_)) => match cvr {
         ConfigValue::Enumeration { prev, values, .. } => {
           let mut result = String::new();
           for cv in &mut values.0 {
+            println!("cv = {:?}", cv);
             cv.resolve(source);
+            println!("cv = {:?}", cv);
             match cv {
-              ConfigValue::String(s) => result.push_str(s),
+              ConfigValue::String(s) => {
+                println!("s = {}", s);
+                result.push_str(s);
+              }
               _ => {}
             }
           }
