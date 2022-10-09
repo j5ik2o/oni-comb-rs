@@ -10,8 +10,6 @@ use anyhow::Result;
 use oni_comb_parser_rs::prelude::*;
 use prop_check_rs::prop::TestCases;
 
-const TEST_COUNT: TestCases = 100;
-
 fn comment<'a>() -> Parser<'a, u8, &'a [u8]> {
   let head = seq(b"//").collect().attempt() | elm_ref(b'#').collect();
   let tail = take_till0(|c| matches!(*c, b'\r' | b'\n'));
@@ -391,7 +389,7 @@ mod gens {
 mod tests {
   use super::*;
   use std::env;
-
+  const TEST_COUNT: TestCases = 100;
   #[ctor::ctor]
   fn init_logger() {
     env::set_var("RUST_LOG", "debug");
