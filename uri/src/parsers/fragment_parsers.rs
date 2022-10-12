@@ -18,11 +18,13 @@ pub mod gens {
 
   pub fn fragment_gen() -> Gen<String> {
     repeat_gen_of_string(1, u8::MAX - 1, {
-      Gens::choose_u8(1, 2).flat_map(|n| match n {
-        1 => pchar_gen(1, 1),
-        2 => Gens::one_of_vec(vec!['/', '?']).map(|c| c.into()),
-        x => panic!("x = {}", x),
-      })
+      Gens::frequency([
+        (1, pchar_gen(1, 1)),
+        (
+          1,
+          Gens::one_of(vec!['/', '?'].into_iter().map(Gens::unit).collect::<Vec<Gen<_>>>()).map(|c| c.into()),
+        ),
+      ])
     })
   }
 }

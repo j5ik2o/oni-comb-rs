@@ -27,9 +27,9 @@ mod tests {
     assert_eq!(value, "bar");
   }
 
-  #[test]
-  fn parse_test_01() {
-    let result = ConfigFactory::new().load_from_file("tests/data/test01.conf");
-    println!("{:?}", result.unwrap());
-  }
+  // #[test]
+  // fn parse_test_01() {
+  //   let result = ConfigFactory::new().load_from_file("tests/data/test01.conf");
+  //   println!("{:?}", result.unwrap());
+  // }
 }

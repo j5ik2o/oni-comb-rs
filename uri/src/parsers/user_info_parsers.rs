@@ -20,12 +20,7 @@ pub mod gens {
   pub fn user_info_gen() -> Gen<String> {
     let gen = {
       repeat_gen_of_string(1, 5, {
-        Gens::choose_u8(1, 3).flat_map(|n| match n {
-          1 => unreserved_gen(1),
-          2 => pct_encoded_gen(),
-          3 => sub_delims_gen(1),
-          x => panic!("x = {}", x),
-        })
+        Gens::frequency([(1, unreserved_gen(1)), (1, pct_encoded_gen()), (1, sub_delims_gen(1))])
       })
     };
     Gens::one_bool().flat_map(move |b| {

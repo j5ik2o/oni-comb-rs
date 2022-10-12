@@ -56,20 +56,20 @@ pub mod gens {
         let g = gen.clone();
         g.map(Some)
       } else {
-        Gen::<String>::unit(|| None)
+        Gens::unit(None)
       }
     })
   }
 
   // Generators
   fn low_alpha_gen() -> Gen<char> {
-    let low_alpha_gen: Vec<char> = ('a'..='z').into_iter().collect::<Vec<_>>();
-    Gens::one_of_vec(low_alpha_gen)
+    let low_alpha_gen: Vec<Gen<char>> = ('a'..='z').into_iter().map(Gens::unit).collect::<Vec<_>>();
+    Gens::one_of(low_alpha_gen)
   }
 
   fn high_alpha_gen() -> Gen<char> {
-    let low_alpha_gen: Vec<char> = ('A'..='Z').into_iter().collect::<Vec<_>>();
-    Gens::one_of_vec(low_alpha_gen)
+    let low_alpha_gen: Vec<Gen<char>> = ('A'..='Z').into_iter().map(Gens::unit).collect::<Vec<_>>();
+    Gens::one_of(low_alpha_gen)
   }
 
   pub fn alpha_char_gen() -> Gen<char> {
@@ -77,8 +77,8 @@ pub mod gens {
   }
 
   pub fn digit_gen(min: char, max: char) -> Gen<char> {
-    let low_alpha_gen: Vec<char> = (min..=max).into_iter().collect::<Vec<_>>();
-    Gens::one_of_vec(low_alpha_gen)
+    let low_alpha_gen: Vec<Gen<char>> = (min..=max).into_iter().map(Gens::unit).collect::<Vec<_>>();
+    Gens::one_of(low_alpha_gen)
   }
 
   pub enum HexDigitMode {
@@ -113,12 +113,19 @@ pub mod gens {
   }
 
   pub fn unreserved_gen_of_char() -> Gen<char> {
-    Gens::choose(1u8, 3).flat_map(|n| match n {
-      1 => alpha_char_gen(),
-      2 => digit_gen('0', '9'),
-      3 => Gens::one_of_vec(vec!['-', '.', '_', '~']),
-      x => panic!("x = {}", x),
-    })
+    Gens::frequency([
+      (1, alpha_char_gen()),
+      (1, digit_gen('0', '9')),
+      (
+        1,
+        Gens::one_of(
+          vec!['-', '.', '_', '~']
+            .into_iter()
+            .map(Gens::unit)
+            .collect::<Vec<Gen<_>>>(),
+        ),
+      ),
+    ])
   }
 
   pub fn unreserved_gen(len: u8) -> Gen<String> {
@@ -126,7 +133,12 @@ pub mod gens {
   }
 
   pub fn gen_delims_gen_of_char() -> Gen<char> {
-    Gens::one_of_vec(vec![':', '/', '?', '#', '[', ']', '@'])
+    Gens::one_of(
+      vec![':', '/', '?', '#', '[', ']', '@']
+        .into_iter()
+        .map(Gens::unit)
+        .collect::<Vec<Gen<_>>>(),
+    )
   }
 
   pub fn gen_delims_gen(len: u8) -> Gen<String> {
@@ -134,7 +146,12 @@ pub mod gens {
   }
 
   pub fn sub_delims_gen_of_char() -> Gen<char> {
-    Gens::one_of_vec(vec!['!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '='])
+    Gens::one_of(
+      vec!['!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=']
+        .into_iter()
+        .map(Gens::unit)
+        .collect::<Vec<Gen<_>>>(),
+    )
   }
 
   pub fn sub_delims_gen(len: u8) -> Gen<String> {
@@ -164,13 +181,15 @@ pub mod gens {
 
   pub fn pchar_gen(min: u8, max: u8) -> Gen<String> {
     repeat_gen_of_string(min, max, {
-      Gens::choose_u8(1, 4).flat_map(|n| match n {
-        1 => unreserved_gen_of_char().map(|c| c.into()),
-        2 => pct_encoded_gen(),
-        3 => sub_delims_gen_of_char().map(|c| c.into()),
-        4 => Gens::one_of_vec(vec![':', '@']).map(|c| c.into()),
-        x => panic!("x = {}", x),
-      })
+      Gens::frequency([
+        (1, unreserved_gen_of_char().map(|c| c.into())),
+        (1, pct_encoded_gen()),
+        (1, sub_delims_gen_of_char().map(|c| c.into())),
+        (
+          1,
+          Gens::one_of(vec![':', '@'].into_iter().map(Gens::unit).collect::<Vec<Gen<_>>>()).map(|c| c.into()),
+        ),
+      ])
     })
   }
 }

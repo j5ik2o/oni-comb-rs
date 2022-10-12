@@ -125,13 +125,12 @@ pub mod gens {
 
   pub fn segment_nz_nc_gen() -> Gen<String> {
     repeat_gen_of_string(1, u8::MAX - 1, {
-      Gens::choose_u8(1, 2).flat_map(|n| match n {
-        1 => unreserved_gen_of_char().map(|c| c.into()),
-        2 => pct_encoded_gen(),
-        3 => sub_delims_gen_of_char().map(|c| c.into()),
-        4 => Gens::one_of_vec(vec!['@']).map(|c| c.into()),
-        x => panic!("x = {}", x),
-      })
+      Gens::frequency([
+        (1, unreserved_gen_of_char().map(|c| c.into())),
+        (1, pct_encoded_gen()),
+        (1, sub_delims_gen_of_char().map(|c| c.into())),
+        (1, Gens::one_of(vec![Gens::unit('@')]).map(|c| c.into())),
+      ])
     })
   }
 
@@ -174,23 +173,21 @@ pub mod gens {
   }
 
   pub fn path_with_abempty_gen() -> Gen<Pair<String, String>> {
-    Gens::choose_u8(1, 5).flat_map(|n| match n {
-      1 => path_abempty_gen().map(|s| Pair("abempty_path".to_string(), s)),
-      2 => path_absolute_gen().map(|s| Pair("absolute_path".to_string(), s)),
-      3 => path_no_scheme_gen().map(|s| Pair("no_scheme_path".to_string(), s)),
-      4 => path_rootless_gen().map(|s| Pair("rootless_path".to_string(), s)),
-      5 => Gen::<String>::unit(|| Pair("empty_path".to_string(), "".to_string())),
-      x => panic!("x = {}", x),
-    })
+    Gens::frequency([
+      (1, path_abempty_gen().map(|s| Pair("abempty_path".to_string(), s))),
+      (1, path_absolute_gen().map(|s| Pair("absolute_path".to_string(), s))),
+      (1, path_no_scheme_gen().map(|s| Pair("no_scheme_path".to_string(), s))),
+      (1, path_rootless_gen().map(|s| Pair("rootless_path".to_string(), s))),
+      (1, Gens::unit(Pair("empty_path".to_string(), "".to_string()))),
+    ])
   }
 
   pub fn path_str_without_abempty_gen() -> Gen<Pair<String, String>> {
-    Gens::choose_u8(1, 3).flat_map(|n| match n {
-      1 => path_absolute_gen().map(|s| Pair("absolute_path".to_string(), s)),
-      2 => path_rootless_gen().map(|s| Pair("rootless_path".to_string(), s)),
-      3 => Gen::<String>::unit(|| Pair("empty_path".to_string(), "".to_string())),
-      x => panic!("x = {}", x),
-    })
+    Gens::frequency([
+      (1, path_absolute_gen().map(|s| Pair("absolute_path".to_string(), s))),
+      (1, path_rootless_gen().map(|s| Pair("rootless_path".to_string(), s))),
+      (1, Gens::unit(Pair("empty_path".to_string(), "".to_string()))),
+    ])
   }
 }
 
