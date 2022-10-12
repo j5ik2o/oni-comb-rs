@@ -212,14 +212,14 @@ mod tests {
 
   const TEST_COUNT: TestCases = 100;
 
-  fn init() {
+  #[ctor::ctor]
+  fn init_logger() {
     env::set_var("RUST_LOG", "debug");
     let _ = env_logger::builder().is_test(true).try_init();
   }
 
   #[test]
   fn test_pchar() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::pchar_gen(1, u8::MAX - 1), move |s| {
       counter += 1;
@@ -239,7 +239,6 @@ mod tests {
 
   #[test]
   fn test_pct_encoded() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::pct_encoded_gen(), move |s| {
       counter += 1;
@@ -259,7 +258,6 @@ mod tests {
 
   #[test]
   fn test_unreserved() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::unreserved_gen(u8::MAX - 1), move |s| {
       counter += 1;
@@ -279,7 +277,6 @@ mod tests {
 
   #[test]
   fn test_reserved() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::reserved_gen(u8::MAX - 1), move |s| {
       counter += 1;
@@ -299,7 +296,6 @@ mod tests {
 
   #[test]
   fn test_gen_delims() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::gen_delims_gen(u8::MAX - 1), move |s| {
       counter += 1;
@@ -319,7 +315,6 @@ mod tests {
 
   #[test]
   fn test_sub_delims() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::sub_delims_gen(u8::MAX - 1), move |s| {
       counter += 1;

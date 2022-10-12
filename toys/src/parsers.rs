@@ -331,14 +331,14 @@ mod test {
   use crate::operator::Operator;
   use std::env;
 
-  fn init() {
+  #[ctor::ctor]
+  fn init_logger() {
     env::set_var("RUST_LOG", "debug");
     let _ = env_logger::builder().is_test(true).try_init();
   }
 
   #[test]
   fn test_example() {
-    init();
     let source = r#"
     {
       a = 1;
@@ -373,7 +373,6 @@ mod test {
 
   #[test]
   fn test_for() {
-    init();
     let source = r"for(i in 1 to 10) a=1;";
     let input = source.chars().collect::<Vec<_>>();
     let result = r#for().parse_as_result(&input).unwrap();
@@ -566,7 +565,6 @@ mod test {
 
   #[test]
   fn test_multitive() {
-    init();
     let source = r"1/2";
     let input = source.chars().collect::<Vec<_>>();
     println!("start");

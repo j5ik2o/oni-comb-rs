@@ -95,14 +95,14 @@ mod tests {
 
   const TEST_COUNT: TestCases = 100;
 
-  fn init() {
+  #[ctor::ctor]
+  fn init_logger() {
     env::set_var("RUST_LOG", "debug");
     let _ = env_logger::builder().is_test(true).try_init();
   }
 
   #[test]
   fn test_ip_v_future() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::ip_v_future_gen(), move |s| {
       counter += 1;
@@ -119,7 +119,6 @@ mod tests {
 
   #[test]
   fn test_reg_name() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::reg_name_gen(), move |s| {
       counter += 1;
@@ -136,7 +135,6 @@ mod tests {
 
   #[test]
   fn test_ip_literal() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::ip_literal_gen(), move |s| {
       counter += 1;
@@ -153,7 +151,6 @@ mod tests {
 
   #[test]
   fn test_host() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::host_gen(), move |s| {
       counter += 1;

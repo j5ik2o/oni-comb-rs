@@ -57,14 +57,14 @@ mod tests {
 
   const TEST_COUNT: TestCases = 100;
 
-  fn init() {
+  #[ctor::ctor]
+  fn init_logger() {
     env::set_var("RUST_LOG", "debug");
     let _ = env_logger::builder().is_test(true).try_init();
   }
 
   #[test]
   fn test_dec_octet() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(dec_octet_gen(), move |s| {
       counter += 1;
@@ -80,7 +80,6 @@ mod tests {
 
   #[test]
   fn test_ipv4_address() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::ipv4_address_gen(), move |s| {
       counter += 1;

@@ -5,6 +5,13 @@ use rust_decimal::prelude::ToPrimitive;
 #[cfg(test)]
 mod tests {
   use super::*;
+  use std::env;
+
+  #[ctor::ctor]
+  fn init_logger() {
+    env::set_var("RUST_LOG", "debug");
+    let _ = env_logger::builder().is_test(true).try_init();
+  }
 
   #[test]
   fn parse_a_1() {
