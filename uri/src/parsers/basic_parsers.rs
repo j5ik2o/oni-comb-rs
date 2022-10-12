@@ -88,18 +88,23 @@ pub mod gens {
   }
 
   pub fn hex_digit_gen(mode: HexDigitMode) -> Gen<char> {
-    Gens::choose_u8(1, 3).flat_map(move |n| match n {
-      1 => digit_gen('0', '9'),
-      2 => match mode {
-        HexDigitMode::All | HexDigitMode::Upper => Gens::choose('A', 'F'),
-        _ => digit_gen('0', '9'),
-      },
-      3 => match mode {
-        HexDigitMode::All | HexDigitMode::Lower => Gens::choose('a', 'f'),
-        _ => digit_gen('0', '9'),
-      },
-      x => panic!("x = {}", x),
-    })
+    Gens::frequency([
+      (1, digit_gen('0', '9')),
+      (
+        1,
+        match mode {
+          HexDigitMode::All | HexDigitMode::Upper => Gens::choose('A', 'F'),
+          _ => digit_gen('0', '9'),
+        },
+      ),
+      (
+        1,
+        match mode {
+          HexDigitMode::All | HexDigitMode::Lower => Gens::choose('a', 'f'),
+          _ => digit_gen('0', '9'),
+        },
+      ),
+    ])
   }
 
   pub fn repeat_gen_of_char(len: u8, g: Gen<char>) -> Gen<String> {

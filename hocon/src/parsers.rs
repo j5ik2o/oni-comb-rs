@@ -2,7 +2,7 @@ use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::collections::HashMap;
 
 use crate::model::*;
-use anyhow::Result;
+
 use oni_comb_parser_rs::prelude::*;
 
 fn comment<'a>() -> Parser<'a, u8, &'a [u8]> {
@@ -383,6 +383,7 @@ mod gens {
 mod tests {
   use super::*;
   use crate::parsers::gens::{comment_gen, comment_space_gen, space_gen};
+  use anyhow::Result;
   use prop_check_rs::prop;
   use prop_check_rs::prop::TestCases;
   use prop_check_rs::rng::RNG;

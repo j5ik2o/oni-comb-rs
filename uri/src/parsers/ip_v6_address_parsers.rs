@@ -212,11 +212,10 @@ pub mod gens {
   }
 
   pub fn ls32_gen() -> Gen<String> {
-    Gens::choose_u8(1, 2).flat_map(|n| match n {
-      1 => ipv4_address_gen(),
-      2 => Gens::list_of_n(2, h16_gen()).map(|sl| sl.join(":")),
-      x => panic!("x = {}", x),
-    })
+    Gens::frequency([
+      (1, ipv4_address_gen()),
+      (1, Gens::list_of_n(2, h16_gen()).map(|sl| sl.join(":"))),
+    ])
   }
 
   pub fn ipv6_address_gen1() -> Gen<String> {
@@ -241,11 +240,10 @@ pub mod gens {
     Gens::one_bool()
       .flat_map(|b| {
         if b {
-          Gens::choose_u8(1, 2).flat_map(|n| match n {
-            1 => h16_gen(),
-            2 => Gens::list_of_n(2, h16_gen()).map(|sl| sl.join(":")),
-            x => panic!("x = {}", x),
-          })
+          Gens::frequency([
+            (1, h16_gen()),
+            (1, Gens::list_of_n(2, h16_gen()).map(|sl| sl.join(":"))),
+          ])
         } else {
           Gens::unit("".to_string())
         }
@@ -264,11 +262,10 @@ pub mod gens {
     Gens::one_bool()
       .flat_map(|b| {
         if b {
-          Gens::choose_u8(1, 2).flat_map(|n| match n {
-            1 => h16_gen(),
-            2 => Gens::list_of_n(3, h16_gen()).map(|sl| sl.join(":")),
-            x => panic!("x = {}", x),
-          })
+          Gens::frequency([
+            (1, h16_gen()),
+            (2, Gens::list_of_n(3, h16_gen()).map(|sl| sl.join(":"))),
+          ])
         } else {
           Gens::unit("".to_string())
         }
@@ -287,11 +284,10 @@ pub mod gens {
     Gens::one_bool()
       .flat_map(|b| {
         if b {
-          Gens::choose_u8(1, 2).flat_map(|n| match n {
-            1 => h16_gen(),
-            2 => Gens::list_of_n(3, h16_gen()).map(|sl| sl.join(":")),
-            x => panic!("x = {}", x),
-          })
+          Gens::frequency([
+            (1, h16_gen()),
+            (1, Gens::list_of_n(3, h16_gen()).map(|sl| sl.join(":"))),
+          ])
         } else {
           Gens::unit("".to_string())
         }
@@ -310,11 +306,10 @@ pub mod gens {
     Gens::one_bool()
       .flat_map(|b| {
         if b {
-          Gens::choose_u8(1, 2).flat_map(|n| match n {
-            1 => h16_gen(),
-            2 => Gens::list_of_n(4, h16_gen()).map(|sl| sl.join(":")),
-            x => panic!("x = {}", x),
-          })
+          Gens::frequency([
+            (1, h16_gen()),
+            (1, Gens::list_of_n(4, h16_gen()).map(|sl| sl.join(":"))),
+          ])
         } else {
           Gens::unit("".to_string())
         }
@@ -327,11 +322,10 @@ pub mod gens {
     Gens::one_bool()
       .flat_map(|b| {
         if b {
-          Gens::choose_u8(1, 2).flat_map(|n| match n {
-            1 => h16_gen(),
-            2 => Gens::list_of_n(5, h16_gen()).map(|sl| sl.join(":")),
-            x => panic!("x = {}", x),
-          })
+          Gens::frequency([
+            (1, h16_gen()),
+            (1, Gens::list_of_n(5, h16_gen()).map(|sl| sl.join(":"))),
+          ])
         } else {
           Gens::unit("".to_string())
         }
@@ -344,11 +338,10 @@ pub mod gens {
     Gens::one_bool()
       .flat_map(|b| {
         if b {
-          Gens::choose_u8(1, 2).flat_map(|n| match n {
-            1 => h16_gen(),
-            2 => Gens::list_of_n(6, h16_gen()).map(|sl| sl.join(":")),
-            x => panic!("x = {}", x),
-          })
+          Gens::frequency([
+            (1, h16_gen()),
+            (1, Gens::list_of_n(6, h16_gen()).map(|sl| sl.join(":"))),
+          ])
         } else {
           Gens::unit("".to_string())
         }

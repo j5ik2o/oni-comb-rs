@@ -51,12 +51,11 @@ pub mod gens {
 
   pub fn reg_name_gen() -> Gen<String> {
     repeat_gen_of_string(1, 10, {
-      Gens::choose_u8(1, 3).flat_map(|n| match n {
-        1 => unreserved_gen_of_char().map(|c| c.into()),
-        2 => sub_delims_gen_of_char().map(|c| c.into()),
-        3 => pct_encoded_gen(),
-        x => panic!("x = {}", x),
-      })
+      Gens::frequency([
+        (1, unreserved_gen_of_char().map(|c| c.into())),
+        (1, sub_delims_gen_of_char().map(|c| c.into())),
+        (1, pct_encoded_gen()),
+      ])
     })
   }
 
