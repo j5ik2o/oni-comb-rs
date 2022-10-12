@@ -394,7 +394,7 @@ mod tests {
   #[ctor::ctor]
   fn init_logger() {
     env::set_var("RUST_LOG", "debug");
-    let _ = env_logger::try_init();
+    let _ = env_logger::builder().is_test(true).try_init();
   }
 
   fn new_rng() -> RNG {

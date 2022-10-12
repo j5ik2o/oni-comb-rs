@@ -378,7 +378,8 @@ mod tests {
 
   const TEST_COUNT: TestCases = 100;
 
-  fn init() {
+  #[ctor::ctor]
+  fn init_logger() {
     env::set_var("RUST_LOG", "debug");
     let _ = env_logger::builder().is_test(true).try_init();
   }
@@ -391,7 +392,6 @@ mod tests {
 
   #[test]
   fn test_h16() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::h16_gen(), move |s| {
       counter += 1;
@@ -407,7 +407,6 @@ mod tests {
 
   #[test]
   fn test_ls32() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::ls32_gen(), move |s| {
       counter += 1;
@@ -423,7 +422,6 @@ mod tests {
 
   #[test]
   fn test_ipv6_address1() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::ipv6_address_gen1(), move |s| {
       counter += 1;
@@ -440,7 +438,6 @@ mod tests {
 
   #[test]
   fn test_ipv6_address2() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::ipv6_address_gen2(), move |s| {
       counter += 1;
@@ -457,7 +454,6 @@ mod tests {
 
   #[test]
   fn test_ipv6_address3() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::ipv6_address_gen3(), move |s| {
       counter += 1;
@@ -474,7 +470,6 @@ mod tests {
 
   #[test]
   fn test_ipv6_address4() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::ipv6_address_gen4(), move |s| {
       counter += 1;
@@ -495,7 +490,6 @@ mod tests {
 
   #[test]
   fn test_ipv6_address5() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::ipv6_address_gen5(), move |s| {
       counter += 1;
@@ -512,7 +506,6 @@ mod tests {
 
   #[test]
   fn test_ipv6_address6() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::ipv6_address_gen6(), move |s| {
       counter += 1;
@@ -529,7 +522,6 @@ mod tests {
 
   #[test]
   fn test_ipv6_address7() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::ipv6_address_gen7(), move |s| {
       counter += 1;
@@ -546,7 +538,6 @@ mod tests {
 
   #[test]
   fn test_ipv6_address8() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::ipv6_address_gen8(), move |s| {
       counter += 1;
@@ -563,7 +554,6 @@ mod tests {
 
   #[test]
   fn test_ipv6_address9() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::ipv6_address_gen9(), move |s| {
       counter += 1;
@@ -580,7 +570,6 @@ mod tests {
 
   #[test]
   fn test_ipv6_address() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(gens::ipv6_address_gen(), move |s| {
       counter += 1;

@@ -144,14 +144,14 @@ mod tests {
   use oni_comb_parser_rs::prelude::end;
   use std::env;
 
-  fn init() {
+  #[ctor::ctor]
+  fn init_logger() {
     env::set_var("RUST_LOG", "debug");
     let _ = env_logger::builder().is_test(true).try_init();
   }
 
   #[test]
   fn test_instruction_1() {
-    init();
     let result = parse("* * * * *").unwrap();
     assert_eq!(
       result,
@@ -167,7 +167,6 @@ mod tests {
 
   #[test]
   fn test_instruction_2() {
-    init();
     let result = parse("1 1 1 1 1").unwrap();
     assert_eq!(
       result,
@@ -183,7 +182,6 @@ mod tests {
 
   #[test]
   fn test_digit_instruction_1() {
-    init();
     let input = "*".chars().collect::<Vec<_>>();
     let result = (digit_instruction!(min_digit()) - end())
       .parse(&input)
@@ -194,7 +192,6 @@ mod tests {
 
   #[test]
   fn test_digit_instruction_2() {
-    init();
     let input = "*/2".chars().collect::<Vec<_>>();
     let result = (digit_instruction!(min_digit()) - end())
       .parse(&input)
@@ -211,7 +208,6 @@ mod tests {
 
   #[test]
   fn test_digit_instruction_3() {
-    init();
     let input = "1-10/2".chars().collect::<Vec<_>>();
     let result = (digit_instruction!(min_digit()) - end())
       .parse(&input)
@@ -229,7 +225,6 @@ mod tests {
 
   #[test]
   fn test_digit_instruction_4() {
-    init();
     let input = "1,2,3".chars().collect::<Vec<_>>();
     let result = (digit_instruction!(min_digit()) - end())
       .parse(&input)
@@ -240,7 +235,6 @@ mod tests {
 
   #[test]
   fn test_digit_instruction_5() {
-    init();
     let input = "1".chars().collect::<Vec<_>>();
     let result = (digit_instruction!(min_digit()) - end())
       .parse(&input)
@@ -251,7 +245,6 @@ mod tests {
 
   #[test]
   fn test_list() {
-    init();
     let s = (0..=59).map(|v| v.to_string()).collect::<Vec<_>>().join(",");
     let input = s.chars().collect::<Vec<_>>();
     let result = (list(min_digit()) - end()).parse(&input).to_result().unwrap();
@@ -261,7 +254,6 @@ mod tests {
 
   #[test]
   fn test_range() {
-    init();
     for n2 in 1..=59 {
       let option = n2 / 2;
       let n1 = n2 - 1;
@@ -282,7 +274,6 @@ mod tests {
 
   #[test]
   fn test_asterisk_per() {
-    init();
     for n in 0..59 {
       let s: &str = &format!("*/{:<02}", n);
       let input = s.chars().collect::<Vec<_>>();
@@ -299,7 +290,6 @@ mod tests {
 
   #[test]
   fn test_per() {
-    init();
     let input = "/2".chars().collect::<Vec<_>>();
     let _result = asterisk_per(min_digit()) - end();
     let result = (per(min_digit()) - end()).parse(&input).to_result().unwrap();
@@ -308,7 +298,6 @@ mod tests {
 
   #[test]
   fn test_min_digit() {
-    init();
     for n in 0..59 {
       let s: &str = &format!("{:<02}", n);
       let input = s.chars().collect::<Vec<_>>();
@@ -322,7 +311,6 @@ mod tests {
 
   #[test]
   fn test_hour_digit() {
-    init();
     for n in 0..=23 {
       if n < 10 {
         let s = &n.to_string();
@@ -342,7 +330,6 @@ mod tests {
 
   #[test]
   fn test_day_digit() {
-    init();
     for n in 1..=31 {
       if n < 10 {
         let s: &str = &n.to_string();
@@ -362,7 +349,6 @@ mod tests {
 
   #[test]
   fn test_month_digit() {
-    init();
     for n in 1..=12 {
       if n < 10 {
         let s: &str = &n.to_string();

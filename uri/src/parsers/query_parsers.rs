@@ -80,14 +80,14 @@ mod tests {
 
   const TEST_COUNT: TestCases = 100;
 
-  fn init() {
+  #[ctor::ctor]
+  fn init_logger() {
     env::set_var("RUST_LOG", "debug");
     let _ = env_logger::builder().is_test(true).try_init();
   }
 
   #[test]
   fn test_pchar_without_eq_amp() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(pchar_without_eq_amp_gen(1, u8::MAX - 1), move |s| {
       counter += 1;
@@ -104,7 +104,6 @@ mod tests {
 
   #[test]
   fn test_query() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(query_gen(), move |s| {
       counter += 1;

@@ -52,14 +52,14 @@ mod tests {
 
   const TEST_COUNT: TestCases = 100;
 
-  fn init() {
+  #[ctor::ctor]
+  fn init_logger() {
     env::set_var("RUST_LOG", "debug");
     let _ = env_logger::builder().is_test(true).try_init();
   }
 
   #[test]
   fn test_hier_part() -> Result<()> {
-    init();
     let mut counter = 0;
     let prop = prop::for_all(hier_part_gen(), move |Pair(s, _b)| {
       counter += 1;
