@@ -1,14 +1,9 @@
-use prop_check_rs::prop;
-use prop_check_rs::rng::RNG;
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::collections::HashMap;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::model::*;
-use crate::parsers::gens::{comment_gen, comment_space_gen, space_gen};
 use anyhow::Result;
 use oni_comb_parser_rs::prelude::*;
-use prop_check_rs::prop::TestCases;
 
 fn comment<'a>() -> Parser<'a, u8, &'a [u8]> {
   let head = seq(b"//").collect().attempt() | elm_ref(b'#').collect();
@@ -340,18 +335,21 @@ pub fn hocon<'a>() -> Parser<'a, u8, Vec<ConfigValue>> {
 mod gens {
   use super::*;
   use prop_check_rs::gen::{Gen, Gens};
+  use std::collections::BTreeMap;
 
   pub fn comment_gen() -> Gen<String> {
-    let tail = Gens::choose_u8(0, 128).flat_map(|n| {
-      let char_gen = Gens::choose_u8(1, 4).flat_map(|e| match e {
-        1 => Gens::choose_char('a', 'z'),
-        2 => Gens::choose_char('A', 'Z'),
-        3 => Gens::choose_char('0', '9'),
-        4 => Gens::one_char().map(|_| ' '),
-        n => panic!("n = {}", n),
+    let array: [(i32, Gen<char>); 2] = [(5, Gens::choose_char('a', 'z')), (5, Gens::choose_char('A', 'Z'))];
+    let (map, total) = array
+      .into_iter()
+      .fold((BTreeMap::new(), 0), |(mut map, mut total), (weight, value)| {
+        total += weight;
+        map.insert(total, value);
+        (map, total)
       });
-      Gens::list_of_n(n as usize, char_gen).map(|e| e.into_iter().collect::<String>())
-    });
+    let char_gen = Gens::choose_i32(1, total).flat_map(move |n| map.range(n..).into_iter().next().unwrap().1.clone());
+
+    let tail = Gens::choose_u8(0, 128)
+      .flat_map(move |n| Gens::list_of_n(n as usize, char_gen.clone()).map(|e| e.into_iter().collect::<String>()));
     let head = Gens::choose_u8(1, 2).map(|n| match n {
       1 => "#".to_string(),
       2 => "//".to_string(),
@@ -377,19 +375,21 @@ mod gens {
   }
 
   pub fn comment_space_gen() -> Gen<String> {
-    Gens::choose_u8(1, 2).flat_map(|n| match n {
-      1 => comment_gen(),
-      2 => space_gen(),
-      n => panic!("n = {}", n),
-    })
+    Gens::frequency([(1, comment_gen()), (1, space_gen())])
   }
 }
 
 #[cfg(test)]
 mod tests {
   use super::*;
+  use crate::parsers::gens::{comment_gen, comment_space_gen, space_gen};
+  use prop_check_rs::prop;
+  use prop_check_rs::prop::TestCases;
+  use prop_check_rs::rng::RNG;
   use std::env;
+
   const TEST_COUNT: TestCases = 100;
+
   #[ctor::ctor]
   fn init_logger() {
     env::set_var("RUST_LOG", "debug");
@@ -397,18 +397,15 @@ mod tests {
   }
 
   fn new_rng() -> RNG {
-    let mut rng = RNG::new();
-    let s = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
-    rng.with_seed(s as i64);
-    rng
+    RNG::new()
   }
 
   #[test]
   fn comment_test() -> Result<()> {
-    // let mut counter = 0;
+    let mut counter = 0;
     let prop = prop::for_all(comment_gen(), move |input| {
-      // counter += 1;
-      // log::debug!("{:>03}, comment:string = {}", counter, input);
+      counter += 1;
+      log::debug!("{:>03}, comment:string = {}", counter, input);
       let input_bytes = input.as_bytes();
       let result = (comment() - end()).parse(input_bytes).to_result();
       let comment = std::str::from_utf8(result.unwrap()).unwrap();

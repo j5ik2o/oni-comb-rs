@@ -18,14 +18,13 @@ pub mod gens {
 
   pub fn scheme_gen() -> Gen<String> {
     repeat_gen_of_char(5, {
-      Gens::choose_u8(1, 5).flat_map(|n| match n {
-        1 => alpha_char_gen(),
-        2 => digit_gen('0', '9'),
-        3 => Gen::<char>::unit(|| '+'),
-        4 => Gen::<char>::unit(|| '-'),
-        5 => Gen::<char>::unit(|| '.'),
-        x => panic!("x = {}", x),
-      })
+      Gens::frequency([
+        (1, alpha_char_gen()),
+        (1, digit_gen('0', '9')),
+        (1, Gens::unit('+')),
+        (1, Gens::unit('-')),
+        (1, Gens::unit('.')),
+      ])
     })
     .flat_map(|s| alpha_char_gen().map(move |c| format!("{}{}", c, s)))
   }

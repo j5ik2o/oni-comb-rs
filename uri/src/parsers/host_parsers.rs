@@ -64,34 +64,22 @@ pub mod gens {
     let a = repeat_gen_of_char(5, hex_digit_gen(HexDigitMode::Lower));
     let b = {
       repeat_gen_of_char(5, {
-        Gens::choose_u8(1, 3).flat_map(|n| match n {
-          1 => unreserved_gen_of_char(),
-          2 => sub_delims_gen_of_char(),
-          3 => Gen::<char>::unit(|| ':'),
-          x => panic!("x = {}", x),
-        })
+        Gens::frequency([
+          (1, unreserved_gen_of_char()),
+          (1, sub_delims_gen_of_char()),
+          (1, Gens::unit(':')),
+        ])
       })
     };
     a.flat_map(move |s1| b.clone().map(move |s2| format!("v{}.{}", s1, s2)))
   }
 
   pub fn ip_literal_gen() -> Gen<String> {
-    Gens::choose_u8(1, 2)
-      .flat_map(|n| match n {
-        1 => ipv6_address_gen(),
-        2 => ip_v_future_gen(),
-        x => panic!("x = {}", x),
-      })
-      .map(|s| format!("[{}]", s))
+    Gens::frequency([(1, ipv6_address_gen()), (1, ip_v_future_gen())]).map(|s| format!("[{}]", s))
   }
 
   pub fn host_gen() -> Gen<String> {
-    Gens::choose_u8(1, 3).flat_map(|n| match n {
-      1 => ip_literal_gen(),
-      2 => ipv4_address_gen(),
-      3 => reg_name_gen(),
-      x => panic!("x = {}", x),
-    })
+    Gens::frequency([(1, ip_literal_gen()), (1, ipv4_address_gen()), (1, reg_name_gen())])
   }
 }
 

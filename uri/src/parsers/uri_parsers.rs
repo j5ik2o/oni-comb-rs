@@ -23,7 +23,7 @@ pub mod gens {
   use crate::parsers::path_parsers::gens::Pair;
   use crate::parsers::query_parsers::gens::query_gen;
   use crate::parsers::scheme_parsers::gens::scheme_gen;
-  use prop_check_rs::gen::Gen;
+  use prop_check_rs::gen::{Gen, Gens};
 
   // URI = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
   pub fn uri_gen() -> Gen<String> {
@@ -32,14 +32,14 @@ pub mod gens {
         hier_part_gen().map(move |Pair(hier_part, is_empty)| (format!("{}:{}", scheme, hier_part), is_empty));
       let query_gen = base_gen.flat_map(|(s, is_empty_opt)| {
         if is_empty_opt.unwrap_or(false) {
-          Gen::<(String, Option<bool>)>::unit(|| (s.clone(), is_empty_opt))
+          Gens::unit((s.clone(), is_empty_opt))
         } else {
           query_gen().map(move |q| (format!("{}?{}", s, q), is_empty_opt))
         }
       });
       let fragment_gen = query_gen.flat_map(|(s, is_empty_opt)| {
         if is_empty_opt.unwrap_or(false) {
-          Gen::<(String, Option<bool>)>::unit(|| s.clone())
+          Gens::unit(s.clone())
         } else {
           fragment_gen().map(move |f| format!("{}#{}", s, f))
         }

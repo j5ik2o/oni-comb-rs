@@ -247,7 +247,7 @@ pub mod gens {
             x => panic!("x = {}", x),
           })
         } else {
-          Gen::<String>::unit(|| "".to_string())
+          Gens::unit("".to_string())
         }
       })
       .flat_map(|s0| {
@@ -270,7 +270,7 @@ pub mod gens {
             x => panic!("x = {}", x),
           })
         } else {
-          Gen::<String>::unit(|| "".to_string())
+          Gens::unit("".to_string())
         }
       })
       .flat_map(|s0| {
@@ -293,7 +293,7 @@ pub mod gens {
             x => panic!("x = {}", x),
           })
         } else {
-          Gen::<String>::unit(|| "".to_string())
+          Gens::unit("".to_string())
         }
       })
       .flat_map(|s0| {
@@ -316,7 +316,7 @@ pub mod gens {
             x => panic!("x = {}", x),
           })
         } else {
-          Gen::<String>::unit(|| "".to_string())
+          Gens::unit("".to_string())
         }
       })
       .flat_map(|s0| ls32_gen().map(move |s1| format!("{}::{}", s0, s1)))
@@ -333,7 +333,7 @@ pub mod gens {
             x => panic!("x = {}", x),
           })
         } else {
-          Gen::<String>::unit(|| "".to_string())
+          Gens::unit("".to_string())
         }
       })
       .flat_map(|s0| h16_gen().map(move |s1| format!("{}::{}", s0, s1)))
@@ -350,28 +350,26 @@ pub mod gens {
             x => panic!("x = {}", x),
           })
         } else {
-          Gen::<String>::unit(|| "".to_string())
+          Gens::unit("".to_string())
         }
       })
       .map(|s0| format!("{}::", s0))
   }
 
   pub fn ipv6_address_gen() -> Gen<String> {
-    Gens::choose_u8(1, 9)
-      .flat_map(|n| match n {
-        1 => ipv6_address_gen1(),
-        2 => ipv6_address_gen2(),
-        3 => ipv6_address_gen3(),
-        4 => ipv6_address_gen4(),
-        5 => ipv6_address_gen5(),
-        6 => ipv6_address_gen6(),
-        7 => ipv6_address_gen7(),
-        8 => ipv6_address_gen8(),
-        9 => ipv6_address_gen9(),
-        x => panic!("x = {}", x),
-      })
-      .map(|s| s.parse::<Ipv6Addr>().unwrap())
-      .map(|i| i.to_string())
+    Gens::frequency([
+      (1, ipv6_address_gen1()),
+      (1, ipv6_address_gen2()),
+      (1, ipv6_address_gen3()),
+      (1, ipv6_address_gen4()),
+      (1, ipv6_address_gen5()),
+      (1, ipv6_address_gen6()),
+      (1, ipv6_address_gen7()),
+      (1, ipv6_address_gen8()),
+      (1, ipv6_address_gen9()),
+    ])
+    .map(|s| s.parse::<Ipv6Addr>().unwrap())
+    .map(|i| i.to_string())
   }
 }
 
@@ -394,8 +392,7 @@ mod tests {
 
   fn new_rng() -> RNG {
     let mut rand = rand::thread_rng();
-    let mut rng = RNG::new();
-    rng.with_seed(rand.gen());
+    let rng = RNG::new_with_seed(rand.gen());
     rng
   }
 
