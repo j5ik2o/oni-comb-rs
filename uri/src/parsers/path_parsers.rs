@@ -129,7 +129,7 @@ pub mod gens {
         (1, unreserved_gen_of_char().map(|c| c.into())),
         (1, pct_encoded_gen()),
         (1, sub_delims_gen_of_char().map(|c| c.into())),
-        (1, Gens::one_of(vec![Gens::unit('@')]).map(|c| c.into())),
+        (1, Gens::unit('@').map(|c| c.into())),
       ])
     })
   }
