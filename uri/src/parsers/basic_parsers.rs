@@ -56,20 +56,18 @@ pub mod gens {
         let g = gen.clone();
         g.map(Some)
       } else {
-        Gens::unit(None)
+        Gens::pure(None)
       }
     })
   }
 
   // Generators
   fn low_alpha_gen() -> Gen<char> {
-    let low_alpha_gen: Vec<Gen<char>> = ('a'..='z').into_iter().map(Gens::unit).collect::<Vec<_>>();
-    Gens::one_of(low_alpha_gen)
+    Gens::one_of_values('a'..='z')
   }
 
   fn high_alpha_gen() -> Gen<char> {
-    let low_alpha_gen: Vec<Gen<char>> = ('A'..='Z').into_iter().map(Gens::unit).collect::<Vec<_>>();
-    Gens::one_of(low_alpha_gen)
+    Gens::one_of_values('A'..='Z')
   }
 
   pub fn alpha_char_gen() -> Gen<char> {
@@ -77,8 +75,7 @@ pub mod gens {
   }
 
   pub fn digit_gen(min: char, max: char) -> Gen<char> {
-    let low_alpha_gen: Vec<Gen<char>> = (min..=max).into_iter().map(Gens::unit).collect::<Vec<_>>();
-    Gens::one_of(low_alpha_gen)
+    Gens::one_of_values(min..=max)
   }
 
   pub enum HexDigitMode {
@@ -121,15 +118,7 @@ pub mod gens {
     Gens::frequency([
       (1, alpha_char_gen()),
       (1, digit_gen('0', '9')),
-      (
-        1,
-        Gens::one_of(
-          vec!['-', '.', '_', '~']
-            .into_iter()
-            .map(Gens::unit)
-            .collect::<Vec<Gen<_>>>(),
-        ),
-      ),
+      (1, Gens::one_of_values(['-', '.', '_', '~'])),
     ])
   }
 
@@ -138,12 +127,7 @@ pub mod gens {
   }
 
   pub fn gen_delims_gen_of_char() -> Gen<char> {
-    Gens::one_of(
-      vec![':', '/', '?', '#', '[', ']', '@']
-        .into_iter()
-        .map(Gens::unit)
-        .collect::<Vec<Gen<_>>>(),
-    )
+    Gens::one_of_values([':', '/', '?', '#', '[', ']', '@'])
   }
 
   pub fn gen_delims_gen(len: u8) -> Gen<String> {
@@ -151,12 +135,7 @@ pub mod gens {
   }
 
   pub fn sub_delims_gen_of_char() -> Gen<char> {
-    Gens::one_of(
-      vec!['!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '=']
-        .into_iter()
-        .map(Gens::unit)
-        .collect::<Vec<Gen<_>>>(),
-    )
+    Gens::one_of_values(vec!['!', '$', '&', '\'', '(', ')', '*', '+', ',', ';', '='])
   }
 
   pub fn sub_delims_gen(len: u8) -> Gen<String> {
@@ -190,10 +169,7 @@ pub mod gens {
         (1, unreserved_gen_of_char().map(|c| c.into())),
         (1, pct_encoded_gen()),
         (1, sub_delims_gen_of_char().map(|c| c.into())),
-        (
-          1,
-          Gens::one_of(vec![':', '@'].into_iter().map(Gens::unit).collect::<Vec<Gen<_>>>()).map(|c| c.into()),
-        ),
+        (1, Gens::one_of_values([':', '@']).map(|c| c.into())),
       ])
     })
   }
@@ -221,7 +197,7 @@ mod tests {
   #[test]
   fn test_pchar() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::pchar_gen(1, u8::MAX - 1), move |s| {
+    let prop = prop::for_all_gen(gens::pchar_gen(1, u8::MAX - 1), move |s| {
       counter += 1;
       log::debug!("{:>03}, value = {}", counter, s);
       let input = s.as_bytes();
@@ -240,7 +216,7 @@ mod tests {
   #[test]
   fn test_pct_encoded() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::pct_encoded_gen(), move |s| {
+    let prop = prop::for_all_gen(gens::pct_encoded_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, value = {}", counter, s);
       let input = s.as_bytes();
@@ -259,7 +235,7 @@ mod tests {
   #[test]
   fn test_unreserved() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::unreserved_gen(u8::MAX - 1), move |s| {
+    let prop = prop::for_all_gen(gens::unreserved_gen(u8::MAX - 1), move |s| {
       counter += 1;
       log::debug!("{:>03}, value = {}", counter, s);
       let input = s.as_bytes();
@@ -278,7 +254,7 @@ mod tests {
   #[test]
   fn test_reserved() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::reserved_gen(u8::MAX - 1), move |s| {
+    let prop = prop::for_all_gen(gens::reserved_gen(u8::MAX - 1), move |s| {
       counter += 1;
       log::debug!("{:>03}, value = {}", counter, s);
       let input = s.as_bytes();
@@ -297,7 +273,7 @@ mod tests {
   #[test]
   fn test_gen_delims() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::gen_delims_gen(u8::MAX - 1), move |s| {
+    let prop = prop::for_all_gen(gens::gen_delims_gen(u8::MAX - 1), move |s| {
       counter += 1;
       log::debug!("{:>03}, value = {}", counter, s);
       let input = s.as_bytes();
@@ -316,7 +292,7 @@ mod tests {
   #[test]
   fn test_sub_delims() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::sub_delims_gen(u8::MAX - 1), move |s| {
+    let prop = prop::for_all_gen(gens::sub_delims_gen(u8::MAX - 1), move |s| {
       counter += 1;
       log::debug!("{:>03}, value = {}", counter, s);
       let input = s.as_bytes();

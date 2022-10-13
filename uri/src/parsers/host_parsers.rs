@@ -66,7 +66,7 @@ pub mod gens {
         Gens::frequency([
           (1, unreserved_gen_of_char()),
           (1, sub_delims_gen_of_char()),
-          (1, Gens::unit(':')),
+          (1, Gens::pure(':')),
         ])
       })
     };
@@ -104,7 +104,7 @@ mod tests {
   #[test]
   fn test_ip_v_future() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::ip_v_future_gen(), move |s| {
+    let prop = prop::for_all_gen(gens::ip_v_future_gen(), move |s| {
       counter += 1;
       log::debug!("{}, ip_v_future = {}", counter, s);
       let input = s.as_bytes();
@@ -120,7 +120,7 @@ mod tests {
   #[test]
   fn test_reg_name() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::reg_name_gen(), move |s| {
+    let prop = prop::for_all_gen(gens::reg_name_gen(), move |s| {
       counter += 1;
       log::debug!("{}, reg_name = {}", counter, s);
       let input = s.as_bytes();
@@ -136,7 +136,7 @@ mod tests {
   #[test]
   fn test_ip_literal() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::ip_literal_gen(), move |s| {
+    let prop = prop::for_all_gen(gens::ip_literal_gen(), move |s| {
       counter += 1;
       log::debug!("{}, ip_literal = {}", counter, s);
       let input = s.as_bytes();
@@ -152,7 +152,7 @@ mod tests {
   #[test]
   fn test_host() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::host_gen(), move |s| {
+    let prop = prop::for_all_gen(gens::host_gen(), move |s| {
       counter += 1;
       log::debug!("{}, host = {}", counter, s);
       let input = s.as_bytes();

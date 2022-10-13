@@ -129,7 +129,7 @@ pub mod gens {
         (1, unreserved_gen_of_char().map(|c| c.into())),
         (1, pct_encoded_gen()),
         (1, sub_delims_gen_of_char().map(|c| c.into())),
-        (1, Gens::unit('@').map(|c| c.into())),
+        (1, Gens::pure('@').map(|c| c.into())),
       ])
     })
   }
@@ -178,7 +178,7 @@ pub mod gens {
       (1, path_absolute_gen().map(|s| Pair("absolute_path".to_string(), s))),
       (1, path_no_scheme_gen().map(|s| Pair("no_scheme_path".to_string(), s))),
       (1, path_rootless_gen().map(|s| Pair("rootless_path".to_string(), s))),
-      (1, Gens::unit(Pair("empty_path".to_string(), "".to_string()))),
+      (1, Gens::pure(Pair("empty_path".to_string(), "".to_string()))),
     ])
   }
 
@@ -186,7 +186,7 @@ pub mod gens {
     Gens::frequency([
       (1, path_absolute_gen().map(|s| Pair("absolute_path".to_string(), s))),
       (1, path_rootless_gen().map(|s| Pair("rootless_path".to_string(), s))),
-      (1, Gens::unit(Pair("empty_path".to_string(), "".to_string()))),
+      (1, Gens::pure(Pair("empty_path".to_string(), "".to_string()))),
     ])
   }
 }
@@ -211,7 +211,7 @@ mod tests {
   #[test]
   fn test_path() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::path_with_abempty_gen(), move |s| {
+    let prop = prop::for_all_gen(gens::path_with_abempty_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, path_str_with_abempty:string = {}", counter, s);
       let input = s.1.as_bytes();
@@ -227,7 +227,7 @@ mod tests {
   #[test]
   fn test_path_abempty() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::path_abempty_gen(), move |s| {
+    let prop = prop::for_all_gen(gens::path_abempty_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, path_abempty:string = {}", counter, s);
       let input = s.as_bytes();
@@ -243,7 +243,7 @@ mod tests {
   #[test]
   fn test_path_absolute() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::path_absolute_gen(), move |s| {
+    let prop = prop::for_all_gen(gens::path_absolute_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, path_absolute:string = {}", counter, s);
       let input = s.as_bytes();
@@ -259,7 +259,7 @@ mod tests {
   #[test]
   fn test_path_noscheme() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::path_no_scheme_gen(), move |s| {
+    let prop = prop::for_all_gen(gens::path_no_scheme_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, path_noscheme:string = {}", counter, s);
       let input = s.as_bytes();
@@ -275,7 +275,7 @@ mod tests {
   #[test]
   fn test_path_rootless() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::path_rootless_gen(), move |s| {
+    let prop = prop::for_all_gen(gens::path_rootless_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, path_rootless:string = {}", counter, s);
       let input = s.as_bytes();

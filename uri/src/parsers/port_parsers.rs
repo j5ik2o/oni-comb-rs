@@ -39,7 +39,7 @@ mod tests {
   fn test_port() -> Result<()> {
     init();
     let mut counter = 0;
-    let prop = prop::for_all(gens::port_gen(), move |s| {
+    let prop = prop::for_all_gen(gens::port_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, port:string = {}", counter, s);
       let input = s.as_bytes();

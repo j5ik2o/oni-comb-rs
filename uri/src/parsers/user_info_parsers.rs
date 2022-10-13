@@ -59,7 +59,7 @@ mod tests {
   #[test]
   fn test_user_info() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(user_info_gen(), move |s| {
+    let prop = prop::for_all_gen(user_info_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, user_info:string = {}", counter, s);
       let input = s.as_bytes();

@@ -404,7 +404,7 @@ mod tests {
   #[test]
   fn comment_test() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(comment_gen(), move |input| {
+    let prop = prop::for_all_gen(comment_gen(), move |input| {
       counter += 1;
       log::debug!("{:>03}, comment:string = {}", counter, input);
       let input_bytes = input.as_bytes();
@@ -419,7 +419,7 @@ mod tests {
   #[test]
   fn space_test() -> Result<()> {
     // let mut counter = 0;
-    let prop = prop::for_all(space_gen(), move |input| {
+    let prop = prop::for_all_gen(space_gen(), move |input| {
       // counter += 1;
       // log::debug!("{:>03}, comment:string = {}", counter, input);
       let input_bytes = input.as_bytes();
@@ -434,7 +434,7 @@ mod tests {
   #[test]
   fn space_or_comment_test() -> Result<()> {
     // let mut counter = 0;
-    let prop = prop::for_all(comment_space_gen(), move |input| {
+    let prop = prop::for_all_gen(comment_space_gen(), move |input| {
       // counter += 1;
       // log::debug!("{:>03}, comment:string = {}", counter, input);
       let input_bytes = input.as_bytes();
