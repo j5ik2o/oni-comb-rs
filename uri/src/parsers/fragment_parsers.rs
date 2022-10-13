@@ -20,10 +20,7 @@ pub mod gens {
     repeat_gen_of_string(1, u8::MAX - 1, {
       Gens::frequency([
         (1, pchar_gen(1, 1)),
-        (
-          1,
-          Gens::one_of(vec!['/', '?'].into_iter().map(Gens::unit).collect::<Vec<Gen<_>>>()).map(|c| c.into()),
-        ),
+        (1, Gens::one_of_values(['/', '?']).map(|c| c.into())),
       ])
     })
   }
@@ -52,7 +49,7 @@ mod tests {
   #[test]
   fn test_fragment() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(fragment_gen(), move |s| {
+    let prop = prop::for_all_gen(fragment_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, fragment = {}", counter, s);
       let input = s.as_bytes();

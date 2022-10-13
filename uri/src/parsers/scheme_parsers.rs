@@ -17,15 +17,16 @@ pub mod gens {
   use crate::parsers::basic_parsers::gens::*;
 
   pub fn scheme_gen() -> Gen<String> {
-    repeat_gen_of_char(5, {
+    repeat_gen_of_char(
+      5,
       Gens::frequency([
         (1, alpha_char_gen()),
         (1, digit_gen('0', '9')),
-        (1, Gens::unit('+')),
-        (1, Gens::unit('-')),
-        (1, Gens::unit('.')),
-      ])
-    })
+        (1, Gens::pure('+')),
+        (1, Gens::pure('-')),
+        (1, Gens::pure('.')),
+      ]),
+    )
     .flat_map(|s| alpha_char_gen().map(move |c| format!("{}{}", c, s)))
   }
 }
@@ -53,7 +54,7 @@ mod tests {
   #[test]
   fn test_scheme() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(scheme_gen(), move |s| {
+    let prop = prop::for_all_gen(scheme_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, scheme:string = {}", counter, s);
       let input = s.as_bytes();

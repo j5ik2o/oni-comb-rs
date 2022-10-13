@@ -32,14 +32,14 @@ pub mod gens {
         hier_part_gen().map(move |Pair(hier_part, is_empty)| (format!("{}:{}", scheme, hier_part), is_empty));
       let query_gen = base_gen.flat_map(|(s, is_empty_opt)| {
         if is_empty_opt.unwrap_or(false) {
-          Gens::unit((s.clone(), is_empty_opt))
+          Gens::pure((s.clone(), is_empty_opt))
         } else {
           query_gen().map(move |q| (format!("{}?{}", s, q), is_empty_opt))
         }
       });
       let fragment_gen = query_gen.flat_map(|(s, is_empty_opt)| {
         if is_empty_opt.unwrap_or(false) {
-          Gens::unit(s.clone())
+          Gens::pure(s.clone())
         } else {
           fragment_gen().map(move |f| format!("{}#{}", s, f))
         }
@@ -73,7 +73,7 @@ mod tests {
   fn test_uri() -> Result<()> {
     let mut counter = 0;
     let uri_gen = uri_gen();
-    let prop = prop::for_all(uri_gen, move |s| {
+    let prop = prop::for_all_gen(uri_gen, move |s| {
       counter += 1;
       log::debug!("{:>03}, uri:string = {}", counter, s);
       let input = s.as_bytes();

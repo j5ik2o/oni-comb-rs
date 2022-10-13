@@ -66,7 +66,7 @@ mod tests {
   #[test]
   fn test_dec_octet() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(dec_octet_gen(), move |s| {
+    let prop = prop::for_all_gen(dec_octet_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, dec_octet = {}", counter, s);
       let input = s.as_bytes();
@@ -81,7 +81,7 @@ mod tests {
   #[test]
   fn test_ipv4_address() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::ipv4_address_gen(), move |s| {
+    let prop = prop::for_all_gen(gens::ipv4_address_gen(), move |s| {
       counter += 1;
       log::debug!("{}, ipv4_address = {}", counter, s);
       let input = s.as_bytes();

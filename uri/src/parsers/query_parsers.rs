@@ -26,12 +26,7 @@ pub mod gens {
   use crate::parsers::basic_parsers::gens::*;
 
   fn sub_delims_without_gen_of_char() -> Gen<char> {
-    Gens::one_of(
-      vec!['!', '$', '\'', '(', ')', '*', '+', ',', ';']
-        .into_iter()
-        .map(Gens::unit)
-        .collect::<Vec<Gen<_>>>(),
-    )
+    Gens::one_of_values(['!', '$', '\'', '(', ')', '*', '+', ',', ';'])
   }
 
   fn sub_delims_without_gen(len: u8) -> Gen<String> {
@@ -44,10 +39,7 @@ pub mod gens {
         (1, unreserved_gen_of_char().map(|c| c.into())),
         (1, pct_encoded_gen()),
         (1, sub_delims_without_gen_of_char().map(|c| c.into())),
-        (
-          1,
-          Gens::one_of(vec![':', '@'].into_iter().map(Gens::unit).collect::<Vec<Gen<_>>>()).map(|c| c.into()),
-        ),
+        (1, Gens::one_of_values([':', '@']).map(|c| c.into())),
       ])
     })
   }
@@ -89,7 +81,7 @@ mod tests {
   #[test]
   fn test_pchar_without_eq_amp() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(pchar_without_eq_amp_gen(1, u8::MAX - 1), move |s| {
+    let prop = prop::for_all_gen(pchar_without_eq_amp_gen(1, u8::MAX - 1), move |s| {
       counter += 1;
       log::debug!("{:>03}, query:string = {}", counter, s);
       let input = s.as_bytes();
@@ -105,7 +97,7 @@ mod tests {
   #[test]
   fn test_query() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(query_gen(), move |s| {
+    let prop = prop::for_all_gen(query_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, query:string = {}", counter, s);
       let input = s.as_bytes();

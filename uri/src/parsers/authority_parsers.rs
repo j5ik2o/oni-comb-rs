@@ -61,7 +61,7 @@ mod tests {
   #[test]
   fn test_authority() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(authority_gen(), move |s| {
+    let prop = prop::for_all_gen(authority_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, authority:string = {}", counter, s);
       let input = s.as_bytes();

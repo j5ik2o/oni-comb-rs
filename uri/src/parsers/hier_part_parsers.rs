@@ -61,7 +61,7 @@ mod tests {
   #[test]
   fn test_hier_part() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(hier_part_gen(), move |Pair(s, _b)| {
+    let prop = prop::for_all_gen(hier_part_gen(), move |Pair(s, _b)| {
       counter += 1;
       log::debug!("{:>03}, hier_part:string = {}", counter, s);
       let input = s.as_bytes();

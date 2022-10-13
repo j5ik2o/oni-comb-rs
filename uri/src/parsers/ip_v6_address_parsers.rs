@@ -245,7 +245,7 @@ pub mod gens {
             (1, Gens::list_of_n(2, h16_gen()).map(|sl| sl.join(":"))),
           ])
         } else {
-          Gens::unit("".to_string())
+          Gens::pure("".to_string())
         }
       })
       .flat_map(|s0| {
@@ -267,7 +267,7 @@ pub mod gens {
             (2, Gens::list_of_n(3, h16_gen()).map(|sl| sl.join(":"))),
           ])
         } else {
-          Gens::unit("".to_string())
+          Gens::pure("".to_string())
         }
       })
       .flat_map(|s0| {
@@ -289,7 +289,7 @@ pub mod gens {
             (1, Gens::list_of_n(3, h16_gen()).map(|sl| sl.join(":"))),
           ])
         } else {
-          Gens::unit("".to_string())
+          Gens::pure("".to_string())
         }
       })
       .flat_map(|s0| {
@@ -311,7 +311,7 @@ pub mod gens {
             (1, Gens::list_of_n(4, h16_gen()).map(|sl| sl.join(":"))),
           ])
         } else {
-          Gens::unit("".to_string())
+          Gens::pure("".to_string())
         }
       })
       .flat_map(|s0| ls32_gen().map(move |s1| format!("{}::{}", s0, s1)))
@@ -327,7 +327,7 @@ pub mod gens {
             (1, Gens::list_of_n(5, h16_gen()).map(|sl| sl.join(":"))),
           ])
         } else {
-          Gens::unit("".to_string())
+          Gens::pure("".to_string())
         }
       })
       .flat_map(|s0| h16_gen().map(move |s1| format!("{}::{}", s0, s1)))
@@ -343,7 +343,7 @@ pub mod gens {
             (1, Gens::list_of_n(6, h16_gen()).map(|sl| sl.join(":"))),
           ])
         } else {
-          Gens::unit("".to_string())
+          Gens::pure("".to_string())
         }
       })
       .map(|s0| format!("{}::", s0))
@@ -393,7 +393,7 @@ mod tests {
   #[test]
   fn test_h16() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::h16_gen(), move |s| {
+    let prop = prop::for_all_gen(gens::h16_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, h16 = {}", counter, s);
       let input = s.as_bytes();
@@ -408,7 +408,7 @@ mod tests {
   #[test]
   fn test_ls32() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::ls32_gen(), move |s| {
+    let prop = prop::for_all_gen(gens::ls32_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, ls32 = {}", counter, s);
       let input = s.as_bytes();
@@ -423,7 +423,7 @@ mod tests {
   #[test]
   fn test_ipv6_address1() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::ipv6_address_gen1(), move |s| {
+    let prop = prop::for_all_gen(gens::ipv6_address_gen1(), move |s| {
       counter += 1;
       log::debug!("{:>03}, ipv6_address1 = {}", counter, s);
       let input = s.as_bytes();
@@ -439,7 +439,7 @@ mod tests {
   #[test]
   fn test_ipv6_address2() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::ipv6_address_gen2(), move |s| {
+    let prop = prop::for_all_gen(gens::ipv6_address_gen2(), move |s| {
       counter += 1;
       log::debug!("{:>03}, ipv6_address2 = {}", counter, s);
       let input = s.as_bytes();
@@ -455,7 +455,7 @@ mod tests {
   #[test]
   fn test_ipv6_address3() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::ipv6_address_gen3(), move |s| {
+    let prop = prop::for_all_gen(gens::ipv6_address_gen3(), move |s| {
       counter += 1;
       log::debug!("{:>03}, ipv6_address3 = {}", counter, s);
       let input = s.as_bytes();
@@ -471,7 +471,7 @@ mod tests {
   #[test]
   fn test_ipv6_address4() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::ipv6_address_gen4(), move |s| {
+    let prop = prop::for_all_gen(gens::ipv6_address_gen4(), move |s| {
       counter += 1;
       log::debug!("{:>03}, ipv6_address4 = {}", counter, s);
       let input = s.as_bytes();
@@ -491,7 +491,7 @@ mod tests {
   #[test]
   fn test_ipv6_address5() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::ipv6_address_gen5(), move |s| {
+    let prop = prop::for_all_gen(gens::ipv6_address_gen5(), move |s| {
       counter += 1;
       log::debug!("{:>03}, ipv6_address5 = {}", counter, s);
       let input = s.as_bytes();
@@ -507,7 +507,7 @@ mod tests {
   #[test]
   fn test_ipv6_address6() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::ipv6_address_gen6(), move |s| {
+    let prop = prop::for_all_gen(gens::ipv6_address_gen6(), move |s| {
       counter += 1;
       log::debug!("{:>03}, ipv6_address6 = {}", counter, s);
       let input = s.as_bytes();
@@ -523,7 +523,7 @@ mod tests {
   #[test]
   fn test_ipv6_address7() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::ipv6_address_gen7(), move |s| {
+    let prop = prop::for_all_gen(gens::ipv6_address_gen7(), move |s| {
       counter += 1;
       log::debug!("{:>03}, ipv6_address7 = {}", counter, s);
       let input = s.as_bytes();
@@ -539,7 +539,7 @@ mod tests {
   #[test]
   fn test_ipv6_address8() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::ipv6_address_gen8(), move |s| {
+    let prop = prop::for_all_gen(gens::ipv6_address_gen8(), move |s| {
       counter += 1;
       log::debug!("{:>03}, ipv6_address8 = {}", counter, s);
       let input = s.as_bytes();
@@ -555,7 +555,7 @@ mod tests {
   #[test]
   fn test_ipv6_address9() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::ipv6_address_gen9(), move |s| {
+    let prop = prop::for_all_gen(gens::ipv6_address_gen9(), move |s| {
       counter += 1;
       log::debug!("{:>03}, ipv6_address9 = {}", counter, s);
       let input = s.as_bytes();
@@ -571,7 +571,7 @@ mod tests {
   #[test]
   fn test_ipv6_address() -> Result<()> {
     let mut counter = 0;
-    let prop = prop::for_all(gens::ipv6_address_gen(), move |s| {
+    let prop = prop::for_all_gen(gens::ipv6_address_gen(), move |s| {
       counter += 1;
       log::debug!("{:>03}, ipv6_address = {}", counter, s);
       let input = s.as_bytes();
