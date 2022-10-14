@@ -1,6 +1,11 @@
 name: crond-bump-version
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows:
+      - parser-release
+    types:
+      - completed
   schedule:
     - cron: '0 0 * * *'
 jobs:
