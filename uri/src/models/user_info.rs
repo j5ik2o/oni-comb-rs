@@ -48,7 +48,7 @@ impl UserInfo {
     &self.user_name
   }
 
-  pub fn password(&self) -> Option<&String> {
-    self.password.as_ref()
+  pub fn password(&self) -> Option<&str> {
+    self.password.as_ref().map(|s| s.as_str())
   }
 }

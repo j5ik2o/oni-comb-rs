@@ -26,6 +26,7 @@ chrono = "0.4.22"
 pom = "3.2.0"
 nom = "7.1.1"
 criterion = "0.4"
+ctor = "0.1.23"
 
 [[bench]]
 name = "bench_main"
