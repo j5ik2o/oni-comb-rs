@@ -16,5 +16,5 @@ oni-comb-parser-rs = { version = "0.0.*", path = "../parser" }
 chrono = "0.4.22"
 
 [dev-dependencies]
-env_logger = "0.9.2"
+env_logger = "0.9.3"
 ctor = "0.1.26"
