@@ -1,7 +1,9 @@
+use std::rc::Rc;
+
+use chrono::{DateTime, Duration, TimeZone};
+
 use crate::cron_interval::CronInterval;
 use crate::cron_specification::Specification;
-use chrono::{DateTime, Duration, TimeZone};
-use std::rc::Rc;
 
 /// Iterator for The CronInterval.<br/>
 /// CronIntervalのためのイテレータ。
@@ -84,23 +86,26 @@ impl<Tz: TimeZone, S: Specification<DateTime<Tz>>> CronIntervalIterator<Tz, S> {
 
 #[cfg(test)]
 mod tests {
-  use super::*;
-  use crate::cron_parser::CronParser;
-  use crate::cron_specification::CronSpecification;
   use chrono::{TimeZone, Utc};
   use intervals_rs::LimitValue;
 
+  use crate::cron_expr::CronExpr;
+  use crate::cron_parser::CronParser;
+  use crate::cron_specification::CronSpecification;
+
+  use super::*;
+
   #[test]
   fn test_iterator() {
-    let dt = Utc.with_ymd_and_hms(2021, 1, 1, 1, 1, 0).unwrap();
-
-    let expr = CronParser::parse("0-59/30 0-23/2 * * *").unwrap();
-    let interval = CronInterval::new(
+    let dt: DateTime<Utc> = Utc.with_ymd_and_hms(2021, 1, 1, 1, 1, 0).unwrap();
+    let expr: CronExpr = CronParser::parse("0-59/30 0-23/2 * * *").unwrap();
+    let interval: CronInterval<Utc, CronSpecification> = CronInterval::new(
       LimitValue::Limit(dt),
       LimitValue::Limitless,
       CronSpecification::new(expr),
     );
-    let itr = interval.iter(Utc);
+    let itr: CronIntervalIterator<Utc, CronSpecification> = interval.iter(Utc);
+
     itr.take(5).for_each(|e| println!("{:?}", e));
   }
 }
