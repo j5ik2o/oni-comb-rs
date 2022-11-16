@@ -82,7 +82,7 @@ mod tests {
 
   #[test]
   fn test_anytime() {
-    let date_time = Utc.ymd(2021, 1, 1).and_hms(1, 1, 1);
+    let date_time = Utc.with_ymd_and_hms(2021, 1, 1, 1, 1, 1).unwrap();
     let evaluator = CronEvaluator::new(&date_time);
     let expr = CronExpr::CronExpr {
       mins: Box::from(CronExpr::AnyValueExpr),
@@ -97,7 +97,7 @@ mod tests {
 
   #[test]
   fn test_point_time() {
-    let date_time = Utc.ymd(2021, 1, 1).and_hms(1, 1, 1);
+    let date_time = Utc.with_ymd_and_hms(2021, 1, 1, 1, 1, 1).unwrap();
     let evaluator = CronEvaluator::new(&date_time);
     let expr = CronExpr::CronExpr {
       mins: Box::from(CronExpr::ValueExpr(1)),
@@ -114,7 +114,7 @@ mod tests {
   fn test_example() {
     let input = "* * * * *".chars().collect::<Vec<_>>();
     let expr = (instruction() - end()).parse(&input).to_result().unwrap();
-    let date_time = Utc.ymd(2021, 1, 1).and_hms(1, 1, 1);
+    let date_time = Utc.with_ymd_and_hms(2021, 1, 1, 1, 1, 1).unwrap();
     let evaluator = CronEvaluator::new(&date_time);
     let result = evaluator.eval(&expr);
     assert!(result)
