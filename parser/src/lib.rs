@@ -1,5 +1,4 @@
 #![warn(dead_code)]
-#![feature(associated_type_defaults)]
 #![allow(incomplete_features)]
 mod core;
 mod extension;

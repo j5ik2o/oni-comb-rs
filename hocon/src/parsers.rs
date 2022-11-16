@@ -28,7 +28,7 @@ fn include_method<'a>() -> Parser<'a, u8, String> {
 
 fn include_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
   (seq(b"include") * elm(b' ') * include_method() + path().surround(seq(b"(\""), seq(b"\")")))
-    .map(|(method, path)| ConfigValue::Include(ConfigIncludeValue::new(method, path)))
+    .map(|(method, path)| ConfigValue::Include(ConfigIncludeValue::new(method, format!("\"{}\"", path))))
 }
 
 fn number<'a>() -> Parser<'a, u8, (Option<&'a u8>, String, Option<String>, Option<String>)> {
@@ -377,18 +377,47 @@ mod gens {
   pub fn comment_space_gen() -> Gen<String> {
     Gens::frequency([(1, comment_gen()), (1, space_gen())])
   }
+
+  pub fn include_method_gen() -> Gen<String> {
+    Gens::frequency_values([(1, "file".to_string()), (1, "url".to_string())])
+  }
+
+  pub fn include_config_value_gen() -> Gen<String> {
+    include_method_gen().flat_map(|method| Gens::pure(format!("include {}(\"{}\")", method, "abc")))
+  }
+
+  pub fn path_element_gen() -> Gen<String> {
+    Gens::choose_u32(1, 128).flat_map(|n| {
+      Gens::list_of_n(
+        n as usize,
+        Gens::frequency([
+          (1, Gens::pure('-')),
+          (1, Gens::pure('_')),
+          (4, Gens::choose_char('a', 'z')),
+          (4, Gens::choose_char('A', 'Z')),
+        ]),
+      )
+      .map(|chars| chars.iter().collect::<String>())
+    })
+  }
+
+  pub fn path_gen() -> Gen<String> {
+    Gens::choose_u32(1, 128)
+      .flat_map(|n| Gens::list_of_n(n as usize, path_element_gen()).map(|elements| elements.join(".")))
+  }
 }
 
 #[cfg(test)]
 mod tests {
   use super::*;
-  use crate::parsers::gens::{comment_gen, comment_space_gen, space_gen};
+  use crate::parsers::gens::*;
   use anyhow::Result;
   use prop_check_rs::prop;
-  use prop_check_rs::prop::TestCases;
+  use prop_check_rs::prop::{MaxSize, TestCases};
   use prop_check_rs::rng::RNG;
   use std::env;
 
+  const MAX_SIZE: MaxSize = 5;
   const TEST_COUNT: TestCases = 100;
 
   #[ctor::ctor]
@@ -413,35 +442,64 @@ mod tests {
       assert_eq!(comment.to_string(), input);
       true
     });
-    prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
+    prop::test_with_prop(prop, MAX_SIZE, TEST_COUNT, new_rng())
   }
 
   #[test]
   fn space_test() -> Result<()> {
-    // let mut counter = 0;
     let prop = prop::for_all_gen(space_gen(), move |input| {
-      // counter += 1;
-      // log::debug!("{:>03}, comment:string = {}", counter, input);
       let input_bytes = input.as_bytes();
       let result = (space() - end()).parse(input_bytes).to_result();
       let comment = std::str::from_utf8(result.unwrap()).unwrap();
       assert_eq!(comment.to_string(), input);
       true
     });
-    prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
+    prop::test_with_prop(prop, MAX_SIZE, TEST_COUNT, new_rng())
   }
 
   #[test]
   fn space_or_comment_test() -> Result<()> {
-    // let mut counter = 0;
     let prop = prop::for_all_gen(comment_space_gen(), move |input| {
-      // counter += 1;
-      // log::debug!("{:>03}, comment:string = {}", counter, input);
       let input_bytes = input.as_bytes();
       let result = (space_or_comment() - end()).parse(input_bytes).to_result();
       assert!(result.is_ok());
       true
     });
+    prop::test_with_prop(prop, MAX_SIZE, TEST_COUNT, new_rng())
+  }
+
+  #[test]
+  fn include_method_test() -> Result<()> {
+    let prop = prop::for_all_gen(include_method_gen(), move |input| {
+      let input_bytes = input.as_bytes();
+      let result = (include_method() - end()).parse(input_bytes).to_result();
+      assert_eq!(result.unwrap().to_string(), input);
+      true
+    });
     prop::test_with_prop(prop, 5, TEST_COUNT, new_rng())
+  }
+
+  #[test]
+  fn include_config_value_test() -> Result<()> {
+    let prop = prop::for_all_gen(include_config_value_gen(), move |input| {
+      log::debug!("include_config_value:string = {}", input);
+      let input_bytes = input.as_bytes();
+      let result = (include_config_value() - end()).parse(input_bytes).to_result();
+      assert_eq!(result.unwrap().to_string(), input);
+      true
+    });
+    prop::test_with_prop(prop, MAX_SIZE, TEST_COUNT, new_rng())
+  }
+
+  #[test]
+  fn path_test() -> Result<()> {
+    let prop = prop::for_all_gen(path_gen(), move |input| {
+      log::debug!("path:string = {}", input);
+      let input_bytes = input.as_bytes();
+      let result = (path() - end()).parse(input_bytes).to_result();
+      assert_eq!(result.unwrap().to_string(), input);
+      true
+    });
+    prop::test_with_prop(prop, MAX_SIZE, TEST_COUNT, new_rng())
   }
 }
