@@ -1,8 +1,8 @@
-use crate::expr::Expr;
-use crate::expr::Expr::*;
+use crate::cron_expr::CronExpr;
+use crate::cron_expr::CronExpr::*;
 use oni_comb_parser_rs::prelude::*;
 
-fn min_digit<'a>() -> Parser<'a, char, Expr> {
+fn min_digit<'a>() -> Parser<'a, char, CronExpr> {
   ((elm_in('1', '5') + elm_digit())
     .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
     .attempt()
@@ -11,7 +11,7 @@ fn min_digit<'a>() -> Parser<'a, char, Expr> {
   .cache()
 }
 
-fn hour_digit<'a>() -> Parser<'a, char, Expr> {
+fn hour_digit<'a>() -> Parser<'a, char, CronExpr> {
   ((elm('2') + elm_in('0', '3'))
     .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
     .attempt()
@@ -23,7 +23,7 @@ fn hour_digit<'a>() -> Parser<'a, char, Expr> {
   .cache()
 }
 
-fn day_digit<'a>() -> Parser<'a, char, Expr> {
+fn day_digit<'a>() -> Parser<'a, char, CronExpr> {
   ((elm('3') + elm_of("01"))
     .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
     .attempt()
@@ -35,7 +35,7 @@ fn day_digit<'a>() -> Parser<'a, char, Expr> {
   .cache()
 }
 
-fn month_digit<'a>() -> Parser<'a, char, Expr> {
+fn month_digit<'a>() -> Parser<'a, char, CronExpr> {
   ((elm('1') + elm_of("012"))
     .map(|(e1, e2)| ValueExpr((e1 as u8 - 48) * 10 + e2 as u8 - 48))
     .attempt()
@@ -44,7 +44,7 @@ fn month_digit<'a>() -> Parser<'a, char, Expr> {
   .cache()
 }
 
-fn day_of_week_digit<'a>() -> Parser<'a, char, Expr> {
+fn day_of_week_digit<'a>() -> Parser<'a, char, CronExpr> {
   (tag("SUN").map(|_| ValueExpr(1)).attempt()
     | tag("MON").map(|_| ValueExpr(2)).attempt()
     | tag("TUE").map(|_| ValueExpr(3)).attempt()
@@ -56,19 +56,19 @@ fn day_of_week_digit<'a>() -> Parser<'a, char, Expr> {
   .cache()
 }
 
-fn day_of_week_text<'a>() -> Parser<'a, char, Expr> {
+fn day_of_week_text<'a>() -> Parser<'a, char, CronExpr> {
   elm_in('1', '7').map(|e| ValueExpr(e as u8 - 48)).cache()
 }
 
-fn asterisk<'a>() -> Parser<'a, char, Expr> {
+fn asterisk<'a>() -> Parser<'a, char, CronExpr> {
   elm('*').map(|_| AnyValueExpr).cache()
 }
 
-fn per(p: Parser<char, Expr>) -> Parser<char, Expr> {
+fn per(p: Parser<char, CronExpr>) -> Parser<char, CronExpr> {
   elm('/') * p
 }
 
-fn asterisk_per(p: Parser<char, Expr>) -> Parser<char, Expr> {
+fn asterisk_per(p: Parser<char, CronExpr>) -> Parser<char, CronExpr> {
   (asterisk() + per(p))
     .map(|(d, op)| PerExpr {
       digit: Box::from(d.clone()),
@@ -78,14 +78,14 @@ fn asterisk_per(p: Parser<char, Expr>) -> Parser<char, Expr> {
     .cache()
 }
 
-fn range_per(p: Parser<char, Expr>) -> Parser<char, Expr> {
+fn range_per(p: Parser<char, CronExpr>) -> Parser<char, CronExpr> {
   per(p).opt().map(|e| match e {
     None => NoOp,
     Some(s) => s,
   })
 }
 
-fn list(p: Parser<char, Expr>) -> Parser<char, Expr> {
+fn list(p: Parser<char, CronExpr>) -> Parser<char, CronExpr> {
   p.of_many1_sep(elm(','))
     .map(|e| match e {
       e if e.len() == 1 => e.get(0).unwrap().clone(),
@@ -112,14 +112,14 @@ macro_rules! digit_instruction {
   };
 }
 
-pub(crate) fn instruction<'a>() -> Parser<'a, char, Expr> {
+pub(crate) fn instruction<'a>() -> Parser<'a, char, CronExpr> {
   (digit_instruction!(min_digit()) - elm(' ') + digit_instruction!(hour_digit()) - elm(' ')
     + digit_instruction!(day_digit())
     - elm(' ')
     + digit_instruction!(month_digit())
     - elm(' ')
     + digit_instruction!(day_of_week_text() | day_of_week_digit()))
-  .map(|((((mins, hours), days), months), day_of_weeks)| CronExpr {
+  .map(|((((mins, hours), days), months), day_of_weeks)| CronExpr::CronExpr {
     mins: Box::from(mins),
     hours: Box::from(hours),
     days: Box::from(days),
@@ -128,18 +128,22 @@ pub(crate) fn instruction<'a>() -> Parser<'a, char, Expr> {
   })
 }
 
-pub fn parse<'a>(input: &str) -> Result<Expr, String> {
-  let input = input.chars().collect::<Vec<_>>();
-  let x = (instruction() - end()).parse(&input).to_result();
-  x.map_err(|e| e.to_string())
+pub struct CronParser;
+
+impl CronParser {
+  pub fn parse<'a>(input: &str) -> Result<CronExpr, String> {
+    let input = input.chars().collect::<Vec<_>>();
+    let x = (instruction() - end()).parse(&input).to_result();
+    x.map_err(|e| e.to_string())
+  }
 }
 
 #[cfg(test)]
 mod tests {
   use super::*;
 
-  use crate::expr::Expr;
-  use crate::expr::Expr::{AnyValueExpr, PerExpr, RangeExpr, ValueExpr};
+  use crate::cron_expr::CronExpr;
+  use crate::cron_expr::CronExpr::{AnyValueExpr, PerExpr, RangeExpr, ValueExpr};
 
   use oni_comb_parser_rs::prelude::end;
   use std::env;
@@ -152,10 +156,10 @@ mod tests {
 
   #[test]
   fn test_instruction_1() {
-    let result = parse("* * * * *").unwrap();
+    let result = CronParser::parse("* * * * *").unwrap();
     assert_eq!(
       result,
-      CronExpr {
+      CronExpr::CronExpr {
         mins: Box::from(AnyValueExpr),
         hours: Box::from(AnyValueExpr),
         days: Box::from(AnyValueExpr),
@@ -167,10 +171,10 @@ mod tests {
 
   #[test]
   fn test_instruction_2() {
-    let result = parse("1 1 1 1 1").unwrap();
+    let result = CronParser::parse("1 1 1 1 1").unwrap();
     assert_eq!(
       result,
-      CronExpr {
+      CronExpr::CronExpr {
         mins: Box::from(ValueExpr(1)),
         hours: Box::from(ValueExpr(1)),
         days: Box::from(ValueExpr(1)),
@@ -315,12 +319,12 @@ mod tests {
       if n < 10 {
         let s = &n.to_string();
         let input = s.chars().collect::<Vec<_>>();
-        let result: Expr = (hour_digit() - end()).debug("test").parse(&input).to_result().unwrap();
+        let result: CronExpr = (hour_digit() - end()).debug("test").parse(&input).to_result().unwrap();
         assert_eq!(result, ValueExpr(n));
       }
       let s: &str = &format!("{:<02}", n);
       let input = s.chars().collect::<Vec<_>>();
-      let result: Expr = (hour_digit() - end()).parse(&input).to_result().unwrap();
+      let result: CronExpr = (hour_digit() - end()).parse(&input).to_result().unwrap();
       assert_eq!(result, ValueExpr(n));
     }
     let input = "24".chars().collect::<Vec<_>>();
@@ -334,12 +338,12 @@ mod tests {
       if n < 10 {
         let s: &str = &n.to_string();
         let input = s.chars().collect::<Vec<_>>();
-        let result: Expr = (day_digit() - end()).parse(&input).to_result().unwrap();
+        let result: CronExpr = (day_digit() - end()).parse(&input).to_result().unwrap();
         assert_eq!(result, ValueExpr(n));
       }
       let s: &str = &format!("{:<02}", n);
       let input = s.chars().collect::<Vec<_>>();
-      let result: Expr = (day_digit() - end()).parse(&input).to_result().unwrap();
+      let result: CronExpr = (day_digit() - end()).parse(&input).to_result().unwrap();
       assert_eq!(result, ValueExpr(n));
     }
     let input = "32".chars().collect::<Vec<_>>();
@@ -353,12 +357,12 @@ mod tests {
       if n < 10 {
         let s: &str = &n.to_string();
         let input = s.chars().collect::<Vec<_>>();
-        let result: Expr = (month_digit() - end()).parse(&input).to_result().unwrap();
+        let result: CronExpr = (month_digit() - end()).parse(&input).to_result().unwrap();
         assert_eq!(result, ValueExpr(n));
       }
       let s: &str = &format!("{:<02}", n);
       let input = s.chars().collect::<Vec<_>>();
-      let result: Expr = (month_digit() - end()).parse(&input).to_result().unwrap();
+      let result: CronExpr = (month_digit() - end()).parse(&input).to_result().unwrap();
       assert_eq!(result, ValueExpr(n));
     }
     let input = "13".chars().collect::<Vec<_>>();
