@@ -1,6 +1,5 @@
 use crate::cron_interval::CronInterval;
 use crate::cron_specification::Specification;
-use crate::{CronInterval, Specification};
 use chrono::{DateTime, Duration, TimeZone};
 use std::rc::Rc;
 
@@ -85,12 +84,11 @@ impl<Tz: TimeZone, S: Specification<DateTime<Tz>>> CronIntervalIterator<Tz, S> {
 
 #[cfg(test)]
 mod tests {
+  use super::*;
+  use crate::cron_parser::CronParser;
+  use crate::cron_specification::CronSpecification;
   use chrono::{TimeZone, Utc};
   use intervals_rs::LimitValue;
-
-  use crate::cron_interval::CronInterval;
-  use crate::cron_specification::CronSpecification;
-  use crate::{CronInterval, CronParser, CronSpecification};
 
   #[test]
   fn test_iterator() {

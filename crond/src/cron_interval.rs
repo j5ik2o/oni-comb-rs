@@ -6,7 +6,6 @@ use intervals_rs::{Interval, LimitValue};
 
 use crate::cron_interval_iterator::CronIntervalIterator;
 use crate::cron_specification::Specification;
-use crate::{CronIntervalIterator, Specification};
 
 /// A structure representing an interval of CROND date and time.<br/>
 /// CROND日時の区間を表す構造体。

@@ -1,21 +1,20 @@
 use std::marker::PhantomData;
 
-use anyhow::Result;
 use chrono::{DateTime, TimeZone};
 use intervals_rs::LimitValue;
 
+use crate::cron_expr::CronExpr;
 use crate::cron_interval::CronInterval;
 use crate::cron_interval_iterator::CronIntervalIterator;
+use crate::cron_parser::CronParser;
 use crate::cron_specification::CronSpecification;
-use crate::expr::Expr;
-use crate::{CronInterval, CronIntervalIterator, CronParser, CronSpecification, Expr};
 
 /// Facade that returns a CronInterval or CronIntervalIterator from a CROND string.<br/>
 /// CROND文字列からCronIntervalやCronIntervalIteratorを返すFacade。
 pub struct CronSchedule<Tz>
 where
   Tz: TimeZone, {
-  expr: Expr,
+  expr: CronExpr,
   phantom: PhantomData<Tz>,
 }
 
@@ -35,7 +34,7 @@ impl<Tz: TimeZone> CronSchedule<Tz> {
   /// * Ok
   ///   - If CrondParser::parse succeeds
   ///   - CrondParser::parseに成功した場合
-  pub fn new(crond_string: &str) -> anyhow::Result<Self> {
+  pub fn new(crond_string: &str) -> Result<Self, String> {
     Ok(Self {
       expr: CronParser::parse(crond_string)?,
       phantom: PhantomData,

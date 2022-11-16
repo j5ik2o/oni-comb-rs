@@ -1,7 +1,7 @@
+use crate::cron_evaluator::CronEvaluator;
 use chrono::{DateTime, TimeZone};
 
-use crate::expr::Expr;
-use crate::{CronEvaluator, Expr};
+use crate::cron_expr::CronExpr;
 
 pub trait Specification<T>: Clone {
   fn is_satisfied_by(&self, arg: &T) -> bool;
@@ -9,11 +9,11 @@ pub trait Specification<T>: Clone {
 
 #[derive(Clone)]
 pub struct CronSpecification {
-  expr: Expr,
+  expr: CronExpr,
 }
 
 impl CronSpecification {
-  pub fn new(expr: Expr) -> Self {
+  pub fn new(expr: CronExpr) -> Self {
     Self { expr }
   }
 }
