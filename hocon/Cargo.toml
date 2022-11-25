@@ -15,7 +15,7 @@ repository = "https://github.com/j5ik2o/oni-comb-rs"
 oni-comb-parser-rs = { version = "0.0.*", path = "../parser" }
 log = "0.4.17"
 envy = "0.4"
-rust_decimal = "1.26"
+rust_decimal = "1.27"
 rust_decimal_macros = "1.27"
 chrono = "0.4.23"
 anyhow = "1.0.66"
