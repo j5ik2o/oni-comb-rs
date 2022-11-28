@@ -29,10 +29,10 @@ impl<Tz: TimeZone> CronSchedule<Tz> {
   /// # Retun values(戻り値)
   ///
   /// * Err:
-  ///   - If CrondParser::parse fails
+  ///   - if CrondParser::parse fails
   ///   - CrondParser::parseに失敗した場合
   /// * Ok
-  ///   - If CrondParser::parse succeeds
+  ///   - if CrondParser::parse succeeds
   ///   - CrondParser::parseに成功した場合
   pub fn new(crond_string: &str) -> Result<Self, String> {
     Ok(Self {
@@ -66,9 +66,10 @@ mod tests {
   fn test_iterator() {
     let dt: chrono::DateTime<Utc> = Utc.with_ymd_and_hms(2021, 1, 1, 1, 1, 0).unwrap();
 
-    let itr = CronSchedule::new("0-59/30 0-23/2 * * *").unwrap().upcoming(dt);
+    let itr: CronIntervalIterator<Utc, CronSpecification> =
+      CronSchedule::new("0-59/30 0-23/2 * * *").unwrap().upcoming(dt);
 
-    let dt_vec = itr.take(5).collect::<Vec<_>>();
+    let dt_vec: Vec<DateTime<Utc>> = itr.take(5).collect::<Vec<_>>();
     assert_eq!(dt_vec[0], Utc.with_ymd_and_hms(2021, 1, 1, 2, 0, 0).unwrap());
     assert_eq!(dt_vec[1], Utc.with_ymd_and_hms(2021, 1, 1, 2, 30, 0).unwrap());
     assert_eq!(dt_vec[2], Utc.with_ymd_and_hms(2021, 1, 1, 4, 0, 0).unwrap());
