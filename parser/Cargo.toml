@@ -24,7 +24,7 @@ prop-check-rs = "0.0.76"
 rust_decimal = "1.27.0"
 chrono = "0.4.23"
 pom = "3.2.0"
-nom = "7.1.1"
+nom = "7.1.2"
 criterion = "0.4"
 ctor = "0.1.26"
 
