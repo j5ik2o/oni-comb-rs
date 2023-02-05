@@ -18,7 +18,7 @@ log = "0.4.17"
 regex = "1.7"
 
 [dev-dependencies]
-anyhow = "1.0.68"
+anyhow = "1.0.69"
 env_logger = "0.10.0"
 prop-check-rs = "0.0.110"
 rust_decimal = "1.28.1"
