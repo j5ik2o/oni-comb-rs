@@ -15,6 +15,7 @@ use criterion::*;
 use crate::nom_json::nom_parse_json;
 use crate::oni_comb_json::oni_comb_parse_json;
 use crate::pom_json::pom_parse_json;
+use pprof::criterion::{Output, PProfProfiler};
 
 mod nom_json;
 mod oni_comb_json;
@@ -31,13 +32,22 @@ fn criterion_benchmark(c: &mut Criterion) {
   group.bench_with_input(BenchmarkId::new("pom", "bool"), data, |b, i| {
     b.iter(|| pom_parse_json(i))
   });
-  group.bench_with_input(BenchmarkId::new("oni-combi-rs", "bool"), data, |b, i| {
+  group.bench_with_input(BenchmarkId::new("oni-comb-rs", "bool"), data, |b, i| {
     b.iter(|| oni_comb_parse_json(i))
   });
   group.finish();
 }
 
-criterion_group!(benches, criterion_benchmark);
+// criterion_group! {
+// name = benches;
+// config = Criterion::default().with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
+// targets = criterion_benchmark
+// }
+
+criterion_group! {
+  benches,
+  criterion_benchmark
+}
 
 criterion_main! {
 benches,

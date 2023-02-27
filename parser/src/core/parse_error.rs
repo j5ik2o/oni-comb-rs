@@ -27,6 +27,7 @@ pub enum ParseError<'a, I> {
     inner: Box<ParseError<'a, I>>,
     message: String,
   },
+  /// カスタムエラー
   Custom {
     offset: usize,
     inner: Option<Box<ParseError<'a, I>>>,
