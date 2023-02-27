@@ -21,33 +21,37 @@ mod nom_json;
 mod oni_comb_json;
 mod pom_json;
 
-fn criterion_benchmark(c: &mut Criterion) {
-  let mut group = c.benchmark_group("json");
+fn criterion_benchmark(criterion: &mut Criterion) {
+  let mut group = criterion.benchmark_group("json");
   // let data = r#"{ "a" : 42, "b" : [ "x", "y", 12 ], "c": { "hello" : "world" } }"#;
   let data = r#"true"#;
 
-  group.bench_with_input(BenchmarkId::new("nom", "bool"), data, |b, i| {
-    b.iter(|| nom_parse_json(i))
+  group.bench_function(BenchmarkId::new("oni-comb-rs", "bool"), |b| {
+    b.iter(|| oni_comb_parse_json(data))
   });
-  group.bench_with_input(BenchmarkId::new("pom", "bool"), data, |b, i| {
-    b.iter(|| pom_parse_json(i))
-  });
-  group.bench_with_input(BenchmarkId::new("oni-comb-rs", "bool"), data, |b, i| {
-    b.iter(|| oni_comb_parse_json(i))
-  });
+
+  // group.bench_with_input(BenchmarkId::new("nom", "bool"), data, |b, i| {
+  //   b.iter(|| nom_parse_json(i))
+  // });
+  // group.bench_with_input(BenchmarkId::new("pom", "bool"), data, |b, i| {
+  //   b.iter(|| pom_parse_json(i))
+  // });
+  // group.bench_with_input(BenchmarkId::new("oni-comb-rs", "bool"), data, |b, i| {
+  //   b.iter(|| oni_comb_parse_json(i))
+  // });
   group.finish();
 }
 
-// criterion_group! {
-// name = benches;
-// config = Criterion::default().with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
-// targets = criterion_benchmark
-// }
-
 criterion_group! {
-  benches,
-  criterion_benchmark
+name = benches;
+config = Criterion::default().with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
+targets = criterion_benchmark
 }
+
+// criterion_group! {
+//   benches,
+//   criterion_benchmark
+// }
 
 criterion_main! {
 benches,
