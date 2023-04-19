@@ -1,6 +1,6 @@
 [package]
 name = "oni-comb-parser-rs"
-version = "0.0.69"
+version = "0.0.70"
 edition = "2021"
 description = "A Rust crate for parser combinators"
 license = "MIT OR Apache-2.0"
