@@ -1,6 +1,6 @@
 [package]
 name = "oni-comb-uri-rs"
-version = "0.2.80"
+version = "0.2.81"
 edition = "2021"
 description = "A Rust crate for uri parser"
 license = "MIT OR Apache-2.0"
