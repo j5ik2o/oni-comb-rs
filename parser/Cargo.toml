@@ -20,7 +20,7 @@ regex = "1.9"
 [dev-dependencies]
 anyhow = "1.0.72"
 env_logger = "0.10.0"
-prop-check-rs = "0.0.291"
+prop-check-rs = "0.0.292"
 rust_decimal = "1.31.0"
 chrono = "0.4.26"
 pom = "3.3.0"
