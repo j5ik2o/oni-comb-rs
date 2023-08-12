@@ -14,7 +14,7 @@ repository = "j5ik2o/oni-comb-rs"
 workflow = "Rust"
 
 [dependencies]
-log = "0.4.19"
+log = "0.4.20"
 regex = "1.9"
 
 [dev-dependencies]
