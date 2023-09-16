@@ -10,7 +10,6 @@ A Rust crate for LL(k) parser combinators.
 [![crates.io](https://img.shields.io/crates/v/oni-comb-parser-rs.svg)](https://crates.io/crates/oni-comb-parser-rs)
 [![docs.rs](https://docs.rs/oni-comb-parser-rs/badge.svg)](https://docs.rs/oni-comb-parser-rs)
 [![dependency status](https://deps.rs/repo/github/j5ik2o/oni-comb-parser-rs/status.svg)](https://deps.rs/repo/github/j5ik2o/oni-comb-parser-rs)
-[![tokei](https://tokei.rs/b1/github/j5ik2o/oni-comb-rs)](https://github.com/XAMPPRocky/tokei)
 
 ## Main project
 
