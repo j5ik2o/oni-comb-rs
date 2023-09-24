@@ -12,5 +12,7 @@
       "matchDepTypes": ["devDependencies"],
       "automerge": true
     }
-  ]
+  ],
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 5
 }
