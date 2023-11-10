@@ -18,5 +18,5 @@ chrono = "0.4.31"
 anyhow = "1.0.75"
 
 [dev-dependencies]
-env_logger = "0.10.0"
+env_logger = "0.10.1"
 ctor = "0.2.5"
