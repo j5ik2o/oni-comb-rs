@@ -386,7 +386,7 @@ mod tests {
 
   fn new_rng() -> RNG {
     let mut rand = rand::thread_rng();
-    let rng = RNG::new_with_seed(rand.gen());
+    let rng = RNG::new().with_seed(rand.gen());
     rng
   }
 
