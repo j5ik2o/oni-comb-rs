@@ -23,7 +23,7 @@ anyhow = "1.0.79"
 [dev-dependencies]
 ctor = "0.2.6"
 rand = "0.8.5"
-env_logger = "0.10.1"
+env_logger = "0.10.2"
 prop-check-rs = "0.0.457"
 anyhow = "1.0.79"
 serial_test = "3.0.0"
