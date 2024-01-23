@@ -17,7 +17,7 @@ log = "0.4.20"
 envy = "0.4"
 rust_decimal = "1.33"
 rust_decimal_macros = "1.33"
-chrono = "0.4.31"
+chrono = "0.4.32"
 anyhow = "1.0.79"
 
 [dev-dependencies]

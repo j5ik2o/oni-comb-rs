@@ -22,7 +22,7 @@ anyhow = "1.0.79"
 env_logger = "0.11.0"
 prop-check-rs = "0.0.462"
 rust_decimal = "1.33.1"
-chrono = "0.4.31"
+chrono = "0.4.32"
 pom = "3.3.0"
 nom = "7.1.3"
 criterion = { version = "0.5.1", features = [ "html_reports" ]}
