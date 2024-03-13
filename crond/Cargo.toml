@@ -1,6 +1,6 @@
 [package]
 name = "oni-comb-crond-rs"
-version = "0.0.43"
+version = "0.0.44"
 edition = "2021"
 description = "A Rust crate for CROND parser"
 license = "MIT OR Apache-2.0"
