@@ -1,6 +1,6 @@
 [package]
 name = "oni-comb-hocon-rs"
-version = "0.1.412"
+version = "0.1.413"
 edition = "2021"
 description = "A Rust crate for HOCON parser"
 license = "MIT OR Apache-2.0"
