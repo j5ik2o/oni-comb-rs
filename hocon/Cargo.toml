@@ -16,7 +16,7 @@ oni-comb-parser-rs = { version = "0.0.*", path = "../parser" }
 log = "0.4.21"
 envy = "0.4.2"
 rust_decimal = "1.35"
-rust_decimal_macros = "1.34"
+rust_decimal_macros = "1.34.2"
 chrono = "0.4.38"
 anyhow = "1.0.82"
 
