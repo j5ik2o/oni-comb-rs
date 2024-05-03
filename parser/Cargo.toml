@@ -15,7 +15,7 @@ workflow = "Rust"
 
 [dependencies]
 log = "0.4.21"
-regex = "1.10"
+regex = "1.10.4"
 
 [dev-dependencies]
 anyhow = "1.0.82"
