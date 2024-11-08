@@ -27,7 +27,7 @@ pom = "3.4.0"
 nom = "7.1.3"
 criterion = { version = "0.5.1", features = [ "html_reports" ]}
 ctor = "0.2.8"
-pprof = { version = "0.13", features = ["flamegraph", "criterion"] }
+pprof = { version = "0.14", features = ["flamegraph", "criterion"] }
 
 [[bench]]
 name = "bench_main"
