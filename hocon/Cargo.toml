@@ -21,7 +21,7 @@ chrono = "0.4.38"
 anyhow = "1.0.82"
 
 [dev-dependencies]
-ctor = "0.2.8"
+ctor = "0.3.0"
 rand = "0.9.0"
 env_logger = "0.11.3"
 prop-check-rs = "0.0.831"
