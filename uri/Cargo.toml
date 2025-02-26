@@ -17,7 +17,7 @@ oni-comb-parser-rs = { version = "0.0.*", path = "../parser" }
 [dev-dependencies]
 log = "0.4.21"
 env_logger = "0.11.3"
-ctor = "0.3.0"
+ctor = "0.4.0"
 rand = "0.9.0"
 prop-check-rs = "0.0.831"
 anyhow = "1.0.82"
