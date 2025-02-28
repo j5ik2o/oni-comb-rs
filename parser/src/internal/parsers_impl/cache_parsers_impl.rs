@@ -3,6 +3,8 @@ use crate::extension::parsers::CacheParsers;
 use crate::internal::ParsersImpl;
 use std::cell::RefCell;
 
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 use std::collections::HashMap;
 use std::fmt::Debug;
 
@@ -11,20 +13,32 @@ impl CacheParsers for ParsersImpl {
   where
     I: Clone + 'a,
     A: Clone + Debug + 'a, {
-    let caches = RefCell::new(HashMap::new());
+    // 高速なハッシュマップを使用
+    let caches = RefCell::new(HashMap::with_capacity(32)); // 初期容量を指定
+    
+    // パーサーのメソッドポインタのハッシュ値を事前に計算
+    let parser_method_hash = {
+      let mut hasher = DefaultHasher::new();
+      format!("{:p}", &parser.method).hash(&mut hasher);
+      hasher.finish()
+    };
+    
     Parser::new(move |parser_state| {
-      let key = format!(
-        "{:p}:{}:{:p}",
-        parser_state,
-        parser_state.last_offset().unwrap_or(0),
-        &parser.method
-      );
-      let parse_result = caches
-        .borrow_mut()
-        .entry(key)
-        .or_insert_with(|| parser.run(parser_state))
-        .clone();
-      parse_result
+      // キーとしてタプルを使用（文字列フォーマットを避ける）
+      let offset = parser_state.next_offset();
+      let key = (offset, parser_method_hash);
+      
+      // キャッシュから結果を取得または計算
+      let mut cache_ref = caches.borrow_mut();
+      if let Some(result) = cache_ref.get(&key) {
+        // キャッシュヒット
+        result.clone()
+      } else {
+        // キャッシュミス - 結果を計算してキャッシュに保存
+        let result = parser.run(parser_state);
+        cache_ref.insert(key, result.clone());
+        result
+      }
     })
   }
 }
