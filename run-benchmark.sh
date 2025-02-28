@@ -1,5 +1,10 @@
 #!/usr/bin/env sh
 
+set -e
+
+export CLICOLOR_FORCE=1
+export FORCE_COLOR=1
+
 # ベンチマークの実行と結果の保存
 echo "JSONパーサーのベンチマークを実行します..."
 
