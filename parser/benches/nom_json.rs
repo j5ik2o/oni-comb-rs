@@ -1,15 +1,13 @@
-// #![cfg(feature = "alloc")]
-
 use nom::{
   branch::alt,
   bytes::complete::{escaped, tag, take_while},
-  character::complete::{char, one_of},
+  character::complete::{alphanumeric1 as alphanumeric, char, one_of},
   combinator::{cut, map, opt, value},
   error::{context, ContextError, ErrorKind, ParseError},
   multi::separated_list0,
   number::complete::double,
   sequence::{delimited, preceded, separated_pair, terminated},
-  IResult,
+  Err, IResult, Parser,
 };
 use std::collections::HashMap;
 use std::str;
@@ -73,11 +71,11 @@ fn boolean<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, bool,
 
   // `alt` combines the two parsers. It returns the result of the first
   // successful parser, or an error
-  alt((parse_true, parse_false))(input)
+  alt((parse_true, parse_false)).parse(input)
 }
 
 fn null<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, (), E> {
-  value((), tag("null"))(input)
+  value((), tag("null")).parse(input)
 }
 
 /// this parser combines the previous `parse_str` parser, that recognizes the
@@ -91,15 +89,23 @@ fn null<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, (), E> {
 /// parsing the string
 /// - `context` lets you add a static string to provide more information in the
 /// error chain (to indicate which parser had an error)
-fn string<'a, E: ParseError<&'a str> + ContextError<&'a str>>(i: &'a str) -> IResult<&'a str, &'a str, E> {
-  context("string", preceded(char('\"'), cut(terminated(parse_str, char('\"')))))(i)
+fn string<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
+  i: &'a str,
+) -> IResult<&'a str, &'a str, E> {
+  context(
+    "string",
+    preceded(char('\"'), cut(terminated(parse_str, char('\"')))),
+  )
+      .parse(i)
 }
 
 /// some combinators, like `separated_list0` or `many0`, will call a parser repeatedly,
 /// accumulating results in a `Vec`, until it encounters an error.
 /// If you want more control on the parser application, check out the `iterator`
 /// combinator (cf `examples/iterator.rs`)
-fn array<'a, E: ParseError<&'a str> + ContextError<&'a str>>(i: &'a str) -> IResult<&'a str, Vec<JsonValue>, E> {
+fn array<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
+  i: &'a str,
+) -> IResult<&'a str, Vec<JsonValue>, E> {
   context(
     "array",
     preceded(
@@ -109,13 +115,19 @@ fn array<'a, E: ParseError<&'a str> + ContextError<&'a str>>(i: &'a str) -> IRes
         preceded(sp, char(']')),
       )),
     ),
-  )(i)
+  )
+      .parse(i)
 }
 
 fn key_value<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
   i: &'a str,
 ) -> IResult<&'a str, (&'a str, JsonValue), E> {
-  separated_pair(preceded(sp, string), cut(preceded(sp, char(':'))), json_value)(i)
+  separated_pair(
+    preceded(sp, string),
+    cut(preceded(sp, char(':'))),
+    json_value,
+  )
+      .parse(i)
 }
 
 fn hash<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
@@ -126,17 +138,26 @@ fn hash<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
     preceded(
       char('{'),
       cut(terminated(
-        map(separated_list0(preceded(sp, char(',')), key_value), |tuple_vec| {
-          tuple_vec.into_iter().map(|(k, v)| (String::from(k), v)).collect()
-        }),
+        map(
+          separated_list0(preceded(sp, char(',')), key_value),
+          |tuple_vec| {
+            tuple_vec
+                .into_iter()
+                .map(|(k, v)| (String::from(k), v))
+                .collect()
+          },
+        ),
         preceded(sp, char('}')),
       )),
     ),
-  )(i)
+  )
+      .parse(i)
 }
 
 /// here, we apply the space parser before trying to parse a value
-fn json_value<'a, E: ParseError<&'a str> + ContextError<&'a str>>(i: &'a str) -> IResult<&'a str, JsonValue, E> {
+fn json_value<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
+  i: &'a str,
+) -> IResult<&'a str, JsonValue, E> {
   preceded(
     sp,
     alt((
@@ -147,26 +168,33 @@ fn json_value<'a, E: ParseError<&'a str> + ContextError<&'a str>>(i: &'a str) ->
       map(boolean, JsonValue::Boolean),
       map(null, |_| JsonValue::Null),
     )),
-  )(i)
+  )
+      .parse(i)
 }
 
 /// the root element of a JSON parser is either an object or an array
-/// Note: This function is currently not used in the benchmarks
-/// but kept for reference.
-// fn root<'a, E: ParseError<&'a str> + ContextError<&'a str>>(i: &'a str) -> IResult<&'a str, JsonValue, E> {
-//   delimited(
-//     sp,
-//     alt((
-//       map(hash, JsonValue::Object),
-//       map(array, JsonValue::Array),
-//       map(null, |_| JsonValue::Null),
-//     )),
-//     opt(sp),
-//   )(i)
-// }
+fn root<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
+  i: &'a str,
+) -> IResult<&'a str, JsonValue, E> {
+  delimited(
+    sp,
+    alt((
+      map(hash, JsonValue::Object),
+      map(array, JsonValue::Array),
+      map(null, |_| JsonValue::Null),
+    )),
+    opt(sp),
+  )
+      .parse(i)
+}
 
 pub fn nom_parse_json(s: &str) {
-  let ir = json_value::<(&str, ErrorKind)>(s);
-  let _ = ir.unwrap().1;
-  //  println!("{:?}", r);
+  match json_value::<(&str, ErrorKind)>(s) {
+    Ok((_, _)) => {
+      // パース成功
+    },
+    Err(_) => {
+      // パース失敗（ベンチマークでは無視）
+    }
+  }
 }
