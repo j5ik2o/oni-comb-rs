@@ -60,14 +60,14 @@ fn get_test_data() -> Vec<(&'static str, &'static str)> {
 
 fn criterion_benchmark(criterion: &mut Criterion) {
   let mut group = criterion.benchmark_group("json");
-  
+
   // 各テストデータに対してベンチマークを実行
   for (name, data) in get_test_data() {
     group.bench_with_input(BenchmarkId::new("oni-comb-rs", name), data, |b, i| {
       b.iter(|| oni_comb_parse_json(i))
     });
   }
-  
+
   group.finish();
 }
 
