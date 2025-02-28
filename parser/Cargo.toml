@@ -24,7 +24,7 @@ prop-check-rs = "0.0.863"
 rust_decimal = "1.35.0"
 chrono = "0.4.38"
 pom = "3.4.0"
-nom = "7.1.3"
+nom = "8.0.0"
 criterion = { version = "0.5.1", features = [ "html_reports" ]}
 ctor = "0.4.0"
 pprof = { version = "0.14", features = ["flamegraph", "criterion"] }
