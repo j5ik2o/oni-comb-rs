@@ -27,6 +27,7 @@ fn number<'a>() -> Parser<'a, char, f64> {
 }
 
 fn string<'a>() -> Parser<'a, char, String> {
+  // エスケープ文字の処理
   let special_char = elm_ref('\\')
     | elm_ref('/')
     | elm_ref('"')
@@ -35,34 +36,64 @@ fn string<'a>() -> Parser<'a, char, String> {
     | elm_ref('n').map(|_| &'\n')
     | elm_ref('r').map(|_| &'\r')
     | elm_ref('t').map(|_| &'\t');
+  
+  // エスケープシーケンス
   let escape_sequence = elm_ref('\\') * special_char;
+  
+  // 通常の文字列（エスケープシーケンスを含む）
   let char_string = (none_ref_of("\\\"") | escape_sequence)
-    .map(Clone::clone)
+    .map(|c| *c) // Clone::clone の代わりに参照外し
     .of_many1()
     .map(String::from_iter);
+  
+  // UTF-16文字の処理（ベンチマークでは使用されないが、完全性のために残す）
   let utf16_char: Parser<char, u16> = tag("\\u")
     * elm_pred(|c: &char| c.is_digit(16))
       .of_count(4)
       .map(String::from_iter)
       .map_res(|digits| u16::from_str_radix(&digits, 16));
+  
   let utf16_string = utf16_char.of_many1().map(|chars| {
     decode_utf16(chars)
       .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
       .collect::<String>()
   });
-  let string = surround(elm_ref('"'), (char_string | utf16_string).of_many0(), elm_ref('"'));
+  
+  // 文字列全体
+  let string = surround(
+    elm_ref('"'),
+    (char_string | utf16_string).of_many0().cache(), // キャッシュを追加
+    elm_ref('"')
+  );
+  
   string.map(|strings| strings.concat())
 }
 
 fn array<'a>() -> Parser<'a, char, Vec<JsonValue>> {
-  let elems = lazy(value).of_many0_sep(space() * elm_ref(',') - space());
+  // 空白を含むカンマ区切りのパターン
+  let comma_sep = space() * elm_ref(',') - space();
+  
+  // 配列要素のパーサー（遅延評価）
+  let elems = lazy(value).cache().of_many0_sep(comma_sep);
+  
+  // 配列全体のパーサー（角括弧で囲まれた要素）
   surround(elm_ref('[') - space(), elems, space() * elm_ref(']'))
 }
 
 fn object<'a>() -> Parser<'a, char, HashMap<String, JsonValue>> {
-  let member = string() - space() - elm_ref(':') - space() + lazy(value);
-  let members = member.of_many0_sep(space() + elm_ref(',') + space());
-  let obj = surround(elm_ref('{') + space(), members, space() + elm_ref('}'));
+  // キーと値のペアのパーサー
+  let member = string().cache() - space() - elm_ref(':') - space() + lazy(value).cache();
+  
+  // 空白を含むカンマ区切りのパターン
+  let comma_sep = space() * elm_ref(',') - space();
+  
+  // オブジェクトメンバーのパーサー
+  let members = member.of_many0_sep(comma_sep);
+  
+  // オブジェクト全体のパーサー（波括弧で囲まれたメンバー）
+  let obj = surround(elm_ref('{') - space(), members, space() * elm_ref('}'));
+  
+  // メンバーをHashMapに変換
   obj.map(|members| members.into_iter().collect::<HashMap<_, _>>())
 }
 
@@ -71,21 +102,33 @@ fn boolean<'a>() -> Parser<'a, char, bool> {
 }
 
 fn value<'a>() -> Parser<'a, char, JsonValue> {
-  (tag("null").map(|_| JsonValue::Null)
-    | boolean().map(|b| JsonValue::Bool(b))
-    | number().map(|num| JsonValue::Num(num))
-    | string().map(|text| JsonValue::Str(text))
-    | array().map(|arr| JsonValue::Array(arr))
-    | object().map(|obj| JsonValue::Object(obj)))
-    - space()
+  // 各種JSONの値をパースするパーサーを組み合わせる
+  // 最も頻度の高いものから順に試す（パフォーマンス向上のため）
+  (
+    // 単純な値（頻度が高い順）
+    string().map(|text| JsonValue::Str(text)).cache() |
+    number().map(|num| JsonValue::Num(num)).cache() |
+    boolean().map(|b| JsonValue::Bool(b)).cache() |
+    tag("null").map(|_| JsonValue::Null).cache() |
+    
+    // 複合型（再帰的なパーサー）
+    array().map(|arr| JsonValue::Array(arr)).cache() |
+    object().map(|obj| JsonValue::Object(obj)).cache()
+  ) - space()
 }
 
 pub fn json<'a>() -> Parser<'a, char, JsonValue> {
-  space() * value() - end()
+  // 先頭の空白をスキップし、値をパースし、終端を確認
+  space() * value().cache() - end()
 }
 
 pub fn oni_comb_parse_json(s: &str) {
+  // 文字列を文字のベクターに変換
   let input: Vec<char> = s.chars().collect();
-  let _ = json().parse(&input).success().unwrap();
-  // println!("{:?}", r);
+  
+  // キャッシュを有効にしたパーサーを使用
+  let parser = json();
+  
+  // パース実行
+  let _ = parser.parse(&input).success().unwrap();
 }
