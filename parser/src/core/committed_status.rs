@@ -1,6 +1,6 @@
 /// A structure representing the commit status of the parser.<br/>
 /// パーサのコミット状態を表す構造体。
-#[derive(Debug, Clone, PartialOrd, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
 pub enum CommittedStatus {
   Committed,
   Uncommitted,
