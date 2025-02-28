@@ -86,6 +86,6 @@ pub fn json<'a>() -> Parser<'a, char, JsonValue> {
 
 pub fn oni_comb_parse_json(s: &str) {
   let input: Vec<char> = s.chars().collect();
-  let _ = boolean().parse(&input).success().unwrap();
+  let _ = json().parse(&input).success().unwrap();
   // println!("{:?}", r);
 }

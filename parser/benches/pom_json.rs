@@ -84,6 +84,6 @@ pub fn json<'a>() -> Parser<'a, char, JsonValue> {
 
 pub fn pom_parse_json(s: &str) {
   let input: Vec<char> = s.chars().collect();
-  let _ = boolean().parse(&input).unwrap();
+  let _ = json().parse(&input).unwrap();
   // println!("{:?}", r);
 }

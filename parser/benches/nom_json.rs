@@ -3,7 +3,7 @@
 use nom::{
   branch::alt,
   bytes::complete::{escaped, tag, take_while},
-  character::complete::{alphanumeric1 as alphanumeric, char, one_of},
+  character::complete::{char, one_of},
   combinator::{cut, map, opt, value},
   error::{context, ContextError, ErrorKind, ParseError},
   multi::separated_list0,
@@ -51,7 +51,7 @@ fn sp<'a, E: ParseError<&'a str>>(i: &'a str) -> IResult<&'a str, &'a str, E> {
 /// of the input data. and there is no allocation needed. This is the main idea
 /// behind nom's performance.
 fn parse_str<'a, E: ParseError<&'a str>>(i: &'a str) -> IResult<&'a str, &'a str, E> {
-  escaped(alphanumeric, '\\', one_of("\"n\\"))(i)
+  escaped(take_while(|c| c != '"' && c != '\\'), '\\', one_of("\"n\\"))(i)
 }
 
 /// `tag(string)` generates a parser that recognizes the argument string.
@@ -151,20 +151,22 @@ fn json_value<'a, E: ParseError<&'a str> + ContextError<&'a str>>(i: &'a str) ->
 }
 
 /// the root element of a JSON parser is either an object or an array
-fn root<'a, E: ParseError<&'a str> + ContextError<&'a str>>(i: &'a str) -> IResult<&'a str, JsonValue, E> {
-  delimited(
-    sp,
-    alt((
-      map(hash, JsonValue::Object),
-      map(array, JsonValue::Array),
-      map(null, |_| JsonValue::Null),
-    )),
-    opt(sp),
-  )(i)
-}
+/// Note: This function is currently not used in the benchmarks
+/// but kept for reference.
+// fn root<'a, E: ParseError<&'a str> + ContextError<&'a str>>(i: &'a str) -> IResult<&'a str, JsonValue, E> {
+//   delimited(
+//     sp,
+//     alt((
+//       map(hash, JsonValue::Object),
+//       map(array, JsonValue::Array),
+//       map(null, |_| JsonValue::Null),
+//     )),
+//     opt(sp),
+//   )(i)
+// }
 
 pub fn nom_parse_json(s: &str) {
-  let ir = boolean::<(&str, ErrorKind)>(s);
+  let ir = json_value::<(&str, ErrorKind)>(s);
   let _ = ir.unwrap().1;
   //  println!("{:?}", r);
 }
