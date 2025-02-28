@@ -1,4 +1,4 @@
-use crate::core::{Parser, ParserRunner};
+use crate::core::{Parser, ParserRunner, ParseResult};
 use crate::extension::parsers::CacheParsers;
 use crate::internal::ParsersImpl;
 use std::cell::RefCell;
@@ -13,8 +13,8 @@ impl CacheParsers for ParsersImpl {
   where
     I: Clone + 'a,
     A: Clone + Debug + 'a, {
-    // 高速なハッシュマップを使用
-    let caches = RefCell::new(HashMap::with_capacity(32)); // 初期容量を指定
+    // 高速なハッシュマップを使用（型パラメータを明示）
+    let caches = RefCell::new(HashMap::<(usize, u64), ParseResult<'a, I, A>>::with_capacity(32));
     
     // パーサーのメソッドポインタのハッシュ値を事前に計算
     let parser_method_hash = {
