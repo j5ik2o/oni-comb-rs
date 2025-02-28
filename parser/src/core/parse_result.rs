@@ -116,7 +116,7 @@ impl<'a, I, A> ParseResult<'a, I, A> {
       ParseResult::Failure {
         committed_status: is_committed,
         ..
-      } => Some(is_committed.clone()),
+      } => Some(*is_committed),
       _ => None,
     }
   }

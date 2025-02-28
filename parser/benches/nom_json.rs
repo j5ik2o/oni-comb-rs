@@ -89,23 +89,15 @@ fn null<'a, E: ParseError<&'a str>>(input: &'a str) -> IResult<&'a str, (), E> {
 /// parsing the string
 /// - `context` lets you add a static string to provide more information in the
 /// error chain (to indicate which parser had an error)
-fn string<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
-  i: &'a str,
-) -> IResult<&'a str, &'a str, E> {
-  context(
-    "string",
-    preceded(char('\"'), cut(terminated(parse_str, char('\"')))),
-  )
-      .parse(i)
+fn string<'a, E: ParseError<&'a str> + ContextError<&'a str>>(i: &'a str) -> IResult<&'a str, &'a str, E> {
+  context("string", preceded(char('\"'), cut(terminated(parse_str, char('\"'))))).parse(i)
 }
 
 /// some combinators, like `separated_list0` or `many0`, will call a parser repeatedly,
 /// accumulating results in a `Vec`, until it encounters an error.
 /// If you want more control on the parser application, check out the `iterator`
 /// combinator (cf `examples/iterator.rs`)
-fn array<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
-  i: &'a str,
-) -> IResult<&'a str, Vec<JsonValue>, E> {
+fn array<'a, E: ParseError<&'a str> + ContextError<&'a str>>(i: &'a str) -> IResult<&'a str, Vec<JsonValue>, E> {
   context(
     "array",
     preceded(
@@ -116,18 +108,13 @@ fn array<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
       )),
     ),
   )
-      .parse(i)
+  .parse(i)
 }
 
 fn key_value<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
   i: &'a str,
 ) -> IResult<&'a str, (&'a str, JsonValue), E> {
-  separated_pair(
-    preceded(sp, string),
-    cut(preceded(sp, char(':'))),
-    json_value,
-  )
-      .parse(i)
+  separated_pair(preceded(sp, string), cut(preceded(sp, char(':'))), json_value).parse(i)
 }
 
 fn hash<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
@@ -138,26 +125,18 @@ fn hash<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
     preceded(
       char('{'),
       cut(terminated(
-        map(
-          separated_list0(preceded(sp, char(',')), key_value),
-          |tuple_vec| {
-            tuple_vec
-                .into_iter()
-                .map(|(k, v)| (String::from(k), v))
-                .collect()
-          },
-        ),
+        map(separated_list0(preceded(sp, char(',')), key_value), |tuple_vec| {
+          tuple_vec.into_iter().map(|(k, v)| (String::from(k), v)).collect()
+        }),
         preceded(sp, char('}')),
       )),
     ),
   )
-      .parse(i)
+  .parse(i)
 }
 
 /// here, we apply the space parser before trying to parse a value
-fn json_value<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
-  i: &'a str,
-) -> IResult<&'a str, JsonValue, E> {
+fn json_value<'a, E: ParseError<&'a str> + ContextError<&'a str>>(i: &'a str) -> IResult<&'a str, JsonValue, E> {
   preceded(
     sp,
     alt((
@@ -169,13 +148,11 @@ fn json_value<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
       map(null, |_| JsonValue::Null),
     )),
   )
-      .parse(i)
+  .parse(i)
 }
 
 /// the root element of a JSON parser is either an object or an array
-fn root<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
-  i: &'a str,
-) -> IResult<&'a str, JsonValue, E> {
+fn root<'a, E: ParseError<&'a str> + ContextError<&'a str>>(i: &'a str) -> IResult<&'a str, JsonValue, E> {
   delimited(
     sp,
     alt((
@@ -185,14 +162,14 @@ fn root<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
     )),
     opt(sp),
   )
-      .parse(i)
+  .parse(i)
 }
 
 pub fn nom_parse_json(s: &str) {
   match json_value::<(&str, ErrorKind)>(s) {
     Ok((_, _)) => {
       // パース成功
-    },
+    }
     Err(_) => {
       // パース失敗（ベンチマークでは無視）
     }
