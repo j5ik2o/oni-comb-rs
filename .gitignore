@@ -4,3 +4,6 @@
 
 Cargo.lock
 .DS_Store
+
+# ベンチマーク結果
+/benchmark_results
