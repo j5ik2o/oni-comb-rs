@@ -8,7 +8,7 @@
 
 use crate::core::{ParserPure, StaticParser};
 
-impl<'a, I, A> ParserPure<'a> for StaticParser<'a, I, A> {
+impl<'a, I, A: 'a> ParserPure<'a> for StaticParser<'a, I, A> {
   fn pure<F>(value: F) -> Self::P<'a, Self::Input, Self::Output>
   where
     F: Fn() -> Self::Output + 'a,

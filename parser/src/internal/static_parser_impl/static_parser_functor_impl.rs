@@ -8,7 +8,7 @@
 
 use crate::core::{ParserFunctor, StaticParser};
 
-impl<'a, I, A> ParserFunctor<'a> for StaticParser<'a, I, A> {
+impl<'a, I, A: 'a> ParserFunctor<'a> for StaticParser<'a, I, A> {
   fn map<B, F>(self, f: F) -> Self::P<'a, Self::Input, B>
   where
     F: Fn(Self::Output) -> B + 'a,

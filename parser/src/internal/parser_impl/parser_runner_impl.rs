@@ -3,7 +3,7 @@ use crate::core::{ParseResult, ParseState, Parser, ParserRunner};
 impl<'a, I, A> ParserRunner<'a> for Parser<'a, I, A> {
   type Input = I;
   type Output = A;
-  type P<'m, X, Y>
+  type P<'m, X, Y: 'm>
     = Parser<'m, X, Y>
   where
     X: 'm;

@@ -8,10 +8,10 @@
 
 use crate::core::{ParseResult, ParseState, ParserRunner, StaticParser};
 
-impl<'a, I, A> ParserRunner<'a> for StaticParser<'a, I, A> {
+impl<'a, I, A: 'a> ParserRunner<'a> for StaticParser<'a, I, A> {
   type Input = I;
   type Output = A;
-  type P<'m, X, Y>
+  type P<'m, X, Y: 'm>
     = StaticParser<'m, X, Y>
   where
     X: 'm;
