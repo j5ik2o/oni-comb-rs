@@ -554,14 +554,14 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, &char> = elm_any_ref_static();
+  /// let parser: StaticParser<char, &[char]> = elm_any_ref_static();
   ///
-  /// let result: ParseResult<char, &char> = parser.parse(&input);
+  /// let result: ParseResult<char, &[char]> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
-  /// assert_eq!(result.success().unwrap(), &input[0]);
+  /// assert_eq!(result.success().unwrap(), &input[0..1]);
   /// ```
-  pub fn elm_any_ref_static<'a, I>() -> StaticParser<'a, I, &'a I>
+  pub fn elm_any_ref_static<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + PartialEq + 'a, {
     StaticParsersImpl::elm_any_ref()
@@ -602,14 +602,16 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, char> = elm_any_static();
+  /// let parser: StaticParser<char, Vec<char>> = elm_any_static();
   ///
-  /// let result: ParseResult<char, char> = parser.parse(&input);
+  /// let result: ParseResult<char, Vec<char>> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
-  /// assert_eq!(result.success().unwrap(), input[0]);
+  /// let chars = result.success().unwrap();
+  /// assert_eq!(chars.len(), 1);
+  /// assert_eq!(chars[0], input[0]);
   /// ```
-  pub fn elm_any_static<'a, I>() -> StaticParser<'a, I, I>
+  pub fn elm_any_static<'a, I>() -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + 'a, {
     StaticParsersImpl::elm_any()
@@ -656,14 +658,14 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, &char> = elm_ref_static('x');
+  /// let parser: StaticParser<char, &[char]> = elm_ref_static('x');
   ///
-  /// let result: ParseResult<char, &char> = parser.parse(&input);
+  /// let result: ParseResult<char, &[char]> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
-  /// assert_eq!(result.success().unwrap(), &input[0]);
+  /// assert_eq!(result.success().unwrap(), &input[0..1]);
   /// ```
-  pub fn elm_ref_static<'a, I>(element: I) -> StaticParser<'a, I, &'a I>
+  pub fn elm_ref_static<'a, I>(element: I) -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_ref(element)
@@ -710,14 +712,16 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, char> = elm_static('x');
+  /// let parser: StaticParser<char, Vec<char>> = elm_static('x');
   ///
-  /// let result: ParseResult<char, char> = parser.parse(&input);
+  /// let result: ParseResult<char, Vec<char>> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
-  /// assert_eq!(result.success().unwrap(), input[0]);
+  /// let chars = result.success().unwrap();
+  /// assert_eq!(chars.len(), 1);
+  /// assert_eq!(chars[0], input[0]);
   /// ```
-  pub fn elm_static<'a, I>(element: I) -> StaticParser<'a, I, I>
+  pub fn elm_static<'a, I>(element: I) -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + 'a, {
     StaticParsersImpl::elm(element)
@@ -763,14 +767,14 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, &char> = elm_pred_ref_static(|c| *c == 'x');
+  /// let parser: StaticParser<char, &[char]> = elm_pred_ref_static(|c| *c == 'x');
   ///
-  /// let result: ParseResult<char, &char> = parser.parse(&input);
+  /// let result: ParseResult<char, &[char]> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
-  /// assert_eq!(result.success().unwrap(), &input[0]);
+  /// assert_eq!(result.success().unwrap(), &input[0..1]);
   /// ```
-  pub fn elm_pred_ref_static<'a, I, F>(f: F) -> StaticParser<'a, I, &'a I>
+  pub fn elm_pred_ref_static<'a, I, F>(f: F) -> StaticParser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
     I: Element + Clone + PartialEq + Debug + 'a, {
@@ -823,14 +827,16 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, char> = elm_pred_static(|c| *c == 'x');
+  /// let parser: StaticParser<char, Vec<char>> = elm_pred_static(|c| *c == 'x');
   ///
-  /// let result: ParseResult<char, char> = parser.parse(&input);
+  /// let result: ParseResult<char, Vec<char>> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
-  /// assert_eq!(result.success().unwrap(), input[0]);
+  /// let chars = result.success().unwrap();
+  /// assert_eq!(chars.len(), 1);
+  /// assert_eq!(chars[0], input[0]);
   /// ```
-  pub fn elm_pred_static<'a, I, F>(f: F) -> StaticParser<'a, I, I>
+  pub fn elm_pred_static<'a, I, F>(f: F) -> StaticParser<'a, I, Vec<I>>
   where
     F: Fn(&I) -> bool + 'a,
     I: Element + Clone + PartialEq + 'a, {
@@ -852,7 +858,7 @@ pub mod prelude {
   /// let text: &str = "xyz";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: Parser<char, String> = elm_ref_of("xyz").of_many1().collect().map(String::from_iter);
+  /// let parser: Parser<char, String> = elm_ref_of("xyz").of_many1().map(|chars| chars.into_iter().map(|c| *c).collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
@@ -881,23 +887,30 @@ pub mod prelude {
   /// let text: &str = "xyz";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_ref_of_static("xyz").of_many1().collect().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_ref_of_static("xyz").of_many1().map(|chars| {
+  ///   chars.iter().flat_map(|slice| slice.iter().map(|c| *c)).collect::<String>()
+  /// });
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_ref_of_static<'a, I, S>(set: &'a S) -> StaticParser<'a, I, &'a I>
+  pub fn elm_ref_of_static<'a, I, S>(set: &'a S) -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Display + Clone + Debug + 'a,
     S: Set<I> + ?Sized, {
-    // Use a predicate-based approach for all sets
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
-      if offset < input.len() && set.contains(&input[offset]) {
-        ParseResult::successful(&input[offset], 1)
+      let mut i = offset;
+
+      while i < input.len() && set.contains(&input[i]) {
+        i += 1;
+      }
+
+      if i > offset {
+        ParseResult::successful(&input[offset..i], i - offset)
       } else if offset >= input.len() {
         let msg = format!("unexpected end of input");
         let pe = ParseError::of_mismatch(input, offset, 0, msg);
@@ -954,33 +967,18 @@ pub mod prelude {
   /// let text: &str = "xyz";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_of_static("xyz").of_many1().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_of_static("xyz").of_many1().map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_of_static<'a, I, S>(set: &'a S) -> StaticParser<'a, I, I>
+  pub fn elm_of_static<'a, I, S>(set: &'a S) -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + PartialEq + Display + Clone + Debug + 'a,
     S: Set<I> + ?Sized, {
-    // Use a predicate-based approach for all sets
-    StaticParser::new(move |parse_state| {
-      let input: &[I] = parse_state.input();
-      let offset = parse_state.next_offset();
-      if offset < input.len() && set.contains(&input[offset]) {
-        ParseResult::successful(input[offset].clone(), 1)
-      } else if offset >= input.len() {
-        let msg = format!("unexpected end of input");
-        let pe = ParseError::of_mismatch(input, offset, 0, msg);
-        ParseResult::failed_with_uncommitted(pe)
-      } else {
-        let msg = format!("element not in set: {:?}", input[offset]);
-        let pe = ParseError::of_mismatch(input, offset, 0, msg);
-        ParseResult::failed_with_uncommitted(pe)
-      }
-    })
+    elm_ref_of_static(set).map(|slice| slice.to_vec())
   }
 
   /// Returns a [Parser] that parses the elements in the specified range. (for reference)<br/>
@@ -1032,14 +1030,14 @@ pub mod prelude {
   /// let text: &str = "xyz";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_in_ref_static('x', 'z').of_many1().collect().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_in_ref_static('x', 'z').of_many1().map(|chars| chars.iter().flat_map(|slice| slice.iter().map(|c| *c)).collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_in_ref_static<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a I>
+  pub fn elm_in_ref_static<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
     StaticParsersImpl::elm_ref_in(start, end)
@@ -1094,14 +1092,14 @@ pub mod prelude {
   /// let text: &str = "xyz";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_in_static('x', 'z').of_many1().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_in_static('x', 'z').of_many1().map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_in_static<'a, I>(start: I, end: I) -> StaticParser<'a, I, I>
+  pub fn elm_in_static<'a, I>(start: I, end: I) -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
     StaticParsersImpl::elm_in(start, end)
@@ -1156,14 +1154,14 @@ pub mod prelude {
   /// let text: &str = "wxy";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_from_until_ref_static('w', 'z').of_many1().collect().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_from_until_ref_static('w', 'z').of_many1().map(|chars| chars.iter().flat_map(|slice| slice.iter().map(|c| *c)).collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_from_until_ref_static<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a I>
+  pub fn elm_from_until_ref_static<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
     StaticParsersImpl::elm_ref_from_until(start, end)
@@ -1218,14 +1216,14 @@ pub mod prelude {
   /// let text: &str = "wxy";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_from_until_static('w', 'z').of_many1().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_from_until_static('w', 'z').of_many1().map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_from_until_static<'a, I>(start: I, end: I) -> StaticParser<'a, I, I>
+  pub fn elm_from_until_static<'a, I>(start: I, end: I) -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
     StaticParsersImpl::elm_from_until(start, end)
@@ -1275,29 +1273,34 @@ pub mod prelude {
   /// let text: &str = "xyz";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = none_ref_of_static("abc").of_many1().collect().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = none_ref_of_static("abc").of_many1().map(|chars| chars.iter().flat_map(|slice| slice.iter().map(|c| *c)).collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn none_ref_of_static<'a, I, S>(set: &'a S) -> StaticParser<'a, I, &'a I>
+  pub fn none_ref_of_static<'a, I, S>(set: &'a S) -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Display + Clone + Debug + 'a,
     S: Set<I> + ?Sized, {
-    // Use a predicate-based approach for all sets
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
-      if offset < input.len() && !set.contains(&input[offset]) {
-        ParseResult::successful(&input[offset], 1)
+      let mut i = offset;
+
+      while i < input.len() && !set.contains(&input[i]) {
+        i += 1;
+      }
+
+      if i > offset {
+        ParseResult::successful(&input[offset..i], i - offset)
       } else if offset >= input.len() {
         let msg = format!("unexpected end of input");
         let pe = ParseError::of_mismatch(input, offset, 0, msg);
         ParseResult::failed_with_uncommitted(pe)
       } else {
-        let msg = format!("element in excluded set: {:?}", input[offset]);
+        let msg = format!("element in set: {:?}", input[offset]);
         let pe = ParseError::of_mismatch(input, offset, 0, msg);
         ParseResult::failed_with_uncommitted(pe)
       }
@@ -1348,33 +1351,18 @@ pub mod prelude {
   /// let text: &str = "xyz";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = none_of_static("abc").of_many1().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = none_of_static("abc").of_many1().map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn none_of_static<'a, I, S>(set: &'a S) -> StaticParser<'a, I, I>
+  pub fn none_of_static<'a, I, S>(set: &'a S) -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + PartialEq + Display + Clone + Debug + 'a,
     S: Set<I> + ?Sized, {
-    // Use a predicate-based approach for all sets
-    StaticParser::new(move |parse_state| {
-      let input: &[I] = parse_state.input();
-      let offset = parse_state.next_offset();
-      if offset < input.len() && !set.contains(&input[offset]) {
-        ParseResult::successful(input[offset].clone(), 1)
-      } else if offset >= input.len() {
-        let msg = format!("unexpected end of input");
-        let pe = ParseError::of_mismatch(input, offset, 0, msg);
-        ParseResult::failed_with_uncommitted(pe)
-      } else {
-        let msg = format!("element in excluded set: {:?}", input[offset]);
-        let pe = ParseError::of_mismatch(input, offset, 0, msg);
-        ParseResult::failed_with_uncommitted(pe)
-      }
-    })
+    none_ref_of_static(set).map(|slice| slice.to_vec())
   }
 
   /// Returns a [Parser] that parses the space (' ', '\t'). (for reference)<br/>
@@ -1414,14 +1402,16 @@ pub mod prelude {
   /// let text: &str = "   ";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_space_ref_static().of_many1().collect().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_space_ref_static().of_many1().map(|chars| {
+  ///   chars.iter().flat_map(|slice| slice.iter().map(|c| *c)).collect::<String>()
+  /// });
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_space_ref_static<'a, I>() -> StaticParser<'a, I, &'a I>
+  pub fn elm_space_ref_static<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Clone + Debug + 'a, {
     StaticParsersImpl::elm_space_ref()
@@ -1464,14 +1454,14 @@ pub mod prelude {
   /// let text: &str = "   ";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_space_static().of_many1().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_space_static().of_many1().map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_space_static<'a, I>() -> StaticParser<'a, I, I>
+  pub fn elm_space_static<'a, I>() -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_space()
@@ -1514,14 +1504,16 @@ pub mod prelude {
   /// let text: &str = " \n ";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_multi_space_ref_static().of_many1().collect().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_multi_space_ref_static().of_many1().map(|chars| {
+  ///   chars.iter().flat_map(|slice| slice.iter().map(|c| *c)).collect::<String>()
+  /// });
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_multi_space_ref_static<'a, I>() -> StaticParser<'a, I, &'a I>
+  pub fn elm_multi_space_ref_static<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Clone + Debug + 'a, {
     StaticParsersImpl::elm_pred_ref(|e: &I| e.is_ascii_multi_space())
@@ -1564,14 +1556,14 @@ pub mod prelude {
   /// let text: &str = " \n ";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_multi_space_static().of_many1().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_multi_space_static().of_many1().map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_multi_space_static<'a, I>() -> StaticParser<'a, I, I>
+  pub fn elm_multi_space_static<'a, I>() -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_pred(|e: &I| e.is_ascii_multi_space())
@@ -1614,14 +1606,16 @@ pub mod prelude {
   /// let text: &str = "abcxyz";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_alpha_ref_static().of_many1().collect().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_alpha_ref_static().of_many1().map(|chars| {
+  ///   chars.iter().flat_map(|slice| slice.iter().map(|c| *c)).collect::<String>()
+  /// });
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_alpha_ref_static<'a, I>() -> StaticParser<'a, I, &'a I>
+  pub fn elm_alpha_ref_static<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + PartialEq + Clone + Debug + 'a, {
     StaticParsersImpl::elm_alpha_ref()
@@ -1664,14 +1658,16 @@ pub mod prelude {
   /// let text: &str = "abcxyz";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_alpha_static().of_many1().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_alpha_static().of_many1().map(|chars| {
+  ///   chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>()
+  /// });
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_alpha_static<'a, I>() -> StaticParser<'a, I, I>
+  pub fn elm_alpha_static<'a, I>() -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_alpha()
@@ -1714,14 +1710,16 @@ pub mod prelude {
   /// let text: &str = "abc123";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_alpha_digit_ref_static().of_many1().collect().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_alpha_digit_ref_static().of_many1().map(|chars| {
+  ///   chars.iter().flat_map(|slice| slice.iter().map(|c| *c)).collect::<String>()
+  /// });
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_alpha_digit_ref_static<'a, I>() -> StaticParser<'a, I, &'a I>
+  pub fn elm_alpha_digit_ref_static<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_alpha_digit_ref()
@@ -1764,14 +1762,16 @@ pub mod prelude {
   /// let text: &str = "abc123";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_alpha_digit_static().of_many1().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_alpha_digit_static().of_many1().map(|chars| {
+  ///   chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>()
+  /// });
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_alpha_digit_static<'a, I>() -> StaticParser<'a, I, I>
+  pub fn elm_alpha_digit_static<'a, I>() -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_alpha_digit()
@@ -1814,14 +1814,16 @@ pub mod prelude {
   /// let text: &str = "123";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_digit_ref_static().of_many1().collect().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_digit_ref_static().of_many1().map(|chars| {
+  ///   chars.iter().flat_map(|slice| slice.iter().map(|c| *c)).collect::<String>()
+  /// });
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_digit_ref_static<'a, I>() -> StaticParser<'a, I, &'a I>
+  pub fn elm_digit_ref_static<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_digit_ref()
@@ -1864,14 +1866,16 @@ pub mod prelude {
   /// let text: &str = "123";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_digit_static().of_many1().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_digit_static().of_many1().map(|chars| {
+  ///   chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>()
+  /// });
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_digit_static<'a, I>() -> StaticParser<'a, I, I>
+  pub fn elm_digit_static<'a, I>() -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_digit()
@@ -1914,14 +1918,14 @@ pub mod prelude {
   /// let text: &str = "123456789";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_digit_1_9_ref_static().of_many1().collect().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_digit_1_9_ref_static().of_many1().map(|chars| chars.iter().flat_map(|slice| slice.iter().map(|c: &char| *c)).collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_digit_1_9_ref_static<'a>() -> StaticParser<'a, char, &'a char> {
+  pub fn elm_digit_1_9_ref_static<'a>() -> StaticParser<'a, char, &'a [char]> {
     StaticParsersImpl::elm_ref_in('1', '9')
   }
 
@@ -1962,14 +1966,16 @@ pub mod prelude {
   /// let text: &str = "123456789";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_digit_1_9_static().of_many1().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_digit_1_9_static().of_many1().map(|chars| {
+  ///   chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>()
+  /// });
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_digit_1_9_static<'a>() -> StaticParser<'a, char, char> {
+  pub fn elm_digit_1_9_static<'a>() -> StaticParser<'a, char, Vec<char>> {
     StaticParsersImpl::elm_in('1', '9')
   }
 
@@ -2010,14 +2016,14 @@ pub mod prelude {
   /// let text: &str = "0123456789ABCDEFabcdef";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_hex_digit_ref_static().of_many1().collect().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_hex_digit_ref_static().of_many1().map(|chars| chars.iter().flat_map(|slice| slice.iter().map(|c| *c)).collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_hex_digit_ref_static<'a, I>() -> StaticParser<'a, I, &'a I>
+  pub fn elm_hex_digit_ref_static<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_hex_digit_ref()
@@ -2060,14 +2066,16 @@ pub mod prelude {
   /// let text: &str = "0123456789ABCDEFabcdef";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_hex_digit_static().of_many1().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_hex_digit_static().of_many1().map(|chars| {
+  ///   chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>()
+  /// });
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_hex_digit_static<'a, I>() -> StaticParser<'a, I, I>
+  pub fn elm_hex_digit_static<'a, I>() -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_hex_digit()
@@ -2110,14 +2118,14 @@ pub mod prelude {
   /// let text: &str = "012345678";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_oct_digit_ref_static().of_many1().collect().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_oct_digit_ref_static().of_many1().map(|chars| chars.iter().flat_map(|slice| slice.iter().map(|c| *c)).collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_oct_digit_ref_static<'a, I>() -> StaticParser<'a, I, &'a I>
+  pub fn elm_oct_digit_ref_static<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_oct_digit_ref()
@@ -2160,14 +2168,16 @@ pub mod prelude {
   /// let text: &str = "012345678";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = elm_oct_digit_static().of_many1().map(String::from_iter);
+  /// let parser: StaticParser<char, String> = elm_oct_digit_static().of_many1().map(|chars| {
+  ///   chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>()
+  /// });
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), text);
   /// ```
-  pub fn elm_oct_digit_static<'a, I>() -> StaticParser<'a, I, I>
+  pub fn elm_oct_digit_static<'a, I>() -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + PartialEq + Clone + Debug + 'a, {
     StaticParsersImpl::elm_oct_digit()
@@ -2213,7 +2223,7 @@ pub mod prelude {
   /// let text: &str = "abc";
   /// let input = text.as_bytes();
   ///
-  /// let parser: StaticParser<u8, &str> = seq_static(b"abc").collect().map_res(std::str::from_utf8);
+  /// let parser: StaticParser<u8, &str> = seq_static(b"abc").collect().map_res(|v: Vec<&[u8]>| std::str::from_utf8(&v[0]));
   ///
   /// let result: ParseResult<u8, &str> = parser.parse(input);
   ///
@@ -2368,8 +2378,14 @@ pub mod prelude {
   /// ```rust
   /// use oni_comb_parser_rs::prelude::*;
   ///
-  /// let s = lazy_static_str("abc");
-  /// assert_eq!(s, "abc");
+  /// let text: &str = "abc";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser: StaticParser<char, String> = lazy_static_str("abc");
+  /// let result = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), "abc".to_string());
   /// ```
   pub fn lazy_static_str<'a>(s: &'a str) -> StaticParser<'a, char, String> {
     StaticParsersImpl::tag(s)
@@ -2466,7 +2482,7 @@ pub mod prelude {
   /// let text: &str = "abcdef";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = take_static(3).map(String::from_iter);
+  /// let parser: StaticParser<char, String> = take_static(3).map(|chars| chars.into_iter().collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
@@ -2547,7 +2563,7 @@ pub mod prelude {
   /// let parser: StaticParser<char, String> = take_while0_static(|e| match *e {
   ///  'a'..='c' => true,
   ///   _ => false
-  /// }).map(String::from_iter);
+  /// }).map(|chars| chars.into_iter().collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
@@ -2565,7 +2581,7 @@ pub mod prelude {
   /// let parser: StaticParser<char, String> = take_while0_static(|e| match *e {
   ///  'a'..='c' => true,
   ///   _ => false
-  /// }).map(String::from_iter);
+  /// }).map(|chars| chars.into_iter().collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
@@ -2647,7 +2663,7 @@ pub mod prelude {
   /// let parser: StaticParser<char, String> = take_while1_static(|e| match *e {
   ///  'a'..='c' => true,
   ///   _ => false
-  /// }).map(String::from_iter);
+  /// }).map(|chars| chars.into_iter().collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
@@ -2665,7 +2681,7 @@ pub mod prelude {
   /// let parser: StaticParser<char, String> = take_while1_static(|e| match *e {
   ///  'a'..='c' => true,
   ///   _ => false
-  /// }).map(String::from_iter);
+  /// }).map(|chars| chars.into_iter().collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
@@ -2747,7 +2763,7 @@ pub mod prelude {
   /// let parser: StaticParser<char, String> = take_while_n_m_static(1, 3, |e| match *e {
   ///  'a'..='c' => true,
   ///   _ => false
-  /// }).map(String::from_iter);
+  /// }).map(|chars| chars.into_iter().collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
@@ -2765,7 +2781,7 @@ pub mod prelude {
   /// let parser: StaticParser<char, String> = take_while_n_m_static(1, 3, |e| match *e {
   ///  'a'..='c' => true,
   ///   _ => false
-  /// }).map(String::from_iter);
+  /// }).map(|chars| chars.into_iter().collect::<String>());
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
@@ -2838,7 +2854,7 @@ pub mod prelude {
   /// let text: &str = "abcdef";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = take_till0_static(|e| matches!(*e, 'c')).map(String::from_iter);
+  /// let parser: StaticParser<char, String> = take_till0_static(|e| matches!(*e, 'c')).map(|chars| String::from_iter(chars.iter().map(|c| *c)));
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
@@ -2853,7 +2869,7 @@ pub mod prelude {
   /// let text: &str = "def";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = take_till0_static(|e| matches!(*e, 'c')).map(String::from_iter);
+  /// let parser: StaticParser<char, String> = take_till0_static(|e| matches!(*e, 'c')).map(|chars| String::from_iter(chars.iter().map(|c| *c)));
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
@@ -2926,12 +2942,12 @@ pub mod prelude {
   /// let text: &str = "abcdef";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = take_till1_static(|e| matches!(*e, 'c')).map(String::from_iter);
+  /// let parser: StaticParser<char, String> = take_till1_static(|e| matches!(*e, 'c')).map(|chars| String::from_iter(chars.iter().map(|c| *c)));
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
-  /// assert_eq!(result.success().unwrap(), "abc");
+  /// assert_eq!(result.success().unwrap(), "ab");
   /// ```
   ///
   /// ```rust
@@ -2941,12 +2957,11 @@ pub mod prelude {
   /// let text: &str = "def";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, String> = take_till1_static(|e| matches!(*e, 'c')).map(String::from_iter);
+  /// let parser: StaticParser<char, String> = take_till1_static(|e| matches!(*e, 'c')).map(|chars| String::from_iter(chars.iter().map(|c| *c)));
   ///
   /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_failure());
-  /// assert_eq!(result.failure().unwrap(), ParseError::of_in_complete());
   /// ```
   pub fn take_till1_static<'a, I, F>(f: F) -> StaticParser<'a, I, &'a [I]>
   where
@@ -3054,9 +3069,9 @@ pub mod prelude {
   /// let input = text.chars().collect::<Vec<_>>();
   ///
   /// let parser: StaticParser<char, &[char]> = surround_static(
-  ///   elm_static('('),
+  ///   elm_ref_static('('),
   ///   take_static(3),
-  ///   elm_static(')'),
+  ///   elm_ref_static(')'),
   /// );
   ///
   /// let result: ParseResult<char, &[char]> = parser.parse(&input);
@@ -3068,11 +3083,12 @@ pub mod prelude {
     lp: StaticParser<'a, I, A>,
     parser: StaticParser<'a, I, B>,
     rp: StaticParser<'a, I, C>,
-  ) -> StaticParser<'a, I, B>
+  ) -> StaticParser<'a, I, &'a [I]>
   where
     A: Clone + Debug + 'a,
     B: Clone + Debug + 'a,
-    C: Clone + Debug + 'a, {
+    C: Clone + Debug + 'a,
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::surround(lp, parser, rp)
   }
 
@@ -3123,15 +3139,15 @@ pub mod prelude {
   /// let text: &str = "abc";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// fn value<'a>() -> StaticParser<'a, char, &'a str> {
-  ///   tag_static("abc").map(|s| s.as_str())
+  /// fn value<'a>() -> StaticParser<'a, char, String> {
+  ///   tag_static("abc").map(|s| String::from_iter(s.chars()))
   /// }
-  /// let parser: StaticParser<char, &str> = lazy_static_str(value);
+  /// let parser: StaticParser<char, String> = lazy_static(value);
   ///
-  /// let result: ParseResult<char, &str> = parser.parse(&input);
+  /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
-  /// assert_eq!(result.success().unwrap(), "abc");
+  /// assert_eq!(result.success().unwrap(), "abc".to_string());
   /// ```
   pub fn lazy_static<'a, I, A, F>(f: F) -> StaticParser<'a, I, A>
   where
@@ -3606,7 +3622,13 @@ mod tests {
     let pb = elm_ref('b');
     let pc = elm_ref('c');
     let pd = elm_ref('d');
-    let p = (pa + pb + (pc | pd)).collect().map(String::from_iter);
+    let p = (pa + pb + (pc | pd)).map(|((a, b), c)| {
+      let mut result = String::new();
+      result.push(*a);
+      result.push(*b);
+      result.push(*c);
+      result
+    });
 
     let result = p.parse_as_result(&input1).unwrap();
     log::debug!("result = {}", result);
@@ -3622,7 +3644,14 @@ mod tests {
     init();
 
     let input = "aname".chars().collect::<Vec<char>>();
-    let p = (elm_ref('a') + tag("name")).collect().map(String::from_iter);
+    let p = (elm_ref('a') + tag("name")).map(|(a, name_chars)| {
+      let mut result = String::new();
+      result.push(*a);
+      for c in name_chars.chars() {
+        result.push(c);
+      }
+      result
+    });
 
     let result = p.parse_as_result(&input).unwrap();
     // let s: String = result.iter().collect();

@@ -94,14 +94,14 @@ impl StaticParsersImpl {
   }
 
   /// 任意の要素を解析するStaticParserを返します。(参照版)
-  pub fn elm_any_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  pub fn elm_any_ref<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
     I: crate::core::Element + PartialEq + 'a, {
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       if offset < input.len() {
-        ParseResult::successful(&input[offset], 1)
+        ParseResult::successful(&input[offset..offset+1], 1)
       } else {
         let msg = format!("unexpected end of input");
         let pe = ParseError::of_mismatch(input, offset, 0, msg);
@@ -111,14 +111,16 @@ impl StaticParsersImpl {
   }
 
   /// 任意の要素を解析するStaticParserを返します。
-  pub fn elm_any<'a, I>() -> StaticParser<'a, I, I>
+  pub fn elm_any<'a, I>() -> StaticParser<'a, I, Vec<I>>
   where
     I: crate::core::Element + Clone + PartialEq + 'a, {
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       if offset < input.len() {
-        ParseResult::successful(input[offset].clone(), 1)
+        let mut result = Vec::new();
+        result.push(input[offset].clone());
+        ParseResult::successful(result, 1)
       } else {
         let msg = format!("unexpected end of input");
         let pe = ParseError::of_mismatch(input, offset, 0, msg);
@@ -128,14 +130,14 @@ impl StaticParsersImpl {
   }
 
   /// 指定した要素を解析するStaticParserを返します。(参照版)
-  pub fn elm_ref<'a, I>(element: I) -> StaticParser<'a, I, &'a I>
+  pub fn elm_ref<'a, I>(element: I) -> StaticParser<'a, I, &'a [I]>
   where
     I: crate::core::Element + Clone + PartialEq + Debug + 'a, {
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       if offset < input.len() && input[offset] == element {
-        ParseResult::successful(&input[offset], 1)
+        ParseResult::successful(&input[offset..offset+1], 1)
       } else if offset >= input.len() {
         let msg = format!("unexpected end of input");
         let pe = ParseError::of_mismatch(input, offset, 0, msg);
@@ -149,14 +151,16 @@ impl StaticParsersImpl {
   }
 
   /// 指定した要素を解析するStaticParserを返します。
-  pub fn elm<'a, I>(element: I) -> StaticParser<'a, I, I>
+  pub fn elm<'a, I>(element: I) -> StaticParser<'a, I, Vec<I>>
   where
     I: crate::core::Element + Clone + PartialEq + Debug + 'a, {
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       if offset < input.len() && input[offset] == element {
-        ParseResult::successful(input[offset].clone(), 1)
+        let mut result = Vec::new();
+        result.push(input[offset].clone());
+        ParseResult::successful(result, 1)
       } else if offset >= input.len() {
         let msg = format!("unexpected end of input");
         let pe = ParseError::of_mismatch(input, offset, 0, msg);
@@ -170,267 +174,173 @@ impl StaticParsersImpl {
   }
 
   /// 条件に一致する要素を解析するStaticParserを返します。(参照版)
-  pub fn elm_pred_ref<'a, I, F>(f: F) -> StaticParser<'a, I, &'a I>
+  pub fn elm_pred_ref<'a, I, F>(f: F) -> StaticParser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
     I: Element + Clone + PartialEq + Debug + 'a, {
-    StaticParser::new(move |parse_state| {
-      let input: &[I] = parse_state.input();
-      let offset = parse_state.next_offset();
-      if offset < input.len() && f(&input[offset]) {
-        ParseResult::successful(&input[offset], 1)
-      } else if offset >= input.len() {
-        let msg = format!("unexpected end of input");
-        let pe = ParseError::of_mismatch(input, offset, 0, msg);
-        ParseResult::failed_with_uncommitted(pe)
-      } else {
-        let msg = format!("predicate failed for: {:?}", input[offset]);
-        let pe = ParseError::of_mismatch(input, offset, 0, msg);
-        ParseResult::failed_with_uncommitted(pe)
-      }
-    })
+    Self::take_while1(f)
   }
 
   /// 条件に一致する要素を解析するStaticParserを返します。
-  pub fn elm_pred<'a, I, F>(f: F) -> StaticParser<'a, I, I>
+  pub fn elm_pred<'a, I, F>(f: F) -> StaticParser<'a, I, Vec<I>>
   where
     F: Fn(&I) -> bool + 'a,
     I: Element + Clone + PartialEq + Debug + 'a, {
-    StaticParser::new(move |parse_state| {
-      let input: &[I] = parse_state.input();
-      let offset = parse_state.next_offset();
-      if offset < input.len() && f(&input[offset]) {
-        ParseResult::successful(input[offset].clone(), 1)
-      } else if offset >= input.len() {
-        let msg = format!("unexpected end of input");
-        let pe = ParseError::of_mismatch(input, offset, 0, msg);
-        ParseResult::failed_with_uncommitted(pe)
-      } else {
-        let msg = format!("predicate failed for: {:?}", input[offset]);
-        let pe = ParseError::of_mismatch(input, offset, 0, msg);
-        ParseResult::failed_with_uncommitted(pe)
-      }
-    })
+    Self::take_while1(f).map(|slice| slice.to_vec())
   }
 
   /// 16進数を解析するStaticParserを返します。(参照版)
-  pub fn elm_hex_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  pub fn elm_hex_digit_ref<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     Self::elm_pred_ref(|e: &I| e.is_ascii_hex_digit())
   }
 
   /// 16進数を解析するStaticParserを返します。
-  pub fn elm_hex_digit<'a, I>() -> StaticParser<'a, I, I>
+  pub fn elm_hex_digit<'a, I>() -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     Self::elm_pred(|e: &I| e.is_ascii_hex_digit())
   }
 
   /// 8進数を解析するStaticParserを返します。(参照版)
-  pub fn elm_oct_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  pub fn elm_oct_digit_ref<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     Self::elm_pred_ref(|e: &I| e.is_ascii_oct_digit())
   }
 
   /// 8進数を解析するStaticParserを返します。
-  pub fn elm_oct_digit<'a, I>() -> StaticParser<'a, I, I>
+  pub fn elm_oct_digit<'a, I>() -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     Self::elm_pred(|e: &I| e.is_ascii_oct_digit())
   }
 
   /// 指定した要素のいずれかを解析するStaticParserを返します。(参照版)
-  pub fn elm_ref_of<'a, I>(set: &'a [I]) -> StaticParser<'a, I, &'a I>
+  pub fn elm_ref_of<'a, I>(set: &'a [I]) -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    StaticParser::new(move |parse_state| {
-      let input: &[I] = parse_state.input();
-      let offset = parse_state.next_offset();
-
-      if offset >= input.len() {
-        let pe = ParseError::of_in_complete();
-        return ParseResult::failed_with_uncommitted(pe);
-      }
-
-      let element = &input[offset];
-      for s in set {
-        if element == s {
-          return ParseResult::successful(element, 1);
-        }
-      }
-
-      let msg = format!("expected one of: {:?}, but got: {:?}", set, element);
-      let pe = ParseError::of_mismatch(input, offset, 0, msg);
-      ParseResult::failed_with_uncommitted(pe)
-    })
+    Self::take_while1(move |e: &I| set.contains(e))
   }
 
   /// 指定した要素のいずれかを解析するStaticParserを返します。
-  pub fn elm_of<'a, I>(set: &'a [I]) -> StaticParser<'a, I, I>
+  pub fn elm_of<'a, I>(set: &'a [I]) -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    StaticParser::new(move |parse_state| {
-      let input: &[I] = parse_state.input();
-      let offset = parse_state.next_offset();
-
-      if offset >= input.len() {
-        let pe = ParseError::of_in_complete();
-        return ParseResult::failed_with_uncommitted(pe);
-      }
-
-      let element = &input[offset];
-      for s in set {
-        if element == s {
-          return ParseResult::successful(element.clone(), 1);
-        }
-      }
-
-      let msg = format!("expected one of: {:?}, but got: {:?}", set, element);
-      let pe = ParseError::of_mismatch(input, offset, 0, msg);
-      ParseResult::failed_with_uncommitted(pe)
-    })
+    Self::elm_ref_of(set).map(|slice| slice.to_vec())
   }
 
   /// 指定した範囲の要素を解析するStaticParserを返します。(参照版)
-  pub fn elm_ref_in<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a I>
+  pub fn elm_ref_in<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + Clone + PartialEq + Debug + PartialOrd + 'a, {
-    Self::elm_pred_ref(move |e| *e >= start && *e <= end)
+    Self::take_while1(move |e: &I| *e >= start && *e <= end)
   }
 
   /// 指定した範囲の要素を解析するStaticParserを返します。
-  pub fn elm_in<'a, I>(start: I, end: I) -> StaticParser<'a, I, I>
+  pub fn elm_in<'a, I>(start: I, end: I) -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + Debug + PartialOrd + 'a, {
-    Self::elm_pred(move |e| *e >= start && *e <= end)
+    Self::elm_ref_in(start, end).map(|slice| slice.to_vec())
   }
 
   /// 指定した範囲の要素を解析するStaticParserを返します。(参照版)
-  pub fn elm_ref_from_until<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a I>
+  pub fn elm_ref_from_until<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + Clone + PartialEq + Debug + PartialOrd + 'a, {
-    Self::elm_any_ref().flat_map(move |e| {
-      if *e >= start && *e < end {
-        Self::successful(e)
-      } else {
-        let msg = format!("expected element in range [{:?}, {:?}), but got: {:?}", start, end, e);
-        Self::failed(ParseError::of_custom(0, None, msg), CommittedStatus::Uncommitted)
-      }
-    })
+    Self::take_while1(move |e: &I| *e >= start && *e < end)
   }
 
   /// 指定した範囲の要素を解析するStaticParserを返します。
-  pub fn elm_from_until<'a, I>(start: I, end: I) -> StaticParser<'a, I, I>
+  pub fn elm_from_until<'a, I>(start: I, end: I) -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + Debug + PartialOrd + 'a, {
-    Self::elm_any().flat_map(move |e| {
-      if e >= start && e < end {
-        Self::successful(e)
-      } else {
-        let msg = format!("expected element in range [{:?}, {:?}), but got: {:?}", start, end, e);
-        Self::failed(ParseError::of_custom(0, None, msg), CommittedStatus::Uncommitted)
-      }
-    })
+    Self::elm_ref_from_until(start, end).map(|slice| slice.to_vec())
   }
 
   /// 指定した要素のいずれでもない要素を解析するStaticParserを返します。(参照版)
-  pub fn none_ref_of<'a, I>(set: &'a [I]) -> StaticParser<'a, I, &'a I>
+  pub fn none_ref_of<'a, I>(set: &'a [I]) -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_any_ref().flat_map(move |e| {
-      if !set.contains(e) {
-        Self::successful(e)
-      } else {
-        let msg = format!("expected none of: {:?}, but got: {:?}", set, e);
-        Self::failed(ParseError::of_custom(0, None, msg), CommittedStatus::Uncommitted)
-      }
-    })
+    Self::take_while1(move |e: &I| !set.contains(e))
   }
 
   /// 指定した要素のいずれでもない要素を解析するStaticParserを返します。
-  pub fn none_of<'a, I>(set: &'a [I]) -> StaticParser<'a, I, I>
+  pub fn none_of<'a, I>(set: &'a [I]) -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_any().flat_map(move |e| {
-      if !set.contains(&e) {
-        Self::successful(e)
-      } else {
-        let msg = format!("expected none of: {:?}, but got: {:?}", set, e);
-        Self::failed(ParseError::of_custom(0, None, msg), CommittedStatus::Uncommitted)
-      }
-    })
+    Self::none_ref_of(set).map(|slice| slice.to_vec())
   }
 
   /// 空白文字を解析するStaticParserを返します。(参照版)
-  pub fn elm_space_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  pub fn elm_space_ref<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_pred_ref(|e: &I| e.is_ascii_space())
+    Self::take_while1(|e: &I| e.is_ascii_space())
   }
 
   /// 空白文字を解析するStaticParserを返します。
-  pub fn elm_space<'a, I>() -> StaticParser<'a, I, I>
+  pub fn elm_space<'a, I>() -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_pred(|e: &I| e.is_ascii_space())
+    Self::take_while1(|e: &I| e.is_ascii_space()).map(|slice| slice.to_vec())
   }
 
   /// 複数の空白文字を解析するStaticParserを返します。(参照版)
-  pub fn elm_multi_space_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  pub fn elm_multi_space_ref<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_pred_ref(|e: &I| e.is_ascii_multi_space())
+    Self::take_while1(|e: &I| e.is_ascii_multi_space())
   }
 
   /// 複数の空白文字を解析するStaticParserを返します。
-  pub fn elm_multi_space<'a, I>() -> StaticParser<'a, I, I>
+  pub fn elm_multi_space<'a, I>() -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_pred(|e: &I| e.is_ascii_multi_space())
+    Self::take_while1(|e: &I| e.is_ascii_multi_space()).map(|slice| slice.to_vec())
   }
 
   /// アルファベットを解析するStaticParserを返します。(参照版)
-  pub fn elm_alpha_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  pub fn elm_alpha_ref<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_pred_ref(|e: &I| e.is_ascii_alpha())
+    Self::take_while1(|e: &I| e.is_ascii_alpha())
   }
 
   /// アルファベットを解析するStaticParserを返します。
-  pub fn elm_alpha<'a, I>() -> StaticParser<'a, I, I>
+  pub fn elm_alpha<'a, I>() -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_pred(|e: &I| e.is_ascii_alpha())
+    Self::take_while1(|e: &I| e.is_ascii_alpha()).map(|slice| slice.to_vec())
   }
 
   /// アルファベットと数字を解析するStaticParserを返します。(参照版)
-  pub fn elm_alpha_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  pub fn elm_alpha_digit_ref<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_pred_ref(|e: &I| e.is_ascii_alpha_digit())
+    Self::take_while1(|e: &I| e.is_ascii_alpha_digit())
   }
 
   /// アルファベットと数字を解析するStaticParserを返します。
-  pub fn elm_alpha_digit<'a, I>() -> StaticParser<'a, I, I>
+  pub fn elm_alpha_digit<'a, I>() -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_pred(|e: &I| e.is_ascii_alpha_digit())
+    Self::take_while1(|e: &I| e.is_ascii_alpha_digit()).map(|slice| slice.to_vec())
   }
 
   /// 数字を解析するStaticParserを返します。(参照版)
-  pub fn elm_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  pub fn elm_digit_ref<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_pred_ref(|e: &I| e.is_ascii_digit())
+    Self::take_while1(|e: &I| e.is_ascii_digit())
   }
 
   /// 数字を解析するStaticParserを返します。
-  pub fn elm_digit<'a, I>() -> StaticParser<'a, I, I>
+  pub fn elm_digit<'a, I>() -> StaticParser<'a, I, Vec<I>>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_pred(|e: &I| e.is_ascii_digit())
+    Self::take_while1(|e: &I| e.is_ascii_digit()).map(|slice| slice.to_vec())
   }
 
   /// 指定した数の要素を取得するStaticParserを返します。
@@ -532,7 +442,26 @@ impl StaticParsersImpl {
   where
     F: Fn(&I) -> bool + 'a,
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::take_while0(move |e| !f(e))
+    StaticParser::new(move |parse_state| {
+      let input: &[I] = parse_state.input();
+      let offset = parse_state.next_offset();
+      let mut i = 0;
+      
+      while offset + i < input.len() {
+        if f(&input[offset + i]) {
+          // 条件に一致する要素を含めて返す
+          i += 1;
+          break;
+        }
+        i += 1;
+      }
+      
+      if i == 0 {
+        ParseResult::successful(&input[offset..offset], 0)
+      } else {
+        ParseResult::successful(&input[offset..offset + i], i)
+      }
+    })
   }
 
   /// 条件に一致するまで要素を取得するStaticParserを返します。(1個以上)
@@ -540,7 +469,28 @@ impl StaticParsersImpl {
   where
     F: Fn(&I) -> bool + 'a,
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::take_while1(move |e| !f(e))
+    StaticParser::new(move |parse_state| {
+      let input: &[I] = parse_state.input();
+      let offset = parse_state.next_offset();
+      let mut i = 0;
+      let mut found_match = false;
+      
+      while offset + i < input.len() {
+        if f(&input[offset + i]) {
+          // 条件に一致する要素は含めない
+          found_match = true;
+          break;
+        }
+        i += 1;
+      }
+      
+      if i == 0 || !found_match {
+        let pe = ParseError::of_in_complete();
+        ParseResult::failed_with_uncommitted(pe)
+      } else {
+        ParseResult::successful(&input[offset..offset + i], i)
+      }
+    })
   }
 
   /// 指定したシーケンスを解析するStaticParserを返します。
@@ -699,40 +649,64 @@ impl StaticParsersImpl {
     lp: StaticParser<'a, I, A>,
     parser: StaticParser<'a, I, B>,
     rp: StaticParser<'a, I, C>,
-  ) -> StaticParser<'a, I, B>
+  ) -> StaticParser<'a, I, &'a [I]>
   where
     A: Clone + Debug + 'a,
     B: Clone + Debug + 'a,
-    C: Clone + Debug + 'a, {
+    C: Clone + Debug + 'a,
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParser::new(move |parse_state| {
-      let lp_method = lp.method.clone();
-      let parser_method = parser.method.clone();
-      let rp_method = rp.method.clone();
-
-      match (lp_method)(parse_state) {
+      let input = parse_state.input();
+      let offset = parse_state.next_offset();
+      
+      // 左側のパーサーを実行
+      match lp.parse(&input[offset..]) {
         ParseResult::Success { length: n1, .. } => {
-          let next_state = parse_state.next(n1);
-          match (parser_method)(&next_state) {
-            ParseResult::Success { value, length: n2 } => {
-              let next_state = next_state.next(n2);
-              match (rp_method)(&next_state) {
-                ParseResult::Success { length: n3, .. } => ParseResult::successful(value, n1 + n2 + n3),
+          // 左側のパーサーが成功した場合、中央のパーサーを実行
+          let middle_offset = offset + n1;
+          if middle_offset >= input.len() {
+            return ParseResult::failed_with_uncommitted(ParseError::of_in_complete());
+          }
+          
+          match parser.parse(&input[middle_offset..]) {
+            ParseResult::Success { length: n2, .. } => {
+              // 中央のパーサーが成功した場合、右側のパーサーを実行
+              let right_offset = middle_offset + n2;
+              if right_offset >= input.len() {
+                return ParseResult::failed_with_uncommitted(ParseError::of_in_complete());
+              }
+              
+              match rp.parse(&input[right_offset..]) {
+                ParseResult::Success { length: n3, .. } => {
+                  // すべてのパーサーが成功した場合、中央部分（bodyの部分）を返す
+                  let body_slice = &input[middle_offset..middle_offset + n2];
+                  ParseResult::successful(body_slice, n1 + n2 + n3)
+                },
                 ParseResult::Failure {
                   error,
                   committed_status,
-                } => ParseResult::failed(error, committed_status),
+                } => {
+                  // 右側のパーサーが失敗した場合、エラーを伝播
+                  ParseResult::failed(error, committed_status)
+                },
               }
             }
             ParseResult::Failure {
               error,
               committed_status,
-            } => ParseResult::failed(error, committed_status),
+            } => {
+              // 中央のパーサーが失敗した場合、エラーを伝播
+              ParseResult::failed(error, committed_status)
+            },
           }
         }
         ParseResult::Failure {
           error,
           committed_status,
-        } => ParseResult::failed(error, committed_status),
+        } => {
+          // 左側のパーサーが失敗した場合、エラーを伝播
+          ParseResult::failed(error, committed_status)
+        },
       }
     })
   }
