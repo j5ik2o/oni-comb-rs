@@ -1,6 +1,5 @@
 use crate::core::{CommittedStatus, ParseError, ParseResult, ParseState, Parser, ParserRunner, Parsers, StaticParser};
 use crate::internal::ParsersImpl;
-use crate::internal::static_parsers_impl::StaticParsersImpl;
 
 mod cache_parsers_impl;
 mod collect_parsers_impl;
@@ -18,6 +17,7 @@ mod repeat_parsers_impl;
 mod skip_parser_impl;
 mod taken_parsers_impl;
 pub mod static_parsers_impl;
+
 
 impl Parsers for ParsersImpl {
   type P<'p, I, A>
