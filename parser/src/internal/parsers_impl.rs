@@ -1,5 +1,6 @@
-use crate::core::{CommittedStatus, ParseError, ParseResult, ParseState, Parser, ParserRunner, Parsers, StaticParser};
-use crate::internal::ParsersImpl;
+use crate::core::{CommittedStatus, ParseError, ParseResult, ParseState, Parser, ParserRunner, Parsers};
+
+pub struct ParsersImpl;
 
 mod cache_parsers_impl;
 mod collect_parsers_impl;

@@ -665,7 +665,7 @@ pub mod prelude {
   /// ```
   pub fn elm_ref_static<'a, I>(element: I) -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_ref(element)
   }
 
@@ -773,7 +773,7 @@ pub mod prelude {
   pub fn elm_pred_ref_static<'a, I, F>(f: F) -> StaticParser<'a, I, &'a I>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + PartialEq + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_pred_ref(f)
   }
 
@@ -890,9 +890,24 @@ pub mod prelude {
   /// ```
   pub fn elm_ref_of_static<'a, I, S>(set: &'a S) -> StaticParser<'a, I, &'a I>
   where
-    I: PartialEq + Display + Debug + 'a,
+    I: Element + PartialEq + Display + Clone + Debug + 'a,
     S: Set<I> + ?Sized, {
-    StaticParsersImpl::elm_ref_of(set)
+    // Use a predicate-based approach for all sets
+    StaticParser::new(move |parse_state| {
+      let input: &[I] = parse_state.input();
+      let offset = parse_state.next_offset();
+      if offset < input.len() && set.contains(&input[offset]) {
+        ParseResult::successful(&input[offset], 1)
+      } else if offset >= input.len() {
+        let msg = format!("unexpected end of input");
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
+      } else {
+        let msg = format!("element not in set: {:?}", input[offset]);
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
+      }
+    })
   }
 
   /// Returns a [Parser] that parses the elements in the specified set.<br/>
@@ -948,9 +963,24 @@ pub mod prelude {
   /// ```
   pub fn elm_of_static<'a, I, S>(set: &'a S) -> StaticParser<'a, I, I>
   where
-    I: PartialEq + Display + Clone + Debug + 'a,
+    I: Element + PartialEq + Display + Clone + Debug + 'a,
     S: Set<I> + ?Sized, {
-    StaticParsersImpl::elm_of(set)
+    // Use a predicate-based approach for all sets
+    StaticParser::new(move |parse_state| {
+      let input: &[I] = parse_state.input();
+      let offset = parse_state.next_offset();
+      if offset < input.len() && set.contains(&input[offset]) {
+        ParseResult::successful(input[offset].clone(), 1)
+      } else if offset >= input.len() {
+        let msg = format!("unexpected end of input");
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
+      } else {
+        let msg = format!("element not in set: {:?}", input[offset]);
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
+      }
+    })
   }
 
   /// Returns a [Parser] that parses the elements in the specified range. (for reference)<br/>
@@ -1011,7 +1041,7 @@ pub mod prelude {
   /// ```
   pub fn elm_in_ref_static<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a I>
   where
-    I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+    I: Element + PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
     StaticParsersImpl::elm_ref_in(start, end)
   }
 
@@ -1073,7 +1103,7 @@ pub mod prelude {
   /// ```
   pub fn elm_in_static<'a, I>(start: I, end: I) -> StaticParser<'a, I, I>
   where
-    I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
+    I: Element + PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
     StaticParsersImpl::elm_in(start, end)
   }
 
@@ -1135,7 +1165,7 @@ pub mod prelude {
   /// ```
   pub fn elm_from_until_ref_static<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a I>
   where
-    I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+    I: Element + PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
     StaticParsersImpl::elm_ref_from_until(start, end)
   }
 
@@ -1197,7 +1227,7 @@ pub mod prelude {
   /// ```
   pub fn elm_from_until_static<'a, I>(start: I, end: I) -> StaticParser<'a, I, I>
   where
-    I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
+    I: Element + PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
     StaticParsersImpl::elm_from_until(start, end)
   }
 
@@ -1254,9 +1284,24 @@ pub mod prelude {
   /// ```
   pub fn none_ref_of_static<'a, I, S>(set: &'a S) -> StaticParser<'a, I, &'a I>
   where
-    I: PartialEq + Display + Debug + 'a,
+    I: Element + PartialEq + Display + Clone + Debug + 'a,
     S: Set<I> + ?Sized, {
-    StaticParsersImpl::none_ref_of(set)
+    // Use a predicate-based approach for all sets
+    StaticParser::new(move |parse_state| {
+      let input: &[I] = parse_state.input();
+      let offset = parse_state.next_offset();
+      if offset < input.len() && !set.contains(&input[offset]) {
+        ParseResult::successful(&input[offset], 1)
+      } else if offset >= input.len() {
+        let msg = format!("unexpected end of input");
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
+      } else {
+        let msg = format!("element in excluded set: {:?}", input[offset]);
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
+      }
+    })
   }
 
   /// Returns a [Parser] that parses elements that do not contain elements of the specified set.<br/>
@@ -1312,9 +1357,24 @@ pub mod prelude {
   /// ```
   pub fn none_of_static<'a, I, S>(set: &'a S) -> StaticParser<'a, I, I>
   where
-    I: PartialEq + Display + Clone + Debug + 'a,
+    I: Element + PartialEq + Display + Clone + Debug + 'a,
     S: Set<I> + ?Sized, {
-    StaticParsersImpl::none_of(set)
+    // Use a predicate-based approach for all sets
+    StaticParser::new(move |parse_state| {
+      let input: &[I] = parse_state.input();
+      let offset = parse_state.next_offset();
+      if offset < input.len() && !set.contains(&input[offset]) {
+        ParseResult::successful(input[offset].clone(), 1)
+      } else if offset >= input.len() {
+        let msg = format!("unexpected end of input");
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
+      } else {
+        let msg = format!("element in excluded set: {:?}", input[offset]);
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
+      }
+    })
   }
 
   /// Returns a [Parser] that parses the space (' ', '\t'). (for reference)<br/>
@@ -1363,7 +1423,7 @@ pub mod prelude {
   /// ```
   pub fn elm_space_ref_static<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a, {
+    I: Element + PartialEq + Clone + Debug + 'a, {
     StaticParsersImpl::elm_space_ref()
   }
 
@@ -1413,7 +1473,7 @@ pub mod prelude {
   /// ```
   pub fn elm_space_static<'a, I>() -> StaticParser<'a, I, I>
   where
-    I: Element + Clone + PartialEq + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_space()
   }
 
@@ -1463,7 +1523,7 @@ pub mod prelude {
   /// ```
   pub fn elm_multi_space_ref_static<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a, {
+    I: Element + PartialEq + Clone + Debug + 'a, {
     StaticParsersImpl::elm_multi_space_ref()
   }
 
@@ -1513,7 +1573,7 @@ pub mod prelude {
   /// ```
   pub fn elm_multi_space_static<'a, I>() -> StaticParser<'a, I, I>
   where
-    I: Element + Clone + PartialEq + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_multi_space()
   }
 
@@ -1563,7 +1623,7 @@ pub mod prelude {
   /// ```
   pub fn elm_alpha_ref_static<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a, {
+    I: Element + PartialEq + Clone + Debug + 'a, {
     StaticParsersImpl::elm_alpha_ref()
   }
 
@@ -1613,7 +1673,7 @@ pub mod prelude {
   /// ```
   pub fn elm_alpha_static<'a, I>() -> StaticParser<'a, I, I>
   where
-    I: Element + Clone + PartialEq + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_alpha()
   }
 
@@ -1663,7 +1723,7 @@ pub mod prelude {
   /// ```
   pub fn elm_alpha_digit_ref_static<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_alpha_digit_ref()
   }
 
@@ -1713,7 +1773,7 @@ pub mod prelude {
   /// ```
   pub fn elm_alpha_digit_static<'a, I>() -> StaticParser<'a, I, I>
   where
-    I: Element + Clone + PartialEq + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_alpha_digit()
   }
 
@@ -1763,7 +1823,7 @@ pub mod prelude {
   /// ```
   pub fn elm_digit_ref_static<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_digit_ref()
   }
 
@@ -1813,7 +1873,7 @@ pub mod prelude {
   /// ```
   pub fn elm_digit_static<'a, I>() -> StaticParser<'a, I, I>
   where
-    I: Element + Clone + PartialEq + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_digit()
   }
 
@@ -1863,7 +1923,7 @@ pub mod prelude {
   /// ```
   pub fn elm_digit_1_9_ref_static<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     elm_digit_ref_static().with_filter_not(|c: &&I| c.is_ascii_digit_zero())
   }
 
@@ -1913,7 +1973,7 @@ pub mod prelude {
   /// ```
   pub fn elm_digit_1_9_static<'a, I>() -> StaticParser<'a, I, I>
   where
-    I: Element + Clone + PartialEq + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     elm_digit_1_9_ref_static().map(Clone::clone)
   }
 
@@ -1963,7 +2023,7 @@ pub mod prelude {
   /// ```
   pub fn elm_hex_digit_ref_static<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_hex_digit_ref()
   }
 
@@ -2013,7 +2073,7 @@ pub mod prelude {
   /// ```
   pub fn elm_hex_digit_static<'a, I>() -> StaticParser<'a, I, I>
   where
-    I: Element + Clone + PartialEq + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_hex_digit()
   }
 
@@ -2063,7 +2123,7 @@ pub mod prelude {
   /// ```
   pub fn elm_oct_digit_ref_static<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_oct_digit_ref()
   }
 
@@ -2113,7 +2173,7 @@ pub mod prelude {
   /// ```
   pub fn elm_oct_digit_static<'a, I>() -> StaticParser<'a, I, I>
   where
-    I: Element + PartialEq + Clone + 'a, {
+    I: Element + PartialEq + Clone + Debug + 'a, {
     StaticParsersImpl::elm_oct_digit()
   }
 
@@ -2166,7 +2226,7 @@ pub mod prelude {
   /// ```
   pub fn seq_static<'a, 'b, I>(seq: &'b [I]) -> StaticParser<'a, I, &'a [I]>
   where
-    I: PartialEq + Debug + 'a,
+    I: Element + PartialEq + Debug + 'a,
     'b: 'a, {
     StaticParsersImpl::seq(seq)
   }
@@ -2212,14 +2272,14 @@ pub mod prelude {
   /// let text: &str = "abcdef";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, &str> = tag_static("abc");
+  /// let parser: StaticParser<char, String> = tag_static("abc");
   ///
-  /// let result: ParseResult<char, &str> = parser.parse(&input);
+  /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), "abc");
   /// ```
-  pub fn tag_static<'a, 'b>(tag: &'b str) -> StaticParser<'a, char, &'a str>
+  pub fn tag_static<'a, 'b>(tag: &'b str) -> StaticParser<'a, char, String>
   where
     'b: 'a, {
     StaticParsersImpl::tag(tag)
@@ -2266,17 +2326,57 @@ pub mod prelude {
   /// let text: &str = "abcdef";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, &str> = tag_no_case_static("ABC");
+  /// let parser: StaticParser<char, String> = tag_no_case_static("ABC");
   ///
-  /// let result: ParseResult<char, &str> = parser.parse(&input);
+  /// let result: ParseResult<char, String> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), "abc");
   /// ```
-  pub fn tag_no_case_static<'a, 'b>(tag: &'b str) -> StaticParser<'a, char, &'a str>
+  pub fn tag_no_case_static<'a, 'b>(tag: &'b str) -> StaticParser<'a, char, String>
   where
     'b: 'a, {
     StaticParsersImpl::tag_no_case(tag)
+  }
+  
+  /// Helper function for lazy_static tests
+  /// This is used to avoid lifetime issues with lazy_static
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// fn value<'a>() -> StaticParser<'a, char, String> {
+  ///   lazy_static_parser()
+  /// }
+  ///
+  /// let text: &str = "abcdef";
+  /// let input = text.chars().collect::<Vec<_>>();
+  ///
+  /// let parser = value();
+  /// let result = parser.parse(&input);
+  ///
+  /// assert!(result.is_success());
+  /// assert_eq!(result.success().unwrap(), "abc");
+  /// ```
+  pub fn lazy_static_parser<'a>() -> StaticParser<'a, char, String> {
+    StaticParsersImpl::lazy_static_parser()
+  }
+  
+  /// Helper function for lazy_static tests
+  /// This is used to avoid lifetime issues with lazy_static
+  ///
+  /// # Example
+  ///
+  /// ```rust
+  /// use oni_comb_parser_rs::prelude::*;
+  ///
+  /// let s = lazy_static_str("abc");
+  /// assert_eq!(s, "abc");
+  /// ```
+  pub fn lazy_static_str(s: &str) -> String {
+    StaticParsersImpl::lazy_static_str(s)
   }
 
   /// Returns a [Parser] that parses a string that match a regular expression.<br/>
@@ -2325,7 +2425,7 @@ pub mod prelude {
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), "abc");
   /// ```
-  pub fn regex_static<'a>(pattern: &str) -> StaticParser<'a, char, String> {
+  pub fn regex_static<'a>(pattern: &'a str) -> StaticParser<'a, char, String> {
     StaticParsersImpl::regex(pattern)
   }
 
@@ -2377,7 +2477,9 @@ pub mod prelude {
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), "abc");
   /// ```
-  pub fn take_static<'a, I>(n: usize) -> StaticParser<'a, I, &'a [I]> {
+  pub fn take_static<'a, I>(n: usize) -> StaticParser<'a, I, &'a [I]>
+  where
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::take(n)
   }
 
@@ -2477,7 +2579,7 @@ pub mod prelude {
   pub fn take_while0_static<'a, I, F>(f: F) -> StaticParser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::take_while0(f)
   }
 
@@ -2577,7 +2679,7 @@ pub mod prelude {
   pub fn take_while1_static<'a, I, F>(f: F) -> StaticParser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::take_while1(f)
   }
 
@@ -2677,7 +2779,7 @@ pub mod prelude {
   pub fn take_while_n_m_static<'a, I, F>(n: usize, m: usize, f: F) -> StaticParser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::take_while_n_m(n, m, f)
   }
 
@@ -2725,11 +2827,11 @@ pub mod prelude {
     ParsersImpl::take_till0(f)
   }
   
-  /// Returns a [StaticParser] that returns a sequence up to either the end element or the element that matches the condition.<br/>
-  /// 条件に一致する要素もしくは最後の要素までの連続を返す[StaticParser]を返す。
+  /// Returns a [StaticParser] that returns a sequence up to and including the element that matches the condition.<br/>
+  /// 条件に一致する要素を含む連続を返す[StaticParser]を返す。
   ///
-  /// 解析結果の長さは1要素以上必要です。<br/>
-  /// The length of the analysis result must be at least one element.
+  /// 解析結果の長さは0要素以上必要です。<br/>
+  /// The length of the analysis result can be zero or more elements.
   ///
   /// # Example
   ///
@@ -2765,7 +2867,7 @@ pub mod prelude {
   pub fn take_till0_static<'a, I, F>(f: F) -> StaticParser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::take_till0(f)
   }
 
@@ -2813,8 +2915,8 @@ pub mod prelude {
     ParsersImpl::take_till1(f)
   }
   
-  /// Returns a [StaticParser] that returns a sequence up to either the end element or the element that matches the condition.<br/>
-  /// 条件に一致する要素もしくは最後の要素までの連続を返す[StaticParser]を返す。
+  /// Returns a [StaticParser] that returns a sequence up to and including the element that matches the condition.<br/>
+  /// 条件に一致する要素を含む連続を返す[StaticParser]を返す。
   ///
   /// 解析結果の長さは1要素以上必要です。<br/>
   /// The length of the analysis result must be at least one element.
@@ -2853,7 +2955,7 @@ pub mod prelude {
   pub fn take_till1_static<'a, I, F>(f: F) -> StaticParser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::take_till1(f)
   }
 
@@ -3026,9 +3128,9 @@ pub mod prelude {
   /// let input = text.chars().collect::<Vec<_>>();
   ///
   /// fn value<'a>() -> StaticParser<'a, char, &'a str> {
-  ///   tag_static("abc")
+  ///   tag_static("abc").map(|s| s.as_str())
   /// }
-  /// let parser: StaticParser<char, &str> = lazy_static(value);
+  /// let parser: StaticParser<char, &str> = lazy_static_str(value);
   ///
   /// let result: ParseResult<char, &str> = parser.parse(&input);
   ///
@@ -3041,6 +3143,7 @@ pub mod prelude {
     A: Debug + 'a, {
     StaticParsersImpl::lazy(f)
   }
+
 }
 
 #[cfg(test)]
