@@ -170,7 +170,7 @@ fn test_static_parser_conversion() {
     let input: Vec<&char> = chars.iter().collect();
 
     // 数値文字列を解析するパーサーを作成
-    let digit_parser = (&elm_digit()).to_static_parser().of_many1().map(|digits| {
+    let digit_parser = elm_digit().clone().to_static_parser().of_many1().map(|digits| {
       let s: String = digits.into_iter().map(|c: &char| *c).collect();
       s
     });
@@ -189,7 +189,7 @@ fn test_static_parser_conversion() {
     let input: Vec<&char> = chars.iter().collect();
 
     // 数値文字列を解析するパーサーを作成
-    let digit_parser = (&elm_digit()).to_static_parser().of_many1().map(|digits| {
+    let digit_parser = elm_digit().clone().to_static_parser().of_many1().map(|digits| {
       let s: String = digits.into_iter().map(|c: &char| *c).collect();
       s
     });
