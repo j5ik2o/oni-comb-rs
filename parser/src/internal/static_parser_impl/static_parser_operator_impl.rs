@@ -113,7 +113,11 @@ impl<'a, I, A: 'a> OperatorParser<'a> for StaticParser<'a, I, A> {
     StaticParser::new(move |parse_state| match (method1)(parse_state) {
       ParseResult::Success { value: x, length: n1 } => {
         let ps = parse_state.add_offset(n1);
-        self.clone().rest_left1(op.clone(), x.clone()).run(&ps).with_add_length(n1)
+        self
+          .clone()
+          .rest_left1(op.clone(), x.clone())
+          .run(&ps)
+          .with_add_length(n1)
       }
       ParseResult::Failure {
         error,
@@ -132,7 +136,9 @@ impl<'a, I, A: 'a> OperatorParser<'a> for StaticParser<'a, I, A> {
     Self::Output: Clone + Debug + 'a, {
     let default_value = x.clone();
     let value = default_value.clone();
-    self.clone().or(StaticParser::new(move |_| ParseResult::successful(value.clone(), 0)))
+    self
+      .clone()
+      .or(StaticParser::new(move |_| ParseResult::successful(value.clone(), 0)))
   }
 
   fn chain_left0<BOP>(
@@ -145,7 +151,9 @@ impl<'a, I, A: 'a> OperatorParser<'a> for StaticParser<'a, I, A> {
     Self::Output: Clone + Debug + 'a, {
     let default_value = x.clone();
     let value = default_value.clone();
-    self.clone().or(StaticParser::new(move |_| ParseResult::successful(value.clone(), 0)))
+    self
+      .clone()
+      .or(StaticParser::new(move |_| ParseResult::successful(value.clone(), 0)))
   }
 
   fn chain_right1<BOP>(self, op: Self::P<'a, Self::Input, BOP>) -> Self::P<'a, Self::Input, Self::Output>
@@ -226,7 +234,8 @@ impl<'a, I, A: 'a> OperatorParser<'a> for StaticParser<'a, I, A> {
           (match (method2)(&ps) {
             ParseResult::Success { value: y, length: n2 } => {
               ps = ps.add_offset(n2);
-              self.clone()
+              self
+                .clone()
                 .rest_left1(op.clone(), f(default_value.clone(), y))
                 .run(&ps)
                 .with_add_length(n2)

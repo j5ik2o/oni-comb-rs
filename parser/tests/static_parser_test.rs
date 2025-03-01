@@ -10,7 +10,6 @@ use oni_comb_parser_rs::prelude::*;
 
 // 不要なインポートを削除
 
-
 #[test]
 fn test_static_parser_runner() {
   let text = "abc";
@@ -174,7 +173,7 @@ fn test_static_parser_conversion() {
       let s: String = digits.into_iter().collect();
       s
     });
-    
+
     let parser = digit_parser.map_res(|s| s.parse::<i32>());
     let result = parser.parse(&input);
 
@@ -192,7 +191,7 @@ fn test_static_parser_conversion() {
       let s: String = digits.into_iter().collect();
       s
     });
-    
+
     let parser = digit_parser.map_res(|s| s.parse::<i32>());
     let result = parser.parse(&input);
 
@@ -249,7 +248,9 @@ fn test_static_parser_operator() {
   let input = text.chars().collect::<Vec<_>>();
 
   // and_then
-  let parser = elm_ref('a').to_static_parser().and_then(elm_ref('b').to_static_parser());
+  let parser = elm_ref('a')
+    .to_static_parser()
+    .and_then(elm_ref('b').to_static_parser());
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap(), (&'a', &'b'));
@@ -353,22 +354,25 @@ fn test_static_parser_skip() {
   let input = text.chars().collect::<Vec<_>>();
 
   // skip_left
-  let parser = elm_ref('a').to_static_parser().skip_left(elm_ref('b').to_static_parser());
+  let parser = elm_ref('a')
+    .to_static_parser()
+    .skip_left(elm_ref('b').to_static_parser());
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap(), &'b');
 
   // skip_right
-  let parser = elm_ref('a').to_static_parser().skip_right(elm_ref('b').to_static_parser());
+  let parser = elm_ref('a')
+    .to_static_parser()
+    .skip_right(elm_ref('b').to_static_parser());
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap(), &'a');
 
   // surround
-  let parser = elm_ref('b').to_static_parser().surround(
-    elm_ref('a').to_static_parser(),
-    elm_ref('c').to_static_parser(),
-  );
+  let parser = elm_ref('b')
+    .to_static_parser()
+    .surround(elm_ref('a').to_static_parser(), elm_ref('c').to_static_parser());
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap(), &'b');
