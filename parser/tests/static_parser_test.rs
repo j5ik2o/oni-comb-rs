@@ -158,7 +158,7 @@ fn test_static_parser_collect() {
   let result = parser.parse(&input);
 
   assert!(result.is_success());
-  assert_eq!(result.success().unwrap(), &['a']);
+  assert_eq!(result.success().unwrap(), vec![&'a']);
 }
 
 #[test]
@@ -169,8 +169,8 @@ fn test_static_parser_conversion() {
     let input = text.chars().collect::<Vec<_>>();
 
     // 数値文字列を解析するパーサーを作成
-    let digit_parser = elm_digit().to_static_parser().of_many1().collect().map(|digits| {
-      let s: String = digits.into_iter().collect();
+    let digit_parser = elm_digit().to_static_parser().of_many1().map(|digits| {
+      let s: String = digits.into_iter().map(|c| *c).collect();
       s
     });
 
@@ -187,8 +187,8 @@ fn test_static_parser_conversion() {
     let input = text.chars().collect::<Vec<_>>();
 
     // 数値文字列を解析するパーサーを作成
-    let digit_parser = elm_digit().to_static_parser().of_many1().collect().map(|digits| {
-      let s: String = digits.into_iter().collect();
+    let digit_parser = elm_digit().to_static_parser().of_many1().map(|digits| {
+      let s: String = digits.into_iter().map(|c| *c).collect();
       s
     });
 
