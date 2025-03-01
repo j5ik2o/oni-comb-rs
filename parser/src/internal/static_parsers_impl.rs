@@ -364,17 +364,17 @@ impl StaticParsersImpl {
   }
 
   /// 複数の空白文字を解析するStaticParserを返します。(参照版)
-  pub fn elm_multi_space_ref<'a, I>() -> StaticParser<'a, I, &'a [I]>
+  pub fn elm_multi_space_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::take_while1(|e: &I| e.is_ascii_multi_space())
+    Self::elm_pred_ref(|e: &I| e.is_ascii_multi_space())
   }
 
   /// 複数の空白文字を解析するStaticParserを返します。
-  pub fn elm_multi_space<'a, I>() -> StaticParser<'a, I, Vec<I>>
+  pub fn elm_multi_space<'a, I>() -> StaticParser<'a, I, I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::take_while1(|e: &I| e.is_ascii_multi_space()).map(|slice| slice.to_vec())
+    Self::elm_pred(|e: &I| e.is_ascii_multi_space())
   }
 
   /// アルファベットを解析するStaticParserを返します。(参照版)
