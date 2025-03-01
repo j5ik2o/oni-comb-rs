@@ -1,9 +1,9 @@
 use crate::core::{CommittedStatus, Element, ParseError, ParseResult, StaticParser};
 use crate::prelude::OperatorParser;
-use std::fmt::{Debug, Display};
 use regex::Regex;
-use std::str;
 use std::char;
+use std::fmt::{Debug, Display};
+use std::str;
 
 /// StaticParserの実装を提供する構造体
 pub struct StaticParsersImpl;
@@ -18,19 +18,20 @@ impl StaticParsersImpl {
     StaticParser::new(move |parse_state| {
       let input = parse_state.input();
       let offset = parse_state.next_offset();
-      
+
       if offset + 3 <= input.len() {
         if input[offset] == 'a' && input[offset + 1] == 'b' && input[offset + 2] == 'c' {
           ParseResult::successful("abc".to_string(), 3)
         } else {
-          ParseResult::failed_with_uncommitted(
-            ParseError::of_mismatch(input, offset, 0, "expected 'abc'".to_string())
-          )
+          ParseResult::failed_with_uncommitted(ParseError::of_mismatch(input, offset, 0, "expected 'abc'".to_string()))
         }
       } else {
-        ParseResult::failed_with_uncommitted(
-          ParseError::of_mismatch(input, offset, 0, "unexpected end of input".to_string())
-        )
+        ParseResult::failed_with_uncommitted(ParseError::of_mismatch(
+          input,
+          offset,
+          0,
+          "unexpected end of input".to_string(),
+        ))
       }
     })
   }
@@ -252,7 +253,7 @@ impl StaticParsersImpl {
     if set.is_empty() {
       return Self::failed(ParseError::of_in_complete(), CommittedStatus::Uncommitted);
     }
-    
+
     let mut parser = Self::elm_ref(set[0].clone());
     for i in 1..set.len() {
       parser = parser.or(Self::elm_ref(set[i].clone()));
@@ -267,7 +268,7 @@ impl StaticParsersImpl {
     if set.is_empty() {
       return Self::failed(ParseError::of_in_complete(), CommittedStatus::Uncommitted);
     }
-    
+
     let mut parser = Self::elm(set[0].clone());
     for i in 1..set.len() {
       parser = parser.or(Self::elm(set[i].clone()));
@@ -310,7 +311,7 @@ impl StaticParsersImpl {
     StaticParser::new(move |parse_state| {
       let input = parse_state.input();
       let offset = parse_state.next_offset();
-      
+
       if offset < input.len() {
         let element = &input[offset];
         if !set.contains(element) {
@@ -335,7 +336,7 @@ impl StaticParsersImpl {
     StaticParser::new(move |parse_state| {
       let input = parse_state.input();
       let offset = parse_state.next_offset();
-      
+
       if offset < input.len() {
         let element = &input[offset];
         if !set.contains(element) {
@@ -430,7 +431,7 @@ impl StaticParsersImpl {
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
-      
+
       if offset + n <= input.len() {
         ParseResult::successful(&input[offset..offset + n], n)
       } else {
@@ -450,11 +451,11 @@ impl StaticParsersImpl {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       let mut i = offset;
-      
+
       while i < input.len() && f(&input[i]) {
         i += 1;
       }
-      
+
       ParseResult::successful(&input[offset..i], i - offset)
     })
   }
@@ -467,18 +468,18 @@ impl StaticParsersImpl {
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
-      
+
       if offset >= input.len() {
         let pe = ParseError::of_in_complete();
         return ParseResult::failed_with_uncommitted(pe);
       }
-      
+
       let mut i = offset;
-      
+
       while i < input.len() && f(&input[i]) {
         i += 1;
       }
-      
+
       if i > offset {
         ParseResult::successful(&input[offset..i], i - offset)
       } else {
@@ -497,18 +498,18 @@ impl StaticParsersImpl {
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
-      
+
       if offset >= input.len() {
         let pe = ParseError::of_in_complete();
         return ParseResult::failed_with_uncommitted(pe);
       }
-      
+
       let mut i = offset;
-      
+
       while i < input.len() && (i - offset) < m && f(&input[i]) {
         i += 1;
       }
-      
+
       if (i - offset) >= n {
         ParseResult::successful(&input[offset..i], i - offset)
       } else {
@@ -527,17 +528,17 @@ impl StaticParsersImpl {
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
-      
+
       if offset >= input.len() {
         return ParseResult::successful(&input[offset..offset], 0);
       }
-      
+
       let mut i = offset;
-      
+
       while i < input.len() && !f(&input[i]) {
         i += 1;
       }
-      
+
       ParseResult::successful(&input[offset..i], i - offset)
     })
   }
@@ -550,18 +551,18 @@ impl StaticParsersImpl {
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
-      
+
       if offset >= input.len() {
         let pe = ParseError::of_in_complete();
         return ParseResult::failed_with_uncommitted(pe);
       }
-      
+
       let mut i = offset;
-      
+
       while i < input.len() && !f(&input[i]) {
         i += 1;
       }
-      
+
       if i > offset {
         ParseResult::successful(&input[offset..i], i - offset)
       } else {
@@ -580,25 +581,29 @@ impl StaticParsersImpl {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       let elements_len = elements.len();
-      
+
       if offset + elements_len > input.len() {
         let msg = format!("unexpected end of input");
         let pe = ParseError::of_mismatch(input, offset, 0, msg);
         return ParseResult::failed_with_uncommitted(pe);
       }
-      
+
       for i in 0..elements_len {
         if input[offset + i] != elements[i] {
-          let msg = format!("expected: {:?}, but got: {:?}", elements, &input[offset..offset + elements_len]);
+          let msg = format!(
+            "expected: {:?}, but got: {:?}",
+            elements,
+            &input[offset..offset + elements_len]
+          );
           let pe = ParseError::of_mismatch(input, offset, 0, msg);
           return ParseResult::failed_with_uncommitted(pe);
         }
       }
-      
+
       ParseResult::successful(elements, elements_len)
     })
   }
-  
+
   /// 指定したタグを解析するStaticParserを返します。
   pub fn tag<'a, I, S>(tag: S) -> StaticParser<'a, I, String>
   where
@@ -606,18 +611,18 @@ impl StaticParsersImpl {
     S: AsRef<str> + 'a, {
     let tag_str = tag.as_ref().to_string();
     let tag_chars: Vec<char> = tag_str.chars().collect();
-    
+
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       let tag_len = tag_chars.len();
-      
+
       if offset + tag_len > input.len() {
         let msg = format!("unexpected end of input");
         let pe = ParseError::of_mismatch(input, offset, 0, msg);
         return ParseResult::failed_with_uncommitted(pe);
       }
-      
+
       for i in 0..tag_len {
         let c = input[offset + i].clone().to_char();
         if c != tag_chars[i] {
@@ -626,11 +631,11 @@ impl StaticParsersImpl {
           return ParseResult::failed_with_uncommitted(pe);
         }
       }
-      
+
       ParseResult::successful(tag_str.clone(), tag_len)
     })
   }
-  
+
   /// 大文字小文字を区別せずに指定したタグを解析するStaticParserを返します。
   pub fn tag_no_case<'a, I, S>(tag: S) -> StaticParser<'a, I, String>
   where
@@ -638,39 +643,43 @@ impl StaticParsersImpl {
     S: AsRef<str> + 'a, {
     let tag_str = tag.as_ref().to_string();
     let tag_chars: Vec<char> = tag_str.chars().collect();
-    
+
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       let tag_len = tag_chars.len();
-      
+
       if offset + tag_len > input.len() {
         let msg = format!("unexpected end of input");
         let pe = ParseError::of_mismatch(input, offset, 0, msg);
         return ParseResult::failed_with_uncommitted(pe);
       }
-      
+
       for i in 0..tag_len {
         let c = input[offset + i].clone().to_char();
         let c_lower = c.to_lowercase().next().unwrap_or(c);
         let tag_lower = tag_chars[i].to_lowercase().next().unwrap_or(tag_chars[i]);
         if c_lower != tag_lower {
-          let msg = format!("expected: {} (case insensitive), but got: {:?}", tag_str, &input[offset..offset + tag_len]);
+          let msg = format!(
+            "expected: {} (case insensitive), but got: {:?}",
+            tag_str,
+            &input[offset..offset + tag_len]
+          );
           let pe = ParseError::of_mismatch(input, offset, 0, msg);
           return ParseResult::failed_with_uncommitted(pe);
         }
       }
-      
+
       // Return the matched string in lowercase to match the expected behavior
       let matched_str = input[offset..offset + tag_len]
         .iter()
         .map(|e| e.clone().to_char().to_lowercase().next().unwrap_or(e.clone().to_char()))
         .collect::<String>();
-      
+
       ParseResult::successful(matched_str, tag_len)
     })
   }
-  
+
   /// 正規表現にマッチする文字列を解析するStaticParserを返します。
   pub fn regex<'a, I, S>(pattern: S) -> StaticParser<'a, I, String>
   where
@@ -678,14 +687,14 @@ impl StaticParsersImpl {
     S: AsRef<str> + 'a, {
     let pattern_str = pattern.as_ref().to_string();
     let re = Regex::new(&pattern_str).unwrap();
-    
+
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
-      
+
       // Convert input to string for regex matching
       let input_str: String = input[offset..].iter().map(|e| e.clone().to_char()).collect();
-      
+
       if let Some(m) = re.find(&input_str) {
         if m.start() == 0 {
           let matched_str = input_str[m.start()..m.end()].to_string();
@@ -729,7 +738,7 @@ impl StaticParsersImpl {
       let lp_method = lp.method.clone();
       let parser_method = parser.method.clone();
       let rp_method = rp.method.clone();
-      
+
       match (lp_method)(parse_state) {
         ParseResult::Success { length: n1, .. } => {
           let next_state = parse_state.next(n1);
@@ -737,22 +746,23 @@ impl StaticParsersImpl {
             ParseResult::Success { value, length: n2 } => {
               let next_state = next_state.next(n2);
               match (rp_method)(&next_state) {
-                ParseResult::Success { length: n3, .. } => {
-                  ParseResult::successful(value, n1 + n2 + n3)
-                }
-                ParseResult::Failure { error, committed_status } => {
-                  ParseResult::failed(error, committed_status)
-                }
+                ParseResult::Success { length: n3, .. } => ParseResult::successful(value, n1 + n2 + n3),
+                ParseResult::Failure {
+                  error,
+                  committed_status,
+                } => ParseResult::failed(error, committed_status),
               }
             }
-            ParseResult::Failure { error, committed_status } => {
-              ParseResult::failed(error, committed_status)
-            }
+            ParseResult::Failure {
+              error,
+              committed_status,
+            } => ParseResult::failed(error, committed_status),
           }
         }
-        ParseResult::Failure { error, committed_status } => {
-          ParseResult::failed(error, committed_status)
-        }
+        ParseResult::Failure {
+          error,
+          committed_status,
+        } => ParseResult::failed(error, committed_status),
       }
     })
   }

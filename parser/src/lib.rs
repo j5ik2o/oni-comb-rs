@@ -12,11 +12,11 @@ pub mod prelude {
   pub use crate::core::*;
   pub use crate::extension::parser::*;
   pub use crate::extension::parsers::*;
-  use crate::internal::*;
   use crate::internal::static_parsers_impl::StaticParsersImpl;
+  use crate::internal::*;
   pub use crate::utils::*;
   use std::fmt::{Debug, Display};
-  
+
   // StaticParser re-export
   pub use crate::core::static_parser::StaticParser;
 
@@ -41,7 +41,7 @@ pub mod prelude {
   pub fn unit<'a, I>() -> Parser<'a, I, ()> {
     ParsersImpl::unit()
   }
-  
+
   /// Returns a [StaticParser] that does nothing.<br/>
   /// 何もしない[StaticParser]を返します。
   ///
@@ -85,7 +85,7 @@ pub mod prelude {
   pub fn empty<'a, I>() -> Parser<'a, I, ()> {
     ParsersImpl::empty()
   }
-  
+
   /// Returns a [StaticParser] that does nothing. It is an alias for `unit_static()`.<br/>
   /// 何もしない[StaticParser]を返します。`unit_static()`のエイリアスです。
   ///
@@ -136,7 +136,7 @@ pub mod prelude {
     I: Debug + Display + 'a, {
     ParsersImpl::end()
   }
-  
+
   /// Returns a [StaticParser] representing the termination.<br/>
   /// 終端を表す[StaticParser]を返します。
   ///
@@ -190,7 +190,7 @@ pub mod prelude {
     A: Clone + 'a, {
     ParsersImpl::successful(value)
   }
-  
+
   /// Returns a [StaticParser] representing the successful parsing result.<br/>
   /// 成功した解析結果を表す[StaticParser]を返します。
   ///
@@ -244,7 +244,7 @@ pub mod prelude {
     A: 'a, {
     ParsersImpl::successful_lazy(f)
   }
-  
+
   /// Returns a [StaticParser] representing the successful parsing result.<br/>
   /// 成功した解析結果を表す[StaticParser]を返します。
   ///
@@ -302,7 +302,7 @@ pub mod prelude {
     A: 'a, {
     ParsersImpl::failed(value, commit)
   }
-  
+
   /// Returns a [StaticParser] that represents the result of the failed parsing.<br/>
   /// 失敗した解析結果を表す[StaticParser]を返します。
   ///
@@ -362,7 +362,7 @@ pub mod prelude {
     A: 'a, {
     ParsersImpl::failed(value, CommittedStatus::Committed)
   }
-  
+
   /// Returns a [StaticParser] that returns and commits the failed parsing result.<br/>
   /// 失敗した解析結果を返しコミットする[StaticParser]を返します。
   ///
@@ -424,7 +424,7 @@ pub mod prelude {
     A: 'a, {
     ParsersImpl::failed(value, CommittedStatus::Uncommitted)
   }
-  
+
   /// Returns a [StaticParser] that returns and uncommits the failed parsing result.<br/>
   /// 失敗した解析結果を返しアンコミットする[StaticParser]を返します。
   ///
@@ -486,7 +486,7 @@ pub mod prelude {
     A: 'a, {
     ParsersImpl::failed_lazy(f)
   }
-  
+
   /// Returns a [StaticParser] that represents the result of the failed parsing.<br/>
   /// 失敗した解析結果を表す[StaticParser]を返します。
   ///
@@ -542,7 +542,7 @@ pub mod prelude {
     I: Element + PartialEq + 'a, {
     ParsersImpl::elm_any_ref()
   }
-  
+
   /// Returns a [StaticParser] that parses an any element.(for reference)<br/>
   /// 任意の要素を解析する[StaticParser]を返します。(参照版)
   ///
@@ -590,7 +590,7 @@ pub mod prelude {
     I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_any()
   }
-  
+
   /// Returns a [StaticParser] that parses an any element.<br/>
   /// 任意の要素を解析する[StaticParser]を返します。
   ///
@@ -641,7 +641,7 @@ pub mod prelude {
     I: Element + PartialEq + 'a, {
     ParsersImpl::elm_ref(element)
   }
-  
+
   /// Returns a [StaticParser] that parses the specified element.(for reference)<br/>
   /// 指定した要素を解析する[StaticParser]を返します。(参照版)
   ///
@@ -695,7 +695,7 @@ pub mod prelude {
     I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm(element)
   }
-  
+
   /// Returns a [StaticParser] that parses the specified element.<br/>
   /// 指定した要素を解析する[StaticParser]を返します。
   ///
@@ -749,7 +749,7 @@ pub mod prelude {
     I: Element + PartialEq + 'a, {
     ParsersImpl::elm_pred_ref(f)
   }
-  
+
   /// Returns a [StaticParser] that parses the elements that satisfy the specified closure conditions.(for reference)<br/>
   /// 指定されたクロージャの条件を満たす要素を解析する[StaticParser]を返します。(参照版)
   ///
@@ -806,7 +806,7 @@ pub mod prelude {
     I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_pred(f)
   }
-  
+
   /// Returns a [StaticParser] that parses the elements that satisfy the specified closure conditions.<br/>
   /// 指定されたクロージャの条件を満たす要素を解析するパーサーを返します。
   ///
@@ -865,7 +865,7 @@ pub mod prelude {
     S: Set<I> + ?Sized, {
     ParsersImpl::elm_ref_of(set)
   }
-  
+
   /// Returns a [StaticParser] that parses the elements in the specified set. (for reference)<br/>
   /// 指定した集合の要素を解析する[StaticParser]を返します。(参照版)
   ///
@@ -938,7 +938,7 @@ pub mod prelude {
     S: Set<I> + ?Sized, {
     ParsersImpl::elm_of(set)
   }
-  
+
   /// Returns a [StaticParser] that parses the elements in the specified set.<br/>
   /// 指定した集合の要素を解析する[StaticParser]を返します。
   ///
@@ -1013,7 +1013,7 @@ pub mod prelude {
     I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
     ParsersImpl::elm_ref_in(start, end)
   }
-  
+
   /// Returns a [StaticParser] that parses the elements in the specified range. (for reference)<br/>
   /// 指定した範囲の要素を解析する[StaticParser]を返します。(参照版)
   ///
@@ -1075,7 +1075,7 @@ pub mod prelude {
     I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
     ParsersImpl::elm_in(start, end)
   }
-  
+
   /// Returns a [StaticParser] that parses the elements in the specified range.<br/>
   /// 指定した範囲の要素を解析する[StaticParser]を返します。
   ///
@@ -1137,7 +1137,7 @@ pub mod prelude {
     I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
     ParsersImpl::elm_ref_from_until(start, end)
   }
-  
+
   /// Returns a [StaticParser] that parses the elements in the specified range. (for reference)<br/>
   /// 指定した範囲の要素を解析する[StaticParser]を返します。(参照版)
   ///
@@ -1199,7 +1199,7 @@ pub mod prelude {
     I: PartialEq + PartialOrd + Display + Copy + Clone + Debug + 'a, {
     ParsersImpl::elm_from_until(start, end)
   }
-  
+
   /// Returns a [StaticParser] that parses the elements in the specified range.<br/>
   /// 指定した範囲の要素を解析する[StaticParser]を返します。
   ///
@@ -1259,7 +1259,7 @@ pub mod prelude {
     S: Set<I> + ?Sized, {
     ParsersImpl::none_ref_of(set)
   }
-  
+
   /// Returns a [StaticParser] that parses elements that do not contain elements of the specified set.(for reference)<br/>
   /// 指定した集合の要素を含まない要素を解析する[StaticParser]を返します。(参照版)
   ///
@@ -1332,7 +1332,7 @@ pub mod prelude {
     S: Set<I> + ?Sized, {
     ParsersImpl::none_of(set)
   }
-  
+
   /// Returns a [StaticParser] that parses elements that do not contain elements of the specified set.<br/>
   /// 指定した集合の要素を含まない要素を解析する[StaticParser]を返します。
   ///
@@ -1401,7 +1401,7 @@ pub mod prelude {
     I: Element + PartialEq + 'a, {
     ParsersImpl::elm_space_ref()
   }
-  
+
   /// Returns a [StaticParser] that parses the space (' ', '\t'). (for reference)<br/>
   /// スペース(' ', '\t')を解析する[StaticParser]を返します。(参照版)
   ///
@@ -1451,7 +1451,7 @@ pub mod prelude {
     I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_space()
   }
-  
+
   /// Returns a [StaticParser] that parses the space (' ', '\t').<br/>
   /// スペース(' ', '\t')を解析する[StaticParser]を返します。
   ///
@@ -1501,7 +1501,7 @@ pub mod prelude {
     I: Element + PartialEq + 'a, {
     ParsersImpl::elm_multi_space_ref()
   }
-  
+
   /// Returns a [StaticParser] that parses spaces containing newlines (' ', '\t', '\n', '\r'). (for reference)<br/>
   /// 改行を含むスペース(' ', '\t', '\n', '\r')を解析する[StaticParser]を返します。(参照版)
   ///
@@ -1551,7 +1551,7 @@ pub mod prelude {
     I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_multi_space()
   }
-  
+
   /// Returns a [StaticParser] that parses spaces containing newlines (' ', '\t', '\n', '\r').<br/>
   /// 改行を含むスペース(' ', '\t', '\n', '\r')を解析する[StaticParser]を返します。
   ///
@@ -1601,7 +1601,7 @@ pub mod prelude {
     I: Element + PartialEq + 'a, {
     ParsersImpl::elm_alpha_ref()
   }
-  
+
   /// Returns a [StaticParser] that parses alphabets ('A'..='Z', 'a'..='z').(for reference)<br/>
   /// 英字('A'..='Z', 'a'..='z')を解析する[StaticParser]を返します。(参照版)
   ///
@@ -1651,7 +1651,7 @@ pub mod prelude {
     I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_alpha()
   }
-  
+
   /// Returns a [StaticParser] that parses alphabets ('A'..='Z', 'a'..='z').<br/>
   /// 英字('A'..='Z', 'a'..='z')を解析する[StaticParser]を返します。
   ///
@@ -1701,7 +1701,7 @@ pub mod prelude {
     I: Element + PartialEq + 'a, {
     ParsersImpl::elm_alpha_digit_ref()
   }
-  
+
   /// Returns a [StaticParser] that parses alphabets and digits ('A'..='Z', 'a'..='z', '0'..='9').(for reference)<br/>
   /// 英数字('A'..='Z', 'a'..='z', '0'..='9')を解析する[StaticParser]を返します。(参照版)
   ///
@@ -1751,7 +1751,7 @@ pub mod prelude {
     I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_alpha_digit()
   }
-  
+
   /// Returns a [StaticParser] that parses alphabets and digits ('A'..='Z', 'a'..='z', '0'..='9').<br/>
   /// 英数字('A'..='Z', 'a'..='z', '0'..='9')を解析する[StaticParser]を返します。
   ///
@@ -1801,7 +1801,7 @@ pub mod prelude {
     I: Element + PartialEq + 'a, {
     ParsersImpl::elm_digit_ref()
   }
-  
+
   /// Returns a [StaticParser] that parses digits ('0'..='9').(for reference)<br/>
   /// 数字('0'..='9')を解析する[StaticParser]を返します。(参照版)
   ///
@@ -1851,7 +1851,7 @@ pub mod prelude {
     I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_digit()
   }
-  
+
   /// Returns a [StaticParser] that parses digits ('0'..='9').<br/>
   /// 数字('0'..='9')を解析する[StaticParser]を返します。
   ///
@@ -1901,7 +1901,7 @@ pub mod prelude {
     I: Element + PartialEq + 'a, {
     elm_digit_ref().with_filter_not(|c: &&I| c.is_ascii_digit_zero())
   }
-  
+
   /// Returns a [StaticParser] that parses digits ('1'..='9').(for reference)<br/>
   /// 数字('1'..='9')を解析する[StaticParser]を返します。(参照版)
   ///
@@ -1949,7 +1949,7 @@ pub mod prelude {
     I: Element + Clone + PartialEq + 'a, {
     elm_digit_1_9_ref().map(Clone::clone)
   }
-  
+
   /// Returns a [StaticParser] that parses digits ('1'..='9').<br/>
   /// 数字('1'..='9')を解析する[StaticParser]を返します。
   ///
@@ -1997,7 +1997,7 @@ pub mod prelude {
     I: Element + PartialEq + 'a, {
     ParsersImpl::elm_hex_digit_ref()
   }
-  
+
   /// Returns a [StaticParser] that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f').(for reference)<br/>
   /// 16進の数字('0'..='9', 'A'..='F', 'a'..='f')を解析する[StaticParser]を返します。(参照版)
   ///
@@ -2047,7 +2047,7 @@ pub mod prelude {
     I: Element + Clone + PartialEq + 'a, {
     ParsersImpl::elm_hex_digit()
   }
-  
+
   /// Returns a [StaticParser] that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f').<br/>
   /// 16進の数字('0'..='9', 'A'..='F', 'a'..='f')を解析する[StaticParser]を返します。
   ///
@@ -2097,7 +2097,7 @@ pub mod prelude {
     I: Element + PartialEq + 'a, {
     ParsersImpl::elm_oct_digit_ref()
   }
-  
+
   /// Returns a [StaticParser] that parses oct digits ('0'..='8').(for reference)<br/>
   /// 8進の数字('0'..='8')を解析する[StaticParser]を返します。(参照版)
   ///
@@ -2147,7 +2147,7 @@ pub mod prelude {
     I: Element + PartialEq + Clone + 'a, {
     ParsersImpl::elm_oct_digit()
   }
-  
+
   /// Returns a [StaticParser] that parses oct digits ('0'..='8').<br/>
   /// 8進の数字('0'..='8')を解析する[StaticParser]を返します。
   ///
@@ -2200,7 +2200,7 @@ pub mod prelude {
     'b: 'a, {
     ParsersImpl::seq(seq)
   }
-  
+
   /// Returns a [StaticParser] that parses a sequence of elements.<br/>
   /// 要素の列を解析する[StaticParser]を返す。
   ///
@@ -2253,7 +2253,7 @@ pub mod prelude {
     'b: 'a, {
     ParsersImpl::tag(tag)
   }
-  
+
   /// Returns a [StaticParser] that parses a string.<br/>
   /// 文字列を解析する[StaticParser]を返す。
   ///
@@ -2307,7 +2307,7 @@ pub mod prelude {
     'b: 'a, {
     ParsersImpl::tag_no_case(tag)
   }
-  
+
   /// Returns a [StaticParser] that parses a string. However, it is not case-sensitive.<br/>
   /// 文字列を解析する[StaticParser]を返す。ただし大文字小文字を区別しない。
   ///
@@ -2334,7 +2334,7 @@ pub mod prelude {
     'b: 'a, {
     StaticParsersImpl::tag_no_case(tag)
   }
-  
+
   /// Helper function for lazy_static tests
   /// This is used to avoid lifetime issues with lazy_static
   ///
@@ -2359,7 +2359,7 @@ pub mod prelude {
   pub fn lazy_static_parser<'a>() -> StaticParser<'a, char, String> {
     StaticParsersImpl::lazy_static_parser()
   }
-  
+
   /// Helper function for lazy_static tests
   /// This is used to avoid lifetime issues with lazy_static
   ///
@@ -2399,7 +2399,7 @@ pub mod prelude {
   pub fn regex<'a>(pattern: &str) -> Parser<'a, char, String> {
     ParsersImpl::regex(pattern)
   }
-  
+
   /// Returns a [StaticParser] that parses a string using a regular expression.<br/>
   /// 正規表現を使用して文字列を解析する[StaticParser]を返す。
   ///
@@ -2450,7 +2450,7 @@ pub mod prelude {
   pub fn take<'a, I>(n: usize) -> Parser<'a, I, &'a [I]> {
     ParsersImpl::take(n)
   }
-  
+
   /// Returns a [StaticParser] that returns an element of the specified length.<br/>
   /// 指定された長さの要素を返す[StaticParser]を返す。
   ///
@@ -2528,7 +2528,7 @@ pub mod prelude {
     I: Element + Debug + 'a, {
     ParsersImpl::take_while0(f)
   }
-  
+
   /// クロージャの結果が真である間は要素を返す[StaticParser]を返す。<br/>
   /// Returns a [StaticParser] that returns elements, while the result of the closure is true.
   ///
@@ -2628,7 +2628,7 @@ pub mod prelude {
     I: Element + Debug + 'a, {
     ParsersImpl::take_while1(f)
   }
-  
+
   /// クロージャの結果が真である間は要素を返す[StaticParser]を返す。<br/>
   /// Returns a [StaticParser] that returns elements, while the result of the closure is true.
   ///
@@ -2728,7 +2728,7 @@ pub mod prelude {
     I: Element + Debug + 'a, {
     ParsersImpl::take_while_n_m(n, m, f)
   }
-  
+
   /// クロージャの結果が真である間は要素を返す[StaticParser]を返す。<br/>
   /// Returns a [StaticParser] that returns elements, while the result of the closure is true.
   ///
@@ -2822,7 +2822,7 @@ pub mod prelude {
     I: Element + Debug + 'a, {
     ParsersImpl::take_till0(f)
   }
-  
+
   /// Returns a [StaticParser] that returns a sequence up to and including the element that matches the condition.<br/>
   /// 条件に一致する要素を含む連続を返す[StaticParser]を返す。
   ///
@@ -2910,7 +2910,7 @@ pub mod prelude {
     I: Element + Debug + 'a, {
     ParsersImpl::take_till1(f)
   }
-  
+
   /// Returns a [StaticParser] that returns a sequence up to and including the element that matches the condition.<br/>
   /// 条件に一致する要素を含む連続を返す[StaticParser]を返す。
   ///
@@ -2982,7 +2982,7 @@ pub mod prelude {
   pub fn skip<'a, I>(n: usize) -> Parser<'a, I, ()> {
     ParsersImpl::skip(n)
   }
-  
+
   /// Returns a [StaticParser] that skips the specified number of elements.<br/>
   /// 指定された数の要素をスキップする[StaticParser]を返す。
   ///
@@ -3041,7 +3041,7 @@ pub mod prelude {
     C: Clone + Debug + 'a, {
     ParsersImpl::surround(lp, parser, rp)
   }
-  
+
   /// Returns a [StaticParser] that parses the body surrounded by open and close.<br/>
   /// openとcloseに囲まれたbodyを解析する[StaticParser]を返す。
   ///
@@ -3107,7 +3107,7 @@ pub mod prelude {
     A: Debug + 'a, {
     ParsersImpl::lazy(f)
   }
-  
+
   /// Returns a [StaticParser] that lazily evaluates the specified [StaticParser].<br/>
   /// 指定した[StaticParser]を遅延評価する[StaticParser]を返す。
   ///
@@ -3139,7 +3139,6 @@ pub mod prelude {
     A: Debug + 'a, {
     StaticParsersImpl::lazy(f)
   }
-
 }
 
 #[cfg(test)]
