@@ -413,14 +413,14 @@ impl StaticParsersImpl {
   pub fn elm_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_pred_ref(|c: &I| c.is_ascii_digit())
+    Self::elm_pred_ref(|e: &I| e.is_ascii_digit())
   }
 
   /// 数字を解析するStaticParserを返します。
   pub fn elm_digit<'a, I>() -> StaticParser<'a, I, I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_pred(|c: &I| c.is_ascii_digit())
+    Self::elm_pred(|e: &I| e.is_ascii_digit())
   }
 
   /// 指定した数の要素を取得するStaticParserを返します。
