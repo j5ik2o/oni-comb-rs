@@ -22,20 +22,14 @@ where
     let rhs_method = rhs.method.clone();
 
     StaticParser::new(move |state| match lhs_method(state) {
-      crate::core::ParseResult::Success { value, length } => {
-        crate::core::ParseResult::successful(value, length)
-      }
+      crate::core::ParseResult::Success { value, length } => crate::core::ParseResult::successful(value, length),
       crate::core::ParseResult::Failure {
         error: lhs_error,
         committed_status: lhs_committed_status,
       } => match lhs_committed_status {
-        crate::core::CommittedStatus::Committed => {
-          crate::core::ParseResult::failed(lhs_error, lhs_committed_status)
-        }
+        crate::core::CommittedStatus::Committed => crate::core::ParseResult::failed(lhs_error, lhs_committed_status),
         crate::core::CommittedStatus::Uncommitted => match rhs_method(state) {
-          crate::core::ParseResult::Success { value, length } => {
-            crate::core::ParseResult::successful(value, length)
-          }
+          crate::core::ParseResult::Success { value, length } => crate::core::ParseResult::successful(value, length),
           crate::core::ParseResult::Failure {
             error: rhs_error,
             committed_status: rhs_committed_status,
@@ -44,7 +38,7 @@ where
             let msg = format!("{} or {}", lhs_error, rhs_error);
             let pe = ParseError::of_custom(offset, None, msg);
             crate::core::ParseResult::failed(pe, rhs_committed_status)
-          },
+          }
         },
       },
     })

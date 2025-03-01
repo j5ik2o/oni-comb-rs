@@ -8,13 +8,16 @@
 
 use crate::core::{ParseError, ParserFilter, StaticParser};
 
-impl<'a, I, A> ParserFilter<'a> for StaticParser<'a, I, A> where I: Clone {
+impl<'a, I, A> ParserFilter<'a> for StaticParser<'a, I, A>
+where
+  I: Clone,
+{
   fn with_filter<F>(self, f: F) -> Self
   where
     F: Fn(&Self::Output) -> bool + 'a,
     Self::Input: 'a,
     Self::Output: 'a,
-    Self: Sized {
+    Self: Sized, {
     StaticParser::new(move |state| match self.run(state) {
       crate::core::ParseResult::Success { value, length } => {
         if f(&value) {

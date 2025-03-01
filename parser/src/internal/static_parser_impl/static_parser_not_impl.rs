@@ -25,10 +25,7 @@ where
         let offset = state.next_offset();
         let msg = "not: parser succeeded".to_string();
         let pe = ParseError::of_custom(offset, None, msg);
-        crate::core::ParseResult::failed(
-          pe,
-          crate::core::CommittedStatus::Uncommitted,
-        )
+        crate::core::ParseResult::failed(pe, crate::core::CommittedStatus::Uncommitted)
       }
       crate::core::ParseResult::Failure {
         error: _,
@@ -38,14 +35,9 @@ where
           let offset = state.next_offset();
           let msg = "not: parser failed with committed status".to_string();
           let pe = ParseError::of_custom(offset, None, msg);
-          crate::core::ParseResult::failed(
-            pe,
-            committed_status,
-          )
-        },
-        crate::core::CommittedStatus::Uncommitted => {
-          crate::core::ParseResult::successful((), 0)
+          crate::core::ParseResult::failed(pe, committed_status)
         }
+        crate::core::CommittedStatus::Uncommitted => crate::core::ParseResult::successful((), 0),
       },
     })
   }

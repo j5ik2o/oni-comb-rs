@@ -67,7 +67,9 @@ fn test_static_parser_monad() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
-  let parser = elm_ref('a').to_static_parser().flat_map(|_| elm_ref('b').to_static_parser());
+  let parser = elm_ref('a')
+    .to_static_parser()
+    .flat_map(|_| elm_ref('b').to_static_parser());
   let result = parser.parse(&input);
 
   assert!(result.is_success());

@@ -6,13 +6,13 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-pub mod static_parser_runner_impl;
-pub mod static_parser_pure_impl;
-pub mod static_parser_functor_impl;
-pub mod static_parser_filter_impl;
-pub mod static_parser_monad_impl;
 pub mod static_parser_add_impl;
 pub mod static_parser_bitor_impl;
+pub mod static_parser_filter_impl;
+pub mod static_parser_functor_impl;
+pub mod static_parser_monad_impl;
 pub mod static_parser_mul_impl;
 pub mod static_parser_not_impl;
+pub mod static_parser_pure_impl;
+pub mod static_parser_runner_impl;
 pub mod static_parser_sub_impl;
