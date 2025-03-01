@@ -23,7 +23,8 @@ fn space<'a>() -> Parser<'a, char, ()> {
 }
 
 // StaticParserを返す関数（外部公開用）
-fn space_optimized<'a>() -> StaticParser<'a, char, (), impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, ()> + Clone + 'a> {
+fn space_optimized<'a>(
+) -> StaticParser<'a, char, (), impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, ()> + Clone + 'a> {
   space().to_static_parser()
 }
 
@@ -37,7 +38,8 @@ fn number_parser<'a>() -> Parser<'a, char, f64> {
 }
 
 // StaticParserを返す関数（外部公開用）
-fn number_optimized<'a>() -> StaticParser<'a, char, f64, impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, f64> + Clone + 'a> {
+fn number_optimized<'a>(
+) -> StaticParser<'a, char, f64, impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, f64> + Clone + 'a> {
   number_parser().to_static_parser()
 }
 
@@ -86,7 +88,8 @@ fn string_parser<'a>() -> Parser<'a, char, String> {
 }
 
 // StaticParserを返す関数（外部公開用）
-fn string_optimized<'a>() -> StaticParser<'a, char, String, impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, String> + Clone + 'a> {
+fn string_optimized<'a>(
+) -> StaticParser<'a, char, String, impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, String> + Clone + 'a> {
   string_parser().to_static_parser()
 }
 
@@ -96,7 +99,8 @@ fn boolean_parser<'a>() -> Parser<'a, char, bool> {
 }
 
 // StaticParserを返す関数（外部公開用）
-fn boolean_optimized<'a>() -> StaticParser<'a, char, bool, impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, bool> + Clone + 'a> {
+fn boolean_optimized<'a>(
+) -> StaticParser<'a, char, bool, impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, bool> + Clone + 'a> {
   boolean_parser().to_static_parser()
 }
 
@@ -121,15 +125,16 @@ fn array_parser<'a>() -> Parser<'a, char, Vec<JsonValue>> {
   let elems = lazy(value_parser_lazy).cache().of_many0_sep(comma_sep);
 
   // 配列全体のパーサー（角括弧で囲まれた要素）
-  surround(
-    elm_ref('[') - space(),
-    elems,
-    space() * elm_ref(']')
-  )
+  surround(elm_ref('[') - space(), elems, space() * elm_ref(']'))
 }
 
 // StaticParserを返す関数（外部公開用）
-fn array_optimized<'a>() -> StaticParser<'a, char, Vec<JsonValue>, impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, Vec<JsonValue>> + Clone + 'a> {
+fn array_optimized<'a>() -> StaticParser<
+  'a,
+  char,
+  Vec<JsonValue>,
+  impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, Vec<JsonValue>> + Clone + 'a,
+> {
   array_parser().to_static_parser()
 }
 
@@ -157,18 +162,19 @@ fn object_parser<'a>() -> Parser<'a, char, HashMap<String, JsonValue>> {
   let members = member.of_many0_sep(comma_sep);
 
   // オブジェクト全体のパーサー（波括弧で囲まれたメンバー）
-  let obj = surround(
-    elm_ref('{') - space(),
-    members,
-    space() * elm_ref('}')
-  );
+  let obj = surround(elm_ref('{') - space(), members, space() * elm_ref('}'));
 
   // メンバーをHashMapに変換
   obj.map(|members| members.into_iter().collect::<HashMap<_, _>>())
 }
 
 // StaticParserを返す関数（外部公開用）
-fn object_optimized<'a>() -> StaticParser<'a, char, HashMap<String, JsonValue>, impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, HashMap<String, JsonValue>> + Clone + 'a> {
+fn object_optimized<'a>() -> StaticParser<
+  'a,
+  char,
+  HashMap<String, JsonValue>,
+  impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, HashMap<String, JsonValue>> + Clone + 'a,
+> {
   object_parser().to_static_parser()
 }
 
@@ -185,7 +191,9 @@ fn value_parser<'a>() -> Parser<'a, char, JsonValue> {
 }
 
 // StaticParserを返す関数（外部公開用）
-fn value_optimized<'a>() -> StaticParser<'a, char, JsonValue, impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a> {
+fn value_optimized<'a>(
+) -> StaticParser<'a, char, JsonValue, impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a>
+{
   value_parser().to_static_parser()
 }
 
@@ -196,7 +204,9 @@ fn json_parser<'a>() -> Parser<'a, char, JsonValue> {
 }
 
 // StaticParserを返す関数（外部公開用）
-fn json_optimized<'a>() -> StaticParser<'a, char, JsonValue, impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a> {
+fn json_optimized<'a>(
+) -> StaticParser<'a, char, JsonValue, impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a>
+{
   json_parser().to_static_parser()
 }
 
@@ -206,7 +216,7 @@ pub fn oni_comb_parse_json_optimized(s: &str) {
 
   // 最適化されたパーサーを使用
   let parser = json_optimized();
-  
+
   // パース実行
   let _ = parser.parse(&input).success().unwrap();
 }
