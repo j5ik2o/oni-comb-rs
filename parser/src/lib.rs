@@ -1524,7 +1524,7 @@ pub mod prelude {
   pub fn elm_multi_space_ref_static<'a, I>() -> StaticParser<'a, I, &'a I>
   where
     I: Element + PartialEq + Clone + Debug + 'a, {
-    StaticParsersImpl::elm_multi_space_ref()
+    StaticParsersImpl::elm_pred_ref(|e: &I| e.is_ascii_multi_space())
   }
 
   /// Returns a [Parser] that parses spaces containing newlines (' ', '\t', '\n', '\r').<br/>
