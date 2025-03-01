@@ -15,6 +15,9 @@ pub mod prelude {
   use crate::internal::*;
   pub use crate::utils::*;
   use std::fmt::{Debug, Display};
+  
+  // StaticParser re-export
+  pub use crate::core::static_parser::StaticParser;
 
   /// Returns a [Parser] that does nothing.<br/>
   /// 何もしない[Parser]を返します。
