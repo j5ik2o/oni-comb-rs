@@ -3,33 +3,27 @@ use std::marker::PhantomData;
 use std::rc::Rc;
 
 /// 静的ディスパッチを使用した最適化されたパーサー実装
-pub struct StaticParser<'a, I, A, F>
-where
-  F: Fn(&ParseState<'a, I>) -> ParseResult<'a, I, A> + Clone + 'a, {
-  pub(crate) method: F,
+pub struct StaticParser<'a, I, A> {
+  pub(crate) method: Rc<dyn Fn(&ParseState<'a, I>) -> ParseResult<'a, I, A> + 'a>,
   _phantom: PhantomData<&'a (I, A)>,
 }
 
-impl<'a, I, A, F> Clone for StaticParser<'a, I, A, F>
-where
-  F: Fn(&ParseState<'a, I>) -> ParseResult<'a, I, A> + Clone + 'a,
-{
+impl<'a, I, A> Clone for StaticParser<'a, I, A> {
   fn clone(&self) -> Self {
     Self {
-      method: self.method.clone(),
+      method: Rc::clone(&self.method),
       _phantom: PhantomData,
     }
   }
 }
 
-impl<'a, I, A, F> StaticParser<'a, I, A, F>
-where
-  F: Fn(&ParseState<'a, I>) -> ParseResult<'a, I, A> + Clone + 'a,
-{
+impl<'a, I, A> StaticParser<'a, I, A> {
   /// 新しいStaticParserを作成
-  pub fn new(parse: F) -> Self {
+  pub fn new<F>(parse: F) -> Self
+  where
+    F: Fn(&ParseState<'a, I>) -> ParseResult<'a, I, A> + 'a, {
     StaticParser {
-      method: parse,
+      method: Rc::new(parse),
       _phantom: PhantomData,
     }
   }
@@ -46,14 +40,11 @@ where
   }
 
   /// 関数を適用して新しい型に変換
-  pub fn map<B, G>(
-    self,
-    f: G,
-  ) -> StaticParser<'a, I, B, impl Fn(&ParseState<'a, I>) -> ParseResult<'a, I, B> + Clone + 'a>
+  pub fn map<B, G>(self, f: G) -> StaticParser<'a, I, B>
   where
     G: Fn(A) -> B + Clone + 'a,
     B: Clone + 'a, {
-    let method = self.method;
+    let method = self.method.clone();
     let f_clone = f.clone();
 
     StaticParser::new(move |state| match method(state) {
@@ -66,14 +57,11 @@ where
   }
 
   /// 条件に基づいてフィルタリング
-  pub fn with_filter<G>(
-    self,
-    f: G,
-  ) -> StaticParser<'a, I, A, impl Fn(&ParseState<'a, I>) -> ParseResult<'a, I, A> + Clone + 'a>
+  pub fn with_filter<G>(self, f: G) -> StaticParser<'a, I, A>
   where
     G: Fn(&A) -> bool + Clone + 'a,
     I: Clone + 'a, {
-    let method = self.method;
+    let method = self.method.clone();
     let f_clone = f.clone();
 
     StaticParser::new(move |state| match method(state) {
@@ -97,10 +85,7 @@ where
   }
 
   /// 条件の否定に基づいてフィルタリング
-  pub fn with_filter_not<G>(
-    self,
-    f: G,
-  ) -> StaticParser<'a, I, A, impl Fn(&ParseState<'a, I>) -> ParseResult<'a, I, A> + Clone + 'a>
+  pub fn with_filter_not<G>(self, f: G) -> StaticParser<'a, I, A>
   where
     G: Fn(&A) -> bool + Clone + 'a,
     I: Clone + 'a, {
@@ -109,15 +94,11 @@ where
   }
 
   /// フラットマップ操作
-  pub fn flat_map<B, G, H>(
-    self,
-    f: G,
-  ) -> StaticParser<'a, I, B, impl Fn(&ParseState<'a, I>) -> ParseResult<'a, I, B> + Clone + 'a>
+  pub fn flat_map<B, G>(self, f: G) -> StaticParser<'a, I, B>
   where
-    G: Fn(A) -> StaticParser<'a, I, B, H> + Clone + 'a,
-    H: Fn(&ParseState<'a, I>) -> ParseResult<'a, I, B> + Clone + 'a,
+    G: Fn(A) -> StaticParser<'a, I, B> + Clone + 'a,
     B: Clone + 'a, {
-    let method = self.method;
+    let method = self.method.clone();
     let f_clone = f.clone();
 
     StaticParser::new(move |state| match method(state) {
@@ -134,16 +115,13 @@ where
   }
 
   /// 区切り文字を使用して複数の要素をパースする
-  pub fn of_many0_sep<B, G>(
-    self,
-    sep: G,
-  ) -> StaticParser<'a, I, Vec<A>, impl Fn(&ParseState<'a, I>) -> ParseResult<'a, I, Vec<A>> + Clone + 'a>
+  pub fn of_many0_sep<B, G>(self, sep: G) -> StaticParser<'a, I, Vec<A>>
   where
     G: Clone + 'a,
     G: for<'b> Fn(&'b ParseState<'a, I>) -> ParseResult<'a, I, B>,
     A: Clone + 'a,
     B: 'a, {
-    let method = self.method;
+    let method = self.method.clone();
     let sep_clone = sep.clone();
 
     StaticParser::new(move |state| {
@@ -215,17 +193,15 @@ where
 
   /// StaticParserをParserに変換する
   pub fn to_parser(self) -> Parser<'a, I, A> {
-    let method = self.method;
+    let method = self.method.clone();
     Parser::new(move |state| method(state))
   }
 }
 
 /// ParserからStaticParserへの変換
 impl<'a, I, A> Parser<'a, I, A> {
-  pub fn to_static_parser(
-    self,
-  ) -> StaticParser<'a, I, A, impl Fn(&ParseState<'a, I>) -> ParseResult<'a, I, A> + Clone + 'a> {
-    let method = self.method.clone();
+  pub fn to_static_parser(self) -> StaticParser<'a, I, A> {
+    let method = self.method;
     StaticParser::new(move |state| method(state))
   }
 }
