@@ -178,3 +178,73 @@ impl Element for char {
     matches!(*self, '\0'..='\x1F' | '\x7F')
   }
 }
+
+impl<'a> Element for &'a char {
+  fn to_char(self) -> char {
+    *self
+  }
+
+  fn is_ascii_space(&self) -> bool {
+    matches!(**self, ' ' | '\t')
+  }
+
+  fn is_ascii_multi_space(&self) -> bool {
+    self.is_ascii_space() || matches!(**self, '\n' | '\r')
+  }
+
+  fn is_ascii_whitespace(&self) -> bool {
+    self.is_ascii_multi_space() || **self == '\x0C'
+  }
+
+  fn is_ascii(&self) -> bool {
+    **self as u32 <= 0x7F
+  }
+
+  fn is_ascii_alpha_uppercase(&self) -> bool {
+    matches!(**self, 'A'..='Z')
+  }
+
+  fn is_ascii_alpha_lowercase(&self) -> bool {
+    matches!(**self, 'a'..='z')
+  }
+
+  fn is_ascii_alpha(&self) -> bool {
+    matches!(**self, 'A'..='Z' | 'a'..='z')
+  }
+
+  fn is_ascii_digit(&self) -> bool {
+    matches!(**self, '0'..='9')
+  }
+
+  fn is_ascii_digit_zero(&self) -> bool {
+    **self == '0'
+  }
+
+  fn is_ascii_digit_non_zero(&self) -> bool {
+    !self.is_ascii_digit_zero()
+  }
+
+  fn is_ascii_alpha_digit(&self) -> bool {
+    matches!(**self, '0'..='9' | 'A'..='Z' | 'a'..='z')
+  }
+
+  fn is_ascii_hex_digit(&self) -> bool {
+    matches!(**self, '0'..='9' | 'A'..='F' | 'a'..='f')
+  }
+
+  fn is_ascii_oct_digit(&self) -> bool {
+    matches!(**self, '0'..='8')
+  }
+
+  fn is_ascii_punctuation(&self) -> bool {
+    matches!(**self, '!'..='/' | ':'..='@' | '['..='`' | '{'..='~')
+  }
+
+  fn is_ascii_graphic(&self) -> bool {
+    matches!(**self, '!'..='~')
+  }
+
+  fn is_ascii_control(&self) -> bool {
+    matches!(**self, '\0'..='\x1F' | '\x7F')
+  }
+}
