@@ -40,13 +40,13 @@ impl<'a, I, A: 'a> OperatorParser<'a> for StaticParser<'a, I, A> {
   where
     Self::Output: Debug + 'a, {
     let method1 = self.method.clone();
-    let method2 = other.method.clone();
+    let _method2 = other.method.clone();
 
     StaticParser::new(move |parse_state| {
       let result = (method1)(parse_state);
       if let Some(committed_status) = result.committed_status() {
         if committed_status.is_uncommitted() {
-          return (method2)(parse_state);
+          return (_method2)(parse_state);
         }
       }
       result
@@ -108,7 +108,7 @@ impl<'a, I, A: 'a> OperatorParser<'a> for StaticParser<'a, I, A> {
     BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
     Self::Output: Clone + Debug + 'a, {
     let method1 = self.method.clone();
-    let method2 = op.method.clone();
+    let _method2 = op.method.clone();
 
     StaticParser::new(move |parse_state| match (method1)(parse_state) {
       ParseResult::Success { value: x, length: n1 } => {
@@ -128,7 +128,7 @@ impl<'a, I, A: 'a> OperatorParser<'a> for StaticParser<'a, I, A> {
 
   fn chain_right0<BOP>(
     self,
-    op: Self::P<'a, Self::Input, BOP>,
+    _op: Self::P<'a, Self::Input, BOP>,
     x: Self::Output,
   ) -> Self::P<'a, Self::Input, Self::Output>
   where
@@ -143,7 +143,7 @@ impl<'a, I, A: 'a> OperatorParser<'a> for StaticParser<'a, I, A> {
 
   fn chain_left0<BOP>(
     self,
-    op: Self::P<'a, Self::Input, BOP>,
+    _op: Self::P<'a, Self::Input, BOP>,
     x: Self::Output,
   ) -> Self::P<'a, Self::Input, Self::Output>
   where
@@ -168,7 +168,7 @@ impl<'a, I, A: 'a> OperatorParser<'a> for StaticParser<'a, I, A> {
     BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
     Self::Output: Clone + Debug + 'a, {
     let method1 = self.method.clone();
-    let method2 = op.method.clone();
+    let _method2 = op.method.clone();
 
     StaticParser::new(move |parse_state| match (method1)(parse_state) {
       ParseResult::Success { value: x, length: n1 } => {
