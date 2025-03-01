@@ -73,7 +73,7 @@ fn criterion_benchmark(criterion: &mut Criterion) {
     group.bench_with_input(BenchmarkId::new("oni-comb-rs", name), data, |b, i| {
       b.iter(|| oni_comb_parse_json(i))
     });
-    
+
     // 最適化されたoni-comb-rsパーサーのベンチマーク
     group.bench_with_input(BenchmarkId::new("oni-comb-rs-optimized", name), data, |b, i| {
       b.iter(|| oni_comb_parse_json_optimized(i))

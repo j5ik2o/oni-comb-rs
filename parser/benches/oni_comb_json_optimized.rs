@@ -28,7 +28,7 @@ fn number_optimized<'a>() -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, c
   let exp = elm_of("eE") + elm_of("+-").opt() + elm_digit_ref().of_many1();
   let number = elm_ref('-').opt() + integer + frac.opt() + exp.opt();
   let parser = number.collect().map(String::from_iter).map_res(|s| f64::from_str(&s));
-  
+
   move |state| parser.run(state)
 }
 
@@ -73,7 +73,7 @@ fn string_optimized<'a>() -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, c
   );
 
   let parser = string.map(|strings| strings.concat());
-  
+
   move |state| parser.run(state)
 }
 
@@ -86,19 +86,24 @@ fn boolean_optimized<'a>() -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, 
 type JsonValueParser<'a> = Box<dyn Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + 'a>;
 
 // 値パーサーの遅延評価（循環参照を解決するため）
-fn value_lazy<'a>(value_parser: &'a JsonValueParser<'a>) -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a {
+fn value_lazy<'a>(
+  value_parser: &'a JsonValueParser<'a>,
+) -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a {
   move |state| value_parser(state)
 }
 
 // 静的ディスパッチを使用した遅延評価関数
-fn value_static<'a, F>(value_parser: F) -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a 
+fn value_static<'a, F>(
+  value_parser: F,
+) -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a
 where
-  F: Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a,
-{
+  F: Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a, {
   move |state| value_parser(state)
 }
 
-fn array_optimized<'a>(value_parser_fn: impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a) -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, Vec<JsonValue>> + Clone + 'a {
+fn array_optimized<'a>(
+  value_parser_fn: impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a,
+) -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, Vec<JsonValue>> + Clone + 'a {
   // 空白を含むカンマ区切りのパターン
   let comma_sep = Parser::new(move |state| {
     let space_fn1 = space_optimized();
@@ -113,22 +118,32 @@ fn array_optimized<'a>(value_parser_fn: impl Fn(&ParseState<'a, char>) -> ParseR
             let space_fn2 = space_optimized();
             let result3 = space_fn2(&state3);
             match result3 {
-              ParseResult::Success { length: length3, .. } => {
-                ParseResult::successful((), length + length2 + length3)
-              }
-              ParseResult::Failure { error, committed_status } => {
-                ParseResult::Failure { error, committed_status }
-              }
+              ParseResult::Success { length: length3, .. } => ParseResult::successful((), length + length2 + length3),
+              ParseResult::Failure {
+                error,
+                committed_status,
+              } => ParseResult::Failure {
+                error,
+                committed_status,
+              },
             }
           }
-          ParseResult::Failure { error, committed_status } => {
-            ParseResult::Failure { error, committed_status }
-          }
+          ParseResult::Failure {
+            error,
+            committed_status,
+          } => ParseResult::Failure {
+            error,
+            committed_status,
+          },
         }
       }
-      ParseResult::Failure { error, committed_status } => {
-        ParseResult::Failure { error, committed_status }
-      }
+      ParseResult::Failure {
+        error,
+        committed_status,
+      } => ParseResult::Failure {
+        error,
+        committed_status,
+      },
     }
   });
 
@@ -139,15 +154,21 @@ fn array_optimized<'a>(value_parser_fn: impl Fn(&ParseState<'a, char>) -> ParseR
   // 配列全体のパーサー（角括弧で囲まれた要素）
   let space_fn1 = space_optimized();
   let space_fn2 = space_optimized();
-  let parser = surround(elm_ref('[') - Parser::new(space_fn1), elems_parser, Parser::new(space_fn2) * elm_ref(']'));
-  
+  let parser = surround(
+    elm_ref('[') - Parser::new(space_fn1),
+    elems_parser,
+    Parser::new(space_fn2) * elm_ref(']'),
+  );
+
   move |state| parser.run(state)
 }
 
-fn object_optimized<'a>(value_parser_fn: impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a) -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, HashMap<String, JsonValue>> + Clone + 'a {
+fn object_optimized<'a>(
+  value_parser_fn: impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a,
+) -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, HashMap<String, JsonValue>> + Clone + 'a {
   let string_fn = string_optimized();
   let value_fn = value_parser_fn.clone();
-  
+
   // キーと値のペアのパーサー
   let member = Parser::new(move |state| {
     let result1 = string_fn(state);
@@ -169,32 +190,53 @@ fn object_optimized<'a>(value_parser_fn: impl Fn(&ParseState<'a, char>) -> Parse
                     let state5 = state4.add_offset(length4);
                     let result5 = value_fn(&state5);
                     match result5 {
-                      ParseResult::Success { value: value2, length: length5 } => {
-                        ParseResult::successful((value, value2), length + length2 + length3 + length4 + length5)
-                      }
-                      ParseResult::Failure { error, committed_status } => {
-                        ParseResult::Failure { error, committed_status }
-                      }
+                      ParseResult::Success {
+                        value: value2,
+                        length: length5,
+                      } => ParseResult::successful((value, value2), length + length2 + length3 + length4 + length5),
+                      ParseResult::Failure {
+                        error,
+                        committed_status,
+                      } => ParseResult::Failure {
+                        error,
+                        committed_status,
+                      },
                     }
                   }
-                  ParseResult::Failure { error, committed_status } => {
-                    ParseResult::Failure { error, committed_status }
-                  }
+                  ParseResult::Failure {
+                    error,
+                    committed_status,
+                  } => ParseResult::Failure {
+                    error,
+                    committed_status,
+                  },
                 }
               }
-              ParseResult::Failure { error, committed_status } => {
-                ParseResult::Failure { error, committed_status }
-              }
+              ParseResult::Failure {
+                error,
+                committed_status,
+              } => ParseResult::Failure {
+                error,
+                committed_status,
+              },
             }
           }
-          ParseResult::Failure { error, committed_status } => {
-            ParseResult::Failure { error, committed_status }
-          }
+          ParseResult::Failure {
+            error,
+            committed_status,
+          } => ParseResult::Failure {
+            error,
+            committed_status,
+          },
         }
       }
-      ParseResult::Failure { error, committed_status } => {
-        ParseResult::Failure { error, committed_status }
-      }
+      ParseResult::Failure {
+        error,
+        committed_status,
+      } => ParseResult::Failure {
+        error,
+        committed_status,
+      },
     }
   });
 
@@ -209,54 +251,59 @@ fn object_optimized<'a>(value_parser_fn: impl Fn(&ParseState<'a, char>) -> Parse
   // オブジェクト全体のパーサー（波括弧で囲まれたメンバー）
   let space_fn3 = space_optimized();
   let space_fn4 = space_optimized();
-  let obj = surround(elm_ref('{') - Parser::new(space_fn3), members, Parser::new(space_fn4) * elm_ref('}'));
+  let obj = surround(
+    elm_ref('{') - Parser::new(space_fn3),
+    members,
+    Parser::new(space_fn4) * elm_ref('}'),
+  );
 
   // メンバーをHashMapに変換
   let parser = obj.map(|members| members.into_iter().collect::<HashMap<_, _>>());
-  
+
   move |state| parser.run(state)
 }
 
 fn value_optimized<'a>() -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a {
   // 循環参照を解決するための遅延評価
-  let value_fn: std::rc::Rc<std::cell::RefCell<Option<Box<dyn Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + 'a>>>> = 
-    std::rc::Rc::new(std::cell::RefCell::new(None));
-  
+  let value_fn: std::rc::Rc<
+    std::cell::RefCell<Option<Box<dyn Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + 'a>>>,
+  > = std::rc::Rc::new(std::cell::RefCell::new(None));
+
   // 実際のパーサー実装
   let string_fn = string_optimized();
   let number_fn = number_optimized();
   let boolean_fn = boolean_optimized();
   let space_fn = space_optimized();
-  
+
   // 値パーサーの実装
   let parser_impl = {
     let value_fn_clone = value_fn.clone();
-    
+
     move |state: &ParseState<'a, char>| {
       // 文字列パース
       let result = string_fn(state);
       if let ParseResult::Success { value, length } = result {
         return ParseResult::successful(JsonValue::Str(value), length);
       }
-      
+
       // 数値パース
       let result = number_fn(state);
       if let ParseResult::Success { value, length } = result {
         return ParseResult::successful(JsonValue::Num(value), length);
       }
-      
+
       // 真偽値パース
       let result = boolean_fn(state);
       if let ParseResult::Success { value, length } = result {
         return ParseResult::successful(JsonValue::Bool(value), length);
       }
-      
+
       // nullパース
       let result = tag("null").run(state);
       if let ParseResult::Success { length, .. } = result {
         return ParseResult::successful(JsonValue::Null, length);
       }
-      
+
       // 配列パース
       let array_fn = {
         let value_fn_clone = value_fn_clone.clone();
@@ -271,12 +318,12 @@ fn value_optimized<'a>() -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, ch
           }
         })
       };
-      
+
       let result = array_fn(state);
       if let ParseResult::Success { value, length } = result {
         return ParseResult::successful(JsonValue::Array(value), length);
       }
-      
+
       // オブジェクトパース
       let object_fn = {
         let value_fn_clone = value_fn_clone.clone();
@@ -291,12 +338,12 @@ fn value_optimized<'a>() -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, ch
           }
         })
       };
-      
+
       let result = object_fn(state);
       if let ParseResult::Success { value, length } = result {
         return ParseResult::successful(JsonValue::Object(value), length);
       }
-      
+
       // どれにもマッチしない場合はエラー
       let input = state.input();
       let offset = state.next_offset();
@@ -304,10 +351,10 @@ fn value_optimized<'a>() -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, ch
       ParseResult::failed_with_uncommitted(pe)
     }
   };
-  
+
   // パーサーを設定
   *value_fn.borrow_mut() = Some(Box::new(parser_impl.clone()));
-  
+
   // 最終的なパーサー
   move |state| {
     let result = parser_impl(state);
@@ -317,24 +364,30 @@ fn value_optimized<'a>() -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, ch
         let space_fn2 = space_optimized();
         let result2 = space_fn2(&state2);
         match result2 {
-          ParseResult::Success { length: length2, .. } => {
-            ParseResult::successful(value, length + length2)
-          }
-          ParseResult::Failure { error, committed_status } => {
-            ParseResult::Failure { error, committed_status }
-          }
+          ParseResult::Success { length: length2, .. } => ParseResult::successful(value, length + length2),
+          ParseResult::Failure {
+            error,
+            committed_status,
+          } => ParseResult::Failure {
+            error,
+            committed_status,
+          },
         }
       }
-      ParseResult::Failure { error, committed_status } => {
-        ParseResult::Failure { error, committed_status }
-      }
+      ParseResult::Failure {
+        error,
+        committed_status,
+      } => ParseResult::Failure {
+        error,
+        committed_status,
+      },
     }
   }
 }
 
 fn json_optimized<'a>() -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a {
   let value_fn = value_optimized();
-  
+
   // 先頭の空白をスキップし、値をパースし、終端を確認
   move |state| {
     let space_fn1 = space_optimized();
@@ -351,19 +404,31 @@ fn json_optimized<'a>() -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, cha
               ParseResult::Success { length: length3, .. } => {
                 ParseResult::successful(value, length + length2 + length3)
               }
-              ParseResult::Failure { error, committed_status } => {
-                ParseResult::Failure { error, committed_status }
-              }
+              ParseResult::Failure {
+                error,
+                committed_status,
+              } => ParseResult::Failure {
+                error,
+                committed_status,
+              },
             }
           }
-          ParseResult::Failure { error, committed_status } => {
-            ParseResult::Failure { error, committed_status }
-          }
+          ParseResult::Failure {
+            error,
+            committed_status,
+          } => ParseResult::Failure {
+            error,
+            committed_status,
+          },
         }
       }
-      ParseResult::Failure { error, committed_status } => {
-        ParseResult::Failure { error, committed_status }
-      }
+      ParseResult::Failure {
+        error,
+        committed_status,
+      } => ParseResult::Failure {
+        error,
+        committed_status,
+      },
     }
   }
 }
@@ -371,11 +436,11 @@ fn json_optimized<'a>() -> impl Fn(&ParseState<'a, char>) -> ParseResult<'a, cha
 pub fn oni_comb_parse_json_optimized(s: &str) {
   // 文字列を文字のベクターに変換
   let input: Vec<char> = s.chars().collect();
-  
+
   // 最適化されたパーサーを使用
   let parser_fn = json_optimized();
   let parse_state = ParseState::new(&input, 0);
-  
+
   // パース実行
   let _ = parser_fn(&parse_state).success().unwrap();
 }
