@@ -246,7 +246,7 @@ impl StaticParsersImpl {
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
 
       if offset >= input.len() {
@@ -272,7 +272,7 @@ impl StaticParsersImpl {
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
 
       if offset >= input.len() {
@@ -316,7 +316,7 @@ impl StaticParsersImpl {
         Self::successful(e)
       } else {
         let msg = format!("expected element in range [{:?}, {:?}), but got: {:?}", start, end, e);
-        Self::failed(ParseError::of_custom(msg), CommittedStatus::Uncommitted)
+        Self::failed(ParseError::of_custom(0, None, msg), CommittedStatus::Uncommitted)
       }
     })
   }
@@ -330,7 +330,7 @@ impl StaticParsersImpl {
         Self::successful(e)
       } else {
         let msg = format!("expected element in range [{:?}, {:?}), but got: {:?}", start, end, e);
-        Self::failed(ParseError::of_custom(msg), CommittedStatus::Uncommitted)
+        Self::failed(ParseError::of_custom(0, None, msg), CommittedStatus::Uncommitted)
       }
     })
   }
@@ -344,7 +344,7 @@ impl StaticParsersImpl {
         Self::successful(e)
       } else {
         let msg = format!("expected none of: {:?}, but got: {:?}", set, e);
-        Self::failed(ParseError::of_custom(msg), CommittedStatus::Uncommitted)
+        Self::failed(ParseError::of_custom(0, None, msg), CommittedStatus::Uncommitted)
       }
     })
   }
@@ -358,7 +358,7 @@ impl StaticParsersImpl {
         Self::successful(e)
       } else {
         let msg = format!("expected none of: {:?}, but got: {:?}", set, e);
-        Self::failed(ParseError::of_custom(msg), CommittedStatus::Uncommitted)
+        Self::failed(ParseError::of_custom(0, None, msg), CommittedStatus::Uncommitted)
       }
     })
   }
@@ -704,7 +704,37 @@ impl StaticParsersImpl {
     A: Clone + Debug + 'a,
     B: Clone + Debug + 'a,
     C: Clone + Debug + 'a, {
-    lp.right(parser).left(rp)
+    StaticParser::new(move |parse_state| {
+      let lp_method = lp.method.clone();
+      let parser_method = parser.method.clone();
+      let rp_method = rp.method.clone();
+
+      match (lp_method)(parse_state) {
+        ParseResult::Success { length: n1, .. } => {
+          let next_state = parse_state.next(n1);
+          match (parser_method)(&next_state) {
+            ParseResult::Success { value, length: n2 } => {
+              let next_state = next_state.next(n2);
+              match (rp_method)(&next_state) {
+                ParseResult::Success { length: n3, .. } => ParseResult::successful(value, n1 + n2 + n3),
+                ParseResult::Failure {
+                  error,
+                  committed_status,
+                } => ParseResult::failed(error, committed_status),
+              }
+            }
+            ParseResult::Failure {
+              error,
+              committed_status,
+            } => ParseResult::failed(error, committed_status),
+          }
+        }
+        ParseResult::Failure {
+          error,
+          committed_status,
+        } => ParseResult::failed(error, committed_status),
+      }
+    })
   }
 
   /// 指定した数の要素をスキップするStaticParserを返します。
