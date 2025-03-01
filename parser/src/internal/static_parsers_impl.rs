@@ -2,6 +2,7 @@ use crate::core::{CommittedStatus, Element, ParseError, ParseResult, ParseState,
 use std::fmt::{Debug, Display};
 use regex::Regex;
 use std::str;
+use std::char;
 
 /// StaticParserの実装を提供する構造体
 pub struct StaticParsersImpl;
@@ -22,7 +23,7 @@ impl StaticParsersImpl {
   where
     I: Debug + Display + 'a, {
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       if offset >= input.len() {
         ParseResult::successful((), 0)
@@ -74,7 +75,7 @@ impl StaticParsersImpl {
   where
     I: crate::core::Element + PartialEq + 'a, {
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       if offset < input.len() {
         ParseResult::successful(&input[offset], 1)
@@ -91,7 +92,7 @@ impl StaticParsersImpl {
   where
     I: crate::core::Element + Clone + PartialEq + 'a, {
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       if offset < input.len() {
         ParseResult::successful(input[offset].clone(), 1)
@@ -108,7 +109,7 @@ impl StaticParsersImpl {
   where
     I: crate::core::Element + PartialEq + 'a, {
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       if offset < input.len() && input[offset] == element {
         ParseResult::successful(&input[offset], 1)
@@ -129,7 +130,7 @@ impl StaticParsersImpl {
   where
     I: crate::core::Element + Clone + PartialEq + 'a, {
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       if offset < input.len() && input[offset] == element {
         ParseResult::successful(input[offset].clone(), 1)
@@ -152,7 +153,7 @@ impl StaticParsersImpl {
     F: Fn(&I) -> bool + 'a,
     I: Debug + 'a, {
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       let mut i = offset;
       let mut found = false;
@@ -180,7 +181,7 @@ impl StaticParsersImpl {
   /// 指定された数の要素をスキップするStaticParserを返します。
   pub fn skip<'a, I>(n: usize) -> StaticParser<'a, I, ()> {
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       if offset + n <= input.len() {
         ParseResult::successful((), n)
@@ -217,18 +218,18 @@ impl StaticParsersImpl {
                 ParseResult::Success { length: n3, .. } => {
                   ParseResult::successful(value, n1 + n2 + n3)
                 }
-                ParseResult::Failure { error, committed } => {
-                  ParseResult::failed(error, committed)
+                ParseResult::Failure { error, committed_status } => {
+                  ParseResult::failed(error, committed_status)
                 }
               }
             }
-            ParseResult::Failure { error, committed } => {
-              ParseResult::failed(error, committed)
+            ParseResult::Failure { error, committed_status } => {
+              ParseResult::failed(error, committed_status)
             }
           }
         }
-        ParseResult::Failure { error, committed } => {
-          ParseResult::failed(error, committed)
+        ParseResult::Failure { error, committed_status } => {
+          ParseResult::failed(error, committed_status)
         }
       }
     })
@@ -251,7 +252,7 @@ impl StaticParsersImpl {
   where
     I: Element + PartialEq + Debug + 'a, {
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       let elements_len = elements.len();
       
@@ -282,7 +283,7 @@ impl StaticParsersImpl {
     let tag_chars: Vec<char> = tag_str.chars().collect();
     
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       let tag_len = tag_chars.len();
       
@@ -319,7 +320,7 @@ impl StaticParsersImpl {
     let tag_chars: Vec<char> = tag_str.chars().collect();
     
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       let tag_len = tag_chars.len();
       
@@ -331,7 +332,7 @@ impl StaticParsersImpl {
       
       for i in 0..tag_len {
         if let Some(c) = input[offset + i].to_char() {
-          if c.to_lowercase().next() != tag_chars[i].to_lowercase().next() {
+          if c.to_lowercase().next().unwrap_or(c) != tag_chars[i].to_lowercase().next().unwrap_or(tag_chars[i]) {
             let msg = format!("expected: {} (case insensitive), but got: {:?}", tag_str, &input[offset..offset + tag_len]);
             let pe = ParseError::of_mismatch(input, offset, 0, msg);
             return ParseResult::failed_with_uncommitted(pe);
@@ -356,7 +357,7 @@ impl StaticParsersImpl {
     let re = Regex::new(pattern_str).unwrap();
     
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       
       if offset >= input.len() {
@@ -389,7 +390,7 @@ impl StaticParsersImpl {
   where
     I: Debug + 'a, {
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       
       if offset + n <= input.len() {
@@ -408,7 +409,7 @@ impl StaticParsersImpl {
     F: Fn(&I) -> bool + 'a,
     I: Debug + 'a, {
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       let mut i = offset;
       
@@ -427,7 +428,7 @@ impl StaticParsersImpl {
     F: Fn(&I) -> bool + 'a,
     I: Debug + 'a, {
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       let mut i = offset;
       
@@ -452,7 +453,7 @@ impl StaticParsersImpl {
     F: Fn(&I) -> bool + 'a,
     I: Debug + 'a, {
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       let mut i = offset;
       let mut count = 0;
@@ -478,7 +479,7 @@ impl StaticParsersImpl {
     F: Fn(&I) -> bool + 'a,
     I: Debug + 'a, {
     StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
+      let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       let mut i = offset;
       
@@ -490,6 +491,285 @@ impl StaticParsersImpl {
         ParseResult::successful(&input[offset..i], i - offset)
       } else {
         ParseResult::failed_with_uncommitted(ParseError::of_in_complete())
+      }
+    })
+  }
+  /// 英数字を解析するStaticParserを返します。(参照版)
+  pub fn elm_alpha_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  where
+    I: Element + PartialEq + Debug + 'a, {
+    StaticParser::new(move |parse_state| {
+      let input: &[I] = parse_state.input();
+      let offset = parse_state.next_offset();
+      if offset < input.len() {
+        if let Some(c) = input[offset].to_char() {
+          if c.is_alphanumeric() {
+            ParseResult::successful(&input[offset], 1)
+          } else {
+            let msg = format!("expected: alphanumeric, but got: {:?}", c);
+            let pe = ParseError::of_mismatch(input, offset, 0, msg);
+            ParseResult::failed_with_uncommitted(pe)
+          }
+        } else {
+          let msg = format!("expected: alphanumeric, but got: non-char element");
+          let pe = ParseError::of_mismatch(input, offset, 0, msg);
+          ParseResult::failed_with_uncommitted(pe)
+        }
+      } else {
+        let msg = format!("unexpected end of input");
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
+      }
+    })
+  }
+
+  /// 英数字を解析するStaticParserを返します。
+  pub fn elm_alpha_digit<'a, I>() -> StaticParser<'a, I, I>
+  where
+    I: Element + Clone + PartialEq + Debug + 'a, {
+    StaticParser::new(move |parse_state| {
+      let input: &[I] = parse_state.input();
+      let offset = parse_state.next_offset();
+      if offset < input.len() {
+        if let Some(c) = input[offset].to_char() {
+          if c.is_alphanumeric() {
+            ParseResult::successful(input[offset].clone(), 1)
+          } else {
+            let msg = format!("expected: alphanumeric, but got: {:?}", c);
+            let pe = ParseError::of_mismatch(input, offset, 0, msg);
+            ParseResult::failed_with_uncommitted(pe)
+          }
+        } else {
+          let msg = format!("expected: alphanumeric, but got: non-char element");
+          let pe = ParseError::of_mismatch(input, offset, 0, msg);
+          ParseResult::failed_with_uncommitted(pe)
+        }
+      } else {
+        let msg = format!("unexpected end of input");
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
+      }
+    })
+  }
+
+  /// 数字を解析するStaticParserを返します。(参照版)
+  pub fn elm_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  where
+    I: Element + PartialEq + Debug + 'a, {
+    StaticParser::new(move |parse_state| {
+      let input: &[I] = parse_state.input();
+      let offset = parse_state.next_offset();
+      if offset < input.len() {
+        if let Some(c) = input[offset].to_char() {
+          if c.is_digit(10) {
+            ParseResult::successful(&input[offset], 1)
+          } else {
+            let msg = format!("expected: digit, but got: {:?}", c);
+            let pe = ParseError::of_mismatch(input, offset, 0, msg);
+            ParseResult::failed_with_uncommitted(pe)
+          }
+        } else {
+          let msg = format!("expected: digit, but got: non-char element");
+          let pe = ParseError::of_mismatch(input, offset, 0, msg);
+          ParseResult::failed_with_uncommitted(pe)
+        }
+      } else {
+        let msg = format!("unexpected end of input");
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
+      }
+    })
+  }
+
+  /// 数字を解析するStaticParserを返します。
+  pub fn elm_digit<'a, I>() -> StaticParser<'a, I, I>
+  where
+    I: Element + Clone + PartialEq + Debug + 'a, {
+    StaticParser::new(move |parse_state| {
+      let input: &[I] = parse_state.input();
+      let offset = parse_state.next_offset();
+      if offset < input.len() {
+        if let Some(c) = input[offset].to_char() {
+          if c.is_digit(10) {
+            ParseResult::successful(input[offset].clone(), 1)
+          } else {
+            let msg = format!("expected: digit, but got: {:?}", c);
+            let pe = ParseError::of_mismatch(input, offset, 0, msg);
+            ParseResult::failed_with_uncommitted(pe)
+          }
+        } else {
+          let msg = format!("expected: digit, but got: non-char element");
+          let pe = ParseError::of_mismatch(input, offset, 0, msg);
+          ParseResult::failed_with_uncommitted(pe)
+        }
+      } else {
+        let msg = format!("unexpected end of input");
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
+      }
+    })
+  }
+
+  /// 16進数を解析するStaticParserを返します。(参照版)
+  pub fn elm_hex_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  where
+    I: Element + PartialEq + Debug + 'a, {
+    StaticParser::new(move |parse_state| {
+      let input: &[I] = parse_state.input();
+      let offset = parse_state.next_offset();
+      if offset < input.len() {
+        if let Some(c) = input[offset].to_char() {
+          if c.is_digit(16) {
+            ParseResult::successful(&input[offset], 1)
+          } else {
+            let msg = format!("expected: hex digit, but got: {:?}", c);
+            let pe = ParseError::of_mismatch(input, offset, 0, msg);
+            ParseResult::failed_with_uncommitted(pe)
+          }
+        } else {
+          let msg = format!("expected: hex digit, but got: non-char element");
+          let pe = ParseError::of_mismatch(input, offset, 0, msg);
+          ParseResult::failed_with_uncommitted(pe)
+        }
+      } else {
+        let msg = format!("unexpected end of input");
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
+      }
+    })
+  }
+
+  /// 16進数を解析するStaticParserを返します。
+  pub fn elm_hex_digit<'a, I>() -> StaticParser<'a, I, I>
+  where
+    I: Element + Clone + PartialEq + Debug + 'a, {
+    StaticParser::new(move |parse_state| {
+      let input: &[I] = parse_state.input();
+      let offset = parse_state.next_offset();
+      if offset < input.len() {
+        if let Some(c) = input[offset].to_char() {
+          if c.is_digit(16) {
+            ParseResult::successful(input[offset].clone(), 1)
+          } else {
+            let msg = format!("expected: hex digit, but got: {:?}", c);
+            let pe = ParseError::of_mismatch(input, offset, 0, msg);
+            ParseResult::failed_with_uncommitted(pe)
+          }
+        } else {
+          let msg = format!("expected: hex digit, but got: non-char element");
+          let pe = ParseError::of_mismatch(input, offset, 0, msg);
+          ParseResult::failed_with_uncommitted(pe)
+        }
+      } else {
+        let msg = format!("unexpected end of input");
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
+      }
+    })
+  }
+
+  /// 8進数を解析するStaticParserを返します。(参照版)
+  pub fn elm_oct_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  where
+    I: Element + PartialEq + Debug + 'a, {
+    StaticParser::new(move |parse_state| {
+      let input: &[I] = parse_state.input();
+      let offset = parse_state.next_offset();
+      if offset < input.len() {
+        if let Some(c) = input[offset].to_char() {
+          if c.is_digit(8) {
+            ParseResult::successful(&input[offset], 1)
+          } else {
+            let msg = format!("expected: octal digit, but got: {:?}", c);
+            let pe = ParseError::of_mismatch(input, offset, 0, msg);
+            ParseResult::failed_with_uncommitted(pe)
+          }
+        } else {
+          let msg = format!("expected: octal digit, but got: non-char element");
+          let pe = ParseError::of_mismatch(input, offset, 0, msg);
+          ParseResult::failed_with_uncommitted(pe)
+        }
+      } else {
+        let msg = format!("unexpected end of input");
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
+      }
+    })
+  }
+
+  /// 8進数を解析するStaticParserを返します。
+  pub fn elm_oct_digit<'a, I>() -> StaticParser<'a, I, I>
+  where
+    I: Element + Clone + PartialEq + Debug + 'a, {
+    StaticParser::new(move |parse_state| {
+      let input: &[I] = parse_state.input();
+      let offset = parse_state.next_offset();
+      if offset < input.len() {
+        if let Some(c) = input[offset].to_char() {
+          if c.is_digit(8) {
+            ParseResult::successful(input[offset].clone(), 1)
+          } else {
+            let msg = format!("expected: octal digit, but got: {:?}", c);
+            let pe = ParseError::of_mismatch(input, offset, 0, msg);
+            ParseResult::failed_with_uncommitted(pe)
+          }
+        } else {
+          let msg = format!("expected: octal digit, but got: non-char element");
+          let pe = ParseError::of_mismatch(input, offset, 0, msg);
+          ParseResult::failed_with_uncommitted(pe)
+        }
+      } else {
+        let msg = format!("unexpected end of input");
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
+      }
+    })
+  }
+
+  /// 条件に一致する要素を解析するStaticParserを返します。(参照版)
+  pub fn elm_pred_ref<'a, I, F>(f: F) -> StaticParser<'a, I, &'a I>
+  where
+    F: Fn(&I) -> bool + 'a,
+    I: Element + PartialEq + Debug + 'a, {
+    StaticParser::new(move |parse_state| {
+      let input: &[I] = parse_state.input();
+      let offset = parse_state.next_offset();
+      if offset < input.len() {
+        if f(&input[offset]) {
+          ParseResult::successful(&input[offset], 1)
+        } else {
+          let msg = format!("predicate failed for: {:?}", input[offset]);
+          let pe = ParseError::of_mismatch(input, offset, 0, msg);
+          ParseResult::failed_with_uncommitted(pe)
+        }
+      } else {
+        let msg = format!("unexpected end of input");
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
+      }
+    })
+  }
+
+  /// 条件に一致する要素を解析するStaticParserを返します。
+  pub fn elm_pred<'a, I, F>(f: F) -> StaticParser<'a, I, I>
+  where
+    F: Fn(&I) -> bool + 'a,
+    I: Element + Clone + PartialEq + Debug + 'a, {
+    StaticParser::new(move |parse_state| {
+      let input: &[I] = parse_state.input();
+      let offset = parse_state.next_offset();
+      if offset < input.len() {
+        if f(&input[offset]) {
+          ParseResult::successful(input[offset].clone(), 1)
+        } else {
+          let msg = format!("predicate failed for: {:?}", input[offset]);
+          let pe = ParseError::of_mismatch(input, offset, 0, msg);
+          ParseResult::failed_with_uncommitted(pe)
+        }
+      } else {
+        let msg = format!("unexpected end of input");
+        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        ParseResult::failed_with_uncommitted(pe)
       }
     })
   }
