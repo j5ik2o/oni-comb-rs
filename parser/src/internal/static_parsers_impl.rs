@@ -310,12 +310,7 @@ impl StaticParsersImpl {
       if offset < input.len() {
         let element = &input[offset];
         if !set.contains(element) {
-          // Parse all consecutive characters that are not in the set
-          let mut i = offset + 1;
-          while i < input.len() && !set.contains(&input[i]) {
-            i += 1;
-          }
-          ParseResult::successful(&input[offset..i], i - offset)
+          ParseResult::successful(element, 1)
         } else {
           let msg = format!("expected none of: {:?}, but got: {:?}", set, element);
           let pe = ParseError::of_mismatch(input, offset, 0, msg);
@@ -340,12 +335,7 @@ impl StaticParsersImpl {
       if offset < input.len() {
         let element = &input[offset];
         if !set.contains(element) {
-          // Parse all consecutive characters that are not in the set
-          let mut i = offset + 1;
-          while i < input.len() && !set.contains(&input[i]) {
-            i += 1;
-          }
-          ParseResult::successful(input[offset].clone(), i - offset)
+          ParseResult::successful(input[offset].clone(), 1)
         } else {
           let msg = format!("expected none of: {:?}, but got: {:?}", set, element);
           let pe = ParseError::of_mismatch(input, offset, 0, msg);
@@ -374,17 +364,17 @@ impl StaticParsersImpl {
   }
 
   /// 複数の空白文字を解析するStaticParserを返します。(参照版)
-  pub fn elm_multi_space_ref<'a, I>() -> StaticParser<'a, I, &'a [I]>
+  pub fn elm_multi_space_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::take_while1(|e: &I| e.is_ascii_multi_space())
+    Self::elm_pred_ref(|e: &I| e.is_ascii_multi_space())
   }
 
   /// 複数の空白文字を解析するStaticParserを返します。
-  pub fn elm_multi_space<'a, I>() -> StaticParser<'a, I, Vec<I>>
+  pub fn elm_multi_space<'a, I>() -> StaticParser<'a, I, I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::take_while1(|e: &I| e.is_ascii_multi_space()).map(|slice| slice.to_vec())
+    Self::elm_pred(|e: &I| e.is_ascii_multi_space())
   }
 
   /// アルファベットを解析するStaticParserを返します。(参照版)
