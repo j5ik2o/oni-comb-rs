@@ -2356,7 +2356,7 @@ pub mod prelude {
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), "abc");
   /// ```
-  pub fn lazy_static_parser<'a>() -> StaticParser<'a, char, String> {
+  pub fn lazy_static_parser<'a>() -> StaticParser<'a, char, &'a str> {
     StaticParsersImpl::lazy_static_parser()
   }
 
@@ -2371,8 +2371,8 @@ pub mod prelude {
   /// let s = lazy_static_str("abc");
   /// assert_eq!(s, "abc");
   /// ```
-  pub fn lazy_static_str(s: &str) -> String {
-    StaticParsersImpl::lazy_static_str(s)
+  pub fn lazy_static_str<'a>(s: &'a str) -> &'a str {
+    s
   }
 
   /// Returns a [Parser] that parses a string that match a regular expression.<br/>

@@ -14,24 +14,19 @@ impl StaticParsersImpl {
     s.to_string()
   }
 
-  pub fn lazy_static_parser<'a>() -> StaticParser<'a, char, String> {
+  pub fn lazy_static_parser<'a>() -> StaticParser<'a, char, &'a str> {
     StaticParser::new(move |parse_state| {
       let input = parse_state.input();
       let offset = parse_state.next_offset();
 
       if offset + 3 <= input.len() {
         if input[offset] == 'a' && input[offset + 1] == 'b' && input[offset + 2] == 'c' {
-          ParseResult::successful("abc".to_string(), 3)
+          ParseResult::successful("abc", 3)
         } else {
           ParseResult::failed_with_uncommitted(ParseError::of_mismatch(input, offset, 0, "expected 'abc'".to_string()))
         }
       } else {
-        ParseResult::failed_with_uncommitted(ParseError::of_mismatch(
-          input,
-          offset,
-          0,
-          "unexpected end of input".to_string(),
-        ))
+        ParseResult::failed_with_uncommitted(ParseError::of_in_complete())
       }
     })
   }
@@ -483,8 +478,7 @@ impl StaticParsersImpl {
       if i > offset {
         ParseResult::successful(&input[offset..i], i - offset)
       } else {
-        let msg = format!("expected at least one matching element");
-        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        let pe = ParseError::of_in_complete();
         ParseResult::failed_with_uncommitted(pe)
       }
     })
@@ -513,8 +507,7 @@ impl StaticParsersImpl {
       if (i - offset) >= n {
         ParseResult::successful(&input[offset..i], i - offset)
       } else {
-        let msg = format!("expected at least {} matching elements", n);
-        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        let pe = ParseError::of_in_complete();
         ParseResult::failed_with_uncommitted(pe)
       }
     })
@@ -566,8 +559,7 @@ impl StaticParsersImpl {
       if i > offset {
         ParseResult::successful(&input[offset..i], i - offset)
       } else {
-        let msg = format!("expected at least one element before condition");
-        let pe = ParseError::of_mismatch(input, offset, 0, msg);
+        let pe = ParseError::of_in_complete();
         ParseResult::failed_with_uncommitted(pe)
       }
     })
