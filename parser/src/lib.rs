@@ -1574,7 +1574,7 @@ pub mod prelude {
   pub fn elm_multi_space_static<'a, I>() -> StaticParser<'a, I, I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    StaticParsersImpl::elm_multi_space()
+    StaticParsersImpl::elm_pred(|e: &I| e.is_ascii_multi_space())
   }
 
   /// Returns a [Parser] that parses alphabets ('A'..='Z', 'a'..='z').(for reference)<br/>
