@@ -8,6 +8,6 @@ impl LazyParsers for ParsersImpl {
   where
     F: Fn() -> Self::P<'a, I, A> + 'a,
     A: Debug + 'a, {
-    Self::unit().flat_map(move |_| f())
+    Self::successful(()).flat_map(move |_| f())
   }
 }

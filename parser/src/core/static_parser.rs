@@ -199,6 +199,62 @@ impl<'a, I, A: 'a> StaticParser<'a, I, A> {
     })
   }
 
+  /// 1回以上の繰り返しを解析する
+  pub fn of_many1(self) -> StaticParser<'a, I, Vec<A>>
+  where
+    A: Clone + 'a, {
+    let method = self.method.clone();
+
+    StaticParser::new(move |state| {
+      let mut result = Vec::new();
+      let mut total_length = 0;
+      let mut current_offset = 0;
+      let mut first = true;
+
+      loop {
+        let current_state = state.add_offset(current_offset);
+        match method(&current_state) {
+          ParseResult::Success { value, length } => {
+            result.push(value);
+            total_length += length;
+            current_offset += length;
+            first = false;
+          }
+          ParseResult::Failure {
+            error,
+            committed_status,
+          } => {
+            if first {
+              return ParseResult::failed(error, committed_status);
+            }
+            break;
+          }
+        }
+      }
+
+      ParseResult::successful(result, total_length)
+    })
+  }
+
+  /// 結果を収集する
+  pub fn collect(self) -> StaticParser<'a, I, Vec<A>>
+  where
+    A: Clone + 'a, {
+    let method = self.method.clone();
+
+    StaticParser::new(move |state| match method(state) {
+      ParseResult::Success { value, length } => {
+        let mut result = Vec::new();
+        result.push(value);
+        ParseResult::successful(result, length)
+      }
+      ParseResult::Failure {
+        error,
+        committed_status,
+      } => ParseResult::failed(error, committed_status),
+    })
+  }
+
   /// StaticParserをParserに変換する
   pub fn to_parser(self) -> Parser<'a, I, A> {
     let method = self.method.clone();
