@@ -4,7 +4,7 @@ use crate::core::{ParseError, ParseResult, ParseState};
 pub trait ParserRunner<'a> {
   type Input;
   type Output;
-  type P<'m, X, Y>: ParserMonad<'m, Input = X, Output = Y>
+  type P<'m, X, Y: 'm>: ParserMonad<'m, Input = X, Output = Y>
   where
     X: 'm;
 

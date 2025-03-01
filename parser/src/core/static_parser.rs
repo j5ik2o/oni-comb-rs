@@ -3,12 +3,12 @@ use std::marker::PhantomData;
 use std::rc::Rc;
 
 /// 静的ディスパッチを使用した最適化されたパーサー実装
-pub struct StaticParser<'a, I, A> {
+pub struct StaticParser<'a, I, A: 'a> {
   pub(crate) method: Rc<dyn Fn(&ParseState<'a, I>) -> ParseResult<'a, I, A> + 'a>,
-  _phantom: PhantomData<&'a (I, A)>,
+  _phantom: PhantomData<&'a I>,
 }
 
-impl<'a, I, A> Clone for StaticParser<'a, I, A> {
+impl<'a, I, A: 'a> Clone for StaticParser<'a, I, A> {
   fn clone(&self) -> Self {
     Self {
       method: Rc::clone(&self.method),
@@ -17,7 +17,7 @@ impl<'a, I, A> Clone for StaticParser<'a, I, A> {
   }
 }
 
-impl<'a, I, A> StaticParser<'a, I, A> {
+impl<'a, I, A: 'a> StaticParser<'a, I, A> {
   /// 新しいStaticParserを作成
   pub fn new<F>(parse: F) -> Self
   where
@@ -54,6 +54,14 @@ impl<'a, I, A> StaticParser<'a, I, A> {
         committed_status,
       } => ParseResult::failed(error, committed_status),
     })
+  }
+
+  /// 条件に基づいてフィルタリング
+  pub fn filter<G>(self, f: G) -> StaticParser<'a, I, A>
+  where
+    G: Fn(&A) -> bool + Clone + 'a,
+    I: Clone + 'a, {
+    self.with_filter(f)
   }
 
   /// 条件に基づいてフィルタリング
@@ -199,7 +207,7 @@ impl<'a, I, A> StaticParser<'a, I, A> {
 }
 
 /// ParserからStaticParserへの変換
-impl<'a, I, A> Parser<'a, I, A> {
+impl<'a, I, A: 'a> Parser<'a, I, A> {
   pub fn to_static_parser(self) -> StaticParser<'a, I, A> {
     let method = self.method;
     StaticParser::new(move |state| method(state))
