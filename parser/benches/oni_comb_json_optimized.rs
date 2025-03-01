@@ -23,8 +23,7 @@ fn space<'a>() -> Parser<'a, char, ()> {
 }
 
 // StaticParserを返す関数（外部公開用）
-fn space_optimized<'a>(
-) -> StaticParser<'a, char, (), impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, ()> + Clone + 'a> {
+fn space_optimized<'a>() -> StaticParser<'a, char, ()> {
   space().to_static_parser()
 }
 
@@ -38,8 +37,7 @@ fn number_parser<'a>() -> Parser<'a, char, f64> {
 }
 
 // StaticParserを返す関数（外部公開用）
-fn number_optimized<'a>(
-) -> StaticParser<'a, char, f64, impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, f64> + Clone + 'a> {
+fn number_optimized<'a>() -> StaticParser<'a, char, f64> {
   number_parser().to_static_parser()
 }
 
@@ -88,8 +86,7 @@ fn string_parser<'a>() -> Parser<'a, char, String> {
 }
 
 // StaticParserを返す関数（外部公開用）
-fn string_optimized<'a>(
-) -> StaticParser<'a, char, String, impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, String> + Clone + 'a> {
+fn string_optimized<'a>() -> StaticParser<'a, char, String> {
   string_parser().to_static_parser()
 }
 
@@ -99,8 +96,7 @@ fn boolean_parser<'a>() -> Parser<'a, char, bool> {
 }
 
 // StaticParserを返す関数（外部公開用）
-fn boolean_optimized<'a>(
-) -> StaticParser<'a, char, bool, impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, bool> + Clone + 'a> {
+fn boolean_optimized<'a>() -> StaticParser<'a, char, bool> {
   boolean_parser().to_static_parser()
 }
 
@@ -129,12 +125,7 @@ fn array_parser<'a>() -> Parser<'a, char, Vec<JsonValue>> {
 }
 
 // StaticParserを返す関数（外部公開用）
-fn array_optimized<'a>() -> StaticParser<
-  'a,
-  char,
-  Vec<JsonValue>,
-  impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, Vec<JsonValue>> + Clone + 'a,
-> {
+fn array_optimized<'a>() -> StaticParser<'a, char, Vec<JsonValue>> {
   array_parser().to_static_parser()
 }
 
@@ -169,12 +160,7 @@ fn object_parser<'a>() -> Parser<'a, char, HashMap<String, JsonValue>> {
 }
 
 // StaticParserを返す関数（外部公開用）
-fn object_optimized<'a>() -> StaticParser<
-  'a,
-  char,
-  HashMap<String, JsonValue>,
-  impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, HashMap<String, JsonValue>> + Clone + 'a,
-> {
+fn object_optimized<'a>() -> StaticParser<'a, char, HashMap<String, JsonValue>> {
   object_parser().to_static_parser()
 }
 
@@ -191,9 +177,7 @@ fn value_parser<'a>() -> Parser<'a, char, JsonValue> {
 }
 
 // StaticParserを返す関数（外部公開用）
-fn value_optimized<'a>(
-) -> StaticParser<'a, char, JsonValue, impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a>
-{
+fn value_optimized<'a>() -> StaticParser<'a, char, JsonValue> {
   value_parser().to_static_parser()
 }
 
@@ -204,9 +188,7 @@ fn json_parser<'a>() -> Parser<'a, char, JsonValue> {
 }
 
 // StaticParserを返す関数（外部公開用）
-fn json_optimized<'a>(
-) -> StaticParser<'a, char, JsonValue, impl Fn(&ParseState<'a, char>) -> ParseResult<'a, char, JsonValue> + Clone + 'a>
-{
+fn json_optimized<'a>() -> StaticParser<'a, char, JsonValue> {
   json_parser().to_static_parser()
 }
 
