@@ -1,5 +1,5 @@
 use crate::core::{CommittedStatus, Element, ParseError, ParseResult, StaticParser};
-use crate::extension::parser::operator_parser::OperatorParser;
+use crate::prelude::OperatorParser;
 use std::fmt::{Debug, Display};
 use regex::Regex;
 use std::str;
@@ -221,32 +221,28 @@ impl StaticParsersImpl {
   pub fn elm_hex_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_ref_in('0', '9')
-      .or(Self::elm_ref_in('A', 'F'))
-      .or(Self::elm_ref_in('a', 'f'))
+    Self::elm_pred_ref(|e: &I| e.is_ascii_hex_digit())
   }
 
   /// 16進数を解析するStaticParserを返します。
   pub fn elm_hex_digit<'a, I>() -> StaticParser<'a, I, I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_in('0', '9')
-      .or(Self::elm_in('A', 'F'))
-      .or(Self::elm_in('a', 'f'))
+    Self::elm_pred(|e: &I| e.is_ascii_hex_digit())
   }
 
   /// 8進数を解析するStaticParserを返します。(参照版)
   pub fn elm_oct_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_ref_in('0', '8')
+    Self::elm_pred_ref(|e: &I| e.is_ascii_oct_digit())
   }
 
   /// 8進数を解析するStaticParserを返します。
   pub fn elm_oct_digit<'a, I>() -> StaticParser<'a, I, I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_in('0', '8')
+    Self::elm_pred(|e: &I| e.is_ascii_oct_digit())
   }
 
   /// 指定した要素のいずれかを解析するStaticParserを返します。(参照版)
@@ -254,7 +250,7 @@ impl StaticParsersImpl {
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     if set.is_empty() {
-      return Self::failed(ParseError::of_in_complete(), CommittedStatus::Uncommitted());
+      return Self::failed(ParseError::of_in_complete(), CommittedStatus::Uncommitted);
     }
     
     let mut parser = Self::elm_ref(set[0].clone());
@@ -269,7 +265,7 @@ impl StaticParsersImpl {
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     if set.is_empty() {
-      return Self::failed(ParseError::of_in_complete(), CommittedStatus::Uncommitted());
+      return Self::failed(ParseError::of_in_complete(), CommittedStatus::Uncommitted);
     }
     
     let mut parser = Self::elm(set[0].clone());
@@ -361,66 +357,70 @@ impl StaticParsersImpl {
   pub fn elm_space_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_ref(' ').or(Self::elm_ref('\t'))
+    Self::elm_pred_ref(|e: &I| e.is_ascii_space())
   }
 
   /// 空白文字を解析するStaticParserを返します。
   pub fn elm_space<'a, I>() -> StaticParser<'a, I, I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm(' ').or(Self::elm('\t'))
+    Self::elm_pred(|e: &I| e.is_ascii_space())
   }
 
   /// 複数の空白文字を解析するStaticParserを返します。(参照版)
   pub fn elm_multi_space_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_ref(' ').or(Self::elm_ref('\t')).or(Self::elm_ref('\n')).or(Self::elm_ref('\r'))
+    Self::elm_pred_ref(|e: &I| e.is_ascii_multi_space())
   }
 
   /// 複数の空白文字を解析するStaticParserを返します。
   pub fn elm_multi_space<'a, I>() -> StaticParser<'a, I, I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm(' ').or(Self::elm('\t')).or(Self::elm('\n')).or(Self::elm('\r'))
+    Self::elm_pred(|e: &I| e.is_ascii_multi_space())
   }
 
   /// アルファベットを解析するStaticParserを返します。(参照版)
   pub fn elm_alpha_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_pred_ref(|e: &I| e.clone().is_ascii_alpha())
+    Self::elm_pred_ref(|e: &I| e.is_ascii_alpha())
   }
 
   /// アルファベットを解析するStaticParserを返します。
   pub fn elm_alpha<'a, I>() -> StaticParser<'a, I, I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_pred(|e: &I| e.clone().is_ascii_alpha())
+    Self::elm_pred(|e: &I| e.is_ascii_alpha())
   }
 
   /// アルファベットと数字を解析するStaticParserを返します。(参照版)
   pub fn elm_alpha_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_pred_ref(|e: &I| e.clone().is_ascii_alpha_digit())
+    Self::elm_pred_ref(|e: &I| e.is_ascii_alpha_digit())
   }
 
   /// アルファベットと数字を解析するStaticParserを返します。
   pub fn elm_alpha_digit<'a, I>() -> StaticParser<'a, I, I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    Self::elm_pred(|e: &I| e.clone().is_ascii_alpha_digit())
+    Self::elm_pred(|e: &I| e.is_ascii_alpha_digit())
   }
 
   /// 数字を解析するStaticParserを返します。(参照版)
-  pub fn elm_digit_ref<'a>() -> StaticParser<'a, char, &'a char> {
-    Self::elm_pred_ref(|c: &char| c.is_ascii_digit())
+  pub fn elm_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  where
+    I: Element + Clone + PartialEq + Debug + 'a, {
+    Self::elm_pred_ref(|c: &I| c.is_ascii_digit())
   }
 
   /// 数字を解析するStaticParserを返します。
-  pub fn elm_digit<'a>() -> StaticParser<'a, char, char> {
-    Self::elm_pred(|c: &char| c.is_ascii_digit())
+  pub fn elm_digit<'a, I>() -> StaticParser<'a, I, I>
+  where
+    I: Element + Clone + PartialEq + Debug + 'a, {
+    Self::elm_pred(|c: &I| c.is_ascii_digit())
   }
 
   /// 指定した数の要素を取得するStaticParserを返します。
