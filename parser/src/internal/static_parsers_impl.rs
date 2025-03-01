@@ -101,7 +101,7 @@ impl StaticParsersImpl {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       if offset < input.len() {
-        ParseResult::successful(&input[offset..offset+1], 1)
+        ParseResult::successful(&input[offset..offset + 1], 1)
       } else {
         let msg = format!("unexpected end of input");
         let pe = ParseError::of_mismatch(input, offset, 0, msg);
@@ -137,7 +137,7 @@ impl StaticParsersImpl {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       if offset < input.len() && input[offset] == element {
-        ParseResult::successful(&input[offset..offset+1], 1)
+        ParseResult::successful(&input[offset..offset + 1], 1)
       } else if offset >= input.len() {
         let msg = format!("unexpected end of input");
         let pe = ParseError::of_mismatch(input, offset, 0, msg);
@@ -446,7 +446,7 @@ impl StaticParsersImpl {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       let mut i = 0;
-      
+
       while offset + i < input.len() {
         if f(&input[offset + i]) {
           // 条件に一致する要素を含めて返す
@@ -455,7 +455,7 @@ impl StaticParsersImpl {
         }
         i += 1;
       }
-      
+
       if i == 0 {
         ParseResult::successful(&input[offset..offset], 0)
       } else {
@@ -474,7 +474,7 @@ impl StaticParsersImpl {
       let offset = parse_state.next_offset();
       let mut i = 0;
       let mut found_match = false;
-      
+
       while offset + i < input.len() {
         if f(&input[offset + i]) {
           // 条件に一致する要素は含めない
@@ -483,7 +483,7 @@ impl StaticParsersImpl {
         }
         i += 1;
       }
-      
+
       if i == 0 || !found_match {
         let pe = ParseError::of_in_complete();
         ParseResult::failed_with_uncommitted(pe)
@@ -658,7 +658,7 @@ impl StaticParsersImpl {
     StaticParser::new(move |parse_state| {
       let input = parse_state.input();
       let offset = parse_state.next_offset();
-      
+
       // 左側のパーサーを実行
       match lp.parse(&input[offset..]) {
         ParseResult::Success { length: n1, .. } => {
@@ -667,7 +667,7 @@ impl StaticParsersImpl {
           if middle_offset >= input.len() {
             return ParseResult::failed_with_uncommitted(ParseError::of_in_complete());
           }
-          
+
           match parser.parse(&input[middle_offset..]) {
             ParseResult::Success { length: n2, .. } => {
               // 中央のパーサーが成功した場合、右側のパーサーを実行
@@ -675,20 +675,20 @@ impl StaticParsersImpl {
               if right_offset >= input.len() {
                 return ParseResult::failed_with_uncommitted(ParseError::of_in_complete());
               }
-              
+
               match rp.parse(&input[right_offset..]) {
                 ParseResult::Success { length: n3, .. } => {
                   // すべてのパーサーが成功した場合、中央部分（bodyの部分）を返す
                   let body_slice = &input[middle_offset..middle_offset + n2];
                   ParseResult::successful(body_slice, n1 + n2 + n3)
-                },
+                }
                 ParseResult::Failure {
                   error,
                   committed_status,
                 } => {
                   // 右側のパーサーが失敗した場合、エラーを伝播
                   ParseResult::failed(error, committed_status)
-                },
+                }
               }
             }
             ParseResult::Failure {
@@ -697,7 +697,7 @@ impl StaticParsersImpl {
             } => {
               // 中央のパーサーが失敗した場合、エラーを伝播
               ParseResult::failed(error, committed_status)
-            },
+            }
           }
         }
         ParseResult::Failure {
@@ -706,7 +706,7 @@ impl StaticParsersImpl {
         } => {
           // 左側のパーサーが失敗した場合、エラーを伝播
           ParseResult::failed(error, committed_status)
-        },
+        }
       }
     })
   }
