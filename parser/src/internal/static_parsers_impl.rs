@@ -245,30 +245,52 @@ impl StaticParsersImpl {
   pub fn elm_ref_of<'a, I>(set: &'a [I]) -> StaticParser<'a, I, &'a I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    if set.is_empty() {
-      return Self::failed(ParseError::of_in_complete(), CommittedStatus::Uncommitted);
-    }
+    StaticParser::new(move |parse_state| {
+      let input = parse_state.input();
+      let offset = parse_state.next_offset();
 
-    let mut parser = Self::elm_ref(set[0].clone());
-    for i in 1..set.len() {
-      parser = parser.or(Self::elm_ref(set[i].clone()));
-    }
-    parser
+      if offset >= input.len() {
+        let pe = ParseError::of_in_complete();
+        return ParseResult::failed_with_uncommitted(pe);
+      }
+
+      let element = &input[offset];
+      for s in set {
+        if element == s {
+          return ParseResult::successful(element, 1);
+        }
+      }
+
+      let msg = format!("expected one of: {:?}, but got: {:?}", set, element);
+      let pe = ParseError::of_mismatch(input, offset, 0, msg);
+      ParseResult::failed_with_uncommitted(pe)
+    })
   }
 
   /// 指定した要素のいずれかを解析するStaticParserを返します。
   pub fn elm_of<'a, I>(set: &'a [I]) -> StaticParser<'a, I, I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    if set.is_empty() {
-      return Self::failed(ParseError::of_in_complete(), CommittedStatus::Uncommitted);
-    }
+    StaticParser::new(move |parse_state| {
+      let input = parse_state.input();
+      let offset = parse_state.next_offset();
 
-    let mut parser = Self::elm(set[0].clone());
-    for i in 1..set.len() {
-      parser = parser.or(Self::elm(set[i].clone()));
-    }
-    parser
+      if offset >= input.len() {
+        let pe = ParseError::of_in_complete();
+        return ParseResult::failed_with_uncommitted(pe);
+      }
+
+      let element = &input[offset];
+      for s in set {
+        if element == s {
+          return ParseResult::successful(element.clone(), 1);
+        }
+      }
+
+      let msg = format!("expected one of: {:?}, but got: {:?}", set, element);
+      let pe = ParseError::of_mismatch(input, offset, 0, msg);
+      ParseResult::failed_with_uncommitted(pe)
+    })
   }
 
   /// 指定した範囲の要素を解析するStaticParserを返します。(参照版)
@@ -289,37 +311,40 @@ impl StaticParsersImpl {
   pub fn elm_ref_from_until<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a I>
   where
     I: Element + Clone + PartialEq + Debug + PartialOrd + 'a, {
-    Self::elm_pred_ref(move |e| *e >= start && *e < end)
+    Self::elm_any_ref().flat_map(move |e| {
+      if *e >= start && *e < end {
+        Self::successful(e)
+      } else {
+        let msg = format!("expected element in range [{:?}, {:?}), but got: {:?}", start, end, e);
+        Self::failed(ParseError::of_custom(msg), CommittedStatus::Uncommitted)
+      }
+    })
   }
 
   /// 指定した範囲の要素を解析するStaticParserを返します。
   pub fn elm_from_until<'a, I>(start: I, end: I) -> StaticParser<'a, I, I>
   where
     I: Element + Clone + PartialEq + Debug + PartialOrd + 'a, {
-    Self::elm_pred(move |e| *e >= start && *e < end)
+    Self::elm_any().flat_map(move |e| {
+      if e >= start && e < end {
+        Self::successful(e)
+      } else {
+        let msg = format!("expected element in range [{:?}, {:?}), but got: {:?}", start, end, e);
+        Self::failed(ParseError::of_custom(msg), CommittedStatus::Uncommitted)
+      }
+    })
   }
 
   /// 指定した要素のいずれでもない要素を解析するStaticParserを返します。(参照版)
   pub fn none_ref_of<'a, I>(set: &'a [I]) -> StaticParser<'a, I, &'a I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
-      let offset = parse_state.next_offset();
-
-      if offset < input.len() {
-        let element = &input[offset];
-        if !set.contains(element) {
-          ParseResult::successful(element, 1)
-        } else {
-          let msg = format!("expected none of: {:?}, but got: {:?}", set, element);
-          let pe = ParseError::of_mismatch(input, offset, 0, msg);
-          ParseResult::failed_with_uncommitted(pe)
-        }
+    Self::elm_any_ref().flat_map(move |e| {
+      if !set.contains(e) {
+        Self::successful(e)
       } else {
-        let msg = format!("unexpected end of input");
-        let pe = ParseError::of_mismatch(input, offset, 0, msg);
-        ParseResult::failed_with_uncommitted(pe)
+        let msg = format!("expected none of: {:?}, but got: {:?}", set, e);
+        Self::failed(ParseError::of_custom(msg), CommittedStatus::Uncommitted)
       }
     })
   }
@@ -328,23 +353,12 @@ impl StaticParsersImpl {
   pub fn none_of<'a, I>(set: &'a [I]) -> StaticParser<'a, I, I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
-    StaticParser::new(move |parse_state| {
-      let input = parse_state.input();
-      let offset = parse_state.next_offset();
-
-      if offset < input.len() {
-        let element = &input[offset];
-        if !set.contains(element) {
-          ParseResult::successful(input[offset].clone(), 1)
-        } else {
-          let msg = format!("expected none of: {:?}, but got: {:?}", set, element);
-          let pe = ParseError::of_mismatch(input, offset, 0, msg);
-          ParseResult::failed_with_uncommitted(pe)
-        }
+    Self::elm_any().flat_map(move |e| {
+      if !set.contains(&e) {
+        Self::successful(e)
       } else {
-        let msg = format!("unexpected end of input");
-        let pe = ParseError::of_mismatch(input, offset, 0, msg);
-        ParseResult::failed_with_uncommitted(pe)
+        let msg = format!("expected none of: {:?}, but got: {:?}", set, e);
+        Self::failed(ParseError::of_custom(msg), CommittedStatus::Uncommitted)
       }
     })
   }
@@ -518,22 +532,7 @@ impl StaticParsersImpl {
   where
     F: Fn(&I) -> bool + 'a,
     I: Element + Clone + PartialEq + Debug + 'a, {
-    StaticParser::new(move |parse_state| {
-      let input: &[I] = parse_state.input();
-      let offset = parse_state.next_offset();
-
-      if offset >= input.len() {
-        return ParseResult::successful(&input[offset..offset], 0);
-      }
-
-      let mut i = offset;
-
-      while i < input.len() && !f(&input[i]) {
-        i += 1;
-      }
-
-      ParseResult::successful(&input[offset..i], i - offset)
-    })
+    Self::take_while0(move |e| !f(e))
   }
 
   /// 条件に一致するまで要素を取得するStaticParserを返します。(1個以上)
@@ -541,28 +540,7 @@ impl StaticParsersImpl {
   where
     F: Fn(&I) -> bool + 'a,
     I: Element + Clone + PartialEq + Debug + 'a, {
-    StaticParser::new(move |parse_state| {
-      let input: &[I] = parse_state.input();
-      let offset = parse_state.next_offset();
-
-      if offset >= input.len() {
-        let pe = ParseError::of_in_complete();
-        return ParseResult::failed_with_uncommitted(pe);
-      }
-
-      let mut i = offset;
-
-      while i < input.len() && !f(&input[i]) {
-        i += 1;
-      }
-
-      if i > offset {
-        ParseResult::successful(&input[offset..i], i - offset)
-      } else {
-        let pe = ParseError::of_in_complete();
-        ParseResult::failed_with_uncommitted(pe)
-      }
-    })
+    Self::take_while1(move |e| !f(e))
   }
 
   /// 指定したシーケンスを解析するStaticParserを返します。
@@ -726,37 +704,7 @@ impl StaticParsersImpl {
     A: Clone + Debug + 'a,
     B: Clone + Debug + 'a,
     C: Clone + Debug + 'a, {
-    StaticParser::new(move |parse_state| {
-      let lp_method = lp.method.clone();
-      let parser_method = parser.method.clone();
-      let rp_method = rp.method.clone();
-
-      match (lp_method)(parse_state) {
-        ParseResult::Success { length: n1, .. } => {
-          let next_state = parse_state.next(n1);
-          match (parser_method)(&next_state) {
-            ParseResult::Success { value, length: n2 } => {
-              let next_state = next_state.next(n2);
-              match (rp_method)(&next_state) {
-                ParseResult::Success { length: n3, .. } => ParseResult::successful(value, n1 + n2 + n3),
-                ParseResult::Failure {
-                  error,
-                  committed_status,
-                } => ParseResult::failed(error, committed_status),
-              }
-            }
-            ParseResult::Failure {
-              error,
-              committed_status,
-            } => ParseResult::failed(error, committed_status),
-          }
-        }
-        ParseResult::Failure {
-          error,
-          committed_status,
-        } => ParseResult::failed(error, committed_status),
-      }
-    })
+    lp.right(parser).left(rp)
   }
 
   /// 指定した数の要素をスキップするStaticParserを返します。
