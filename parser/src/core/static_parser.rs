@@ -240,7 +240,21 @@ impl<'a, I, A: 'a> StaticParser<'a, I, A> {
   pub fn collect(self) -> StaticParser<'a, I, Vec<A>>
   where
     A: Clone + 'a, {
-    self
+    let method = self.method.clone();
+    
+    StaticParser::new(move |state| {
+      match method(state) {
+        ParseResult::Success { value, length } => {
+          let mut result = Vec::new();
+          result.push(value);
+          ParseResult::successful(result, length)
+        }
+        ParseResult::Failure {
+          error,
+          committed_status,
+        } => ParseResult::failed(error, committed_status),
+      }
+    })
   }
 
   /// StaticParserをParserに変換する
