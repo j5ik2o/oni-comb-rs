@@ -16,7 +16,6 @@ mod primitive_parsers_impl;
 mod repeat_parsers_impl;
 mod skip_parser_impl;
 mod taken_parsers_impl;
-pub mod static_parsers_impl;
 
 
 impl Parsers for ParsersImpl {
