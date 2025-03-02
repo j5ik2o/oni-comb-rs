@@ -3624,15 +3624,19 @@ mod tests {
       // Test with characters not in the set
       {
         let input2 = "defg".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2);
-        assert!(result2.is_err());
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
       }
 
       // Test with empty input
       {
         let input3: Vec<char> = vec![];
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
@@ -3652,15 +3656,19 @@ mod tests {
       // Test with characters not in the set
       {
         let input2 = "defg".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2);
-        assert!(result2.is_err());
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
       }
 
       // Test with empty input
       {
         let input3: Vec<char> = vec![];
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
@@ -3678,15 +3686,19 @@ mod tests {
       // Test with no spaces
       {
         let input2 = "abc".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2).unwrap();
-        assert_eq!(result2, "");
+        {
+          let result2 = p.parse_as_result(&input2).unwrap();
+          assert_eq!(result2, "");
+        }
       }
 
       // Test with empty input
       {
         let input3: Vec<char> = vec![];
-        let result3 = p.parse_as_result(&input3).unwrap();
-        assert_eq!(result3, "");
+        {
+          let result3 = p.parse_as_result(&input3).unwrap();
+          assert_eq!(result3, "");
+        }
       }
     }
   }
@@ -3704,15 +3716,19 @@ mod tests {
       // Test with no spaces
       {
         let input2 = "abc".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2).unwrap();
-        assert_eq!(result2, "");
+        {
+          let result2 = p.parse_as_result(&input2).unwrap();
+          assert_eq!(result2, "");
+        }
       }
 
       // Test with empty input
       {
         let input3: Vec<char> = vec![];
-        let result3 = p.parse_as_result(&input3).unwrap();
-        assert_eq!(result3, "");
+        {
+          let result3 = p.parse_as_result(&input3).unwrap();
+          assert_eq!(result3, "");
+        }
       }
     }
   }
@@ -3735,15 +3751,19 @@ mod tests {
       // Test with non-octal digits
       {
         let input2 = "89abc".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2);
-        assert!(result2.is_err());
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
       }
 
       // Test with empty input
       {
         let input3: Vec<char> = vec![];
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
@@ -3763,15 +3783,19 @@ mod tests {
       // Test with non-octal digits
       {
         let input2 = "89abc".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2);
-        assert!(result2.is_err());
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
       }
 
       // Test with empty input
       {
         let input3: Vec<char> = vec![];
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
