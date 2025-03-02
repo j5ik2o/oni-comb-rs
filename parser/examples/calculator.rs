@@ -183,12 +183,13 @@ mod static_parsers {
 
   pub fn value_static<'a>() -> StaticParser<'a, char, Rc<Expr>> {
     let digit = elm_pred(|c: &char| c.is_digit(10));
-    
+
     // Parse integer part
-    let int_parser = digit.clone().of_many1().map(|digits: Vec<char>| {
-      digits.iter().collect::<String>()
-    });
-    
+    let int_parser = digit
+      .clone()
+      .of_many1()
+      .map(|digits: Vec<char>| digits.iter().collect::<String>());
+
     // Parse optional fraction part
     let frac_parser = (elm_ref('.') * digit.of_many1()).opt().map(|frac_opt| {
       if let Some(frac_digits) = frac_opt {
@@ -199,14 +200,14 @@ mod static_parsers {
         String::new()
       }
     });
-    
+
     // Combine integer and fraction parts using a different approach
     let number_parser = (int_parser + frac_parser).map(|(int_str, frac_str)| {
       let mut result = int_str;
       result.push_str(&frac_str);
       result
     });
-    
+
     // Convert to Decimal and wrap in Expr::Value and Rc
     number_parser
       .map_res(|s| Decimal::from_str(&s))

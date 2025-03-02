@@ -97,19 +97,15 @@ pub mod static_parsers {
   pub fn number_static<'a>() -> StaticParser<'a, u8, f64> {
     let digit = elm_pred(|b: &u8| b.is_ascii_digit());
     let digit_1_9 = elm_pred(|b: &u8| *b >= b'1' && *b <= b'9');
-    
+
     // Parse integer part
     let int_parser = digit_1_9 * digit.clone().of_many0() | elm_ref(b'0').map(|c| vec![*c]);
-    
+
     // Parse optional minus sign
-    let minus_parser = elm_ref(b'-').opt().map(|m_opt| {
-      if let Some(m) = m_opt {
-        vec![*m]
-      } else {
-        vec![]
-      }
-    });
-    
+    let minus_parser = elm_ref(b'-')
+      .opt()
+      .map(|m_opt| if let Some(m) = m_opt { vec![*m] } else { vec![] });
+
     // Parse optional fraction part
     let frac_parser = (elm_ref(b'.') * digit.clone().of_many1()).opt().map(|frac_opt| {
       if let Some(frac_digits) = frac_opt {
@@ -120,31 +116,30 @@ pub mod static_parsers {
         vec![]
       }
     });
-    
+
     // Parse optional exponent part
-    let exp_sign_parser = elm_of(b"+-").opt().map(|sign_opt| {
-      if let Some(sign) = sign_opt {
-        vec![sign]
-      } else {
-        vec![]
-      }
-    });
-    
+    let exp_sign_parser =
+      elm_of(b"+-")
+        .opt()
+        .map(|sign_opt| if let Some(sign) = sign_opt { vec![sign] } else { vec![] });
+
     let exp_digits_parser = digit.clone().of_many1();
-    
+
     // Parse optional exponent part
     let exp_e_parser = elm_of(b"eE");
-    let exp_parser = (exp_e_parser + exp_sign_parser + exp_digits_parser).opt().map(|exp_opt| {
-      if let Some(((e_char, sign_bytes), digits)) = exp_opt {
-        let mut result = vec![e_char];
-        result.extend(sign_bytes);
-        result.extend(digits);
-        result
-      } else {
-        vec![]
-      }
-    });
-    
+    let exp_parser = (exp_e_parser + exp_sign_parser + exp_digits_parser)
+      .opt()
+      .map(|exp_opt| {
+        if let Some(((e_char, sign_bytes), digits)) = exp_opt {
+          let mut result = vec![e_char];
+          result.extend(sign_bytes);
+          result.extend(digits);
+          result
+        } else {
+          vec![]
+        }
+      });
+
     // Combine all parts into a single parser using tuple operators
     let number_parser = (minus_parser + int_parser).map(|(minus_bytes, int_bytes)| {
       let mut result = Vec::new();
@@ -152,19 +147,19 @@ pub mod static_parsers {
       result.extend(int_bytes);
       result
     });
-    
+
     let number_parser = (number_parser + frac_parser).map(|(num_bytes, frac_bytes)| {
       let mut result = num_bytes;
       result.extend(frac_bytes);
       result
     });
-    
+
     let number_parser = (number_parser + exp_parser).map(|(num_bytes, exp_bytes)| {
       let mut result = num_bytes;
       result.extend(exp_bytes);
       result
     });
-    
+
     // Convert to string and parse as f64
     number_parser
       .map_res(|bytes| String::from_utf8(bytes))
@@ -185,79 +180,83 @@ pub mod static_parsers {
       .map(Clone::clone)
       .of_many1()
       .map_res(|bytes| String::from_utf8(bytes));
-      
+
     let hex_digit = elm_pred(|b: &u8| b.is_ascii_hexdigit());
-    let utf16_char = elm_ref(b'\\') * (elm_ref(b'u') * (
-      hex_digit.of_count(4)
-        .map_res(|bytes| String::from_utf8(bytes))
-        .map_res(|s| u16::from_str_radix(&s, 16))
-    ));
-    
+    let utf16_char = elm_ref(b'\\')
+      * (elm_ref(b'u')
+        * (hex_digit
+          .of_count(4)
+          .map_res(|bytes| String::from_utf8(bytes))
+          .map_res(|s| u16::from_str_radix(&s, 16))));
+
     let utf16_string = utf16_char.of_many1().map(|chars| {
       decode_utf16(chars)
         .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
         .collect::<String>()
     });
-    
+
     let string_content = (char_string | utf16_string).of_many0();
     let string_parser = elm_ref(b'"') * string_content - elm_ref(b'"');
-    
+
     string_parser.map(|strings| strings.concat())
   }
 
   pub fn array_static<'a>() -> StaticParser<'a, u8, Vec<JsonValue>> {
     let sep = space_static() * elm_ref(b',') * space_static();
-    
+
     // First element followed by zero or more comma-separated elements
     let first_elem = value_static();
     let rest_elems = (sep * value_static()).of_many0();
-    
+
     // Combine first element with rest elements if first element exists
-    let elems = (first_elem + rest_elems).map(|(first, rest): (JsonValue, Vec<JsonValue>)| {
-      let mut result = vec![first];
-      result.extend(rest);
-      result
-    }).opt().map(|opt| opt.unwrap_or_else(Vec::new));
-    
+    let elems = (first_elem + rest_elems)
+      .map(|(first, rest): (JsonValue, Vec<JsonValue>)| {
+        let mut result = vec![first];
+        result.extend(rest);
+        result
+      })
+      .opt()
+      .map(|opt| opt.unwrap_or_else(Vec::new));
+
     let array_parser = elm_ref(b'[') * (space_static() * elems) - (space_static() * elm_ref(b']'));
     array_parser
   }
 
   pub fn object_static<'a>() -> StaticParser<'a, u8, HashMap<String, JsonValue>> {
     let sep = space_static() * elm_ref(b',') * space_static();
-    
+
     // Parse a key-value pair
     let key_parser = string_static();
     let colon_parser = space_static() * elm_ref(b':') * space_static();
     let value_parser = value_static();
-    let member = (key_parser + (colon_parser * value_parser))
-      .map(|(key, value): (String, JsonValue)| (key, value));
-    
+    let member = (key_parser + (colon_parser * value_parser)).map(|(key, value): (String, JsonValue)| (key, value));
+
     // First member followed by zero or more comma-separated members
     let first_member = member.clone();
     let rest_members = (sep * member).of_many0();
-    
+
     // Combine first member with rest members if first member exists
-    let members = (first_member + rest_members).map(|(first, rest): ((String, JsonValue), Vec<(String, JsonValue)>)| {
-      let mut result = vec![first];
-      result.extend(rest);
-      result
-    }).opt().map(|opt| opt.unwrap_or_else(Vec::new));
-    
+    let members = (first_member + rest_members)
+      .map(|(first, rest): ((String, JsonValue), Vec<(String, JsonValue)>)| {
+        let mut result = vec![first];
+        result.extend(rest);
+        result
+      })
+      .opt()
+      .map(|opt| opt.unwrap_or_else(Vec::new));
+
     let obj_parser = elm_ref(b'{') * (space_static() * members) - (space_static() * elm_ref(b'}'));
     obj_parser.map(|members| members.into_iter().collect::<HashMap<String, JsonValue>>())
   }
 
   pub fn value_static<'a>() -> StaticParser<'a, u8, JsonValue> {
-    let null_parser = elm_ref(b'n') * elm_ref(b'u') * elm_ref(b'l') * elm_ref(b'l')
-      .map(|_| JsonValue::Null);
-      
-    let true_parser = elm_ref(b't') * elm_ref(b'r') * elm_ref(b'u') * elm_ref(b'e')
-      .map(|_| JsonValue::Bool(true));
-      
-    let false_parser = elm_ref(b'f') * elm_ref(b'a') * elm_ref(b'l') * elm_ref(b's') * elm_ref(b'e')
-      .map(|_| JsonValue::Bool(false));
-    
+    let null_parser = elm_ref(b'n') * elm_ref(b'u') * elm_ref(b'l') * elm_ref(b'l').map(|_| JsonValue::Null);
+
+    let true_parser = elm_ref(b't') * elm_ref(b'r') * elm_ref(b'u') * elm_ref(b'e').map(|_| JsonValue::Bool(true));
+
+    let false_parser =
+      elm_ref(b'f') * elm_ref(b'a') * elm_ref(b'l') * elm_ref(b's') * elm_ref(b'e').map(|_| JsonValue::Bool(false));
+
     (null_parser
       | true_parser
       | false_parser
