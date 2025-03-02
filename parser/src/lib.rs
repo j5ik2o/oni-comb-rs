@@ -3351,15 +3351,19 @@ mod tests {
       // Test with zero digit (should not be parsed)
       {
         let input2 = "0123456789".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2);
-        assert!(result2.is_err());
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
       }
 
       // Test with non-digit characters
       {
         let input3 = "123abc".chars().collect::<Vec<_>>();
-        let result3 = p.parse_as_result(&input3).unwrap();
-        assert_eq!(result3, "123");
+        {
+          let result3 = p.parse_as_result(&input3).unwrap();
+          assert_eq!(result3, "123");
+        }
       }
     }
   }
@@ -3380,15 +3384,19 @@ mod tests {
       // Test with zero digit (should not be parsed)
       {
         let input2 = "0123456789".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2);
-        assert!(result2.is_err());
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
       }
 
       // Test with non-digit characters
       {
         let input3 = "123abc".chars().collect::<Vec<_>>();
-        let result3 = p.parse_as_result(&input3).unwrap();
-        assert_eq!(result3, "123");
+        {
+          let result3 = p.parse_as_result(&input3).unwrap();
+          assert_eq!(result3, "123");
+        }
       }
     }
   }
@@ -3412,15 +3420,19 @@ mod tests {
       // Test with non-digit characters
       {
         let input2 = "123abc".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2).unwrap();
-        assert_eq!(result2, "123");
+        {
+          let result2 = p.parse_as_result(&input2).unwrap();
+          assert_eq!(result2, "123");
+        }
       }
 
       // Test with error case
       {
         let input3 = "abc123".chars().collect::<Vec<_>>();
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
@@ -3441,15 +3453,19 @@ mod tests {
       // Test with non-digit characters
       {
         let input2 = "123abc".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2).unwrap();
-        assert_eq!(result2, "123");
+        {
+          let result2 = p.parse_as_result(&input2).unwrap();
+          assert_eq!(result2, "123");
+        }
       }
 
       // Test with error case
       {
         let input3 = "abc123".chars().collect::<Vec<_>>();
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
