@@ -5134,115 +5134,127 @@ mod tests {
   #[test]
   fn test_unit_static() {
     init();
-    let input = "abc".chars().collect::<Vec<_>>();
+    {
+      let input = "abc".chars().collect::<Vec<_>>();
 
-    // Test with a simple value
-    let p = unit_static(42);
-    let result = p.parse_as_result(&input).unwrap();
-    assert_eq!(result, 42);
+      // Test with a simple value
+      let p = unit_static(42);
+      let result = p.parse_as_result(&input).unwrap();
+      assert_eq!(result, 42);
 
-    // Test with a different type
-    let p2 = unit_static("hello");
-    let result2 = p2.parse_as_result(&input).unwrap();
-    assert_eq!(result2, "hello");
+      // Test with a different type
+      let p2 = unit_static("hello");
+      let result2 = p2.parse_as_result(&input).unwrap();
+      assert_eq!(result2, "hello");
 
-    // Test with a complex type
-    let p3 = unit_static(vec![1, 2, 3]);
-    let result3 = p3.parse_as_result(&input).unwrap();
-    assert_eq!(result3, vec![1, 2, 3]);
+      // Test with a complex type
+      let p3 = unit_static(vec![1, 2, 3]);
+      let result3 = p3.parse_as_result(&input).unwrap();
+      assert_eq!(result3, vec![1, 2, 3]);
 
-    // Test with empty input
-    let empty_input: Vec<char> = vec![];
-    let p4 = unit_static(42);
-    let result4 = p4.parse_as_result(&empty_input).unwrap();
-    assert_eq!(result4, 42);
+      // Test with empty input
+      {
+        let empty_input: Vec<char> = vec![];
+        let p4 = unit_static(42);
+        let result4 = p4.parse_as_result(&empty_input).unwrap();
+        assert_eq!(result4, 42);
+      }
 
-    // Test with map to transform the result
-    let p5 = unit_static(42).map(|n| n * 2);
-    let result5 = p5.parse_as_result(&input).unwrap();
-    assert_eq!(result5, 84);
+      // Test with map to transform the result
+      let p5 = unit_static(42).map(|n| n * 2);
+      let result5 = p5.parse_as_result(&input).unwrap();
+      assert_eq!(result5, 84);
 
-    // Test with parse method to check remaining input
-    let p6 = unit_static(42);
-    let result6 = p6.parse(&input);
-    assert!(result6.is_ok());
-    assert_eq!(result6.unwrap(), &input[..]); // Should return the entire input unchanged
+      // Test with parse method to check remaining input
+      let p6 = unit_static(42);
+      let result6 = p6.parse(&input);
+      assert!(result6.is_ok());
+      assert_eq!(result6.unwrap(), &input[..]); // Should return the entire input unchanged
+    }
   }
 
   #[test]
   fn test_lazy_static_parser() {
     init();
-    let input = "abc".chars().collect::<Vec<_>>();
+    {
+      let input = "abc".chars().collect::<Vec<_>>();
 
-    // Test with a simple parser
-    let p = lazy_static_parser(|| tag_static("abc"));
-    let result = p.parse_as_result(&input).unwrap();
-    assert_eq!(result, "abc");
+      // Test with a simple parser
+      let p = lazy_static_parser(|| tag_static("abc"));
+      let result = p.parse_as_result(&input).unwrap();
+      assert_eq!(result, "abc");
 
-    // Test with a different parser
-    let p2 = lazy_static_parser(|| take_static(2));
-    let result2 = p2.parse_as_result(&input).unwrap();
-    assert_eq!(result2, "ab");
+      // Test with a different parser
+      let p2 = lazy_static_parser(|| take_static(2));
+      let result2 = p2.parse_as_result(&input).unwrap();
+      assert_eq!(result2, "ab");
 
-    // Test with a parser that fails
-    let p3 = lazy_static_parser(|| tag_static("def"));
-    let result3 = p3.parse_as_result(&input);
-    assert!(result3.is_err());
+      // Test with a parser that fails
+      let p3 = lazy_static_parser(|| tag_static("def"));
+      let result3 = p3.parse_as_result(&input);
+      assert!(result3.is_err());
 
-    // Test with empty input
-    let empty_input: Vec<char> = vec![];
-    let p4 = lazy_static_parser(|| tag_static(""));
-    let result4 = p4.parse_as_result(&empty_input).unwrap();
-    assert_eq!(result4, "");
+      // Test with empty input
+      {
+        let empty_input: Vec<char> = vec![];
+        let p4 = lazy_static_parser(|| tag_static(""));
+        let result4 = p4.parse_as_result(&empty_input).unwrap();
+        assert_eq!(result4, "");
+      }
 
-    // Test with map to transform the result
-    let p5 = lazy_static_parser(|| tag_static("abc")).map(|s| s.to_uppercase());
-    let result5 = p5.parse_as_result(&input).unwrap();
-    assert_eq!(result5, "ABC");
+      // Test with map to transform the result
+      let p5 = lazy_static_parser(|| tag_static("abc")).map(|s| s.to_uppercase());
+      let result5 = p5.parse_as_result(&input).unwrap();
+      assert_eq!(result5, "ABC");
 
-    // Test with parse method to check remaining input
-    let p6 = lazy_static_parser(|| tag_static("a"));
-    let result6 = p6.parse(&input);
-    assert!(result6.is_ok());
-    assert_eq!(result6.unwrap(), &input[1..]); // Should return the remaining input after "a"
+      // Test with parse method to check remaining input
+      let p6 = lazy_static_parser(|| tag_static("a"));
+      let result6 = p6.parse(&input);
+      assert!(result6.is_ok());
+      assert_eq!(result6.unwrap(), &input[1..]); // Should return the remaining input after "a"
+    }
   }
 
   #[test]
   fn test_lazy_static_str() {
     init();
-    let input = "abc".chars().collect::<Vec<_>>();
+    {
+      let input = "abc".chars().collect::<Vec<_>>();
 
-    // Test with a simple parser
-    let p = lazy_static_str("abc");
-    let result = p.parse_as_result(&input).unwrap();
-    assert_eq!(result, "abc");
+      // Test with a simple parser
+      let p = lazy_static_str("abc");
+      let result = p.parse_as_result(&input).unwrap();
+      assert_eq!(result, "abc");
 
-    // Test with a different string
-    let p2 = lazy_static_str("ab");
-    let result2 = p2.parse_as_result(&input).unwrap();
-    assert_eq!(result2, "ab");
+      // Test with a different string
+      let p2 = lazy_static_str("ab");
+      let result2 = p2.parse_as_result(&input).unwrap();
+      assert_eq!(result2, "ab");
 
-    // Test with a string that doesn't match
-    let p3 = lazy_static_str("def");
-    let result3 = p3.parse_as_result(&input);
-    assert!(result3.is_err());
+      // Test with a string that doesn't match
+      let p3 = lazy_static_str("def");
+      let result3 = p3.parse_as_result(&input);
+      assert!(result3.is_err());
 
-    // Test with empty input
-    let empty_input: Vec<char> = vec![];
-    let p4 = lazy_static_str("");
-    let result4 = p4.parse_as_result(&empty_input).unwrap();
-    assert_eq!(result4, "");
+      // Test with empty input
+      {
+        let empty_input: Vec<char> = vec![];
+        let p4 = lazy_static_str("");
+        let result4 = p4.parse_as_result(&empty_input).unwrap();
+        assert_eq!(result4, "");
+      }
 
-    // Test with map to transform the result
-    let p5 = lazy_static_str("abc").map(|s| s.to_uppercase());
-    let result5 = p5.parse_as_result(&input).unwrap();
-    assert_eq!(result5, "ABC");
+      // Test with map to transform the result
+      let p5 = lazy_static_str("abc").map(|s| s.to_uppercase());
+      let result5 = p5.parse_as_result(&input).unwrap();
+      assert_eq!(result5, "ABC");
 
-    // Test with parse method to check remaining input
-    let p6 = lazy_static_str("a");
-    let result6 = p6.parse(&input);
-    assert!(result6.is_ok());
-    assert_eq!(result6.unwrap(), &input[1..]); // Should return the remaining input after "a"
+      // Test with parse method to check remaining input
+      let p6 = lazy_static_str("a");
+      let result6 = p6.parse(&input);
+      assert!(result6.is_ok());
+      assert_eq!(result6.unwrap(), &input[1..]); // Should return the remaining input after "a"
+    }
   }
 
   fn init() {
