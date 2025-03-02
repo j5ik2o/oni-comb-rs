@@ -3488,15 +3488,19 @@ mod tests {
       // Test with characters outside the range
       {
         let input2 = "defg".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2);
-        assert!(result2.is_err());
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
       }
 
       // Test with empty input
       {
         let input3: Vec<char> = vec![];
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
@@ -3516,15 +3520,19 @@ mod tests {
       // Test with characters outside the range
       {
         let input2 = "defg".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2);
-        assert!(result2.is_err());
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
       }
 
       // Test with empty input
       {
         let input3: Vec<char> = vec![];
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
@@ -3548,15 +3556,19 @@ mod tests {
       // Test with non-hex characters
       {
         let input2 = "0123456789abcdefABCDEFghijkl".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2).unwrap();
-        assert_eq!(result2, "0123456789abcdefABCDEF");
+        {
+          let result2 = p.parse_as_result(&input2).unwrap();
+          assert_eq!(result2, "0123456789abcdefABCDEF");
+        }
       }
 
       // Test with error case
       {
         let input3 = "ghijkl0123456789abcdefABCDEF".chars().collect::<Vec<_>>();
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
@@ -3577,15 +3589,19 @@ mod tests {
       // Test with non-hex characters
       {
         let input2 = "0123456789abcdefABCDEFghijkl".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2).unwrap();
-        assert_eq!(result2, "0123456789abcdefABCDEF");
+        {
+          let result2 = p.parse_as_result(&input2).unwrap();
+          assert_eq!(result2, "0123456789abcdefABCDEF");
+        }
       }
 
       // Test with error case
       {
         let input3 = "ghijkl0123456789abcdefABCDEF".chars().collect::<Vec<_>>();
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
