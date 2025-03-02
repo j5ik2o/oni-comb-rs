@@ -3963,8 +3963,10 @@ mod tests {
       // Test with empty input
       {
         let input2: Vec<char> = vec![];
-        let result2 = p.parse_as_result(&input2);
-        assert_eq!(result2.unwrap(), ());
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert_eq!(result2.unwrap(), ());
+        }
       }
     }
   }
@@ -3983,8 +3985,10 @@ mod tests {
       // Test with non-empty input - should fail
       {
         let input2 = "abc".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2);
-        assert!(result2.is_err());
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
       }
     }
   }
@@ -4422,9 +4426,11 @@ mod tests {
       // Test with empty input
       {
         let input2: Vec<char> = vec![];
-        let result3 = p.parse_as_result(&input2).unwrap();
-        assert_eq!(result3, "result");
-        assert_eq!(counter.get(), 3);
+        {
+          let result3 = p.parse_as_result(&input2).unwrap();
+          assert_eq!(result3, "result");
+          assert_eq!(counter.get(), 3);
+        }
       }
     }
 
