@@ -29,7 +29,7 @@ pub trait OperatorParser<'a>: ParserRunner<'a> {
 
   fn scan_right1<BOP>(self, op: Self::P<'a, Self::Input, BOP>) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a;
 
   fn chain_right0<BOP>(
@@ -38,7 +38,7 @@ pub trait OperatorParser<'a>: ParserRunner<'a> {
     x: Self::Output,
   ) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a;
 
   fn chain_left0<BOP>(
@@ -47,17 +47,17 @@ pub trait OperatorParser<'a>: ParserRunner<'a> {
     x: Self::Output,
   ) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a;
 
   fn chain_right1<BOP>(self, op: Self::P<'a, Self::Input, BOP>) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a;
 
   fn chain_left1<BOP>(self, op: Self::P<'a, Self::Input, BOP>) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a;
 
   fn rest_right1<BOP>(
@@ -66,7 +66,7 @@ pub trait OperatorParser<'a>: ParserRunner<'a> {
     x: Self::Output,
   ) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a;
 
   fn rest_left1<BOP>(
@@ -75,6 +75,6 @@ pub trait OperatorParser<'a>: ParserRunner<'a> {
     x: Self::Output,
   ) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a;
 }

@@ -45,7 +45,7 @@ impl<'a, I, A> OperatorParser<'a> for Parser<'a, I, A> {
 
   fn scan_right1<BOP>(self, op: Self::P<'a, Self::Input, BOP>) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a, {
     ParsersImpl::scan_right1(self, op)
   }
@@ -56,7 +56,7 @@ impl<'a, I, A> OperatorParser<'a> for Parser<'a, I, A> {
     x: Self::Output,
   ) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a, {
     ParsersImpl::chain_right0(self, op, x)
   }
@@ -67,21 +67,21 @@ impl<'a, I, A> OperatorParser<'a> for Parser<'a, I, A> {
     x: Self::Output,
   ) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a, {
     ParsersImpl::chain_left0(self, op, x)
   }
 
   fn chain_right1<BOP>(self, op: Self::P<'a, Self::Input, BOP>) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a, {
     ParsersImpl::chain_right1(self, op)
   }
 
   fn chain_left1<BOP>(self, op: Self::P<'a, Self::Input, BOP>) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a, {
     ParsersImpl::chain_left1(self, op)
   }
@@ -92,7 +92,7 @@ impl<'a, I, A> OperatorParser<'a> for Parser<'a, I, A> {
     x: Self::Output,
   ) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a, {
     ParsersImpl::rest_right1(self, op, x)
   }
@@ -103,7 +103,7 @@ impl<'a, I, A> OperatorParser<'a> for Parser<'a, I, A> {
     x: Self::Output,
   ) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a, {
     ParsersImpl::rest_left1(self, op, x)
   }

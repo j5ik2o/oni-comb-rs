@@ -66,9 +66,9 @@ impl Parsers for ParsersImpl {
 
   fn filter<'a, I, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
   where
-    F: Fn(&A) -> bool + 'a,
-    I: 'a,
-    A: 'a, {
+    F: Fn(&A) -> bool + 'a + Clone,
+    I: 'a + Clone,
+    A: 'a + Clone, {
     Parser::new(move |parse_state| match parser.run(parse_state) {
       ParseResult::Success { value, length } => {
         if f(&value) {
@@ -91,7 +91,7 @@ impl Parsers for ParsersImpl {
 
   fn flat_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
-    F: Fn(A) -> Self::P<'a, I, B> + 'a,
+    F: Fn(A) -> Self::P<'a, I, B> + 'a + Clone,
     A: 'a,
     B: 'a, {
     Parser::new(move |parse_state| match parser.run(&parse_state) {
@@ -108,7 +108,7 @@ impl Parsers for ParsersImpl {
 
   fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
-    F: Fn(A) -> B + 'a,
+    F: Fn(A) -> B + 'a + Clone,
     A: 'a,
     B: Clone + 'a, {
     Self::flat_map(parser, move |e| Self::successful(f(e)))
