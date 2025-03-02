@@ -75,7 +75,7 @@ impl<T: PartialOrd + Copy> Set<T> for RangeToInclusive<T> {
   }
 }
 
-macro_rules! impl_set_for_array {
+macro_rules! impl_set_for_u8_array {
 	( $($n:expr),+ ) => {
 		$(
 			impl Set<u8> for [u8; $n] {
@@ -91,7 +91,29 @@ macro_rules! impl_set_for_array {
 	};
 }
 
-impl_set_for_array!(
+macro_rules! impl_set_for_char_array {
+	( $($n:expr),+ ) => {
+		$(
+			impl Set<char> for [char; $n] {
+				fn contains(&self, elem: &char) -> bool {
+					(self as &[char]).contains(elem)
+				}
+
+				fn to_str(&self) -> &str {
+					"<char array>"
+				}
+			}
+		)+
+	};
+}
+
+impl_set_for_u8_array!(
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+  32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60,
+  61, 62, 63, 64
+);
+
+impl_set_for_char_array!(
   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
   32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60,
   61, 62, 63, 64

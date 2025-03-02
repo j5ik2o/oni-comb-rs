@@ -635,7 +635,7 @@ pub mod prelude {
   /// let result: ParseResult<char, &char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
-  /// assert_eq!(result.success().unwrap(), &input[0]);
+  /// assert_eq!(*result.success().unwrap(), input[0]);
   /// ```
   pub fn elm_ref<'a, I>(element: I) -> Parser<'a, I, &'a I>
   where
@@ -657,14 +657,14 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, &[char]> = elm_ref_static('x');
+  /// let parser: StaticParser<char, &char> = elm_ref_static('x');
   ///
-  /// let result: ParseResult<char, &[char]> = parser.parse(&input);
+  /// let result: ParseResult<char, &char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
-  /// assert_eq!(result.success().unwrap(), &input[0..1]);
+  /// assert_eq!(*result.success().unwrap(), input[0]);
   /// ```
-  pub fn elm_ref_static<'a, I>(element: I) -> StaticParser<'a, I, &'a [I]>
+  pub fn elm_ref_static<'a, I>(element: I) -> StaticParser<'a, I, &'a I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_ref(element)
@@ -711,16 +711,15 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, Vec<char>> = elm_static('x');
+  /// let parser: StaticParser<char, char> = elm_static('x');
   ///
-  /// let result: ParseResult<char, Vec<char>> = parser.parse(&input);
+  /// let result: ParseResult<char, char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
-  /// let chars = result.success().unwrap();
-  /// assert_eq!(chars.len(), 1);
-  /// assert_eq!(chars[0], input[0]);
+  /// let c = result.success().unwrap();
+  /// assert_eq!(c, input[0]);
   /// ```
-  pub fn elm_static<'a, I>(element: I) -> StaticParser<'a, I, Vec<I>>
+  pub fn elm_static<'a, I>(element: I) -> StaticParser<'a, I, I>
   where
     I: Element + Clone + PartialEq + 'a + 'static, {
     StaticParsersImpl::elm(element)
@@ -3202,7 +3201,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "abc123");
       },
       Err(_) => panic!("Expected success"),
@@ -3236,7 +3235,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "abc123");
       },
       Err(_) => panic!("Expected success"),
@@ -3276,7 +3275,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "abc");
       },
       Err(_) => panic!("Expected success"),
@@ -3329,7 +3328,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "abc");
       },
       Err(_) => panic!("Expected success"),
@@ -3461,7 +3460,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "123");
       },
       Err(_) => panic!("Expected success"),
@@ -3511,7 +3510,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "123");
       },
       Err(_) => panic!("Expected success"),
@@ -3551,7 +3550,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "123");
       },
       Err(_) => panic!("Expected success"),
@@ -3604,7 +3603,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "123");
       },
       Err(_) => panic!("Expected success"),
@@ -3640,7 +3639,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "abc");
       },
       Err(_) => panic!("Expected success"),
@@ -3695,7 +3694,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "abc");
       },
       Err(_) => panic!("Expected success"),
@@ -3767,7 +3766,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "0123456789abcdefABCDEF");
       },
       Err(_) => panic!("Expected success"),
@@ -3820,7 +3819,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "0123456789abcdefABCDEF");
       },
       Err(_) => panic!("Expected success"),
@@ -3856,7 +3855,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "abc");
       },
       Err(_) => panic!("Expected success"),
@@ -3911,7 +3910,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "abc");
       },
       Err(_) => panic!("Expected success"),
@@ -3958,7 +3957,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "   ");
       },
       Err(_) => panic!("Expected success"),
@@ -4001,7 +4000,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "   ");
       },
       Err(_) => panic!("Expected success"),
@@ -4049,7 +4048,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "01234567");
       },
       Err(_) => panic!("Expected success"),
@@ -4104,7 +4103,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "01234567");
       },
       Err(_) => panic!("Expected success"),
@@ -4154,7 +4153,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "abc");
       },
       Err(_) => panic!("Expected success"),
@@ -4209,7 +4208,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "abc");
       },
       Err(_) => panic!("Expected success"),
@@ -4267,7 +4266,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "abc");
       },
       Err(_) => panic!("Expected success"),
@@ -4322,7 +4321,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "abc");
       },
       Err(_) => panic!("Expected success"),
@@ -4377,7 +4376,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        assert_eq!(result[0], 'a');
+        assert_eq!(*result, 'a');
       },
       Err(_) => panic!("Expected success"),
     }
@@ -4503,7 +4502,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        assert_eq!(result[0], 'a');
+        assert_eq!(result, 'a');
       },
       Err(_) => panic!("Expected success"),
     }
@@ -4593,6 +4592,8 @@ mod tests {
     }
   }
 
+  // FIXME: 以下のテストメソッドは1テストメソッド=1目的として分割できていない。
+
   #[test]
   fn test_failed_lazy_static() {
     init();
@@ -4640,7 +4641,7 @@ mod tests {
     init();
     {
       let input = "abc".chars().collect::<Vec<_>>();
-      let p = failed_static("error message");
+      let p: StaticParser<'_, char, ()> = failed_static(ParseError::of_mismatch(&[], 0, 0, String::from("error message")), CommittedStatus::Committed);
 
       let result = p.parse_as_result(&input);
       assert!(result.is_err());
@@ -4669,7 +4670,7 @@ mod tests {
       let input = "abc".chars().collect::<Vec<_>>();
 
       // Create a parser that fails with commit
-      let p1 = failed_with_commit_static("error message");
+      let p1 = failed_with_commit_static(ParseError::of_mismatch(&[], 0, 0, String::from("error message")));
 
       // Create a parser that succeeds
       let p2 = elm_static('a');
@@ -4704,13 +4705,13 @@ mod tests {
       let input = "abc".chars().collect::<Vec<_>>();
 
       // Create a parser that fails with uncommit
-      let p1 = failed_with_uncommit_static("error message");
+      let p1 = failed_with_uncommit_static(ParseError::of_mismatch(&[], 0, 0, String::from("error message")));
 
       // Create a parser that succeeds
       let p2 = elm_static('a');
 
       // Combine them with or - since p1 uncommits, p2 should be tried and succeed
-      let p = p1.or(p2);
+      let p = p1.clone().or(p2);
 
       let result = p.parse_as_result(&input);
       assert!(result.is_ok());
@@ -4777,7 +4778,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        assert_eq!(result, 'a');
+        assert_eq!(result, vec!['a']);
       },
       Err(_) => panic!("Expected success"),
     }
@@ -4819,7 +4820,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        assert_eq!(result, 'd');
+        assert_eq!(result, vec!['d']);
       },
       Err(_) => panic!("Expected success"),
     }
@@ -4847,7 +4848,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        assert_eq!(*result, 'a');
+        assert_eq!(*result, vec!['a']);
       },
       Err(_) => panic!("Expected success"),
     }
@@ -4889,7 +4890,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        assert_eq!(*result, 'd');
+        assert_eq!(result[0], 'd');
       },
       Err(_) => panic!("Expected success"),
     }
@@ -4917,7 +4918,7 @@ mod tests {
 
     match p.parse_as_result(&input[3..]) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "123");
       },
       Err(_) => panic!("Expected success"),
@@ -4932,7 +4933,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "123");
       },
       Err(_) => panic!("Expected success"),
@@ -4975,7 +4976,7 @@ mod tests {
 
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "abc123");
       },
       Err(_) => panic!("Expected success"),
@@ -4987,13 +4988,8 @@ mod tests {
     init();
     let input = "abc".chars().collect::<Vec<_>>();
 
-    // Create parsers for individual characters
-    let p1 = elm_static('a');
-    let p2 = elm_static('b');
-    let p3 = elm_static('c');
-
     // Create a sequence parser using a vector of parsers
-    let parsers = vec![p1, p2, p3];
+    let parsers = vec!['a', 'b', 'c'];
     let p = seq_static(&parsers);
 
     // Test successful parsing
@@ -5010,13 +5006,8 @@ mod tests {
     init();
     let input = "ab".chars().collect::<Vec<_>>();
 
-    // Create parsers for individual characters
-    let p1 = elm_static('a');
-    let p2 = elm_static('b');
-    let p3 = elm_static('c');
-
     // Create a sequence parser using a vector of parsers
-    let parsers = vec![p1, p2, p3];
+    let parsers = vec!['a', 'b', 'c'];
     let p = seq_static(&parsers);
 
     // Test with partial match
@@ -5033,13 +5024,8 @@ mod tests {
     init();
     let input = "def".chars().collect::<Vec<_>>();
 
-    // Create parsers for individual characters
-    let p1 = elm_static('a');
-    let p2 = elm_static('b');
-    let p3 = elm_static('c');
-
     // Create a sequence parser using a vector of parsers
-    let parsers = vec![p1, p2, p3];
+    let parsers = vec!['a', 'b', 'c'];
     let p = seq_static(&parsers);
 
     // Test with non-matching input
@@ -5062,7 +5048,7 @@ mod tests {
     let p3 = elm_static('c');
 
     // Create a sequence parser using a vector of parsers
-    let parsers = vec![p1, p2, p3];
+    let parsers = vec!['a', 'b', 'c'];
     let p = seq_static(&parsers);
 
     // Test with empty input
@@ -5079,19 +5065,14 @@ mod tests {
     init();
     let input = "abc".chars().collect::<Vec<_>>();
 
-    // Create parsers for individual characters
-    let p1 = elm_static('a');
-    let p2 = elm_static('b');
-    let p3 = elm_static('c');
-
     // Create a sequence parser using a vector of parsers
-    let parsers = vec![p1, p2, p3];
+    let parsers = vec!['a', 'b', 'c'];
     let p = seq_static(&parsers).map(|chars| chars.into_iter().collect::<String>().to_uppercase());
 
     // Test with map to transform the result
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "ABC");
       },
       Err(_) => panic!("Expected success"),
@@ -5109,7 +5090,7 @@ mod tests {
 
       // Test successful parsing
       let result = p.parse_as_result(&input).unwrap();
-      assert_eq!(result, 'd');
+      assert_eq!(result.1, 'd');
 
       // Test with insufficient input length
       {
@@ -5136,7 +5117,7 @@ mod tests {
       {
         let p2 = skip_static(0).and_then(elm_static('a'));
         let result5 = p2.parse_as_result(&input).unwrap();
-        assert_eq!(result5, 'a');
+        assert_eq!(result5.1, 'a');
       }
     }
   }
@@ -5164,7 +5145,7 @@ mod tests {
 
       // Parse the input
       let result = p.parse_as_result(&input).unwrap();
-      let result_str: String = result.iter().collect();
+      let result_str: String = result.chars().collect();
       assert_eq!(result_str, "result");
 
       // The parser should be evaluated now
@@ -5212,7 +5193,7 @@ mod tests {
 
       // Parse the input
       let result = p.parse_as_result(&input).unwrap();
-      let result_str: String = result.iter().collect();
+      let result_str: String = result.chars().collect();
       assert_eq!(result_str, "result");
 
       // Parse again to verify the result is the same
@@ -5238,7 +5219,7 @@ mod tests {
 
       // Test with complex type
       {
-        #[derive(Debug, PartialEq)]
+        #[derive(Debug, PartialEq, Clone)]
         struct TestStruct {
           value: i32,
         }
@@ -5259,16 +5240,18 @@ mod tests {
       let input = "(abc)".chars().collect::<Vec<_>>();
 
       // Create parsers for opening, content, and closing
-      let open_parser = elm_static('(');
-      let content_parser = elm_static('a').and_then(elm_static('b')).and_then(elm_static('c'));
-      let close_parser = elm_static(')');
+      let open_parser = elm_static('(').map(|s| s.to_string());
+      let content_parser = (elm_static('a').and_then(elm_static('b')).and_then(elm_static('c')))
+          .map(|((a, b),c)| format!("{}{}{}", a, b,c));
+
+      let close_parser = elm_static(')').map(|s| s.to_string());
 
       // Create a parser that surrounds the content with opening and closing parsers
-      let p = surround_static(open_parser, content_parser, close_parser);
+      let p = surround_static(open_parser.clone(), content_parser.clone(), close_parser.clone());
 
       // Test successful parsing
       let result = p.parse_as_result(&input).unwrap();
-      assert_eq!(result, 'c'); // surround returns the result of the content parser
+      assert_eq!(result[0], 'c'); // surround returns the result of the content parser
 
       // Test with missing closing character
       let input2 = "(abc".chars().collect::<Vec<_>>();
@@ -5300,9 +5283,9 @@ mod tests {
 
       // Test with map to transform the result
       {
-        let p_mapped = surround_static(open_parser, content_parser, close_parser).map(|c| c.to_ascii_uppercase());
+        let p_mapped = surround_static(open_parser, content_parser.clone(), close_parser);
         let result6 = p_mapped.parse_as_result(&input).unwrap();
-        assert_eq!(result6, 'C');
+        assert_eq!(result6[0], 'C');
       }
 
       // Test with different opening and closing characters
@@ -5312,7 +5295,7 @@ mod tests {
         let close_parser2 = elm_static(']');
         let p2 = surround_static(open_parser2, content_parser, close_parser2);
         let result7 = p2.parse_as_result(&input7).unwrap();
-        assert_eq!(result7, 'c');
+        assert_eq!(result7[0], 'c');
       }
     }
   }
@@ -5472,11 +5455,12 @@ mod tests {
 
       // Test with longer input than tag
       {
-        let input10 = "hello world".chars().collect::<Vec<_>>();
+        let s = "hello world";
+        let input10 = s.chars().collect::<Vec<_>>();
         let p10 = tag_static("hello");
-        let result10 = p10.parse(&input10);
+        let result10 = p10.parse(&input10).to_result();
         assert!(result10.is_ok());
-        assert_eq!(result10.unwrap(), &input10[5..]);
+        assert_eq!(result10.unwrap(), &s[5..]);
       }
     }
   }
@@ -5497,14 +5481,14 @@ mod tests {
       {
         let p_zero = take_static(0);
         let result_zero = p_zero.parse_as_result(&input).unwrap();
-        assert_eq!(result_zero, "");
+        assert!(result_zero.is_empty());
       }
 
       // Test taking all elements
       {
         let p_all = take_static(6);
         let result_all = p_all.parse_as_result(&input).unwrap();
-        assert_eq!(result_all, "abcdef");
+        assert_eq!(result_all.iter().collect::<String>(), "abcdef");
       }
 
       // Test taking more elements than available
@@ -5519,7 +5503,7 @@ mod tests {
         let empty_input: Vec<char> = vec![];
         let p_empty = take_static(0);
         let result_empty = p_empty.parse_as_result(&empty_input).unwrap();
-        assert_eq!(result_empty, "");
+        assert_eq!(result_empty.iter().collect::<String>(), "");
 
         // Test with empty input and non-zero count
         let p_empty_nonzero = take_static(1);
@@ -5529,7 +5513,7 @@ mod tests {
 
       // Test with map to transform the result
       {
-        let p_mapped = take_static(3).map(|s| s.to_uppercase());
+        let p_mapped = take_static(3).map(|s: &[char]| s.iter().map(|c| c.to_ascii_uppercase()).collect::<String>());
         let result_mapped = p_mapped.parse_as_result(&input).unwrap();
         assert_eq!(result_mapped, "ABC");
       }
@@ -5537,7 +5521,7 @@ mod tests {
       // Test with parse method to check remaining input
       {
         let p_remaining = take_static(3);
-        let result_remaining = p_remaining.parse(&input);
+        let result_remaining = p_remaining.parse(&input).to_result();
         assert!(result_remaining.is_ok());
         assert_eq!(result_remaining.unwrap(), &input[3..]);
       }
@@ -5552,52 +5536,52 @@ mod tests {
     // Test taking elements until a digit is encountered
     let p = take_till0_static(|c: &char| c.is_digit(10));
     let result = p.parse_as_result(&input).unwrap();
-    assert_eq!(result, "abc");
+    assert_eq!(result.iter().collect::<String>(), "abc");
 
     // Test with input starting with the predicate character
     {
       let input2 = "123def".chars().collect::<Vec<_>>();
-      let p2 = take_till0_static(|c| c.is_digit(10));
+      let p2 = take_till0_static(|c: &char| c.is_digit(10));
       let result2 = p2.parse_as_result(&input2).unwrap();
-      assert_eq!(result2, ""); // Should return empty string since the first character satisfies the predicate
+      assert!(result2.is_empty()); // Should return empty string since the first character satisfies the predicate
     }
 
     // Test with input not containing any predicate character
     {
       let input3 = "abcdef".chars().collect::<Vec<_>>();
-      let p3 = take_till0_static(|c| c.is_digit(10));
+      let p3 = take_till0_static(|c: &char| c.is_digit(10));
       let result3 = p3.parse_as_result(&input3).unwrap();
-      assert_eq!(result3, "abcdef"); // Should return the entire input
+      assert_eq!(result3.iter().collect::<String>(), "abcdef"); // Should return the entire input
     }
 
     // Test with empty input
     {
       let input4: Vec<char> = vec![];
-      let p4 = take_till0_static(|c| c.is_digit(10));
+      let p4 = take_till0_static(|c: &char| c.is_digit(10));
       let result4 = p4.parse_as_result(&input4).unwrap();
-      assert_eq!(result4, ""); // Should return empty string for empty input
+      assert_eq!(result4.iter().collect::<String>(), ""); // Should return empty string for empty input
     }
 
     // Test with map to transform the result
     {
-      let p5 = take_till0_static(|c| c.is_digit(10)).map(|s| s.to_uppercase());
+      let p5 = take_till0_static(|c: &char| c.is_digit(10)).map(|s| s.iter().map(|c| c.to_ascii_uppercase()).collect::<String>());
       let result5 = p5.parse_as_result(&input).unwrap();
       assert_eq!(result5, "ABC");
     }
 
     // Test with parse method to check remaining input
     {
-      let p6 = take_till0_static(|c| c.is_digit(10));
-      let result6 = p6.parse(&input);
+      let p6 = take_till0_static(|c: &char| c.is_digit(10));
+      let result6 = p6.parse(&input).to_result();
       assert!(result6.is_ok());
       assert_eq!(result6.unwrap(), &input[3..]); // Should return the remaining input after "abc"
     }
 
     // Test with a more complex predicate
     {
-      let p7 = take_till0_static(|c| c == 'c' || c.is_digit(10));
+      let p7 = take_till0_static(|c: &char| *c == 'c' || c.is_digit(10));
       let result7 = p7.parse_as_result(&input).unwrap();
-      assert_eq!(result7, "ab"); // Should stop at 'c'
+      assert_eq!(result7.iter().collect::<String>(), "ab"); // Should stop at 'c'
     }
   }
 
@@ -5609,12 +5593,12 @@ mod tests {
     // Test taking elements until a digit is encountered
     let p = take_till1_static(|c: &char| c.is_digit(10));
     let result = p.parse_as_result(&input).unwrap();
-    assert_eq!(result, "abc");
+    assert_eq!(result.iter().collect::<String>(), "abc");
 
     // Test with input starting with the predicate character
     {
       let input2 = "123def".chars().collect::<Vec<_>>();
-      let p2 = take_till1_static(|c| c.is_digit(10));
+      let p2 = take_till1_static(|c: &char| c.is_digit(10));
       let result2 = p2.parse_as_result(&input2);
       assert!(result2.is_err()); // Should fail since it requires at least one element before the predicate
     }
@@ -5622,47 +5606,47 @@ mod tests {
     // Test with input not containing any predicate character
     {
       let input3 = "abcdef".chars().collect::<Vec<_>>();
-      let p3 = take_till1_static(|c| c.is_digit(10));
+      let p3 = take_till1_static(|c: &char| c.is_digit(10));
       let result3 = p3.parse_as_result(&input3).unwrap();
-      assert_eq!(result3, "abcdef"); // Should return the entire input
+      assert_eq!(result3.iter().collect::<String>(), "abcdef"); // Should return the entire input
     }
 
     // Test with empty input
     {
       let input4: Vec<char> = vec![];
-      let p4 = take_till1_static(|c| c.is_digit(10));
+      let p4 = take_till1_static(|c: &char| c.is_digit(10));
       let result4 = p4.parse_as_result(&input4);
       assert!(result4.is_err()); // Should fail since it requires at least one element
     }
 
     // Test with map to transform the result
     {
-      let p5 = take_till1_static(|c| c.is_digit(10)).map(|s| s.to_uppercase());
+      let p5 = take_till1_static(|c: &char| c.is_digit(10)).map(|s| s.iter().map(|c| c.to_ascii_uppercase()).collect::<String>());
       let result5 = p5.parse_as_result(&input).unwrap();
       assert_eq!(result5, "ABC");
     }
 
     // Test with parse method to check remaining input
     {
-      let p6 = take_till1_static(|c| c.is_digit(10));
-      let result6 = p6.parse(&input);
+      let p6 = take_till1_static(|c: &char| c.is_digit(10));
+      let result6 = p6.parse(&input).to_result();
       assert!(result6.is_ok());
       assert_eq!(result6.unwrap(), &input[3..]); // Should return the remaining input after "abc"
     }
 
     // Test with a more complex predicate
     {
-      let p7 = take_till1_static(|c| c == 'c' || c.is_digit(10));
+      let p7 = take_till1_static(|c: &char| *c == 'c' || c.is_digit(10));
       let result7 = p7.parse_as_result(&input).unwrap();
-      assert_eq!(result7, "ab"); // Should stop at 'c'
+      assert_eq!(result7.iter().collect::<String>(), "ab"); // Should stop at 'c'
     }
 
     // Test with single character before predicate
     {
       let input8 = "a123def".chars().collect::<Vec<_>>();
-      let p8 = take_till1_static(|c| c.is_digit(10));
+      let p8 = take_till1_static(|c: &char| c.is_digit(10));
       let result8 = p8.parse_as_result(&input8).unwrap();
-      assert_eq!(result8, "a"); // Should return just the single character
+      assert_eq!(result8.iter().collect::<String>(), "a"); // Should return just the single character
     }
   }
 
@@ -6071,7 +6055,7 @@ mod tests {
     
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "hello");
       },
       Err(_) => panic!("Expected success"),
@@ -6146,7 +6130,7 @@ mod tests {
     
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "abc");
       },
       Err(_) => panic!("Expected success"),
@@ -6163,7 +6147,7 @@ mod tests {
     
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "ab");
       },
       Err(_) => panic!("Expected success"),
@@ -6192,7 +6176,7 @@ mod tests {
     
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "ABC");
       },
       Err(_) => panic!("Expected success"),
@@ -6224,7 +6208,7 @@ mod tests {
     
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "abc");
       },
       Err(_) => panic!("Expected success"),
@@ -6239,7 +6223,7 @@ mod tests {
     
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "ab");
       },
       Err(_) => panic!("Expected success"),
@@ -6282,7 +6266,7 @@ mod tests {
     
     match p.parse_as_result(&input) {
       Ok(result) => {
-        let result_str: String = result.iter().collect();
+        let result_str: String = result.chars().collect();
         assert_eq!(result_str, "ABC");
       },
       Err(_) => panic!("Expected success"),
@@ -6768,12 +6752,12 @@ mod tests {
 
     let result = p.parse_as_result(&input1).unwrap();
     log::debug!("result = {}", result);
-    let result_str: String = result.iter().collect();
+    let result_str: String = result.chars().collect();
     assert_eq!(result_str, "abc");
 
     let result = p.parse_as_result(&input2).unwrap();
     log::debug!("result = {}", result);
-    let result_str: String = result.iter().collect();
+    let result_str: String = result.chars().collect();
     assert_eq!(result_str, "abd");
   }
 
@@ -6792,7 +6776,7 @@ mod tests {
     });
 
     let result = p.parse_as_result(&input).unwrap();
-    // let s: String = result.iter().collect();
+    // let s: String = result.chars().collect();
     log::debug!("result = {:?}", result);
     // assert_eq!(s, "aname");
   }
