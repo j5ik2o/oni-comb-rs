@@ -119,10 +119,9 @@ pub mod static_parsers {
     });
 
     // Parse optional exponent part
-    let exp_sign_parser =
-      elm_of("+-")
-        .opt()
-        .map(|sign_opt| if let Some(sign) = sign_opt { vec![sign] } else { vec![] });
+    let exp_sign_parser = elm_of("+-")
+      .opt()
+      .map(|sign_opt| if let Some(sign) = sign_opt { vec![sign] } else { vec![] });
 
     let exp_digits_parser = digit.clone().of_many1();
 
