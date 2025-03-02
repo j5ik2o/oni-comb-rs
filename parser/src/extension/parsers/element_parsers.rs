@@ -485,4 +485,292 @@ pub mod static_parsers {
       }
     })
   }
+
+  pub fn elm_space_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  where
+    I: Element + PartialEq + Clone + 'a + 'static, {
+    elm_pred_ref(|e: &I| e.is_ascii_space())
+  }
+
+  pub fn elm_space<'a, I>() -> StaticParser<'a, I, I>
+  where
+    I: Element + Clone + PartialEq + 'a + 'static, {
+    elm_pred(|e: &I| e.is_ascii_space())
+  }
+
+  pub fn elm_multi_space_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  where
+    I: Element + PartialEq + Clone + 'a + 'static, {
+    elm_pred_ref(|e: &I| e.is_ascii_multi_space())
+  }
+
+  pub fn elm_multi_space<'a, I>() -> StaticParser<'a, I, I>
+  where
+    I: Element + Clone + PartialEq + 'a + 'static, {
+    elm_pred(|e: &I| e.is_ascii_multi_space())
+  }
+
+  pub fn elm_alpha_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  where
+    I: Element + PartialEq + Clone + 'a + 'static, {
+    elm_pred_ref(|e: &I| e.is_ascii_alpha())
+  }
+
+  pub fn elm_alpha<'a, I>() -> StaticParser<'a, I, I>
+  where
+    I: Element + Clone + PartialEq + 'a + 'static, {
+    elm_pred(|e: &I| e.is_ascii_alpha())
+  }
+
+  pub fn elm_alpha_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  where
+    I: Element + PartialEq + Clone + 'a + 'static, {
+    elm_pred_ref(|e: &I| e.is_ascii_alpha_digit())
+  }
+
+  pub fn elm_alpha_digit<'a, I>() -> StaticParser<'a, I, I>
+  where
+    I: Element + Clone + PartialEq + 'a + 'static, {
+    elm_pred(|e: &I| e.is_ascii_alpha_digit())
+  }
+
+  pub fn elm_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  where
+    I: Element + PartialEq + Clone + 'a + 'static, {
+    elm_pred_ref(|e: &I| e.is_ascii_digit())
+  }
+
+  pub fn elm_digit<'a, I>() -> StaticParser<'a, I, I>
+  where
+    I: Element + Clone + PartialEq + 'a + 'static, {
+    elm_pred(|e: &I| e.is_ascii_digit())
+  }
+
+  pub fn elm_hex_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  where
+    I: Element + PartialEq + Clone + 'a + 'static, {
+    elm_pred_ref(|e: &I| e.is_ascii_hex_digit())
+  }
+
+  pub fn elm_hex_digit<'a, I>() -> StaticParser<'a, I, I>
+  where
+    I: Element + Clone + PartialEq + 'a + 'static, {
+    elm_pred(|e: &I| e.is_ascii_hex_digit())
+  }
+
+  pub fn elm_oct_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
+  where
+    I: Element + PartialEq + Clone + 'a + 'static, {
+    elm_pred_ref(|e: &I| e.is_ascii_oct_digit())
+  }
+
+  pub fn elm_oct_digit<'a, I>() -> StaticParser<'a, I, I>
+  where
+    I: Element + Clone + PartialEq + 'a + 'static, {
+    elm_pred(|e: &I| e.is_ascii_oct_digit())
+  }
+
+  pub fn elm_ref_of<'a, I, S>(set: &'static S) -> StaticParser<'a, I, &'a I>
+  where
+    I: PartialEq + Display + Debug + 'a,
+    S: Set<I> + ?Sized + 'static + std::fmt::Debug, {
+    StaticParser::new(move |state| {
+      let input: &[I] = state.input();
+      if input.is_empty() {
+        crate::core::ParseResult::failed(
+          crate::core::ParseError::of_custom(state.next_offset(), None, "Unexpected EOF".to_string()),
+          crate::core::CommittedStatus::Uncommitted,
+        )
+      } else if set.contains(&input[0]) {
+        crate::core::ParseResult::successful(&input[0], 1)
+      } else {
+        crate::core::ParseResult::failed(
+          crate::core::ParseError::of_custom(
+            state.next_offset(),
+            None,
+            format!("Expected one of {:?}, but got {:?}", set, input[0]),
+          ),
+          crate::core::CommittedStatus::Uncommitted,
+        )
+      }
+    })
+  }
+
+  pub fn elm_of<'a, I, S>(set: &'static S) -> StaticParser<'a, I, I>
+  where
+    I: PartialEq + Clone + Display + Debug + 'a + 'static,
+    S: Set<I> + ?Sized + 'static + std::fmt::Debug, {
+    StaticParser::new(move |state| {
+      let input: &[I] = state.input();
+      if input.is_empty() {
+        crate::core::ParseResult::failed(
+          crate::core::ParseError::of_custom(state.next_offset(), None, "Unexpected EOF".to_string()),
+          crate::core::CommittedStatus::Uncommitted,
+        )
+      } else if set.contains(&input[0]) {
+        crate::core::ParseResult::successful(input[0].clone(), 1)
+      } else {
+        crate::core::ParseResult::failed(
+          crate::core::ParseError::of_custom(
+            state.next_offset(),
+            None,
+            format!("Expected one of {:?}, but got {:?}", set, input[0]),
+          ),
+          crate::core::CommittedStatus::Uncommitted,
+        )
+      }
+    })
+  }
+
+  pub fn elm_ref_in<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a I>
+  where
+    I: PartialEq + PartialOrd + Display + Debug + Copy + 'a, {
+    StaticParser::new(move |state| {
+      let input: &[I] = state.input();
+      if input.is_empty() {
+        crate::core::ParseResult::failed(
+          crate::core::ParseError::of_custom(state.next_offset(), None, "Unexpected EOF".to_string()),
+          crate::core::CommittedStatus::Uncommitted,
+        )
+      } else if input[0] >= start && input[0] <= end {
+        crate::core::ParseResult::successful(&input[0], 1)
+      } else {
+        crate::core::ParseResult::failed(
+          crate::core::ParseError::of_custom(
+            state.next_offset(),
+            None,
+            format!("Expected between {:?} and {:?}, but got {:?}", start, end, input[0]),
+          ),
+          crate::core::CommittedStatus::Uncommitted,
+        )
+      }
+    })
+  }
+
+  pub fn elm_in<'a, I>(start: I, end: I) -> StaticParser<'a, I, I>
+  where
+    I: PartialEq + PartialOrd + Display + Debug + Copy + Clone + 'a + 'static, {
+    StaticParser::new(move |state| {
+      let input: &[I] = state.input();
+      if input.is_empty() {
+        crate::core::ParseResult::failed(
+          crate::core::ParseError::of_custom(state.next_offset(), None, "Unexpected EOF".to_string()),
+          crate::core::CommittedStatus::Uncommitted,
+        )
+      } else if input[0] >= start && input[0] <= end {
+        crate::core::ParseResult::successful(input[0].clone(), 1)
+      } else {
+        crate::core::ParseResult::failed(
+          crate::core::ParseError::of_custom(
+            state.next_offset(),
+            None,
+            format!("Expected between {:?} and {:?}, but got {:?}", start, end, input[0]),
+          ),
+          crate::core::CommittedStatus::Uncommitted,
+        )
+      }
+    })
+  }
+
+  pub fn elm_ref_from_until<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a I>
+  where
+    I: PartialEq + PartialOrd + Display + Debug + Copy + 'a, {
+    StaticParser::new(move |state| {
+      let input: &[I] = state.input();
+      if input.is_empty() {
+        crate::core::ParseResult::failed(
+          crate::core::ParseError::of_custom(state.next_offset(), None, "Unexpected EOF".to_string()),
+          crate::core::CommittedStatus::Uncommitted,
+        )
+      } else if input[0] >= start && input[0] < end {
+        crate::core::ParseResult::successful(&input[0], 1)
+      } else {
+        crate::core::ParseResult::failed(
+          crate::core::ParseError::of_custom(
+            state.next_offset(),
+            None,
+            format!("Expected from {:?} until {:?}, but got {:?}", start, end, input[0]),
+          ),
+          crate::core::CommittedStatus::Uncommitted,
+        )
+      }
+    })
+  }
+
+  pub fn elm_from_until<'a, I>(start: I, end: I) -> StaticParser<'a, I, I>
+  where
+    I: PartialEq + PartialOrd + Display + Debug + Copy + Clone + 'a + 'static, {
+    StaticParser::new(move |state| {
+      let input: &[I] = state.input();
+      if input.is_empty() {
+        crate::core::ParseResult::failed(
+          crate::core::ParseError::of_custom(state.next_offset(), None, "Unexpected EOF".to_string()),
+          crate::core::CommittedStatus::Uncommitted,
+        )
+      } else if input[0] >= start && input[0] < end {
+        crate::core::ParseResult::successful(input[0].clone(), 1)
+      } else {
+        crate::core::ParseResult::failed(
+          crate::core::ParseError::of_custom(
+            state.next_offset(),
+            None,
+            format!("Expected from {:?} until {:?}, but got {:?}", start, end, input[0]),
+          ),
+          crate::core::CommittedStatus::Uncommitted,
+        )
+      }
+    })
+  }
+
+  pub fn none_ref_of<'a, I, S>(set: &'static S) -> StaticParser<'a, I, &'a I>
+  where
+    I: PartialEq + Display + Debug + 'a,
+    S: Set<I> + ?Sized + 'static + std::fmt::Debug, {
+    StaticParser::new(move |state| {
+      let input: &[I] = state.input();
+      if input.is_empty() {
+        crate::core::ParseResult::failed(
+          crate::core::ParseError::of_custom(state.next_offset(), None, "Unexpected EOF".to_string()),
+          crate::core::CommittedStatus::Uncommitted,
+        )
+      } else if !set.contains(&input[0]) {
+        crate::core::ParseResult::successful(&input[0], 1)
+      } else {
+        crate::core::ParseResult::failed(
+          crate::core::ParseError::of_custom(
+            state.next_offset(),
+            None,
+            format!("Expected none of {:?}, but got {:?}", set, input[0]),
+          ),
+          crate::core::CommittedStatus::Uncommitted,
+        )
+      }
+    })
+  }
+
+  pub fn none_of<'a, I, S>(set: &'static S) -> StaticParser<'a, I, I>
+  where
+    I: PartialEq + Display + Clone + Debug + 'a + 'static,
+    S: Set<I> + ?Sized + 'static + std::fmt::Debug, {
+    StaticParser::new(move |state| {
+      let input: &[I] = state.input();
+      if input.is_empty() {
+        crate::core::ParseResult::failed(
+          crate::core::ParseError::of_custom(state.next_offset(), None, "Unexpected EOF".to_string()),
+          crate::core::CommittedStatus::Uncommitted,
+        )
+      } else if !set.contains(&input[0]) {
+        crate::core::ParseResult::successful(input[0].clone(), 1)
+      } else {
+        crate::core::ParseResult::failed(
+          crate::core::ParseError::of_custom(
+            state.next_offset(),
+            None,
+            format!("Expected none of {:?}, but got {:?}", set, input[0]),
+          ),
+          crate::core::CommittedStatus::Uncommitted,
+        )
+      }
+    })
+  }
 }

@@ -6,23 +6,22 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use oni_comb_parser_rs::prelude::*;
+// Import necessary traits and types for StaticParser
+use oni_comb_parser_rs::prelude::static_parsers::*;
 use oni_comb_parser_rs::prelude::{
   CacheParser, ConversionParser, DiscardParser, FilterParsers, LoggingParser, OffsetParser, OperatorParser, ParserPure,
   PeekParser, RepeatParser, SkipParser,
 };
 use oni_comb_parser_rs::StaticParser;
 
+// 直接StaticParserを使用するテスト
+
 #[test]
-fn test_static_parser_runner() {
+fn test_direct_static_parser_runner() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
-  // 直接StaticParserを使用する例
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    elm_ref('a')
-  };
+  let parser = elm_ref('a');
   let result = parser.parse(&input);
 
   assert!(result.is_success());
@@ -30,7 +29,7 @@ fn test_static_parser_runner() {
 }
 
 #[test]
-fn test_static_parser_pure() {
+fn test_direct_static_parser_pure() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
@@ -42,14 +41,11 @@ fn test_static_parser_pure() {
 }
 
 #[test]
-fn test_static_parser_functor() {
+fn test_direct_static_parser_functor() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    elm_ref('a').map(|c| c.to_ascii_uppercase())
-  };
+  let parser = elm_ref('a').map(|c| c.to_ascii_uppercase());
   let result = parser.parse(&input);
 
   assert!(result.is_success());
@@ -57,39 +53,28 @@ fn test_static_parser_functor() {
 }
 
 #[test]
-fn test_static_parser_filter() {
+fn test_direct_static_parser_filter() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::FilterParsers;
-    elm_ref('a').filter(|c| **c == 'a')
-  };
+  let parser = elm_ref('a').filter(|c| **c == 'a');
   let result = parser.parse(&input);
 
   assert!(result.is_success());
   assert_eq!(result.success().unwrap(), &'a');
 
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::FilterParsers;
-    elm_ref('a').filter(|c| **c == 'b')
-  };
+  let parser = elm_ref('a').filter(|c| **c == 'b');
   let result = parser.parse(&input);
 
   assert!(result.is_failure());
 }
 
 #[test]
-fn test_static_parser_monad() {
+fn test_direct_static_parser_monad() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    elm_ref('a').flat_map(|_| elm_ref('b'))
-  };
+  let parser = elm_ref('a').flat_map(|_| elm_ref('b'));
   let result = parser.parse(&input);
 
   assert!(result.is_success());
@@ -97,14 +82,11 @@ fn test_static_parser_monad() {
 }
 
 #[test]
-fn test_static_parser_add() {
+fn test_direct_static_parser_add() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    elm_ref('a') + elm_ref('b')
-  };
+  let parser = elm_ref('a') + elm_ref('b');
   let result = parser.parse(&input);
 
   assert!(result.is_success());
@@ -112,14 +94,11 @@ fn test_static_parser_add() {
 }
 
 #[test]
-fn test_static_parser_bitor() {
+fn test_direct_static_parser_bitor() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    elm_ref('x') | elm_ref('a')
-  };
+  let parser = elm_ref('x') | elm_ref('a');
   let result = parser.parse(&input);
 
   assert!(result.is_success());
@@ -127,14 +106,11 @@ fn test_static_parser_bitor() {
 }
 
 #[test]
-fn test_static_parser_mul() {
+fn test_direct_static_parser_mul() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    elm_ref('a') * elm_ref('b')
-  };
+  let parser = elm_ref('a') * elm_ref('b');
   let result = parser.parse(&input);
 
   assert!(result.is_success());
@@ -142,14 +118,11 @@ fn test_static_parser_mul() {
 }
 
 #[test]
-fn test_static_parser_not() {
+fn test_direct_static_parser_not() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    !elm_ref('x')
-  };
+  let parser = !elm_ref('x');
   let result = parser.parse(&input);
 
   assert!(result.is_success());
@@ -157,14 +130,11 @@ fn test_static_parser_not() {
 }
 
 #[test]
-fn test_static_parser_sub() {
+fn test_direct_static_parser_sub() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    elm_ref('a') - elm_ref('b')
-  };
+  let parser = elm_ref('a') - elm_ref('b');
   let result = parser.parse(&input);
 
   assert!(result.is_success());
@@ -172,15 +142,11 @@ fn test_static_parser_sub() {
 }
 
 #[test]
-fn test_static_parser_cache() {
+fn test_direct_static_parser_cache() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::CacheParser;
-    elm_ref('a').cache()
-  };
+  let parser = elm_ref('a').cache();
   let result = parser.parse(&input);
 
   assert!(result.is_success());
@@ -188,14 +154,11 @@ fn test_static_parser_cache() {
 }
 
 #[test]
-fn test_static_parser_collect() {
+fn test_direct_static_parser_collect() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    elm_ref('a').collect()
-  };
+  let parser = elm_ref('a').collect();
   let result = parser.parse(&input);
 
   assert!(result.is_success());
@@ -203,7 +166,7 @@ fn test_static_parser_collect() {
 }
 
 #[test]
-fn test_static_parser_conversion() {
+fn test_direct_static_parser_conversion() {
   // 数値文字列のテスト
   {
     // 静的な文字配列を使用
@@ -211,19 +174,12 @@ fn test_static_parser_conversion() {
     let char_refs: Vec<&char> = DIGITS.iter().collect();
 
     // 数値文字列を解析するパーサーを作成
-    let digit_parser = {
-      use oni_comb_parser_rs::prelude::static_parsers::*;
-      use oni_comb_parser_rs::prelude::{ConversionParser, RepeatParser};
-      elm_digit().of_many1().map(|digits| {
-        let s: String = digits.into_iter().map(|c: &char| *c).collect();
-        s
-      })
-    };
+    let digit_parser = elm_digit().clone().of_many1().map(|digits| {
+      let s: String = digits.into_iter().map(|c: &char| *c).collect();
+      s
+    });
 
-    let parser = {
-      use oni_comb_parser_rs::prelude::ConversionParser;
-      digit_parser.map_res(|s| s.parse::<i32>())
-    };
+    let parser = digit_parser.map_res(|s| s.parse::<i32>());
     let result = parser.parse(&char_refs);
 
     assert!(result.is_success());
@@ -237,19 +193,12 @@ fn test_static_parser_conversion() {
     let char_refs: Vec<&char> = LETTERS.iter().collect();
 
     // 数値文字列を解析するパーサーを作成
-    let digit_parser = {
-      use oni_comb_parser_rs::prelude::static_parsers::*;
-      use oni_comb_parser_rs::prelude::{ConversionParser, RepeatParser};
-      elm_digit().of_many1().map(|digits| {
-        let s: String = digits.into_iter().map(|c: &char| *c).collect();
-        s
-      })
-    };
+    let digit_parser = elm_digit().clone().of_many1().map(|digits| {
+      let s: String = digits.into_iter().map(|c: &char| *c).collect();
+      s
+    });
 
-    let parser = {
-      use oni_comb_parser_rs::prelude::ConversionParser;
-      digit_parser.map_res(|s| s.parse::<i32>())
-    };
+    let parser = digit_parser.map_res(|s| s.parse::<i32>());
     let result = parser.parse(&char_refs);
 
     assert!(result.is_failure());
@@ -257,15 +206,11 @@ fn test_static_parser_conversion() {
 }
 
 #[test]
-fn test_static_parser_discard() {
+fn test_direct_static_parser_discard() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::DiscardParser;
-    elm_ref('a').discard()
-  };
+  let parser = elm_ref('a').discard();
   let result = parser.parse(&input);
 
   assert!(result.is_success());
@@ -273,15 +218,11 @@ fn test_static_parser_discard() {
 }
 
 #[test]
-fn test_static_parser_logging() {
+fn test_direct_static_parser_logging() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::LoggingParser;
-    elm_ref('a').name("a_parser")
-  };
+  let parser = elm_ref('a').name("a_parser");
   let result = parser.parse(&input);
 
   assert!(result.is_success());
@@ -289,26 +230,18 @@ fn test_static_parser_logging() {
 }
 
 #[test]
-fn test_static_parser_offset() {
+fn test_direct_static_parser_offset() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::OffsetParser;
-    elm_ref('a').last_offset()
-  };
+  let parser = elm_ref('a').last_offset();
   let result = parser.parse(&input);
 
   assert!(result.is_success());
   // StaticParserの実装では、last_offsetは0を返す
   assert_eq!(result.success().unwrap(), 0);
 
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::OffsetParser;
-    elm_ref('a').next_offset()
-  };
+  let parser = elm_ref('a').next_offset();
   let result = parser.parse(&input);
 
   assert!(result.is_success());
@@ -316,92 +249,60 @@ fn test_static_parser_offset() {
 }
 
 #[test]
-fn test_static_parser_operator() {
+fn test_direct_static_parser_operator() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
   // and_then
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::OperatorParser;
-    elm_ref('a').and_then(elm_ref('b'))
-  };
+  let parser = elm_ref('a').and_then(elm_ref('b'));
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap(), (&'a', &'b'));
 
   // or
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::OperatorParser;
-    elm_ref('x').or(elm_ref('a'))
-  };
+  let parser = elm_ref('x').or(elm_ref('a'));
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap(), &'a');
 
   // exists
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::OperatorParser;
-    elm_ref('a').exists()
-  };
+  let parser = elm_ref('a').exists();
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap(), true);
 
   // not
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::OperatorParser;
-    elm_ref('x').not()
-  };
+  let parser = elm_ref('x').not();
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap(), ());
 
   // opt
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::OperatorParser;
-    elm_ref('a').opt()
-  };
+  let parser = elm_ref('a').opt();
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap(), Some(&'a'));
 
   // attempt
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::OperatorParser;
-    elm_ref('a').attempt()
-  };
+  let parser = elm_ref('a').attempt();
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap(), &'a');
 }
 
 #[test]
-fn test_static_parser_peek() {
+fn test_direct_static_parser_peek() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::PeekParser;
-    elm_ref('a').peek()
-  };
+  let parser = elm_ref('a').peek();
   let result = parser.parse(&input);
 
   assert!(result.is_success());
   assert_eq!(result.success().unwrap(), &'a');
 
   // Verify that peek doesn't consume input
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::PeekParser;
-    elm_ref('a').peek() + elm_ref('a')
-  };
+  let parser = elm_ref('a').peek() + elm_ref('a');
   let result = parser.parse(&input);
 
   assert!(result.is_success());
@@ -409,46 +310,30 @@ fn test_static_parser_peek() {
 }
 
 #[test]
-fn test_static_parser_repeat() {
+fn test_direct_static_parser_repeat() {
   let text = "aaa";
   let input = text.chars().collect::<Vec<_>>();
 
   // many0
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::RepeatParser;
-    elm_ref('a').of_many0()
-  };
+  let parser = elm_ref('a').of_many0();
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap().len(), 3);
 
   // many1
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::RepeatParser;
-    elm_ref('a').of_many1()
-  };
+  let parser = elm_ref('a').of_many1();
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap().len(), 3);
 
   // many_n_m
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::RepeatParser;
-    elm_ref('a').of_many_n_m(1, 2)
-  };
+  let parser = elm_ref('a').of_many_n_m(1, 2);
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap().len(), 2);
 
   // count
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::RepeatParser;
-    elm_ref('a').of_count(2)
-  };
+  let parser = elm_ref('a').of_count(2);
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap().len(), 2);
@@ -456,56 +341,36 @@ fn test_static_parser_repeat() {
   // Edge case: zero repetitions
   let text = "bbb";
   let input = text.chars().collect::<Vec<_>>();
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::RepeatParser;
-    elm_ref('a').of_many0()
-  };
+  let parser = elm_ref('a').of_many0();
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap().len(), 0);
 
   // Edge case: required repetitions not found
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::RepeatParser;
-    elm_ref('a').of_many1()
-  };
+  let parser = elm_ref('a').of_many1();
   let result = parser.parse(&input);
   assert!(result.is_failure());
 }
 
 #[test]
-fn test_static_parser_skip() {
+fn test_direct_static_parser_skip() {
   let text = "abc";
   let input = text.chars().collect::<Vec<_>>();
 
   // skip_left
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::SkipParser;
-    elm_ref('a').skip_left(elm_ref('b'))
-  };
+  let parser = elm_ref('a').skip_left(elm_ref('b'));
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap(), &'b');
 
   // skip_right
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::SkipParser;
-    elm_ref('a').skip_right(elm_ref('b'))
-  };
+  let parser = elm_ref('a').skip_right(elm_ref('b'));
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap(), &'a');
 
   // surround
-  let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::SkipParser;
-    elm_ref('b').surround(elm_ref('a'), elm_ref('c'))
-  };
+  let parser = elm_ref('b').surround(elm_ref('a'), elm_ref('c'));
   let result = parser.parse(&input);
   assert!(result.is_success());
   assert_eq!(result.success().unwrap(), &'b');
