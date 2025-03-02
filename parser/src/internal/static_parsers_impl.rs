@@ -222,14 +222,14 @@ impl StaticParsersImpl {
   }
 
   /// 指定した要素を解析するStaticParserを返します。(参照版)
-  pub fn elm_ref<'a, I>(element: I) -> StaticParser<'a, I, &'a [I]>
+  pub fn elm_ref<'a, I>(element: I) -> StaticParser<'a, I, &'a I>
   where
     I: crate::core::Element + Clone + PartialEq + Debug + 'a, {
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       if offset < input.len() && input[offset] == element {
-        ParseResult::successful(&input[offset..offset + 1], 1)
+        ParseResult::successful(&input[offset], 1)
       } else if offset >= input.len() {
         let msg = format!("unexpected end of input");
         let pe = ParseError::of_mismatch(input, offset, 0, msg);
@@ -243,16 +243,14 @@ impl StaticParsersImpl {
   }
 
   /// 指定した要素を解析するStaticParserを返します。
-  pub fn elm<'a, I>(element: I) -> StaticParser<'a, I, Vec<I>>
+  pub fn elm<'a, I>(element: I) -> StaticParser<'a, I, I>
   where
     I: crate::core::Element + Clone + PartialEq + Debug + 'a, {
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
       if offset < input.len() && input[offset] == element {
-        let mut result = Vec::new();
-        result.push(input[offset].clone());
-        ParseResult::successful(result, 1)
+        ParseResult::successful(input[offset].clone(), 1)
       } else if offset >= input.len() {
         let msg = format!("unexpected end of input");
         let pe = ParseError::of_mismatch(input, offset, 0, msg);

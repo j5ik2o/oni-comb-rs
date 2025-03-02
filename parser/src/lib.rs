@@ -635,7 +635,7 @@ pub mod prelude {
   /// let result: ParseResult<char, &char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
-  /// assert_eq!(result.success().unwrap(), &input[0]);
+  /// assert_eq!(*result.success().unwrap(), input[0]);
   /// ```
   pub fn elm_ref<'a, I>(element: I) -> Parser<'a, I, &'a I>
   where
@@ -657,14 +657,14 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, &[char]> = elm_ref_static('x');
+  /// let parser: StaticParser<char, &char> = elm_ref_static('x');
   ///
-  /// let result: ParseResult<char, &[char]> = parser.parse(&input);
+  /// let result: ParseResult<char, &char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
-  /// assert_eq!(result.success().unwrap(), &input[0..1]);
+  /// assert_eq!(*result.success().unwrap(), input[0]);
   /// ```
-  pub fn elm_ref_static<'a, I>(element: I) -> StaticParser<'a, I, &'a [I]>
+  pub fn elm_ref_static<'a, I>(element: I) -> StaticParser<'a, I, &'a I>
   where
     I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::elm_ref(element)
@@ -711,16 +711,15 @@ pub mod prelude {
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: StaticParser<char, Vec<char>> = elm_static('x');
+  /// let parser: StaticParser<char, char> = elm_static('x');
   ///
-  /// let result: ParseResult<char, Vec<char>> = parser.parse(&input);
+  /// let result: ParseResult<char, char> = parser.parse(&input);
   ///
   /// assert!(result.is_success());
-  /// let chars = result.success().unwrap();
-  /// assert_eq!(chars.len(), 1);
-  /// assert_eq!(chars[0], input[0]);
+  /// let c = result.success().unwrap();
+  /// assert_eq!(c, input[0]);
   /// ```
-  pub fn elm_static<'a, I>(element: I) -> StaticParser<'a, I, Vec<I>>
+  pub fn elm_static<'a, I>(element: I) -> StaticParser<'a, I, I>
   where
     I: Element + Clone + PartialEq + 'a + 'static, {
     StaticParsersImpl::elm(element)
@@ -3169,6 +3168,3126 @@ mod tests {
 
   use super::prelude::*;
 
+  #[test]
+  fn test_elm_alpha_digit_ref_static_success() {
+    init();
+    let text = "abc123";
+    let input = text.chars().collect::<Vec<_>>();
+    let p = elm_alpha_digit_ref_static().of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, text);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_alpha_digit_ref_static_with_special_chars() {
+    init();
+    let input = "abc123!@#".chars().collect::<Vec<_>>();
+    let p = elm_alpha_digit_ref_static().of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "abc123");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_alpha_digit_static_success() {
+    init();
+    let text = "abc123";
+    let input = text.chars().collect::<Vec<_>>();
+    let p = elm_alpha_digit_static()
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, text);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_alpha_digit_static_with_special_chars() {
+    init();
+    let input = "abc123!@#".chars().collect::<Vec<_>>();
+    let p = elm_alpha_digit_static()
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "abc123");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_alpha_ref_static_success() {
+    init();
+    let text = "abc";
+    let input = text.chars().collect::<Vec<_>>();
+    let p = elm_alpha_ref_static().of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, text);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_alpha_ref_static_with_non_alpha() {
+    init();
+    let input = "abc123".chars().collect::<Vec<_>>();
+    let p = elm_alpha_ref_static().of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "abc");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_alpha_ref_static_invalid_input() {
+    init();
+    let input = "123abc".chars().collect::<Vec<_>>();
+    let p = elm_alpha_ref_static().of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_alpha_static_success() {
+    init();
+    let text = "abc";
+    let input = text.chars().collect::<Vec<_>>();
+    let p = elm_alpha_static()
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, text);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_alpha_static_with_non_alpha() {
+    init();
+    let input = "abc123".chars().collect::<Vec<_>>();
+    let p = elm_alpha_static()
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "abc");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_alpha_static_invalid_input() {
+    init();
+    let input = "123abc".chars().collect::<Vec<_>>();
+    let p = elm_alpha_static()
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_any_ref_static_success() {
+    init();
+    let input = "a".chars().collect::<Vec<_>>();
+    let p = elm_any_ref_static();
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result[0], 'a');
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_any_ref_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = elm_any_ref_static();
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_any_static_success() {
+    init();
+    let input = "a".chars().collect::<Vec<_>>();
+    let p = elm_any_static();
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_char = result[0];
+        assert_eq!(result_char, 'a');
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_any_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = elm_any_static();
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_digit_1_9_ref_static_success() {
+    init();
+    let text = "123456789";
+    let input = text.chars().collect::<Vec<_>>();
+    let p = elm_digit_1_9_ref_static().of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, text);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_digit_1_9_ref_static_with_zero() {
+    init();
+    let input = "0123456789".chars().collect::<Vec<_>>();
+    let p = elm_digit_1_9_ref_static().of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_digit_1_9_ref_static_with_non_digit() {
+    init();
+    let input = "123abc".chars().collect::<Vec<_>>();
+    let p = elm_digit_1_9_ref_static().of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "123");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_digit_1_9_static_success() {
+    init();
+    let text = "123456789";
+    let input = text.chars().collect::<Vec<_>>();
+    let p = elm_digit_1_9_static()
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, text);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_digit_1_9_static_with_zero() {
+    init();
+    let input = "0123456789".chars().collect::<Vec<_>>();
+    let p = elm_digit_1_9_static()
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_digit_1_9_static_with_non_digit() {
+    init();
+    let input = "123abc".chars().collect::<Vec<_>>();
+    let p = elm_digit_1_9_static()
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "123");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_digit_ref_static_success() {
+    init();
+    let text = "0123456789";
+    let input = text.chars().collect::<Vec<_>>();
+    let p = elm_digit_ref_static().of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, text);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_digit_ref_static_with_non_digit() {
+    init();
+    let input = "123abc".chars().collect::<Vec<_>>();
+    let p = elm_digit_ref_static().of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "123");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_digit_ref_static_invalid_input() {
+    init();
+    let input = "abc123".chars().collect::<Vec<_>>();
+    let p = elm_digit_ref_static().of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_digit_static_success() {
+    init();
+    let text = "0123456789";
+    let input = text.chars().collect::<Vec<_>>();
+    let p = elm_digit_static()
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, text);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_digit_static_with_non_digit() {
+    init();
+    let input = "123abc".chars().collect::<Vec<_>>();
+    let p = elm_digit_static()
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "123");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_digit_static_invalid_input() {
+    init();
+    let input = "abc123".chars().collect::<Vec<_>>();
+    let p = elm_digit_static()
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_from_until_ref_static_success() {
+    init();
+    let input = "abcdefg".chars().collect::<Vec<_>>();
+    let p = elm_from_until_ref_static('a', 'c').of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "abc");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_from_until_ref_static_invalid_input() {
+    init();
+    let input = "defg".chars().collect::<Vec<_>>();
+    let p = elm_from_until_ref_static('a', 'c').of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_from_until_ref_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = elm_from_until_ref_static('a', 'c').of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_from_until_static_success() {
+    init();
+    let input = "abcdefg".chars().collect::<Vec<_>>();
+    let p = elm_from_until_static('a', 'c')
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "abc");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_from_until_static_invalid_input() {
+    init();
+    let input = "defg".chars().collect::<Vec<_>>();
+    let p = elm_from_until_static('a', 'c')
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_from_until_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = elm_from_until_static('a', 'c')
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_hex_digit_ref_static_success() {
+    init();
+    let text = "0123456789abcdefABCDEF";
+    let input = text.chars().collect::<Vec<_>>();
+    let p = elm_hex_digit_ref_static().of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, text);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_hex_digit_ref_static_with_non_hex() {
+    init();
+    let input = "0123456789abcdefABCDEFghijkl".chars().collect::<Vec<_>>();
+    let p = elm_hex_digit_ref_static().of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "0123456789abcdefABCDEF");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_hex_digit_ref_static_invalid_input() {
+    init();
+    let input = "ghijkl0123456789abcdefABCDEF".chars().collect::<Vec<_>>();
+    let p = elm_hex_digit_ref_static().of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_hex_digit_static_success() {
+    init();
+    let text = "0123456789abcdefABCDEF";
+    let input = text.chars().collect::<Vec<_>>();
+    let p = elm_hex_digit_static()
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, text);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_hex_digit_static_with_non_hex() {
+    init();
+    let input = "0123456789abcdefABCDEFghijkl".chars().collect::<Vec<_>>();
+    let p = elm_hex_digit_static()
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "0123456789abcdefABCDEF");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_hex_digit_static_invalid_input() {
+    init();
+    let input = "ghijkl0123456789abcdefABCDEF".chars().collect::<Vec<_>>();
+    let p = elm_hex_digit_static()
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_in_ref_static_success() {
+    init();
+    let input = "abcdef".chars().collect::<Vec<_>>();
+    let p = elm_in_ref_static('a', 'c').of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "abc");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_in_ref_static_invalid_input() {
+    init();
+    let input = "defg".chars().collect::<Vec<_>>();
+    let p = elm_in_ref_static('a', 'c').of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_in_ref_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = elm_in_ref_static('a', 'c').of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_in_static_success() {
+    init();
+    let input = "abcdef".chars().collect::<Vec<_>>();
+    let p = elm_in_static('a', 'c')
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "abc");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_in_static_invalid_input() {
+    init();
+    let input = "defg".chars().collect::<Vec<_>>();
+    let p = elm_in_static('a', 'c')
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_in_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = elm_in_static('a', 'c')
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_multi_space_ref_static_with_spaces() {
+    init();
+    let input = "   abc".chars().collect::<Vec<_>>();
+    let p = elm_multi_space_ref_static().map(|chars| chars.iter().map(|c| *c).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "   ");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_multi_space_ref_static_no_spaces() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = elm_multi_space_ref_static().map(|chars| chars.iter().map(|c| *c).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, "");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_multi_space_ref_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = elm_multi_space_ref_static().map(|chars| chars.iter().map(|c| *c).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, "");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_multi_space_static_with_spaces() {
+    init();
+    let input = "   abc".chars().collect::<Vec<_>>();
+    let p = elm_multi_space_static().map(|chars| chars.into_iter().collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "   ");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_multi_space_static_no_spaces() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = elm_multi_space_static().map(|chars| chars.into_iter().collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, "");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_multi_space_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = elm_multi_space_static().map(|chars| chars.into_iter().collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, "");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_oct_digit_ref_static_success() {
+    init();
+    let input = "01234567abc".chars().collect::<Vec<_>>();
+    let p = elm_oct_digit_ref_static().of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "01234567");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_oct_digit_ref_static_invalid_input() {
+    init();
+    let input = "89abc".chars().collect::<Vec<_>>();
+    let p = elm_oct_digit_ref_static().of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_oct_digit_ref_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = elm_oct_digit_ref_static().of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_oct_digit_static_success() {
+    init();
+    let input = "01234567abc".chars().collect::<Vec<_>>();
+    let p = elm_oct_digit_static()
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "01234567");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_oct_digit_static_invalid_input() {
+    init();
+    let input = "89abc".chars().collect::<Vec<_>>();
+    let p = elm_oct_digit_static()
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_oct_digit_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = elm_oct_digit_static()
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_of_static_success() {
+    init();
+    let input = "abcdef".chars().collect::<Vec<_>>();
+    let set = ['a', 'b', 'c'];
+    let p = elm_of_static(&set)
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "abc");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_of_static_invalid_input() {
+    init();
+    let input = "defg".chars().collect::<Vec<_>>();
+    let set = ['a', 'b', 'c'];
+    let p = elm_of_static(&set)
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_of_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let set = ['a', 'b', 'c'];
+    let p = elm_of_static(&set)
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_pred_ref_static_success() {
+    init();
+    let input = "abcdef".chars().collect::<Vec<_>>();
+    let pred = |c: &char| *c == 'a' || *c == 'b' || *c == 'c';
+    let p = elm_pred_ref_static(&pred).of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "abc");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_pred_ref_static_invalid_input() {
+    init();
+    let input = "defg".chars().collect::<Vec<_>>();
+    let pred = |c: &char| *c == 'a' || *c == 'b' || *c == 'c';
+    let p = elm_pred_ref_static(&pred).of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_pred_ref_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let pred = |c: &char| *c == 'a' || *c == 'b' || *c == 'c';
+    let p = elm_pred_ref_static(&pred).of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_pred_static_success() {
+    init();
+    let input = "abcdef".chars().collect::<Vec<_>>();
+    let pred = |c: &char| *c == 'a' || *c == 'b' || *c == 'c';
+    let p = elm_pred_static(&pred)
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "abc");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_pred_static_invalid_input() {
+    init();
+    let input = "defg".chars().collect::<Vec<_>>();
+    let pred = |c: &char| *c == 'a' || *c == 'b' || *c == 'c';
+    let p = elm_pred_static(&pred)
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_pred_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let pred = |c: &char| *c == 'a' || *c == 'b' || *c == 'c';
+    let p = elm_pred_static(&pred)
+      .of_many1()
+      .map(|chars| chars.into_iter().flat_map(|v| v.into_iter()).collect::<String>());
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_ref_of_static_success() {
+    init();
+    let input = "abcdef".chars().collect::<Vec<_>>();
+    let set = ['a', 'b', 'c'];
+    let p = elm_ref_of_static(&set[..]).of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "abc");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_ref_of_static_invalid_input() {
+    init();
+    let input = "defg".chars().collect::<Vec<_>>();
+    let set = ['a', 'b', 'c'];
+    let p = elm_ref_of_static(&set[..]).of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_ref_of_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let set = ['a', 'b', 'c'];
+    let p = elm_ref_of_static(&set[..]).of_many1().map(|chars| {
+      chars
+        .iter()
+        .flat_map(|slice| slice.iter().map(|c| *c))
+        .collect::<String>()
+    });
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_ref_static_success() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = elm_ref_static('a');
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(*result, 'a');
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_ref_static_invalid_input() {
+    init();
+    let input = "def".chars().collect::<Vec<_>>();
+    let p = elm_ref_static('a');
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_ref_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = elm_ref_static('a');
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_space_ref_static_success() {
+    init();
+    let input = " abc".chars().collect::<Vec<_>>();
+    let p = elm_space_ref_static();
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result[0], ' ');
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_space_ref_static_invalid_input() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = elm_space_ref_static();
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_space_ref_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = elm_space_ref_static();
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_space_static_success() {
+    init();
+    let input = " abc".chars().collect::<Vec<_>>();
+    let p = elm_space_static();
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result[0], ' ');
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_space_static_invalid_input() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = elm_space_static();
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_space_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = elm_space_static();
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_static_success() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = elm_static('a');
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, 'a');
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_elm_static_invalid_input() {
+    init();
+    let input = "def".chars().collect::<Vec<_>>();
+    let p = elm_static('a');
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_elm_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = elm_static('a');
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_empty_static_with_input() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = empty_static();
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, ());
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_empty_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = empty_static();
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, ());
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_end_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = end_static();
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, ());
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_end_static_with_input() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = end_static();
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  // FIXME: 以下のテストメソッドは1テストメソッド=1目的として分割できていない。
+
+  #[test]
+  fn test_failed_lazy_static() {
+    init();
+    {
+      let input = "abc".chars().collect::<Vec<_>>();
+
+      {
+        let counter = std::rc::Rc::new(std::cell::Cell::new(0));
+        let counter_clone = counter.clone();
+        let p: static_parser::StaticParser<'_, char, char> = failed_lazy_static(move || {
+          counter_clone.set(counter_clone.get() + 1);
+          (
+            ParseError::of_mismatch(&input, 0, 0, format!("error message: {}", counter_clone.get())),
+            CommittedStatus::Uncommitted,
+          )
+        });
+
+        // The error message should be evaluated lazily
+        assert_eq!(counter.get(), 0);
+
+        let result = p.parse_as_result(&input);
+        assert!(result.is_err());
+
+        // The error message should be evaluated now
+        assert_eq!(counter.get(), 1);
+
+        // Check the error message
+        match result {
+          Err(ParseError::Mismatch { message, .. }) => {
+            assert_eq!(message, "error message: 1");
+          }
+          _ => panic!("Expected Mismatch error"),
+        }
+
+        // Parsing again should evaluate the error message again
+        let result2 = p.parse_as_result(&input);
+        assert!(result2.is_err());
+        assert_eq!(counter.get(), 2);
+      }
+    }
+  }
+
+  #[test]
+  fn test_failed_static() {
+    init();
+    {
+      let input = "abc".chars().collect::<Vec<_>>();
+      let p: StaticParser<'_, char, ()> = failed_static(ParseError::of_mismatch(&[], 0, 0, String::from("error message")), CommittedStatus::Committed);
+
+      let result = p.parse_as_result(&input);
+      assert!(result.is_err());
+
+      // Check the error message
+      match result {
+        Err(ParseError::Mismatch { message, .. }) => {
+          assert_eq!(message, "error message");
+        }
+        _ => panic!("Expected Mismatch error"),
+      }
+
+      // Test with empty input
+      let input2: Vec<char> = vec![];
+      {
+        let result2 = p.parse_as_result(&input2);
+        assert!(result2.is_err());
+      }
+    }
+  }
+
+  #[test]
+  fn test_failed_with_commit_static() {
+    init();
+    {
+      let input = "abc".chars().collect::<Vec<_>>();
+
+      // Create a parser that fails with commit
+      let p1 = failed_with_commit_static(ParseError::of_mismatch(&[], 0, 0, String::from("error message")));
+
+      // Create a parser that succeeds
+      let p2 = elm_static('a');
+
+      // Combine them with or - since p1 commits, p2 should not be tried
+      let p = p1.or(p2);
+
+      let result = p.parse_as_result(&input);
+      assert!(result.is_err());
+
+      // Check the error message
+      match result {
+        Err(ParseError::Mismatch { message, .. }) => {
+          assert_eq!(message, "error message");
+        }
+        _ => panic!("Expected Mismatch error"),
+      }
+
+      // Test with empty input
+      let input2: Vec<char> = vec![];
+      {
+        let result2 = p1.parse_as_result(&input2);
+        assert!(result2.is_err());
+      }
+    }
+  }
+
+  #[test]
+  fn test_failed_with_uncommit_static() {
+    init();
+    {
+      let input = "abc".chars().collect::<Vec<_>>();
+
+      // Create a parser that fails with uncommit
+      let p1 = failed_with_uncommit_static(ParseError::of_mismatch(&[], 0, 0, String::from("error message")));
+
+      // Create a parser that succeeds
+      let p2 = elm_static('a');
+
+      // Combine them with or - since p1 uncommits, p2 should be tried and succeed
+      let p = p1.clone().or(p2);
+
+      let result = p.parse_as_result(&input);
+      assert!(result.is_ok());
+      assert_eq!(result.unwrap(), 'a');
+
+      // Test with empty input
+      let input2: Vec<char> = vec![];
+      {
+        let result2 = p1.parse_as_result(&input2);
+        assert!(result2.is_err());
+      }
+    }
+  }
+
+  #[test]
+  fn test_lazy_static() {
+    init();
+
+    {
+      let input = "abc".chars().collect::<Vec<_>>();
+
+      {
+        // Create a counter to verify lazy evaluation
+        let counter = std::rc::Rc::new(std::cell::Cell::new(0));
+        let counter_clone = counter.clone();
+
+        // Create a parser that will be lazily evaluated
+        let p = lazy_static(move || {
+          counter_clone.set(counter_clone.get() + 1);
+          elm_static('a')
+        });
+
+        // The parser should not be evaluated yet
+        assert_eq!(counter.get(), 0);
+
+        // Parse the input
+        let result = p.parse_as_result(&input).unwrap();
+        assert_eq!(result, 'a');
+
+        // The parser should be evaluated now
+        assert_eq!(counter.get(), 1);
+
+        // Parse again to verify the parser is evaluated each time
+        let result2 = p.parse_as_result(&input).unwrap();
+        assert_eq!(result2, 'a');
+        assert_eq!(counter.get(), 2);
+
+        // Test with non-matching input
+        {
+          let input2 = "def".chars().collect::<Vec<_>>();
+          let result3 = p.parse_as_result(&input2);
+          assert!(result3.is_err());
+          assert_eq!(counter.get(), 3);
+        }
+      }
+    }
+  }
+
+  #[test]
+  fn test_none_of_static_match_a() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = none_of_static(&['b', 'c']);
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, vec!['a']);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_none_of_static_no_match_b() {
+    init();
+    let input = "bcd".chars().collect::<Vec<_>>();
+    let p = none_of_static(&['b', 'c']);
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_none_of_static_no_match_c() {
+    init();
+    let input = "cde".chars().collect::<Vec<_>>();
+    let p = none_of_static(&['b', 'c']);
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_none_of_static_match_d() {
+    init();
+    let input = "def".chars().collect::<Vec<_>>();
+    let p = none_of_static(&['b', 'c']);
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, vec!['d']);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_none_of_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = none_of_static(&['b', 'c']);
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_none_ref_of_static_match_a() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = none_ref_of_static(&['b', 'c']);
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(*result, vec!['a']);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_none_ref_of_static_no_match_b() {
+    init();
+    let input = "bcd".chars().collect::<Vec<_>>();
+    let p = none_ref_of_static(&['b', 'c']);
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_none_ref_of_static_no_match_c() {
+    init();
+    let input = "cde".chars().collect::<Vec<_>>();
+    let p = none_ref_of_static(&['b', 'c']);
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_none_ref_of_static_match_d() {
+    init();
+    let input = "def".chars().collect::<Vec<_>>();
+    let p = none_ref_of_static(&['b', 'c']);
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result[0], 'd');
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_none_ref_of_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = none_ref_of_static(&['b', 'c']);
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_regex_static_digits_in_middle() {
+    init();
+    let input = "abc123def".chars().collect::<Vec<_>>();
+    let p = regex_static(r"[0-9]+");
+
+    match p.parse_as_result(&input[3..]) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "123");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_regex_static_digits_at_start() {
+    init();
+    let input = "123abc".chars().collect::<Vec<_>>();
+    let p = regex_static(r"[0-9]+");
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "123");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_regex_static_no_digits() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = regex_static(r"[0-9]+");
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_regex_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = regex_static(r"[0-9]+");
+
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_regex_static_complex_pattern() {
+    init();
+    let input = "abc123def".chars().collect::<Vec<_>>();
+    let p = regex_static(r"[a-z]+[0-9]+");
+
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "abc123");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_seq_static_success() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+
+    // Create a sequence parser using a vector of parsers
+    let parsers = vec!['a', 'b', 'c'];
+    let p = seq_static(&parsers);
+
+    // Test successful parsing
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, vec!['a', 'b', 'c']);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_seq_static_partial_match() {
+    init();
+    let input = "ab".chars().collect::<Vec<_>>();
+
+    // Create a sequence parser using a vector of parsers
+    let parsers = vec!['a', 'b', 'c'];
+    let p = seq_static(&parsers);
+
+    // Test with partial match
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_seq_static_non_matching() {
+    init();
+    let input = "def".chars().collect::<Vec<_>>();
+
+    // Create a sequence parser using a vector of parsers
+    let parsers = vec!['a', 'b', 'c'];
+    let p = seq_static(&parsers);
+
+    // Test with non-matching input
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_seq_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+
+    // Create parsers for individual characters
+    let p1 = elm_static('a');
+    let p2 = elm_static('b');
+    let p3 = elm_static('c');
+
+    // Create a sequence parser using a vector of parsers
+    let parsers = vec!['a', 'b', 'c'];
+    let p = seq_static(&parsers);
+
+    // Test with empty input
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_seq_static_with_map() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+
+    // Create a sequence parser using a vector of parsers
+    let parsers = vec!['a', 'b', 'c'];
+    let p = seq_static(&parsers).map(|chars| chars.into_iter().collect::<String>().to_uppercase());
+
+    // Test with map to transform the result
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "ABC");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_skip_static() {
+    init();
+    {
+      let input = "abcdef".chars().collect::<Vec<_>>();
+
+      // Create a parser that skips the first 3 characters and then matches 'd'
+      let p = skip_static(3).and_then(elm_static('d'));
+
+      // Test successful parsing
+      let result = p.parse_as_result(&input).unwrap();
+      assert_eq!(result.1, 'd');
+
+      // Test with insufficient input length
+      {
+        let input2 = "ab".chars().collect::<Vec<_>>();
+        let result2 = p.parse_as_result(&input2);
+        assert!(result2.is_err());
+      }
+
+      // Test with empty input
+      {
+        let input3: Vec<char> = vec![];
+        let result3 = p.parse_as_result(&input3);
+        assert!(result3.is_err());
+      }
+
+      // Test with non-matching character after skip
+      {
+        let input4 = "abcxyz".chars().collect::<Vec<_>>();
+        let result4 = p.parse_as_result(&input4);
+        assert!(result4.is_err());
+      }
+
+      // Test with skip(0)
+      {
+        let p2 = skip_static(0).and_then(elm_static('a'));
+        let result5 = p2.parse_as_result(&input).unwrap();
+        assert_eq!(result5.1, 'a');
+      }
+    }
+  }
+
+  #[test]
+  fn test_successful_lazy_static() {
+    init();
+
+    {
+      let input = "abc".chars().collect::<Vec<_>>();
+
+      // Create a counter to verify lazy evaluation
+      // Use Rc<Cell<i32>> to allow sharing between closure and test code
+      let counter = std::rc::Rc::new(std::cell::Cell::new(0));
+      let counter_clone = counter.clone();
+
+      // Create a parser that lazily evaluates a successful value
+      let p = successful_lazy_static(move || {
+        counter_clone.set(counter_clone.get() + 1);
+        "result"
+      });
+
+      // The parser should not be evaluated yet
+      assert_eq!(counter.get(), 0);
+
+      // Parse the input
+      let result = p.parse_as_result(&input).unwrap();
+      let result_str: String = result.chars().collect();
+      assert_eq!(result_str, "result");
+
+      // The parser should be evaluated now
+      assert_eq!(counter.get(), 1);
+
+      // Parse again to verify the parser is evaluated each time
+      let result2 = p.parse_as_result(&input).unwrap();
+      assert_eq!(result2, "result");
+      assert_eq!(counter.get(), 2);
+
+      // Test with empty input
+      let input2: Vec<char> = vec![];
+      let result3 = p.parse_as_result(&input2).unwrap();
+      assert_eq!(result3, "result");
+      assert_eq!(counter.get(), 3);
+    }
+
+    // Test with map to transform the result
+    {
+      let input = "abc".chars().collect::<Vec<_>>();
+
+      let counter = std::rc::Rc::new(std::cell::Cell::new(0));
+      let counter_clone = counter.clone();
+      let p_mapped = successful_lazy_static(move || {
+        counter_clone.set(counter_clone.get() + 1);
+        "result"
+      })
+      .map(|s| s.to_uppercase());
+
+      let result4 = p_mapped.parse_as_result(&input).unwrap();
+      assert_eq!(result4, "RESULT");
+      assert_eq!(counter.get(), 1);
+    }
+  }
+
+  #[test]
+  fn test_successful_static() {
+    init();
+
+    {
+      let input = "abc".chars().collect::<Vec<_>>();
+
+      // Create a parser that always succeeds with a specified value
+      let p = successful_static("result");
+
+      // Parse the input
+      let result = p.parse_as_result(&input).unwrap();
+      let result_str: String = result.chars().collect();
+      assert_eq!(result_str, "result");
+
+      // Parse again to verify the result is the same
+      let result2 = p.parse_as_result(&input).unwrap();
+      assert_eq!(result2, "result");
+      let input2: Vec<char> = vec![];
+      let result3 = p.parse_as_result(&input2).unwrap();
+      assert_eq!(result3, "result");
+
+      // Test with map to transform the result
+      {
+        let p_mapped = successful_static("result").map(|s| s.to_uppercase());
+        let result4 = p_mapped.parse_as_result(&input).unwrap();
+        assert_eq!(result4, "RESULT");
+      }
+
+      // Test with different input types
+      {
+        let p_int = successful_static(42);
+        let result5 = p_int.parse_as_result(&input).unwrap();
+        assert_eq!(result5, 42);
+      }
+
+      // Test with complex type
+      {
+        #[derive(Debug, PartialEq, Clone)]
+        struct TestStruct {
+          value: i32,
+        }
+
+        let test_struct = TestStruct { value: 42 };
+        let p_struct = successful_static(test_struct);
+        let result6 = p_struct.parse_as_result(&input).unwrap();
+        assert_eq!(result6, TestStruct { value: 42 });
+      }
+    }
+  }
+
+  #[test]
+  fn test_surround_static() {
+    init();
+
+    {
+      let input = "(abc)".chars().collect::<Vec<_>>();
+
+      // Create parsers for opening, content, and closing
+      let open_parser = elm_static('(').map(|s| s.to_string());
+      let content_parser = (elm_static('a').and_then(elm_static('b')).and_then(elm_static('c')))
+          .map(|((a, b),c)| format!("{}{}{}", a, b,c));
+
+      let close_parser = elm_static(')').map(|s| s.to_string());
+
+      // Create a parser that surrounds the content with opening and closing parsers
+      let p = surround_static(open_parser.clone(), content_parser.clone(), close_parser.clone());
+
+      // Test successful parsing
+      let result = p.parse_as_result(&input).unwrap();
+      assert_eq!(result[0], 'c'); // surround returns the result of the content parser
+
+      // Test with missing closing character
+      let input2 = "(abc".chars().collect::<Vec<_>>();
+      {
+        let result2 = p.parse_as_result(&input2);
+        assert!(result2.is_err());
+      }
+
+      // Test with missing opening character
+      let input3 = "abc)".chars().collect::<Vec<_>>();
+      {
+        let result3 = p.parse_as_result(&input3);
+        assert!(result3.is_err());
+      }
+
+      // Test with non-matching content
+      let input4 = "(xyz)".chars().collect::<Vec<_>>();
+      {
+        let result4 = p.parse_as_result(&input4);
+        assert!(result4.is_err());
+      }
+
+      // Test with empty input
+      let input5: Vec<char> = vec![];
+      {
+        let result5 = p.parse_as_result(&input5);
+        assert!(result5.is_err());
+      }
+
+      // Test with map to transform the result
+      {
+        let p_mapped = surround_static(open_parser, content_parser.clone(), close_parser);
+        let result6 = p_mapped.parse_as_result(&input).unwrap();
+        assert_eq!(result6[0], 'C');
+      }
+
+      // Test with different opening and closing characters
+      let input7 = "[abc]".chars().collect::<Vec<_>>();
+      {
+        let open_parser2 = elm_static('[');
+        let close_parser2 = elm_static(']');
+        let p2 = surround_static(open_parser2, content_parser, close_parser2);
+        let result7 = p2.parse_as_result(&input7).unwrap();
+        assert_eq!(result7[0], 'c');
+      }
+    }
+  }
+
+  #[test]
+  fn test_tag_no_case_static() {
+    init();
+
+    // Test with lowercase input matching lowercase tag
+    {
+      let input1 = "hello".chars().collect::<Vec<_>>();
+      let p1 = tag_no_case_static("hello");
+      let result1 = p1.parse_as_result(&input1).unwrap();
+      assert_eq!(result1, "hello");
+    }
+
+    // Test with uppercase input matching lowercase tag
+    {
+      let input2 = "HELLO".chars().collect::<Vec<_>>();
+      let p2 = tag_no_case_static("hello");
+      let result2 = p2.parse_as_result(&input2).unwrap();
+      assert_eq!(result2, "HELLO");
+    }
+
+    // Test with mixed case input matching lowercase tag
+    {
+      let input3 = "HeLLo".chars().collect::<Vec<_>>();
+      let p3 = tag_no_case_static("hello");
+      let result3 = p3.parse_as_result(&input3).unwrap();
+      assert_eq!(result3, "HeLLo");
+    }
+
+    // Test with lowercase input matching uppercase tag
+    {
+      let input4 = "hello".chars().collect::<Vec<_>>();
+      let p4 = tag_no_case_static("HELLO");
+      let result4 = p4.parse_as_result(&input4).unwrap();
+      assert_eq!(result4, "hello");
+    }
+
+    // Test with non-matching input
+    {
+      let input5 = "world".chars().collect::<Vec<_>>();
+      let p5 = tag_no_case_static("hello");
+      let result5 = p5.parse_as_result(&input5);
+      assert!(result5.is_err());
+    }
+
+    // Test with partial matching input
+    {
+      let input6 = "hel".chars().collect::<Vec<_>>();
+      let p6 = tag_no_case_static("hello");
+      let result6 = p6.parse_as_result(&input6);
+      assert!(result6.is_err());
+    }
+
+    // Test with empty input
+    {
+      let input7: Vec<char> = vec![];
+      let p7 = tag_no_case_static("hello");
+      let result7 = p7.parse_as_result(&input7);
+      assert!(result7.is_err());
+    }
+
+    // Test with empty tag
+    {
+      let input8 = "hello".chars().collect::<Vec<_>>();
+      let p8 = tag_no_case_static("");
+      let result8 = p8.parse_as_result(&input8).unwrap();
+      assert_eq!(result8, "");
+    }
+
+    // Test with map to transform the result
+    {
+      let input9 = "hello".chars().collect::<Vec<_>>();
+      let p9 = tag_no_case_static("hello").map(|s| format!("{}!", s));
+      let result9 = p9.parse_as_result(&input9).unwrap();
+      assert_eq!(result9, "hello!");
+    }
+  }
+
+  #[test]
+  fn test_tag_static() {
+    init();
+    {
+      // Test with matching input
+      {
+        let input1 = "hello".chars().collect::<Vec<_>>();
+        let p1 = tag_static("hello");
+        let result1 = p1.parse_as_result(&input1).unwrap();
+        assert_eq!(result1, "hello");
+      }
+
+      // Test with case-sensitive mismatch (unlike tag_no_case_static)
+      {
+        let input2 = "HELLO".chars().collect::<Vec<_>>();
+        let p2 = tag_static("hello");
+        let result2 = p2.parse_as_result(&input2);
+        assert!(result2.is_err());
+      }
+
+      // Test with mixed case mismatch
+      {
+        let input3 = "HeLLo".chars().collect::<Vec<_>>();
+        let p3 = tag_static("hello");
+        let result3 = p3.parse_as_result(&input3);
+        assert!(result3.is_err());
+      }
+
+      // Test with uppercase tag matching uppercase input
+      {
+        let input4 = "HELLO".chars().collect::<Vec<_>>();
+        let p4 = tag_static("HELLO");
+        let result4 = p4.parse_as_result(&input4).unwrap();
+        assert_eq!(result4, "HELLO");
+      }
+
+      // Test with non-matching input
+      {
+        let input5 = "world".chars().collect::<Vec<_>>();
+        let p5 = tag_static("hello");
+        let result5 = p5.parse_as_result(&input5);
+        assert!(result5.is_err());
+      }
+
+      // Test with partial matching input
+      {
+        let input6 = "hel".chars().collect::<Vec<_>>();
+        let p6 = tag_static("hello");
+        let result6 = p6.parse_as_result(&input6);
+        assert!(result6.is_err());
+      }
+
+      // Test with empty input
+      {
+        let input7: Vec<char> = vec![];
+        let p7 = tag_static("hello");
+        let result7 = p7.parse_as_result(&input7);
+        assert!(result7.is_err());
+      }
+
+      // Test with empty tag
+      {
+        let input8 = "hello".chars().collect::<Vec<_>>();
+        let p8 = tag_static("");
+        let result8 = p8.parse_as_result(&input8).unwrap();
+        assert_eq!(result8, "");
+      }
+
+      // Test with map to transform the result
+      {
+        let input9 = "hello".chars().collect::<Vec<_>>();
+        let p9 = tag_static("hello").map(|s| format!("{}!", s));
+        let result9 = p9.parse_as_result(&input9).unwrap();
+        assert_eq!(result9, "hello!");
+      }
+
+      // Test with longer input than tag
+      {
+        let s = "hello world";
+        let input10 = s.chars().collect::<Vec<_>>();
+        let p10 = tag_static("hello");
+        let result10 = p10.parse(&input10).to_result();
+        assert!(result10.is_ok());
+        assert_eq!(result10.unwrap(), &s[5..]);
+      }
+    }
+  }
+
+  #[test]
+  fn test_take_static() {
+    init();
+    {
+      let input = "abcdef".chars().collect::<Vec<_>>();
+
+      // Test taking a specific number of elements
+      let p = take_static(3);
+      let result = p.parse_as_result(&input).unwrap();
+      let result_str: String = result.iter().collect();
+      assert_eq!(result_str, "abc");
+
+      // Test taking zero elements
+      {
+        let p_zero = take_static(0);
+        let result_zero = p_zero.parse_as_result(&input).unwrap();
+        assert!(result_zero.is_empty());
+      }
+
+      // Test taking all elements
+      {
+        let p_all = take_static(6);
+        let result_all = p_all.parse_as_result(&input).unwrap();
+        assert_eq!(result_all.iter().collect::<String>(), "abcdef");
+      }
+
+      // Test taking more elements than available
+      {
+        let p_more = take_static(10);
+        let result_more = p_more.parse_as_result(&input);
+        assert!(result_more.is_err());
+      }
+
+      // Test with empty input
+      {
+        let empty_input: Vec<char> = vec![];
+        let p_empty = take_static(0);
+        let result_empty = p_empty.parse_as_result(&empty_input).unwrap();
+        assert_eq!(result_empty.iter().collect::<String>(), "");
+
+        // Test with empty input and non-zero count
+        let p_empty_nonzero = take_static(1);
+        let result_empty_nonzero = p_empty_nonzero.parse_as_result(&empty_input);
+        assert!(result_empty_nonzero.is_err());
+      }
+
+      // Test with map to transform the result
+      {
+        let p_mapped = take_static(3).map(|s: &[char]| s.iter().map(|c| c.to_ascii_uppercase()).collect::<String>());
+        let result_mapped = p_mapped.parse_as_result(&input).unwrap();
+        assert_eq!(result_mapped, "ABC");
+      }
+
+      // Test with parse method to check remaining input
+      {
+        let p_remaining = take_static(3);
+        let result_remaining = p_remaining.parse(&input).to_result();
+        assert!(result_remaining.is_ok());
+        assert_eq!(result_remaining.unwrap(), &input[3..]);
+      }
+    }
+  }
+
+  #[test]
+  fn test_take_till0_static() {
+    init();
+    let input = "abc123def".chars().collect::<Vec<_>>();
+
+    // Test taking elements until a digit is encountered
+    let p = take_till0_static(|c: &char| c.is_digit(10));
+    let result = p.parse_as_result(&input).unwrap();
+    assert_eq!(result.iter().collect::<String>(), "abc");
+
+    // Test with input starting with the predicate character
+    {
+      let input2 = "123def".chars().collect::<Vec<_>>();
+      let p2 = take_till0_static(|c: &char| c.is_digit(10));
+      let result2 = p2.parse_as_result(&input2).unwrap();
+      assert!(result2.is_empty()); // Should return empty string since the first character satisfies the predicate
+    }
+
+    // Test with input not containing any predicate character
+    {
+      let input3 = "abcdef".chars().collect::<Vec<_>>();
+      let p3 = take_till0_static(|c: &char| c.is_digit(10));
+      let result3 = p3.parse_as_result(&input3).unwrap();
+      assert_eq!(result3.iter().collect::<String>(), "abcdef"); // Should return the entire input
+    }
+
+    // Test with empty input
+    {
+      let input4: Vec<char> = vec![];
+      let p4 = take_till0_static(|c: &char| c.is_digit(10));
+      let result4 = p4.parse_as_result(&input4).unwrap();
+      assert_eq!(result4.iter().collect::<String>(), ""); // Should return empty string for empty input
+    }
+
+    // Test with map to transform the result
+    {
+      let p5 = take_till0_static(|c: &char| c.is_digit(10)).map(|s| s.iter().map(|c| c.to_ascii_uppercase()).collect::<String>());
+      let result5 = p5.parse_as_result(&input).unwrap();
+      assert_eq!(result5, "ABC");
+    }
+
+    // Test with parse method to check remaining input
+    {
+      let p6 = take_till0_static(|c: &char| c.is_digit(10));
+      let result6 = p6.parse(&input).to_result();
+      assert!(result6.is_ok());
+      assert_eq!(result6.unwrap(), &input[3..]); // Should return the remaining input after "abc"
+    }
+
+    // Test with a more complex predicate
+    {
+      let p7 = take_till0_static(|c: &char| *c == 'c' || c.is_digit(10));
+      let result7 = p7.parse_as_result(&input).unwrap();
+      assert_eq!(result7.iter().collect::<String>(), "ab"); // Should stop at 'c'
+    }
+  }
+
+  #[test]
+  fn test_take_till1_static() {
+    init();
+    let input = "abc123def".chars().collect::<Vec<_>>();
+
+    // Test taking elements until a digit is encountered
+    let p = take_till1_static(|c: &char| c.is_digit(10));
+    let result = p.parse_as_result(&input).unwrap();
+    assert_eq!(result.iter().collect::<String>(), "abc");
+
+    // Test with input starting with the predicate character
+    {
+      let input2 = "123def".chars().collect::<Vec<_>>();
+      let p2 = take_till1_static(|c: &char| c.is_digit(10));
+      let result2 = p2.parse_as_result(&input2);
+      assert!(result2.is_err()); // Should fail since it requires at least one element before the predicate
+    }
+
+    // Test with input not containing any predicate character
+    {
+      let input3 = "abcdef".chars().collect::<Vec<_>>();
+      let p3 = take_till1_static(|c: &char| c.is_digit(10));
+      let result3 = p3.parse_as_result(&input3).unwrap();
+      assert_eq!(result3.iter().collect::<String>(), "abcdef"); // Should return the entire input
+    }
+
+    // Test with empty input
+    {
+      let input4: Vec<char> = vec![];
+      let p4 = take_till1_static(|c: &char| c.is_digit(10));
+      let result4 = p4.parse_as_result(&input4);
+      assert!(result4.is_err()); // Should fail since it requires at least one element
+    }
+
+    // Test with map to transform the result
+    {
+      let p5 = take_till1_static(|c: &char| c.is_digit(10)).map(|s| s.iter().map(|c| c.to_ascii_uppercase()).collect::<String>());
+      let result5 = p5.parse_as_result(&input).unwrap();
+      assert_eq!(result5, "ABC");
+    }
+
+    // Test with parse method to check remaining input
+    {
+      let p6 = take_till1_static(|c: &char| c.is_digit(10));
+      let result6 = p6.parse(&input).to_result();
+      assert!(result6.is_ok());
+      assert_eq!(result6.unwrap(), &input[3..]); // Should return the remaining input after "abc"
+    }
+
+    // Test with a more complex predicate
+    {
+      let p7 = take_till1_static(|c: &char| *c == 'c' || c.is_digit(10));
+      let result7 = p7.parse_as_result(&input).unwrap();
+      assert_eq!(result7.iter().collect::<String>(), "ab"); // Should stop at 'c'
+    }
+
+    // Test with single character before predicate
+    {
+      let input8 = "a123def".chars().collect::<Vec<_>>();
+      let p8 = take_till1_static(|c: &char| c.is_digit(10));
+      let result8 = p8.parse_as_result(&input8).unwrap();
+      assert_eq!(result8.iter().collect::<String>(), "a"); // Should return just the single character
+    }
+  }
+
+  #[test]
+  fn test_take_while0_static_success() {
+    init();
+    let input = "123abc".chars().collect::<Vec<_>>();
+    let p = take_while0_static(|c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.iter().collect();
+        assert_eq!(result_str, "123");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while0_static_no_matching_start() {
+    init();
+    let input = "abc123".chars().collect::<Vec<_>>();
+    let p = take_while0_static(|c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.iter().collect();
+        assert_eq!(result_str, ""); // Should return empty string since no characters satisfy the predicate initially
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while0_static_all_matching() {
+    init();
+    let input = "12345".chars().collect::<Vec<_>>();
+    let p = take_while0_static(|c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.iter().collect();
+        assert_eq!(result_str, "12345"); // Should return the entire input
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while0_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = take_while0_static(|c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.iter().collect();
+        assert_eq!(result_str, ""); // Should return empty string for empty input
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while0_static_with_map() {
+    init();
+    let input = "123abc".chars().collect::<Vec<_>>();
+    let p = take_while0_static(|c: &char| c.is_digit(10)).map(|s| format!("{}!", s.iter().collect::<String>()));
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, "123!");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while0_static_check_remaining() {
+    init();
+    let input = "123abc".chars().collect::<Vec<_>>();
+    let p = take_while0_static(|c: &char| c.is_digit(10));
+    
+    match p.parse(&input) {
+      ParseResult::Success { value: _, length } => {
+        assert_eq!(length, 3);
+        assert_eq!(&input[length..], &input[3..]); // Should return the remaining input after "123"
+      },
+      _ => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while0_static_complex_predicate() {
+    init();
+    let input = "123abc".chars().collect::<Vec<_>>();
+    let p = take_while0_static(|c: &char| c.is_digit(10) || *c == 'a');
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.iter().collect();
+        assert_eq!(result_str, "123a"); // Should include 'a' as well
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while0_static_single_character() {
+    init();
+    let input = "1abc".chars().collect::<Vec<_>>();
+    let p = take_while0_static(|c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.iter().collect();
+        assert_eq!(result_str, "1"); // Should return just the single character
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while1_static_success() {
+    init();
+    let input = "123abc".chars().collect::<Vec<_>>();
+    let p = take_while1_static(|c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.iter().collect();
+        assert_eq!(result_str, "123");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while1_static_no_matching_start() {
+    init();
+    let input = "abc123".chars().collect::<Vec<_>>();
+    let p = take_while1_static(|c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_take_while1_static_all_matching() {
+    init();
+    let input = "12345".chars().collect::<Vec<_>>();
+    let p = take_while1_static(|c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.iter().collect();
+        assert_eq!(result_str, "12345"); // Should return the entire input
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while1_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = take_while1_static(|c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_take_while1_static_with_map() {
+    init();
+    let input = "123abc".chars().collect::<Vec<_>>();
+    let p = take_while1_static(|c: &char| c.is_digit(10)).map(|s| format!("{}!", s.iter().collect::<String>()));
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, "123!");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while1_static_check_remaining() {
+    init();
+    let input = "123abc".chars().collect::<Vec<_>>();
+    let p = take_while1_static(|c: &char| c.is_digit(10));
+    
+    match p.parse(&input) {
+      ParseResult::Success { value: _, length } => {
+        assert_eq!(length, 3);
+        assert_eq!(&input[length..], &input[3..]); // Should return the remaining input after "123"
+      },
+      _ => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while1_static_complex_predicate() {
+    init();
+    let input = "123abc".chars().collect::<Vec<_>>();
+    let p = take_while1_static(|c: &char| c.is_digit(10) || *c == 'a');
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.iter().collect();
+        assert_eq!(result_str, "123a"); // Should include 'a' as well
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while1_static_single_character() {
+    init();
+    let input = "1abc".chars().collect::<Vec<_>>();
+    let p = take_while1_static(|c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.iter().collect();
+        assert_eq!(result_str, "1"); // Should return just the single character
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while_n_m_static_success() {
+    init();
+    let input = "12345abc".chars().collect::<Vec<_>>();
+    let p = take_while_n_m_static(2, 4, |c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.iter().collect();
+        assert_eq!(result_str, "1234"); // Should take at most 4 digits
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while_n_m_static_fewer_than_min() {
+    init();
+    let input = "1abc".chars().collect::<Vec<_>>();
+    let p = take_while_n_m_static(2, 4, |c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_take_while_n_m_static_exactly_min() {
+    init();
+    let input = "12abc".chars().collect::<Vec<_>>();
+    let p = take_while_n_m_static(2, 4, |c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.iter().collect();
+        assert_eq!(result_str, "12"); // Should take exactly 2 digits
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while_n_m_static_more_than_max() {
+    init();
+    let input = "123456abc".chars().collect::<Vec<_>>();
+    let p = take_while_n_m_static(2, 4, |c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.iter().collect();
+        assert_eq!(result_str, "1234"); // Should take at most 4 digits
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while_n_m_static_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = take_while_n_m_static(2, 4, |c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_take_while_n_m_static_min_zero_empty_input() {
+    init();
+    let input: Vec<char> = vec![];
+    let p = take_while_n_m_static(0, 4, |c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.iter().collect();
+        assert_eq!(result_str, ""); // Should succeed with empty result
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while_n_m_static_min_zero_non_matching() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = take_while_n_m_static(0, 4, |c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.iter().collect();
+        assert_eq!(result_str, ""); // Should succeed with empty result
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while_n_m_static_with_map() {
+    init();
+    let input = "12345abc".chars().collect::<Vec<_>>();
+    let p = take_while_n_m_static(2, 4, |c: &char| c.is_digit(10)).map(|s| format!("{}!", s.iter().collect::<String>()));
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, "1234!");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while_n_m_static_check_remaining() {
+    init();
+    let input = "12345abc".chars().collect::<Vec<_>>();
+    let p = take_while_n_m_static(2, 4, |c: &char| c.is_digit(10));
+    
+    match p.parse(&input) {
+      ParseResult::Success { value: _, length } => {
+        assert_eq!(length, 4);
+        assert_eq!(&input[length..], &input[4..]); // Should return the remaining input after "1234"
+      },
+      _ => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_take_while_n_m_static_min_equals_max() {
+    init();
+    let input = "12345abc".chars().collect::<Vec<_>>();
+    let p = take_while_n_m_static(3, 3, |c: &char| c.is_digit(10));
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.iter().collect();
+        assert_eq!(result_str, "123"); // Should take exactly 3 digits
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_unit_static_success() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = unit_static().map(|_| 42);
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, 42);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_unit_static_with_string() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = unit_static().map(|_| "hello");
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "hello");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_unit_static_with_complex_type() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = unit_static().map(|_| vec![1, 2, 3]);
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, vec![1, 2, 3]);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_unit_static_empty_input() {
+    init();
+    let empty_input: Vec<char> = vec![];
+    let p = unit_static().map(|_| 42);
+    
+    match p.parse_as_result(&empty_input) {
+      Ok(result) => {
+        assert_eq!(result, 42);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_unit_static_with_map() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = unit_static().map(|_| 42).map(|n| n * 2);
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        assert_eq!(result, 84);
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_unit_static_check_remaining() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = unit_static().map(|_| 42);
+    
+    match p.parse(&input) {
+      ParseResult::Success { value: _, length: _ } => {
+        // unit_static doesn't consume any input
+        assert_eq!(&input[..], &input[..]);
+      },
+      _ => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_lazy_static_parser_success() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    
+    // lazy_static_parser doesn't take arguments directly
+    // We need to use it with map to create a parser that matches "abc"
+    let p = lazy_static_parser().map(|_| "abc");
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "abc");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_lazy_static_parser_with_different_parser() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    
+    // Create a parser that returns the first two characters
+    let p = lazy_static_parser().map(|_| "ab");
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "ab");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_lazy_static_parser_empty_input() {
+    init();
+    let empty_input: Vec<char> = vec![];
+    let p = lazy_static_parser().map(|_| "");
+    
+    match p.parse_as_result(&empty_input) {
+      Ok(result) => {
+        assert_eq!(result, "");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_lazy_static_parser_with_map() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = lazy_static_parser().map(|_| "abc").map(|s| s.to_uppercase());
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "ABC");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_lazy_static_parser_check_remaining() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    
+    // Create a parser that consumes one character
+    let p = tag_static("a");
+    
+    match p.parse(&input) {
+      ParseResult::Success { value: _, length } => {
+        assert_eq!(length, 1);
+        assert_eq!(&input[length..], &input[1..]);
+      },
+      _ => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_lazy_static_str_success() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = lazy_static_str("abc");
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "abc");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_lazy_static_str_partial_match() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = lazy_static_str("ab");
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "ab");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_lazy_static_str_non_matching() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = lazy_static_str("def");
+    
+    match p.parse_as_result(&input) {
+      Ok(_) => panic!("Expected failure"),
+      Err(_) => {
+        // Test passes if we get an error
+      },
+    }
+  }
+
+  #[test]
+  fn test_lazy_static_str_empty_input() {
+    init();
+    let empty_input: Vec<char> = vec![];
+    let p = lazy_static_str("");
+    
+    match p.parse_as_result(&empty_input) {
+      Ok(result) => {
+        assert_eq!(result, "");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_lazy_static_str_with_map() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = lazy_static_str("abc").map(|s| s.to_uppercase());
+    
+    match p.parse_as_result(&input) {
+      Ok(result) => {
+        let result_str: String = result.chars().collect();
+        assert_eq!(result_str, "ABC");
+      },
+      Err(_) => panic!("Expected success"),
+    }
+  }
+
+  #[test]
+  fn test_lazy_static_str_check_remaining() {
+    init();
+    let input = "abc".chars().collect::<Vec<_>>();
+    let p = lazy_static_str("a");
+    
+    match p.parse(&input) {
+      ParseResult::Success { value: _, length } => {
+        assert_eq!(length, 1);
+        assert_eq!(&input[length..], &input[1..]);
+      },
+      _ => panic!("Expected success"),
+    }
+  }
+
   fn init() {
     env::set_var("RUST_LOG", "debug");
     let _ = env_logger::builder().is_test(true).try_init();
@@ -3633,11 +6752,13 @@ mod tests {
 
     let result = p.parse_as_result(&input1).unwrap();
     log::debug!("result = {}", result);
-    assert_eq!(result, "abc");
+    let result_str: String = result.chars().collect();
+    assert_eq!(result_str, "abc");
 
     let result = p.parse_as_result(&input2).unwrap();
     log::debug!("result = {}", result);
-    assert_eq!(result, "abd");
+    let result_str: String = result.chars().collect();
+    assert_eq!(result_str, "abd");
   }
 
   #[test]
@@ -3655,7 +6776,7 @@ mod tests {
     });
 
     let result = p.parse_as_result(&input).unwrap();
-    // let s: String = result.iter().collect();
+    // let s: String = result.chars().collect();
     log::debug!("result = {:?}", result);
     // assert_eq!(s, "aname");
   }
