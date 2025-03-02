@@ -3188,8 +3188,10 @@ mod tests {
       // Test with non-alphanumeric characters
       {
         let input2 = "abc123!@#".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2).unwrap();
-        assert_eq!(result2, "abc123");
+        {
+          let result2 = p.parse_as_result(&input2).unwrap();
+          assert_eq!(result2, "abc123");
+        }
       }
     }
   }
@@ -3210,8 +3212,10 @@ mod tests {
       // Test with non-alphanumeric characters
       {
         let input2 = "abc123!@#".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2).unwrap();
-        assert_eq!(result2, "abc123");
+        {
+          let result2 = p.parse_as_result(&input2).unwrap();
+          assert_eq!(result2, "abc123");
+        }
       }
     }
   }
@@ -3235,15 +3239,19 @@ mod tests {
       // Test with non-alphabetic characters
       {
         let input2 = "abc123".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2).unwrap();
-        assert_eq!(result2, "abc");
+        {
+          let result2 = p.parse_as_result(&input2).unwrap();
+          assert_eq!(result2, "abc");
+        }
       }
 
       // Test with error case
       {
         let input3 = "123abc".chars().collect::<Vec<_>>();
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
@@ -3264,15 +3272,19 @@ mod tests {
       // Test with non-alphabetic characters
       {
         let input2 = "abc123".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2).unwrap();
-        assert_eq!(result2, "abc");
+        {
+          let result2 = p.parse_as_result(&input2).unwrap();
+          assert_eq!(result2, "abc");
+        }
       }
 
       // Test with error case
       {
         let input3 = "123abc".chars().collect::<Vec<_>>();
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
@@ -3288,9 +3300,13 @@ mod tests {
       assert_eq!(result[0], 'a');
 
       // Test with empty input
-      let input2: Vec<char> = vec![];
-      let result2 = p.parse_as_result(&input2);
-      assert!(result2.is_err());
+      {
+        let input2: Vec<char> = vec![];
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
+      }
     }
   }
 
@@ -3306,9 +3322,13 @@ mod tests {
       assert_eq!(result_char, 'a');
 
       // Test with empty input
-      let input2: Vec<char> = vec![];
-      let result2 = p.parse_as_result(&input2);
-      assert!(result2.is_err());
+      {
+        let input2: Vec<char> = vec![];
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
+      }
     }
   }
 
