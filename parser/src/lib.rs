@@ -3816,15 +3816,19 @@ mod tests {
       // Test with characters not matching the predicate
       {
         let input2 = "defg".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2);
-        assert!(result2.is_err());
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
       }
 
       // Test with empty input
       {
         let input3: Vec<char> = vec![];
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
@@ -3848,15 +3852,19 @@ mod tests {
       // Test with characters not matching the predicate
       {
         let input2 = "defg".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2);
-        assert!(result2.is_err());
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
       }
 
       // Test with empty input
       {
         let input3: Vec<char> = vec![];
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
@@ -3877,15 +3885,19 @@ mod tests {
       // Test with characters not matching the predicate
       {
         let input2 = "defg".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2);
-        assert!(result2.is_err());
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
       }
 
       // Test with empty input
       {
         let input3: Vec<char> = vec![];
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
@@ -3909,15 +3921,19 @@ mod tests {
       // Test with characters not matching the predicate
       {
         let input2 = "defg".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2);
-        assert!(result2.is_err());
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
       }
 
       // Test with empty input
       {
         let input3: Vec<char> = vec![];
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
@@ -3935,15 +3951,19 @@ mod tests {
       // Test with non-matching character
       {
         let input2 = "def".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2);
-        assert!(result2.is_err());
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
       }
 
       // Test with empty input
       {
         let input3: Vec<char> = vec![];
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
@@ -4013,15 +4033,19 @@ mod tests {
       // Test with non-matching character
       {
         let input2 = "def".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2);
-        assert!(result2.is_err());
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
       }
 
       // Test with empty input
       {
         let input3: Vec<char> = vec![];
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
     }
   }
@@ -4304,29 +4328,37 @@ mod tests {
       // Should not match 'b'
       {
         let input2 = "bcd".chars().collect::<Vec<_>>();
-        let result2 = p.parse_as_result(&input2);
-        assert!(result2.is_err());
+        {
+          let result2 = p.parse_as_result(&input2);
+          assert!(result2.is_err());
+        }
       }
 
       // Should not match 'c'
       {
         let input3 = "cde".chars().collect::<Vec<_>>();
-        let result3 = p.parse_as_result(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse_as_result(&input3);
+          assert!(result3.is_err());
+        }
       }
 
       // Should match 'd' and return a reference to it
       {
         let input4 = "def".chars().collect::<Vec<_>>();
-        let result4 = p.parse_as_result(&input4).unwrap();
-        assert_eq!(*result4, 'd');
+        {
+          let result4 = p.parse_as_result(&input4).unwrap();
+          assert_eq!(*result4, 'd');
+        }
       }
 
       // Should fail with empty input
       {
         let input5: Vec<char> = vec![];
-        let result5 = p.parse_as_result(&input5);
-        assert!(result5.is_err());
+        {
+          let result5 = p.parse_as_result(&input5);
+          assert!(result5.is_err());
+        }
       }
     }
   }
@@ -4347,30 +4379,38 @@ mod tests {
       // Test with input that starts with digits
       {
         let input2 = "123abc".chars().collect::<Vec<_>>();
-        let result2 = p.parse(&input2).unwrap();
-        assert_eq!(result2, "123");
+        {
+          let result2 = p.parse(&input2).unwrap();
+          assert_eq!(result2, "123");
+        }
       }
 
       // Test with input that doesn't have digits
       {
         let input3 = "abc".chars().collect::<Vec<_>>();
-        let result3 = p.parse(&input3);
-        assert!(result3.is_err());
+        {
+          let result3 = p.parse(&input3);
+          assert!(result3.is_err());
+        }
       }
 
       // Test with empty input
       {
         let input4: Vec<char> = vec![];
-        let result4 = p.parse(&input4);
-        assert!(result4.is_err());
+        {
+          let result4 = p.parse(&input4);
+          assert!(result4.is_err());
+        }
       }
 
       // Test with more complex regex
       {
         let p2 = regex_static(r"[a-z]+[0-9]+");
         let input5 = "abc123def".chars().collect::<Vec<_>>();
-        let result5 = p2.parse(&input5).unwrap();
-        assert_eq!(result5, "abc123");
+        {
+          let result5 = p2.parse(&input5).unwrap();
+          assert_eq!(result5, "abc123");
+        }
       }
     }
   }
