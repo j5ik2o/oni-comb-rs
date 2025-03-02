@@ -50,7 +50,7 @@ impl<'a, I, A: 'a> StaticParser<'a, I, A> {
     let method = self.method.clone();
     let f_clone = f.clone();
 
-    StaticParser::new(move |state| match method(state) {
+    StaticParser::new(move |state| match (method)(state) {
       ParseResult::Success { value, length } => ParseResult::successful(f_clone(value), length),
       ParseResult::Failure {
         error,
@@ -75,7 +75,7 @@ impl<'a, I, A: 'a> StaticParser<'a, I, A> {
     let method = self.method.clone();
     let f_clone = f.clone();
 
-    StaticParser::new(move |state| match method(state) {
+    StaticParser::new(move |state| match (method)(state) {
       ParseResult::Success { value, length } => {
         if f_clone(&value) {
           ParseResult::successful(value, length)
@@ -112,7 +112,7 @@ impl<'a, I, A: 'a> StaticParser<'a, I, A> {
     let method = self.method.clone();
     let f_clone = f.clone();
 
-    StaticParser::new(move |state| match method(state) {
+    StaticParser::new(move |state| match (method)(state) {
       ParseResult::Success { value: a, length: n } => {
         let ps = state.add_offset(n);
         let parser_b = f_clone(a);
@@ -141,7 +141,7 @@ impl<'a, I, A: 'a> StaticParser<'a, I, A> {
       let mut current_offset = 0;
 
       // 最初の要素をパース
-      match method(state) {
+      match (method)(state) {
         ParseResult::Success { value, length } => {
           result.push(value);
           total_length += length;
@@ -162,12 +162,12 @@ impl<'a, I, A: 'a> StaticParser<'a, I, A> {
         let current_state = state.add_offset(current_offset);
 
         // 区切り文字をパース
-        match sep_clone(&current_state) {
+        match (sep_clone)(&current_state) {
           ParseResult::Success { length: sep_length, .. } => {
             let next_state = current_state.add_offset(sep_length);
 
             // 次の要素をパース
-            match method(&next_state) {
+            match (method)(&next_state) {
               ParseResult::Success { value, length } => {
                 result.push(value);
                 total_length += sep_length + length;
@@ -216,7 +216,7 @@ impl<'a, I, A: 'a> StaticParser<'a, I, A> {
 
       loop {
         let current_state = state.add_offset(current_offset);
-        match method(&current_state) {
+        match (method)(&current_state) {
           ParseResult::Success { value, length } => {
             result.push(value);
             total_length += length;
@@ -245,7 +245,7 @@ impl<'a, I, A: 'a> StaticParser<'a, I, A> {
     A: Clone + 'a, {
     let method = self.method.clone();
 
-    StaticParser::new(move |state| match method(state) {
+    StaticParser::new(move |state| match (method)(state) {
       ParseResult::Success { value, length } => {
         let mut result = Vec::new();
         result.push(value);
@@ -261,7 +261,7 @@ impl<'a, I, A: 'a> StaticParser<'a, I, A> {
   /// StaticParserをParserに変換する
   pub fn to_parser(self) -> Parser<'a, I, A> {
     let method = self.method.clone();
-    Parser::new(move |state| method(state))
+    Parser::new(move |state| (method)(state))
   }
 }
 
@@ -273,6 +273,6 @@ impl<'a, I, A: 'a> Parser<'a, I, A> {
   )]
   pub fn to_static_parser(self) -> StaticParser<'a, I, A> {
     let method = self.method;
-    StaticParser::new(move |state| method(state))
+    StaticParser::new(move |state| (method)(state))
   }
 }
