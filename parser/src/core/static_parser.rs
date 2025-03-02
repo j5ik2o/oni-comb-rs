@@ -2,9 +2,12 @@ use crate::core::{ParseResult, ParseState, Parser};
 use std::marker::PhantomData;
 use std::rc::Rc;
 
+/// StaticParserの内部関数型
+pub type StaticParseFn<'a, I, A> = dyn Fn(&ParseState<'a, I>) -> ParseResult<'a, I, A> + 'a;
+
 /// 静的ディスパッチを使用した最適化されたパーサー実装
 pub struct StaticParser<'a, I, A: 'a> {
-  pub(crate) method: Rc<dyn Fn(&ParseState<'a, I>) -> ParseResult<'a, I, A> + 'a>,
+  pub(crate) method: Rc<StaticParseFn<'a, I, A>>,
   _phantom: PhantomData<&'a I>,
 }
 
@@ -264,6 +267,10 @@ impl<'a, I, A: 'a> StaticParser<'a, I, A> {
 
 /// ParserからStaticParserへの変換
 impl<'a, I, A: 'a> Parser<'a, I, A> {
+  #[deprecated(
+    since = "1.0.0",
+    note = "直接StaticParserを使用してください。将来のバージョンで削除される予定です。"
+  )]
   pub fn to_static_parser(self) -> StaticParser<'a, I, A> {
     let method = self.method;
     StaticParser::new(move |state| method(state))
