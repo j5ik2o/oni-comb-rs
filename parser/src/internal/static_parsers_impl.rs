@@ -1,12 +1,104 @@
-use crate::core::{CommittedStatus, Element, ParseError, ParseResult, StaticParser};
-use crate::prelude::OperatorParser;
+use crate::core::{CommittedStatus, Element, ParseError, ParseResult, StaticParser, StaticParsers};
+use crate::extension::parsers::{
+  StaticElementsParsers, StaticLoggingParsers, StaticPrimitiveParsers, StaticRepeatParsers,
+};
 use regex::Regex;
 use std::char;
 use std::fmt::{Debug, Display};
 use std::str;
 
+pub mod elements_parsers_impl;
+pub mod logging_parsers_impl;
+pub mod primitive_parsers_impl;
+pub mod repeat_parsers_impl;
+
 /// StaticParserの実装を提供する構造体
 pub struct StaticParsersImpl;
+
+impl StaticParsers for StaticParsersImpl {
+  type P<'p, I, A>
+    = StaticParser<'p, I, A>
+  where
+    I: 'p,
+    A: 'p + 'static;
+
+  fn parse<'a, 'b, I, A>(parser: &Self::P<'a, I, A>, input: &'b [I]) -> Result<A, ParseError<'a, I>>
+  where
+    A: 'a + 'static,
+    'b: 'a, {
+    use crate::prelude::ParserRunner;
+    parser
+      .parse(input)
+      .success()
+      .ok_or_else(|| ParseError::of_custom(0, None, "Parse failed".to_string()))
+  }
+
+  fn successful<'a, I, A>(value: A) -> Self::P<'a, I, A>
+  where
+    A: Clone + 'a + 'static, {
+    StaticParser::new(move |_| ParseResult::successful(value.clone(), 0))
+  }
+
+  fn successful_lazy<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
+  where
+    F: Fn() -> A + 'a,
+    A: 'a + 'static, {
+    StaticParser::new(move |_| ParseResult::successful(value(), 0))
+  }
+
+  fn failed<'a, I, A>(value: ParseError<'a, I>, committed: CommittedStatus) -> Self::P<'a, I, A>
+  where
+    I: Clone + 'a,
+    A: 'a + 'static, {
+    StaticParser::new(move |_| ParseResult::failed(value.clone(), committed))
+  }
+
+  fn failed_lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
+  where
+    F: Fn() -> (ParseError<'a, I>, CommittedStatus) + 'a,
+    I: 'a,
+    A: 'a + 'static, {
+    StaticParser::new(move |_| {
+      let (error, committed) = f();
+      ParseResult::failed(error, committed)
+    })
+  }
+
+  fn filter<'a, I, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
+  where
+    F: Fn(&A) -> bool + 'a + Clone,
+    I: 'a + Clone,
+    A: 'a + 'static + Clone, {
+    // 直接実装を使用
+    Self::flat_map(parser, move |a| {
+      if f(&a) {
+        Self::successful(a)
+      } else {
+        Self::failed(
+          ParseError::of_custom(0, None, "Filter predicate failed".to_string()),
+          CommittedStatus::Uncommitted,
+        )
+      }
+    })
+  }
+
+  fn flat_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  where
+    F: Fn(A) -> Self::P<'a, I, B> + 'a + Clone,
+    A: 'a + 'static,
+    B: 'a + 'static + Clone, {
+    parser.flat_map(f)
+  }
+
+  fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  where
+    F: Fn(A) -> B + 'a + Clone,
+    A: 'a + 'static,
+    B: Clone + 'a + 'static, {
+    // 直接実装を使用
+    Self::flat_map(parser, move |a| Self::successful(f(a)))
+  }
+}
 
 impl StaticParsersImpl {
   // Helper functions for lazy_static tests
@@ -494,13 +586,14 @@ impl StaticParsersImpl {
   }
 
   /// 指定したシーケンスを解析するStaticParserを返します。
-  pub fn seq<'a, I>(elements: &'a [I]) -> StaticParser<'a, I, &'a [I]>
+  pub fn seq<'a, I>(elements: &'a [I]) -> StaticParser<'a, I, Vec<I>>
   where
-    I: Element + PartialEq + Debug + 'a, {
+    I: Element + PartialEq + Debug + Clone + 'a + 'static, {
+    let elements_vec = elements.to_vec();
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
-      let elements_len = elements.len();
+      let elements_len = elements_vec.len();
 
       if offset + elements_len > input.len() {
         let msg = format!("unexpected end of input");
@@ -509,10 +602,10 @@ impl StaticParsersImpl {
       }
 
       for i in 0..elements_len {
-        if input[offset + i] != elements[i] {
+        if input[offset + i] != elements_vec[i] {
           let msg = format!(
             "expected: {:?}, but got: {:?}",
-            elements,
+            elements_vec,
             &input[offset..offset + elements_len]
           );
           let pe = ParseError::of_mismatch(input, offset, 0, msg);
@@ -520,7 +613,7 @@ impl StaticParsersImpl {
         }
       }
 
-      ParseResult::successful(elements, elements_len)
+      ParseResult::successful(elements_vec.clone(), elements_len)
     })
   }
 

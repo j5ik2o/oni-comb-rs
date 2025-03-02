@@ -5,7 +5,7 @@ pub trait ParserFunctor<'a>: ParserPure<'a> {
   /// 解析結果を変換する[Parser]を返す。
   fn map<B, F>(self, f: F) -> Self::P<'a, Self::Input, B>
   where
-    F: Fn(Self::Output) -> B + 'a,
+    F: Fn(Self::Output) -> B + 'a + Clone,
     Self::Input: 'a,
     Self::Output: Clone + 'a,
     B: Clone + 'a;
