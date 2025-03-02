@@ -8,7 +8,7 @@ impl ElementParsers for ParsersImpl {
   fn elm_pred_ref<'a, I, F>(f: F) -> Self::P<'a, I, &'a I>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + PartialEq + 'a, {
+    I: Element + PartialEq + 'a + 'static, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       if let Some(actual) = input.get(0) {
@@ -26,43 +26,43 @@ impl ElementParsers for ParsersImpl {
 
   fn elm_space_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a, {
+    I: Element + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(Element::is_ascii_space)
   }
 
   fn elm_multi_space_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a, {
+    I: Element + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(Element::is_ascii_multi_space)
   }
 
   fn elm_alpha_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a, {
+    I: Element + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(Element::is_ascii_alpha)
   }
 
   fn elm_alpha_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a, {
+    I: Element + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(Element::is_ascii_alpha_digit)
   }
 
   fn elm_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a, {
+    I: Element + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(Element::is_ascii_digit)
   }
 
   fn elm_hex_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a, {
+    I: Element + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(Element::is_ascii_hex_digit)
   }
 
   fn elm_oct_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a, {
+    I: Element + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(Element::is_ascii_oct_digit)
   }
 

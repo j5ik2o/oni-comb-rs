@@ -105,7 +105,7 @@ impl<'a, I, A: 'a> OperatorParser<'a> for StaticParser<'a, I, A> {
 
   fn scan_right1<BOP>(self, op: Self::P<'a, Self::Input, BOP>) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a, {
     let method1 = self.method.clone();
     let _method2 = op.method.clone();
@@ -132,7 +132,7 @@ impl<'a, I, A: 'a> OperatorParser<'a> for StaticParser<'a, I, A> {
     x: Self::Output,
   ) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a, {
     let default_value = x.clone();
     let value = default_value.clone();
@@ -147,7 +147,7 @@ impl<'a, I, A: 'a> OperatorParser<'a> for StaticParser<'a, I, A> {
     x: Self::Output,
   ) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a, {
     let default_value = x.clone();
     let value = default_value.clone();
@@ -158,14 +158,14 @@ impl<'a, I, A: 'a> OperatorParser<'a> for StaticParser<'a, I, A> {
 
   fn chain_right1<BOP>(self, op: Self::P<'a, Self::Input, BOP>) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a, {
     self.clone().scan_right1(op)
   }
 
   fn chain_left1<BOP>(self, op: Self::P<'a, Self::Input, BOP>) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a, {
     let method1 = self.method.clone();
     let _method2 = op.method.clone();
@@ -188,7 +188,7 @@ impl<'a, I, A: 'a> OperatorParser<'a> for StaticParser<'a, I, A> {
     x: Self::Output,
   ) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a, {
     let default_value = x.clone();
     let method1 = op.method.clone();
@@ -220,7 +220,7 @@ impl<'a, I, A: 'a> OperatorParser<'a> for StaticParser<'a, I, A> {
     x: Self::Output,
   ) -> Self::P<'a, Self::Input, Self::Output>
   where
-    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a,
+    BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a, {
     let default_value = x.clone();
     let method1 = op.method.clone();

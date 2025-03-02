@@ -6,16 +6,16 @@ use std::fmt::Debug;
 use std::iter::FromIterator;
 
 impl ElementsParsers for ParsersImpl {
-  fn seq<'a, 'b, I>(seq: &'b [I]) -> Self::P<'a, I, &'a [I]>
+  fn seq<'a, 'b, I>(seq: &'b [I]) -> Self::P<'a, I, Vec<I>>
   where
-    I: PartialEq + Debug + 'a,
+    I: PartialEq + Debug + Clone + 'a,
     'b: 'a, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       let mut index = 0;
       loop {
         if index == seq.len() {
-          return ParseResult::successful(seq, index);
+          return ParseResult::successful(seq.to_vec(), index);
         }
         if let Some(str) = input.get(index) {
           if seq[index] != *str {
@@ -33,7 +33,7 @@ impl ElementsParsers for ParsersImpl {
   }
 
   #[inline(always)]
-  fn tag<'a, 'b>(tag: &'b str) -> Self::P<'a, char, &'a str>
+  fn tag<'a, 'b>(tag: &'b str) -> Self::P<'a, char, String>
   where
     'b: 'a, {
     Parser::new(move |parse_state| {
@@ -52,11 +52,11 @@ impl ElementsParsers for ParsersImpl {
         }
         index += 1;
       }
-      ParseResult::successful(tag, index)
+      ParseResult::successful(tag.to_string(), index)
     })
   }
 
-  fn tag_no_case<'a, 'b>(tag: &'b str) -> Self::P<'a, char, &'a str>
+  fn tag_no_case<'a, 'b>(tag: &'b str) -> Self::P<'a, char, String>
   where
     'b: 'a, {
     Parser::new(move |parse_state: &ParseState<char>| {
@@ -75,7 +75,7 @@ impl ElementsParsers for ParsersImpl {
         }
         index += 1;
       }
-      ParseResult::successful(tag, index)
+      ParseResult::successful(tag.to_string(), index)
     })
   }
 

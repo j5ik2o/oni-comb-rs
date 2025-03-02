@@ -11,36 +11,41 @@ use crate::extension::parser::RepeatParser;
 use crate::utils::{Bound, RangeArgument};
 use std::fmt::Debug;
 
-impl<'a, I, A: 'a> RepeatParser<'a> for StaticParser<'a, I, A> {
+impl<'a, I: Clone, A: 'a + Clone> RepeatParser<'a> for StaticParser<'a, I, A> {
   fn repeat<R>(self, range: R) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     R: RangeArgument<usize> + Debug + 'a,
-    Self::Output: Debug + 'a,
+    Self::Input: Clone + 'a,
+    Self::Output: Clone + Debug + 'a,
     Self: Sized, {
     self.of_rep_sep(range, None as Option<StaticParser<'a, I, ()>>)
   }
 
   fn of_many0(self) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
-    Self::Output: Debug + 'a, {
+    Self::Input: Clone + 'a,
+    Self::Output: Clone + Debug + 'a, {
     self.of_rep_sep(0.., None as Option<StaticParser<'a, I, ()>>)
   }
 
   fn of_many1(self) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
-    Self::Output: Debug + 'a, {
+    Self::Input: Clone + 'a,
+    Self::Output: Clone + Debug + 'a, {
     self.of_rep_sep(1.., None as Option<StaticParser<'a, I, ()>>)
   }
 
   fn of_many_n_m(self, n: usize, m: usize) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
-    Self::Output: Debug + 'a, {
+    Self::Input: Clone + 'a,
+    Self::Output: Clone + Debug + 'a, {
     self.of_rep_sep(n..=m, None as Option<StaticParser<'a, I, ()>>)
   }
 
   fn of_count(self, n: usize) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
-    Self::Output: Debug + 'a, {
+    Self::Input: Clone + 'a,
+    Self::Output: Clone + Debug + 'a, {
     self.of_rep_sep(n, None as Option<StaticParser<'a, I, ()>>)
   }
 
@@ -51,8 +56,9 @@ impl<'a, I, A: 'a> RepeatParser<'a> for StaticParser<'a, I, A> {
   ) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
     R: RangeArgument<usize> + Debug + 'a,
-    Self::Output: Debug + 'a,
-    B: Debug + 'a, {
+    Self::Input: Clone + 'a,
+    Self::Output: Clone + Debug + 'a,
+    B: Clone + Debug + 'a, {
     let method = self.method.clone();
     let separator_clone = separator.clone();
 
@@ -119,15 +125,17 @@ impl<'a, I, A: 'a> RepeatParser<'a> for StaticParser<'a, I, A> {
 
   fn of_many0_sep<B>(self, separator: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
-    Self::Output: Debug + 'a,
-    B: Debug + 'a, {
+    Self::Input: Clone + 'a,
+    Self::Output: Clone + Debug + 'a,
+    B: Clone + Debug + 'a, {
     self.of_rep_sep(0.., Some(separator))
   }
 
   fn of_many1_sep<B>(self, separator: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
-    Self::Output: Debug + 'a,
-    B: Debug + 'a, {
+    Self::Input: Clone + 'a,
+    Self::Output: Clone + Debug + 'a,
+    B: Clone + Debug + 'a, {
     self.of_rep_sep(1.., Some(separator))
   }
 
@@ -138,8 +146,9 @@ impl<'a, I, A: 'a> RepeatParser<'a> for StaticParser<'a, I, A> {
     separator: Self::P<'a, Self::Input, B>,
   ) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
-    Self::Output: Debug + 'a,
-    B: Debug + 'a, {
+    Self::Input: Clone + 'a,
+    Self::Output: Clone + Debug + 'a,
+    B: Clone + Debug + 'a, {
     self.of_rep_sep(n..=m, Some(separator))
   }
 
@@ -149,8 +158,9 @@ impl<'a, I, A: 'a> RepeatParser<'a> for StaticParser<'a, I, A> {
     separator: Self::P<'a, Self::Input, B>,
   ) -> Self::P<'a, Self::Input, Vec<Self::Output>>
   where
-    Self::Output: Debug + 'a,
-    B: Debug + 'a, {
+    Self::Input: Clone + 'a,
+    Self::Output: Clone + Debug + 'a,
+    B: Clone + Debug + 'a, {
     self.of_rep_sep(n, Some(separator))
   }
 }

@@ -165,9 +165,9 @@ fn test_static_parser_collect() {
 fn test_static_parser_conversion() {
   // 数値文字列のテスト
   {
-    let text = "123";
-    let chars = text.chars().collect::<Vec<_>>();
-    let input: Vec<&char> = chars.iter().collect();
+    // 静的な文字配列を使用
+    static DIGITS: [char; 3] = ['1', '2', '3'];
+    let char_refs: Vec<&char> = DIGITS.iter().collect();
 
     // 数値文字列を解析するパーサーを作成
     let digit_parser = elm_digit().clone().to_static_parser().of_many1().map(|digits| {
@@ -176,7 +176,7 @@ fn test_static_parser_conversion() {
     });
 
     let parser = digit_parser.map_res(|s| s.parse::<i32>());
-    let result = parser.parse(&input);
+    let result = parser.parse(&char_refs);
 
     assert!(result.is_success());
     assert_eq!(result.success().unwrap(), 123);
@@ -184,9 +184,9 @@ fn test_static_parser_conversion() {
 
   // 非数値文字列のテスト
   {
-    let text = "abc";
-    let chars = text.chars().collect::<Vec<_>>();
-    let input: Vec<&char> = chars.iter().collect();
+    // 静的な文字配列を使用
+    static LETTERS: [char; 3] = ['a', 'b', 'c'];
+    let char_refs: Vec<&char> = LETTERS.iter().collect();
 
     // 数値文字列を解析するパーサーを作成
     let digit_parser = elm_digit().clone().to_static_parser().of_many1().map(|digits| {
@@ -195,7 +195,7 @@ fn test_static_parser_conversion() {
     });
 
     let parser = digit_parser.map_res(|s| s.parse::<i32>());
-    let result = parser.parse(&input);
+    let result = parser.parse(&char_refs);
 
     assert!(result.is_failure());
   }

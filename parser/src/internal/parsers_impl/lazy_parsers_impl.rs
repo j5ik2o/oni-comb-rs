@@ -6,8 +6,8 @@ use std::fmt::Debug;
 impl LazyParsers for ParsersImpl {
   fn lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
   where
-    F: Fn() -> Self::P<'a, I, A> + 'a,
-    A: Debug + 'a, {
+    F: Fn() -> Self::P<'a, I, A> + 'a + Clone,
+    A: Clone + Debug + 'a, {
     Self::successful(()).flat_map(move |_| f())
   }
 }

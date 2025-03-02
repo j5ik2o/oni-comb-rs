@@ -243,11 +243,11 @@ fn path<'a>() -> Parser<'a, u8, String> {
     .map(String::from)
 }
 
-fn reference_left_bracket<'a>() -> Parser<'a, u8, &'a [u8]> {
-  seq(b"${").collect().surround(space_or_comment(), space_or_comment())
+fn reference_left_bracket<'a>() -> Parser<'a, u8, Vec<u8>> {
+  seq(b"${").surround(space_or_comment(), space_or_comment())
 }
 
-fn reference_right_bracket<'a>() -> Parser<'a, u8, &'a [u8]> {
+fn reference_right_bracket<'a>() -> Parser<'a, u8, Vec<u8>> {
   seq(b"}").surround(space_or_comment(), space_or_comment())
 }
 

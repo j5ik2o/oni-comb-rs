@@ -29,35 +29,35 @@ fn div<'a>() -> Parser<'a, char, &'a char> {
   space() * elm_ref('/') - space()
 }
 
-fn lbracket<'a>() -> Parser<'a, char, &'a str> {
+fn lbracket<'a>() -> Parser<'a, char, String> {
   space() * tag("[") - space()
 }
 
-fn rbracket<'a>() -> Parser<'a, char, &'a str> {
+fn rbracket<'a>() -> Parser<'a, char, String> {
   space() * tag("]") - space()
 }
 
-fn lbrace<'a>() -> Parser<'a, char, &'a str> {
+fn lbrace<'a>() -> Parser<'a, char, String> {
   space() * tag("{") - space()
 }
 
-fn rbrace<'a>() -> Parser<'a, char, &'a str> {
+fn rbrace<'a>() -> Parser<'a, char, String> {
   space() * tag("}") - space()
 }
 
-fn lparen<'a>() -> Parser<'a, char, &'a str> {
+fn lparen<'a>() -> Parser<'a, char, String> {
   space() * tag("(") - space()
 }
 
-fn rparen<'a>() -> Parser<'a, char, &'a str> {
+fn rparen<'a>() -> Parser<'a, char, String> {
   space() * tag(")") - space()
 }
 
-fn comma<'a>() -> Parser<'a, char, &'a str> {
+fn comma<'a>() -> Parser<'a, char, String> {
   space() * tag(",") - space()
 }
 
-fn semi_colon<'a>() -> Parser<'a, char, &'a str> {
+fn semi_colon<'a>() -> Parser<'a, char, String> {
   space() * tag(";") - space()
 }
 
@@ -224,7 +224,7 @@ fn comparative<'a>() -> Parser<'a, char, Rc<Expr>> {
           | neq.attempt()
           | eqeq)
         - space())
-      .map(|e| match e {
+      .map(|e| match e.as_str() {
         "&&" => Expr::of_and,
         "||" => Expr::of_or,
         "<=" => Expr::of_less_or_equal,
@@ -262,7 +262,7 @@ fn array_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
 }
 
 fn bool_literal<'a>() -> Parser<'a, char, Rc<Expr>> {
-  let p = (tag("true").attempt() | tag("false")).map(|e| match e {
+  let p = (tag("true").attempt() | tag("false")).map(|e| match e.as_str() {
     "true" => Expr::of_bool_literal(true),
     "false" => Expr::of_bool_literal(false),
     _ => panic!("unexpected token"),
