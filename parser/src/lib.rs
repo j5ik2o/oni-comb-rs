@@ -4083,12 +4083,10 @@ mod tests {
       assert_eq!(result, ());
 
       // Test with non-empty input - should fail
+      let input2 = "abc".chars().collect::<Vec<_>>();
       {
-        let input2 = "abc".chars().collect::<Vec<_>>();
-        {
-          let result2 = p.parse_as_result(&input2);
-          assert!(result2.is_err());
-        }
+        let result2 = p.parse_as_result(&input2);
+        assert!(result2.is_err());
       }
     }
   }
@@ -4154,8 +4152,8 @@ mod tests {
       }
 
       // Test with empty input
+      let input2: Vec<char> = vec![];
       {
-        let input2: Vec<char> = vec![];
         let result2 = p.parse_as_result(&input2);
         assert!(result2.is_err());
       }
@@ -4189,8 +4187,8 @@ mod tests {
       }
 
       // Test with empty input
+      let input2: Vec<char> = vec![];
       {
-        let input2: Vec<char> = vec![];
         let result2 = p1.parse_as_result(&input2);
         assert!(result2.is_err());
       }
@@ -4217,8 +4215,8 @@ mod tests {
       assert_eq!(result.unwrap(), 'a');
 
       // Test with empty input
+      let input2: Vec<char> = vec![];
       {
-        let input2: Vec<char> = vec![];
         let result2 = p1.parse_as_result(&input2);
         assert!(result2.is_err());
       }
@@ -4283,29 +4281,29 @@ mod tests {
       assert_eq!(result, 'a');
 
       // Should not match 'b'
+      let input2 = "bcd".chars().collect::<Vec<_>>();
       {
-        let input2 = "bcd".chars().collect::<Vec<_>>();
         let result2 = p.parse_as_result(&input2);
         assert!(result2.is_err());
       }
 
       // Should not match 'c'
+      let input3 = "cde".chars().collect::<Vec<_>>();
       {
-        let input3 = "cde".chars().collect::<Vec<_>>();
         let result3 = p.parse_as_result(&input3);
         assert!(result3.is_err());
       }
 
       // Should match 'd'
+      let input4 = "def".chars().collect::<Vec<_>>();
       {
-        let input4 = "def".chars().collect::<Vec<_>>();
         let result4 = p.parse_as_result(&input4).unwrap();
         assert_eq!(result4, 'd');
       }
 
       // Should fail with empty input
+      let input5: Vec<char> = vec![];
       {
-        let input5: Vec<char> = vec![];
         let result5 = p.parse_as_result(&input5);
         assert!(result5.is_err());
       }
@@ -4326,39 +4324,31 @@ mod tests {
       assert_eq!(*result, 'a');
 
       // Should not match 'b'
+      let input2 = "bcd".chars().collect::<Vec<_>>();
       {
-        let input2 = "bcd".chars().collect::<Vec<_>>();
-        {
-          let result2 = p.parse_as_result(&input2);
-          assert!(result2.is_err());
-        }
+        let result2 = p.parse_as_result(&input2);
+        assert!(result2.is_err());
       }
 
       // Should not match 'c'
+      let input3 = "cde".chars().collect::<Vec<_>>();
       {
-        let input3 = "cde".chars().collect::<Vec<_>>();
-        {
-          let result3 = p.parse_as_result(&input3);
-          assert!(result3.is_err());
-        }
+        let result3 = p.parse_as_result(&input3);
+        assert!(result3.is_err());
       }
 
       // Should match 'd' and return a reference to it
+      let input4 = "def".chars().collect::<Vec<_>>();
       {
-        let input4 = "def".chars().collect::<Vec<_>>();
-        {
-          let result4 = p.parse_as_result(&input4).unwrap();
-          assert_eq!(*result4, 'd');
-        }
+        let result4 = p.parse_as_result(&input4).unwrap();
+        assert_eq!(*result4, 'd');
       }
 
       // Should fail with empty input
+      let input5: Vec<char> = vec![];
       {
-        let input5: Vec<char> = vec![];
-        {
-          let result5 = p.parse_as_result(&input5);
-          assert!(result5.is_err());
-        }
+        let result5 = p.parse_as_result(&input5);
+        assert!(result5.is_err());
       }
     }
   }
@@ -4540,13 +4530,11 @@ mod tests {
       assert_eq!(counter.get(), 2);
 
       // Test with empty input
+      let input2: Vec<char> = vec![];
       {
-        let input2: Vec<char> = vec![];
-        {
-          let result3 = p.parse_as_result(&input2).unwrap();
-          assert_eq!(result3, "result");
-          assert_eq!(counter.get(), 3);
-        }
+        let result3 = p.parse_as_result(&input2).unwrap();
+        assert_eq!(result3, "result");
+        assert_eq!(counter.get(), 3);
       }
     }
 
@@ -4587,8 +4575,8 @@ mod tests {
       assert_eq!(result2, "result");
 
       // Test with empty input
+      let input2: Vec<char> = vec![];
       {
-        let input2: Vec<char> = vec![];
         let result3 = p.parse_as_result(&input2).unwrap();
         assert_eq!(result3, "result");
       }
@@ -4642,29 +4630,29 @@ mod tests {
       assert_eq!(result, 'c'); // surround returns the result of the content parser
 
       // Test with missing closing character
+      let input2 = "(abc".chars().collect::<Vec<_>>();
       {
-        let input2 = "(abc".chars().collect::<Vec<_>>();
         let result2 = p.parse_as_result(&input2);
         assert!(result2.is_err());
       }
 
       // Test with missing opening character
+      let input3 = "abc)".chars().collect::<Vec<_>>();
       {
-        let input3 = "abc)".chars().collect::<Vec<_>>();
         let result3 = p.parse_as_result(&input3);
         assert!(result3.is_err());
       }
 
       // Test with non-matching content
+      let input4 = "(xyz)".chars().collect::<Vec<_>>();
       {
-        let input4 = "(xyz)".chars().collect::<Vec<_>>();
         let result4 = p.parse_as_result(&input4);
         assert!(result4.is_err());
       }
 
       // Test with empty input
+      let input5: Vec<char> = vec![];
       {
-        let input5: Vec<char> = vec![];
         let result5 = p.parse_as_result(&input5);
         assert!(result5.is_err());
       }
@@ -4677,8 +4665,8 @@ mod tests {
       }
 
       // Test with different opening and closing characters
+      let input7 = "[abc]".chars().collect::<Vec<_>>();
       {
-        let input7 = "[abc]".chars().collect::<Vec<_>>();
         let open_parser2 = elm_static('[');
         let close_parser2 = elm_static(']');
         let p2 = surround_static(open_parser2, content_parser, close_parser2);
