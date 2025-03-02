@@ -4603,7 +4603,7 @@ mod tests {
       {
         let counter = std::rc::Rc::new(std::cell::Cell::new(0));
         let counter_clone = counter.clone();
-        let p = failed_lazy_static(move || {
+        let p: static_parser::StaticParser<'_, char, char> = failed_lazy_static(move || {
           counter_clone.set(counter_clone.get() + 1);
           (
             ParseError::of_mismatch(&input, 0, 0, format!("error message: {}", counter_clone.get())),
