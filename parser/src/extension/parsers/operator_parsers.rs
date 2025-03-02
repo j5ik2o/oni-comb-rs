@@ -3,175 +3,175 @@ use std::fmt::Debug;
 use crate::core::{Parser, Parsers, StaticParser, StaticParsers};
 
 pub trait OperatorParsers: Parsers {
-  fn exists<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
+  fn exists<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
   where
     A: Debug + 'a;
 
-  fn not<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, ()>
+  fn not<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, ()>
   where
     A: Debug + 'a;
 
-  fn opt<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, Option<A>>
+  fn opt<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, Option<A>>
   where
     A: Clone + Debug + 'a, {
     Self::or(Self::map(Self::attempt(parser), Some), Self::successful(None))
   }
 
-  fn or<'a, I, A>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, A>) -> Self::P<'a, I, A>
+  fn or<'a, I: Clone, A>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, A>) -> Self::P<'a, I, A>
   where
     A: Debug + 'a;
 
-  fn and_then<'a, I, A, B>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, B>) -> Self::P<'a, I, (A, B)>
+  fn and_then<'a, I: Clone, A, B>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, B>) -> Self::P<'a, I, (A, B)>
   where
     A: Clone + Debug + 'a,
     B: Clone + Debug + 'a;
 
-  fn attempt<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
+  fn attempt<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
   where
     A: Debug + 'a;
 
-  fn scan_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
+  fn scan_right1<'a, I: Clone, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a;
 
-  fn chain_right0<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
+  fn chain_right0<'a, I: Clone, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a, {
     Self::or(Self::chain_right1(p, op), Self::successful(x.clone()))
   }
 
-  fn chain_left0<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
+  fn chain_left0<'a, I: Clone, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a, {
     Self::or(Self::chain_left1(p, op), Self::successful(x.clone()))
   }
 
-  fn chain_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
+  fn chain_right1<'a, I: Clone, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a, {
     Self::scan_right1(p, op)
   }
 
-  fn chain_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
+  fn chain_left1<'a, I: Clone, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a;
 
-  fn rest_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
+  fn rest_right1<'a, I: Clone, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a;
 
-  fn rest_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
+  fn rest_left1<'a, I: Clone, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a;
 }
 
 pub trait StaticOperatorParsers: StaticParsers {
-  fn exists<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
+  fn exists<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
   where
     A: Debug + 'a + 'static;
 
-  fn not<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, ()>
+  fn not<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, ()>
   where
     A: Debug + 'a + 'static;
 
-  fn opt<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, Option<A>>
+  fn opt<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, Option<A>>
   where
     A: Clone + Debug + 'a + 'static, {
     Self::or(Self::map(Self::attempt(parser), Some), Self::successful(None))
   }
 
-  fn or<'a, I, A>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, A>) -> Self::P<'a, I, A>
+  fn or<'a, I: Clone, A>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, A>) -> Self::P<'a, I, A>
   where
     A: Debug + 'a + 'static;
 
-  fn and_then<'a, I, A, B>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, B>) -> Self::P<'a, I, (A, B)>
+  fn and_then<'a, I: Clone, A, B>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, B>) -> Self::P<'a, I, (A, B)>
   where
     A: Clone + Debug + 'a + 'static,
     B: Clone + Debug + 'a + 'static;
 
-  fn attempt<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
+  fn attempt<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
   where
     A: Debug + 'a + 'static;
 
-  fn scan_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
+  fn scan_right1<'a, I: Clone, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a + 'static;
 
-  fn chain_right0<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
+  fn chain_right0<'a, I: Clone, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a + 'static, {
     Self::or(Self::chain_right1(p, op), Self::successful(x.clone()))
   }
 
-  fn chain_left0<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
+  fn chain_left0<'a, I: Clone, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a + 'static, {
     Self::or(Self::chain_left1(p, op), Self::successful(x.clone()))
   }
 
-  fn chain_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
+  fn chain_right1<'a, I: Clone, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a + 'static, {
     Self::scan_right1(p, op)
   }
 
-  fn chain_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
+  fn chain_left1<'a, I: Clone, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a + 'static;
 
-  fn rest_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
+  fn rest_right1<'a, I: Clone, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a + 'static;
 
-  fn rest_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
+  fn rest_left1<'a, I: Clone, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a + 'static;
 }
 
 // 既存のParserを使用する関数
-pub fn exists<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, bool>
+pub fn exists<'a, I: Clone, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, bool>
 where
   A: Debug + 'a, {
   use crate::internal::parsers_impl::ParsersImpl;
   <ParsersImpl as OperatorParsers>::exists(parser)
 }
 
-pub fn not<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, ()>
+pub fn not<'a, I: Clone, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, ()>
 where
   A: Debug + 'a, {
   use crate::internal::parsers_impl::ParsersImpl;
   <ParsersImpl as OperatorParsers>::not(parser)
 }
 
-pub fn opt<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, Option<A>>
+pub fn opt<'a, I: Clone, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, Option<A>>
 where
   A: Clone + Debug + 'a, {
   use crate::internal::parsers_impl::ParsersImpl;
   <ParsersImpl as OperatorParsers>::opt(parser)
 }
 
-pub fn or<'a, I, A>(parser1: Parser<'a, I, A>, parser2: Parser<'a, I, A>) -> Parser<'a, I, A>
+pub fn or<'a, I: Clone, A>(parser1: Parser<'a, I, A>, parser2: Parser<'a, I, A>) -> Parser<'a, I, A>
 where
   A: Debug + 'a, {
   use crate::internal::parsers_impl::ParsersImpl;
   <ParsersImpl as OperatorParsers>::or(parser1, parser2)
 }
 
-pub fn and_then<'a, I, A, B>(parser1: Parser<'a, I, A>, parser2: Parser<'a, I, B>) -> Parser<'a, I, (A, B)>
+pub fn and_then<'a, I: Clone, A, B>(parser1: Parser<'a, I, A>, parser2: Parser<'a, I, B>) -> Parser<'a, I, (A, B)>
 where
   A: Clone + Debug + 'a,
   B: Clone + Debug + 'a, {
@@ -179,14 +179,14 @@ where
   <ParsersImpl as OperatorParsers>::and_then(parser1, parser2)
 }
 
-pub fn attempt<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, A>
+pub fn attempt<'a, I: Clone, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, A>
 where
   A: Debug + 'a, {
   use crate::internal::parsers_impl::ParsersImpl;
   <ParsersImpl as OperatorParsers>::attempt(parser)
 }
 
-pub fn scan_right1<'a, I, A, BOP>(p: Parser<'a, I, A>, op: Parser<'a, I, BOP>) -> Parser<'a, I, A>
+pub fn scan_right1<'a, I: Clone, A, BOP>(p: Parser<'a, I, A>, op: Parser<'a, I, BOP>) -> Parser<'a, I, A>
 where
   BOP: Fn(A, A) -> A + 'a + Clone,
   A: Clone + Debug + 'a, {
@@ -194,7 +194,7 @@ where
   <ParsersImpl as OperatorParsers>::scan_right1(p, op)
 }
 
-pub fn chain_right0<'a, I, A, BOP>(p: Parser<'a, I, A>, op: Parser<'a, I, BOP>, x: A) -> Parser<'a, I, A>
+pub fn chain_right0<'a, I: Clone, A, BOP>(p: Parser<'a, I, A>, op: Parser<'a, I, BOP>, x: A) -> Parser<'a, I, A>
 where
   BOP: Fn(A, A) -> A + 'a + Clone,
   A: Clone + Debug + 'a, {
@@ -202,7 +202,7 @@ where
   <ParsersImpl as OperatorParsers>::chain_right0(p, op, x)
 }
 
-pub fn chain_left0<'a, I, A, BOP>(p: Parser<'a, I, A>, op: Parser<'a, I, BOP>, x: A) -> Parser<'a, I, A>
+pub fn chain_left0<'a, I: Clone, A, BOP>(p: Parser<'a, I, A>, op: Parser<'a, I, BOP>, x: A) -> Parser<'a, I, A>
 where
   BOP: Fn(A, A) -> A + 'a + Clone,
   A: Clone + Debug + 'a, {
@@ -210,7 +210,7 @@ where
   <ParsersImpl as OperatorParsers>::chain_left0(p, op, x)
 }
 
-pub fn chain_right1<'a, I, A, BOP>(p: Parser<'a, I, A>, op: Parser<'a, I, BOP>) -> Parser<'a, I, A>
+pub fn chain_right1<'a, I: Clone, A, BOP>(p: Parser<'a, I, A>, op: Parser<'a, I, BOP>) -> Parser<'a, I, A>
 where
   BOP: Fn(A, A) -> A + 'a + Clone,
   A: Clone + Debug + 'a, {
@@ -218,7 +218,7 @@ where
   <ParsersImpl as OperatorParsers>::chain_right1(p, op)
 }
 
-pub fn chain_left1<'a, I, A, BOP>(p: Parser<'a, I, A>, op: Parser<'a, I, BOP>) -> Parser<'a, I, A>
+pub fn chain_left1<'a, I: Clone, A, BOP>(p: Parser<'a, I, A>, op: Parser<'a, I, BOP>) -> Parser<'a, I, A>
 where
   BOP: Fn(A, A) -> A + 'a + Clone,
   A: Clone + Debug + 'a, {
@@ -226,7 +226,7 @@ where
   <ParsersImpl as OperatorParsers>::chain_left1(p, op)
 }
 
-pub fn rest_right1<'a, I, A, BOP>(p: Parser<'a, I, A>, op: Parser<'a, I, BOP>, x: A) -> Parser<'a, I, A>
+pub fn rest_right1<'a, I: Clone, A, BOP>(p: Parser<'a, I, A>, op: Parser<'a, I, BOP>, x: A) -> Parser<'a, I, A>
 where
   BOP: Fn(A, A) -> A + 'a + Clone,
   A: Clone + Debug + 'a, {
@@ -234,7 +234,7 @@ where
   <ParsersImpl as OperatorParsers>::rest_right1(p, op, x)
 }
 
-pub fn rest_left1<'a, I, A, BOP>(p: Parser<'a, I, A>, op: Parser<'a, I, BOP>, x: A) -> Parser<'a, I, A>
+pub fn rest_left1<'a, I: Clone, A, BOP>(p: Parser<'a, I, A>, op: Parser<'a, I, BOP>, x: A) -> Parser<'a, I, A>
 where
   BOP: Fn(A, A) -> A + 'a + Clone,
   A: Clone + Debug + 'a, {
@@ -247,13 +247,13 @@ pub mod static_parsers {
   use super::*;
 
   // ヘルパー関数
-  pub fn successful<'a, I, A>(value: A) -> StaticParser<'a, I, A>
+  pub fn successful<'a, I: Clone, A>(value: A) -> StaticParser<'a, I, A>
   where
     A: Clone + 'a + 'static, {
     StaticParser::new(move |_| crate::core::ParseResult::successful(value.clone(), 0))
   }
 
-  pub fn map<'a, I, A, B, F>(parser: StaticParser<'a, I, A>, f: F) -> StaticParser<'a, I, B>
+  pub fn map<'a, I: Clone, A, B, F>(parser: StaticParser<'a, I, A>, f: F) -> StaticParser<'a, I, B>
   where
     F: Fn(A) -> B + 'a + Clone,
     A: Debug + 'a + 'static,
@@ -271,7 +271,7 @@ pub mod static_parsers {
   }
 
   // StaticParserを使用する関数
-  pub fn exists<'a, I, A>(parser: StaticParser<'a, I, A>) -> StaticParser<'a, I, bool>
+  pub fn exists<'a, I: Clone, A>(parser: StaticParser<'a, I, A>) -> StaticParser<'a, I, bool>
   where
     A: Debug + 'a + 'static, {
     // 直接実装を使用
@@ -287,7 +287,7 @@ pub mod static_parsers {
     })
   }
 
-  pub fn not<'a, I, A>(parser: StaticParser<'a, I, A>) -> StaticParser<'a, I, ()>
+  pub fn not<'a, I: Clone, A>(parser: StaticParser<'a, I, A>) -> StaticParser<'a, I, ()>
   where
     A: Debug + 'a + 'static, {
     // 直接実装を使用
@@ -306,14 +306,14 @@ pub mod static_parsers {
     })
   }
 
-  pub fn opt<'a, I, A>(parser: StaticParser<'a, I, A>) -> StaticParser<'a, I, Option<A>>
+  pub fn opt<'a, I: Clone, A>(parser: StaticParser<'a, I, A>) -> StaticParser<'a, I, Option<A>>
   where
     A: Clone + Debug + 'a + 'static, {
     // 直接実装を使用
     or(map(attempt(parser), Some), successful(None))
   }
 
-  pub fn or<'a, I, A>(parser1: StaticParser<'a, I, A>, parser2: StaticParser<'a, I, A>) -> StaticParser<'a, I, A>
+  pub fn or<'a, I: Clone, A>(parser1: StaticParser<'a, I, A>, parser2: StaticParser<'a, I, A>) -> StaticParser<'a, I, A>
   where
     A: Debug + 'a + 'static, {
     // 直接実装を使用
@@ -344,7 +344,7 @@ pub mod static_parsers {
     })
   }
 
-  pub fn and_then<'a, I, A, B>(
+  pub fn and_then<'a, I: Clone, A, B>(
     parser1: StaticParser<'a, I, A>,
     parser2: StaticParser<'a, I, B>,
   ) -> StaticParser<'a, I, (A, B)>
@@ -380,7 +380,7 @@ pub mod static_parsers {
     })
   }
 
-  pub fn attempt<'a, I, A>(parser: StaticParser<'a, I, A>) -> StaticParser<'a, I, A>
+  pub fn attempt<'a, I: Clone, A>(parser: StaticParser<'a, I, A>) -> StaticParser<'a, I, A>
   where
     A: Debug + 'a + 'static, {
     // 直接実装を使用
@@ -396,7 +396,7 @@ pub mod static_parsers {
     })
   }
 
-  pub fn scan_right1<'a, I, A, BOP>(p: StaticParser<'a, I, A>, op: StaticParser<'a, I, BOP>) -> StaticParser<'a, I, A>
+  pub fn scan_right1<'a, I: Clone, A, BOP>(p: StaticParser<'a, I, A>, op: StaticParser<'a, I, BOP>) -> StaticParser<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a + 'static, {
@@ -442,7 +442,7 @@ pub mod static_parsers {
     })
   }
 
-  pub fn chain_right0<'a, I, A, BOP>(
+  pub fn chain_right0<'a, I: Clone, A, BOP>(
     p: StaticParser<'a, I, A>,
     op: StaticParser<'a, I, BOP>,
     x: A,
@@ -454,7 +454,7 @@ pub mod static_parsers {
     or(chain_right1(p, op), successful(x))
   }
 
-  pub fn chain_left0<'a, I, A, BOP>(
+  pub fn chain_left0<'a, I: Clone, A, BOP>(
     p: StaticParser<'a, I, A>,
     op: StaticParser<'a, I, BOP>,
     x: A,
@@ -466,7 +466,7 @@ pub mod static_parsers {
     or(chain_left1(p, op), successful(x))
   }
 
-  pub fn chain_right1<'a, I, A, BOP>(
+  pub fn chain_right1<'a, I: Clone, A, BOP>(
     p: StaticParser<'a, I, A>,
     op: StaticParser<'a, I, BOP>,
   ) -> StaticParser<'a, I, A>
@@ -477,7 +477,7 @@ pub mod static_parsers {
     scan_right1(p, op)
   }
 
-  pub fn chain_left1<'a, I, A, BOP>(p: StaticParser<'a, I, A>, op: StaticParser<'a, I, BOP>) -> StaticParser<'a, I, A>
+  pub fn chain_left1<'a, I: Clone, A, BOP>(p: StaticParser<'a, I, A>, op: StaticParser<'a, I, BOP>) -> StaticParser<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a + 'static, {
@@ -536,7 +536,7 @@ pub mod static_parsers {
     })
   }
 
-  pub fn rest_right1<'a, I, A, BOP>(
+  pub fn rest_right1<'a, I: Clone, A, BOP>(
     p: StaticParser<'a, I, A>,
     op: StaticParser<'a, I, BOP>,
     x: A,
@@ -560,7 +560,7 @@ pub mod static_parsers {
     })
   }
 
-  pub fn rest_left1<'a, I, A, BOP>(
+  pub fn rest_left1<'a, I: Clone, A, BOP>(
     p: StaticParser<'a, I, A>,
     op: StaticParser<'a, I, BOP>,
     x: A,

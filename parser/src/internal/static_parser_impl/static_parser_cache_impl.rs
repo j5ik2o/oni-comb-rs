@@ -14,7 +14,7 @@ use std::ptr;
 
 use fnv::FnvHashMap;
 
-impl<'a, I, A: 'a> CacheParser<'a> for StaticParser<'a, I, A> {
+impl<'a, I: Clone, A: 'a> CacheParser<'a> for StaticParser<'a, I, A> {
   fn cache(self) -> Self::P<'a, Self::Input, Self::Output>
   where
     Self::Input: Clone + 'a,

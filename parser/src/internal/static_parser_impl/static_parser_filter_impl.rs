@@ -8,7 +8,7 @@
 
 use crate::core::{ParseError, ParserFilter, StaticParser};
 
-impl<'a, I, A: 'a> ParserFilter<'a> for StaticParser<'a, I, A> {
+impl<'a, I: std::clone::Clone, A: 'a> ParserFilter<'a> for StaticParser<'a, I, A> {
   fn with_filter<F>(self, f: F) -> Self
   where
     F: Fn(&Self::Output) -> bool + 'a,

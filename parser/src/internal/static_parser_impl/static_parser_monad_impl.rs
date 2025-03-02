@@ -8,7 +8,7 @@
 
 use crate::core::{ParserMonad, StaticParser};
 
-impl<'a, I, A: 'a> ParserMonad<'a> for StaticParser<'a, I, A> {
+impl<'a, I: Clone, A: 'a> ParserMonad<'a> for StaticParser<'a, I, A> {
   fn flat_map<B, F>(self, f: F) -> Self::P<'a, Self::Input, B>
   where
     F: Fn(Self::Output) -> Self::P<'a, Self::Input, B> + 'a,

@@ -4,7 +4,7 @@ use crate::core::CommittedStatus;
 /// The enum type representing the parse result.<br/>
 /// 解析結果を示す列挙型。
 #[derive(Debug, Clone)]
-pub enum ParseResult<'a, I, A> {
+pub enum ParseResult<'a, I: Clone + 'a, A> {
   /// Success.<br/>
   /// 成功
   Success {
@@ -27,7 +27,7 @@ pub enum ParseResult<'a, I, A> {
   },
 }
 
-impl<'a, I, A> ParseResult<'a, I, A> {
+impl<'a, I: Clone + 'a, A> ParseResult<'a, I, A> {
   /// Returns the parse result of success.<br/>
   /// 成功の解析結果を返します。
   ///

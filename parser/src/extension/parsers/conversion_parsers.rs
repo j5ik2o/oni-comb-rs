@@ -5,53 +5,53 @@ use crate::core::{Parser, Parsers, StaticParser, StaticParsers};
 use crate::prelude::ParserRunner;
 
 pub trait ConversionParsers: Parsers {
-  fn map_res<'a, I, A, B, E, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  fn map_res<'a, I: Clone, A, B, E, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> Result<B, E> + 'a,
     E: Debug,
     A: Debug + 'a,
     B: Debug + 'a;
 
-  fn map_opt<'a, I, A, B, E, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  fn map_opt<'a, I: Clone, A, B, E, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> Option<B> + 'a,
     A: Debug + 'a,
     B: Debug + 'a;
 
-  fn convert_from_bytes_to_str<'a, I>(parser: Self::P<'a, I, &'a [u8]>) -> Self::P<'a, I, &'a str> {
+  fn convert_from_bytes_to_str<'a, I: Clone>(parser: Self::P<'a, I, &'a [u8]>) -> Self::P<'a, I, &'a str> {
     Self::map_res(parser, std::str::from_utf8)
   }
 
-  fn convert_from_str_to_f64<'a, I>(parser: Self::P<'a, I, &'a str>) -> Self::P<'a, I, f64> {
+  fn convert_from_str_to_f64<'a, I: Clone>(parser: Self::P<'a, I, &'a str>) -> Self::P<'a, I, f64> {
     Self::map_res(parser, f64::from_str)
   }
 }
 
 pub trait StaticConversionParsers: StaticParsers {
-  fn map_res<'a, I, A, B, E, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  fn map_res<'a, I: Clone, A, B, E, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> Result<B, E> + 'a,
     E: Debug,
     A: Debug + 'a + 'static,
     B: Debug + 'a + 'static;
 
-  fn map_opt<'a, I, A, B, E, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  fn map_opt<'a, I: Clone, A, B, E, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> Option<B> + 'a,
     A: Debug + 'a + 'static,
     B: Debug + 'a + 'static;
 
-  fn convert_from_bytes_to_str<'a, I>(parser: Self::P<'a, I, &'a [u8]>) -> Self::P<'a, I, &'a str> {
+  fn convert_from_bytes_to_str<'a, I: Clone>(parser: Self::P<'a, I, &'a [u8]>) -> Self::P<'a, I, &'a str> {
     Self::map_res(parser, std::str::from_utf8)
   }
 
-  fn convert_from_str_to_f64<'a, I>(parser: Self::P<'a, I, &'a str>) -> Self::P<'a, I, f64> {
+  fn convert_from_str_to_f64<'a, I: Clone>(parser: Self::P<'a, I, &'a str>) -> Self::P<'a, I, f64> {
     Self::map_res(parser, f64::from_str)
   }
 }
 
 // 既存のParserを使用する関数
-pub fn map_res<'a, I, A, B, E, F>(parser: Parser<'a, I, A>, f: F) -> Parser<'a, I, B>
+pub fn map_res<'a, I: Clone, A, B, E, F>(parser: Parser<'a, I, A>, f: F) -> Parser<'a, I, B>
 where
   F: Fn(A) -> Result<B, E> + 'a,
   E: Debug,
@@ -79,7 +79,7 @@ where
   })
 }
 
-pub fn map_opt<'a, I, A, B, F>(parser: Parser<'a, I, A>, f: F) -> Parser<'a, I, B>
+pub fn map_opt<'a, I: Clone, A, B, F>(parser: Parser<'a, I, A>, f: F) -> Parser<'a, I, B>
 where
   F: Fn(A) -> Option<B> + 'a,
   A: Debug + 'a,
@@ -106,11 +106,11 @@ where
   })
 }
 
-pub fn convert_from_bytes_to_str<'a, I>(parser: Parser<'a, I, &'a [u8]>) -> Parser<'a, I, &'a str> {
+pub fn convert_from_bytes_to_str<'a, I: Clone>(parser: Parser<'a, I, &'a [u8]>) -> Parser<'a, I, &'a str> {
   map_res(parser, std::str::from_utf8)
 }
 
-pub fn convert_from_str_to_f64<'a, I>(parser: Parser<'a, I, &'a str>) -> Parser<'a, I, f64> {
+pub fn convert_from_str_to_f64<'a, I: Clone>(parser: Parser<'a, I, &'a str>) -> Parser<'a, I, f64> {
   map_res(parser, f64::from_str)
 }
 
@@ -119,7 +119,7 @@ pub mod static_parsers {
   use super::*;
 
   // StaticParserを使用する関数
-  pub fn map_res<'a, I, A, B, E, F>(parser: StaticParser<'a, I, A>, f: F) -> StaticParser<'a, I, B>
+  pub fn map_res<'a, I: Clone, A, B, E, F>(parser: StaticParser<'a, I, A>, f: F) -> StaticParser<'a, I, B>
   where
     F: Fn(A) -> Result<B, E> + 'a,
     E: Debug,
@@ -147,7 +147,7 @@ pub mod static_parsers {
     })
   }
 
-  pub fn map_opt<'a, I, A, B, F>(parser: StaticParser<'a, I, A>, f: F) -> StaticParser<'a, I, B>
+  pub fn map_opt<'a, I: Clone, A, B, F>(parser: StaticParser<'a, I, A>, f: F) -> StaticParser<'a, I, B>
   where
     F: Fn(A) -> Option<B> + 'a,
     A: Debug + 'a + 'static,
@@ -174,7 +174,7 @@ pub mod static_parsers {
     })
   }
 
-  pub fn convert_from_bytes_to_str<'a, I>(parser: StaticParser<'a, I, &'a [u8]>) -> StaticParser<'a, I, &'a str> {
+  pub fn convert_from_bytes_to_str<'a, I: Clone>(parser: StaticParser<'a, I, &'a [u8]>) -> StaticParser<'a, I, &'a str> {
     // 直接実装を使用
     StaticParser::new(move |state| {
       let result = parser.run(state);
@@ -197,7 +197,7 @@ pub mod static_parsers {
     })
   }
 
-  pub fn convert_from_str_to_f64<'a, I>(parser: StaticParser<'a, I, &'a str>) -> StaticParser<'a, I, f64> {
+  pub fn convert_from_str_to_f64<'a, I: Clone>(parser: StaticParser<'a, I, &'a str>) -> StaticParser<'a, I, f64> {
     // 直接実装を使用
     StaticParser::new(move |state| {
       let result = parser.run(state);

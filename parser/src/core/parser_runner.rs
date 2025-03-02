@@ -2,11 +2,11 @@ use crate::core::ParserMonad;
 use crate::core::{ParseError, ParseResult, ParseState};
 
 pub trait ParserRunner<'a> {
-  type Input;
+  type Input: Clone;
   type Output;
   type P<'m, X, Y: 'm>: ParserMonad<'m, Input = X, Output = Y>
   where
-    X: 'm;
+    X: Clone + 'm;
 
   /// Analyze input value(for [ParseResult]).<br/>
   /// 入力を解析する。
@@ -14,7 +14,9 @@ pub trait ParserRunner<'a> {
 
   /// Analyze input value(for [Result]).<br/>
   /// 入力を解析する。
-  fn parse_as_result(&self, input: &'a [Self::Input]) -> Result<Self::Output, ParseError<'a, Self::Input>> {
+  fn parse_as_result(&self, input: &'a [Self::Input]) -> Result<Self::Output, ParseError<'a, Self::Input>> 
+  where
+    Self::Input: Clone {
     self.parse(input).to_result()
   }
 

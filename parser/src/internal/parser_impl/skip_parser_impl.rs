@@ -4,7 +4,7 @@ use crate::extension::parsers::SkipParsers;
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;
 
-impl<'a, I, A> SkipParser<'a> for Parser<'a, I, A> {
+impl<'a, I: Clone, A> SkipParser<'a> for Parser<'a, I, A> {
   fn skip_left<B>(self, pb: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, B>
   where
     Self::Output: Clone + Debug + 'a,

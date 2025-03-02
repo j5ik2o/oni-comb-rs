@@ -10,7 +10,7 @@ use crate::core::{ParseResult, StaticParser};
 use crate::extension::parser::SkipParser;
 use std::fmt::Debug;
 
-impl<'a, I, A: 'a> SkipParser<'a> for StaticParser<'a, I, A> {
+impl<'a, I: Clone, A: 'a> SkipParser<'a> for StaticParser<'a, I, A> {
   fn skip_left<B>(self, other: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, B>
   where
     Self::Output: Clone + Debug + 'a,

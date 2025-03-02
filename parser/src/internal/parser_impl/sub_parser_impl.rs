@@ -3,7 +3,7 @@ use crate::extension::parser::SkipParser;
 use std::fmt::Debug;
 use std::ops::Sub;
 
-impl<'a, I, A, B> Sub<Parser<'a, I, B>> for Parser<'a, I, A>
+impl<'a, I: Clone, A, B> Sub<Parser<'a, I, B>> for Parser<'a, I, A>
 where
   A: Clone + Debug + 'a,
   B: Clone + Debug + 'a,

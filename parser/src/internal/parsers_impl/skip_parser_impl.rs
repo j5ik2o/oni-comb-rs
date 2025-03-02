@@ -3,7 +3,7 @@ use crate::extension::parsers::SkipParsers;
 use crate::internal::ParsersImpl;
 
 impl SkipParsers for ParsersImpl {
-  fn skip<'a, I>(n: usize) -> Self::P<'a, I, ()> {
+  fn skip<'a, I: std::clone::Clone>(n: usize) -> Self::P<'a, I, ()> {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       if input.len() >= n {

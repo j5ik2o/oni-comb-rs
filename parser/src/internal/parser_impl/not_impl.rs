@@ -4,7 +4,7 @@ use crate::internal::ParsersImpl;
 use std::fmt::Debug;
 use std::ops::Not;
 
-impl<'a, I, A> Not for Parser<'a, I, A>
+impl<'a, I: Clone, A> Not for Parser<'a, I, A>
 where
   A: Debug + 'a,
 {

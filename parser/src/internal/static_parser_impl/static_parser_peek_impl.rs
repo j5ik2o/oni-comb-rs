@@ -10,7 +10,7 @@ use crate::core::{ParseResult, StaticParser};
 use crate::extension::parser::PeekParser;
 use std::fmt::Debug;
 
-impl<'a, I, A: 'a> PeekParser<'a> for StaticParser<'a, I, A> {
+impl<'a, I: Clone, A: 'a> PeekParser<'a> for StaticParser<'a, I, A> {
   fn peek(self) -> Self::P<'a, Self::Input, Self::Output>
   where
     Self::Output: Debug + 'a, {

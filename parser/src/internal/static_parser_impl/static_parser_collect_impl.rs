@@ -10,7 +10,7 @@ use crate::core::{ParseResult, StaticParser};
 use crate::extension::parser::CollectParser;
 use std::fmt::Debug;
 
-impl<'a, I, A: 'a> CollectParser<'a> for StaticParser<'a, I, A> {
+impl<'a, I: std::clone::Clone, A: 'a> CollectParser<'a> for StaticParser<'a, I, A> {
   fn collect(self) -> Self::P<'a, Self::Input, &'a [Self::Input]>
   where
     Self::Output: Debug + 'a, {

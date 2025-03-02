@@ -4,7 +4,7 @@ use crate::prelude::PeekParsers;
 use std::fmt::Debug;
 
 impl PeekParsers for ParsersImpl {
-  fn peek<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
+  fn peek<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
   where
     A: Debug + 'a, {
     Parser::new(move |parse_state| match parser.run(parse_state) {

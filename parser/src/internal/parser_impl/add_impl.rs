@@ -3,7 +3,7 @@ use crate::extension::parser::OperatorParser;
 use std::fmt::Debug;
 use std::ops::Add;
 
-impl<'a, I, A, B> Add<Parser<'a, I, B>> for Parser<'a, I, A>
+impl<'a, I: Clone, A, B> Add<Parser<'a, I, B>> for Parser<'a, I, A>
 where
   A: Clone + Debug + 'a,
   B: Clone + Debug + 'a,

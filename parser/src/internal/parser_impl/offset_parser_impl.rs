@@ -4,7 +4,7 @@ use crate::extension::parsers::OffsetParsers;
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;
 
-impl<'a, I, A> OffsetParser<'a> for Parser<'a, I, A> {
+impl<'a, I: Clone, A> OffsetParser<'a> for Parser<'a, I, A> {
   fn last_offset(self) -> Self::P<'a, Self::Input, usize>
   where
     Self::Output: Debug + 'a, {

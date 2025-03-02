@@ -10,7 +10,7 @@ use crate::core::{ParseError, ParseResult, StaticParser};
 use crate::extension::parser::OperatorParser;
 use std::fmt::Debug;
 
-impl<'a, I, A: 'a> OperatorParser<'a> for StaticParser<'a, I, A> {
+impl<'a, I: Clone, A: 'a> OperatorParser<'a> for StaticParser<'a, I, A> {
   fn and_then<B>(self, other: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, (Self::Output, B)>
   where
     Self::Output: Clone + Debug + 'a,
