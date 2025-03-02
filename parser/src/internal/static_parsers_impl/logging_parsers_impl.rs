@@ -7,7 +7,7 @@ impl StaticLoggingParsers for StaticParsersImpl {
   fn log_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, name: &'a str, log_level: LogLevel, f: F) -> Self::P<'a, I, A>
   where
     F: Fn(&ParseResult<'a, I, A>) -> B + 'a,
-    I: Debug,
+    I: Debug + std::clone::Clone,
     A: Debug + 'a + 'static,
     B: Display + 'a, {
     StaticParser::new(move |state| {
@@ -24,7 +24,7 @@ impl StaticLoggingParsers for StaticParsersImpl {
 
   fn name<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str) -> Self::P<'a, I, A>
   where
-    I: Debug,
+    I: Debug + std::clone::Clone,
     A: Debug + 'a + 'static, {
     Self::log_map(parser, name, LogLevel::Debug, move |result| match result {
       ParseResult::Success { value, .. } => format!("Success: {:?}", value),
@@ -34,7 +34,7 @@ impl StaticLoggingParsers for StaticParsersImpl {
 
   fn expect<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str) -> Self::P<'a, I, A>
   where
-    I: Debug,
+    I: Debug + std::clone::Clone,
     A: Debug + 'a + 'static, {
     Self::log_map(parser, name, LogLevel::Err, move |result| match result {
       ParseResult::Success { value, .. } => format!("Success: {:?}", value),

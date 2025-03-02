@@ -8,7 +8,8 @@ impl LoggingParsers for ParsersImpl {
   where
     F: Fn(&ParseResult<'a, I, A>) -> B + 'a,
     A: Debug + 'a,
-    B: Display + 'a, {
+    B: Display + 'a,
+    I: Debug + std::clone::Clone, {
     Parser::new(move |parse_state| {
       let ps = parser.run(parse_state);
       let s = format!("{} = {}", name, f(&ps));
@@ -24,7 +25,7 @@ impl LoggingParsers for ParsersImpl {
 
   fn name<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str) -> Self::P<'a, I, A>
   where
-    I: Debug,
+    I: Debug + std::clone::Clone,
     A: Debug + 'a, {
     Parser::new(move |parse_state| match parser.run(parse_state) {
       res @ ParseResult::Success { .. } => res,
@@ -47,7 +48,7 @@ impl LoggingParsers for ParsersImpl {
 
   fn expect<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str) -> Self::P<'a, I, A>
   where
-    I: Debug,
+    I: Debug + std::clone::Clone,
     A: Debug + 'a, {
     Parser::new(move |parse_state| match parser.run(parse_state) {
       res @ ParseResult::Success { .. } => res,

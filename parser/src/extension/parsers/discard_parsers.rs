@@ -3,19 +3,19 @@ use crate::prelude::ParserRunner;
 use std::fmt::Debug;
 
 pub trait DiscardParsers: Parsers {
-  fn discard<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, ()>
+  fn discard<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, ()>
   where
     A: Debug + 'a;
 }
 
 pub trait StaticDiscardParsers: StaticParsers {
-  fn discard<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, ()>
+  fn discard<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, ()>
   where
     A: Debug + 'a + 'static;
 }
 
 // 既存のParserを使用する関数
-pub fn discard<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, ()>
+pub fn discard<'a, I: Clone, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, ()>
 where
   A: Debug + 'a, {
   use crate::internal::parsers_impl::ParsersImpl;
@@ -27,7 +27,7 @@ pub mod static_parsers {
   use super::*;
 
   // StaticParserを使用する関数
-  pub fn discard<'a, I, A>(parser: StaticParser<'a, I, A>) -> StaticParser<'a, I, ()>
+  pub fn discard<'a, I: Clone, A>(parser: StaticParser<'a, I, A>) -> StaticParser<'a, I, ()>
   where
     A: Debug + 'a + 'static, {
     // 直接実装を使用

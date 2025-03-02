@@ -11,7 +11,7 @@ use crate::extension::parser::LoggingParser;
 use crate::extension::parsers::LogLevel;
 use std::fmt::Debug;
 
-impl<'a, I, A: 'a> LoggingParser<'a> for StaticParser<'a, I, A> {
+impl<'a, I: Clone, A: 'a> LoggingParser<'a> for StaticParser<'a, I, A> {
   fn log(self, name: &'a str, log_level: LogLevel) -> Self::P<'a, Self::Input, Self::Output>
   where
     Self::Input: Debug,
@@ -65,22 +65,21 @@ impl<'a, I, A: 'a> LoggingParser<'a> for StaticParser<'a, I, A> {
     Self::Output: Debug + 'a, {
     let method = self.method.clone();
 
-    StaticParser::new(move |parse_state| match (method)(parse_state) {
-      res @ ParseResult::Success { .. } => res,
-      ParseResult::Failure {
-        error,
-        committed_status,
-      } => match error {
-        ParseError::Custom { .. } => ParseResult::failed(error, committed_status),
-        _ => ParseResult::failed(
-          ParseError::of_custom(
-            parse_state.last_offset().unwrap_or(0),
-            Some(Box::new(error)),
-            format!("failed to parse {}", name),
-          ),
-          committed_status,
-        ),
-      },
+    StaticParser::new(move |parse_state| {
+      let ps = (method)(parse_state);
+      match ps {
+        ParseResult::Success { .. } => ps,
+        ParseResult::Failure { error, .. } => {
+          ParseResult::Failure {
+            error: ParseError::of_custom(
+              parse_state.last_offset().unwrap_or(0),
+              Some(Box::new(error)),
+              format!("failed to parse {}", name),
+            ),
+            committed_status: crate::core::CommittedStatus::Committed,
+          }
+        }
+      }
     })
   }
 }

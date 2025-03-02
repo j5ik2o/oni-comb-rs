@@ -4,7 +4,7 @@ use crate::internal::ParsersImpl;
 
 impl CollectParsers for ParsersImpl {
   #[inline]
-  fn collect<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, &'a [I]>
+  fn collect<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, &'a [I]>
   where
     A: 'a, {
     Parser::new(move |parse_state| match parser.run(parse_state) {

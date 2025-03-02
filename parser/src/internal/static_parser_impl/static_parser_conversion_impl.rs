@@ -10,7 +10,7 @@ use crate::core::{ParseError, ParseResult, StaticParser};
 use crate::extension::parser::ConversionParser;
 use std::fmt::Debug;
 
-impl<'a, I, A: 'a> ConversionParser<'a> for StaticParser<'a, I, A> {
+impl<'a, I: std::clone::Clone, A: 'a> ConversionParser<'a> for StaticParser<'a, I, A> {
   fn map_res<B, E, F>(self, f: F) -> Self::P<'a, Self::Input, B>
   where
     F: Fn(Self::Output) -> Result<B, E> + 'a,

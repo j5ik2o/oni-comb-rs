@@ -19,12 +19,13 @@ impl StaticParsers for StaticParsersImpl {
   type P<'p, I, A>
     = StaticParser<'p, I, A>
   where
-    I: 'p,
+    I: Clone + 'p,
     A: 'p + 'static;
 
   fn parse<'a, 'b, I, A>(parser: &Self::P<'a, I, A>, input: &'b [I]) -> Result<A, ParseError<'a, I>>
   where
     A: 'a + 'static,
+    I: Clone + 'a,
     'b: 'a, {
     use crate::prelude::ParserRunner;
     parser
@@ -35,14 +36,16 @@ impl StaticParsers for StaticParsersImpl {
 
   fn successful<'a, I, A>(value: A) -> Self::P<'a, I, A>
   where
-    A: Clone + 'a + 'static, {
+    A: Clone + 'a + 'static,
+    I: Clone + 'a, {
     StaticParser::new(move |_| ParseResult::successful(value.clone(), 0))
   }
 
   fn successful_lazy<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> A + 'a,
-    A: 'a + 'static, {
+    A: 'a + 'static,
+    I: Clone + 'a, {
     StaticParser::new(move |_| ParseResult::successful(value(), 0))
   }
 
@@ -56,7 +59,7 @@ impl StaticParsers for StaticParsersImpl {
   fn failed_lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> (ParseError<'a, I>, CommittedStatus) + 'a,
-    I: 'a,
+    I: Clone + 'a,
     A: 'a + 'static, {
     StaticParser::new(move |_| {
       let (error, committed) = f();
@@ -85,6 +88,7 @@ impl StaticParsers for StaticParsersImpl {
   fn flat_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> Self::P<'a, I, B> + 'a + Clone,
+    I: 'a + Clone,
     A: 'a + 'static,
     B: 'a + 'static + Clone, {
     parser.flat_map(f)
@@ -93,6 +97,7 @@ impl StaticParsers for StaticParsersImpl {
   fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> B + 'a + Clone,
+    I: 'a + Clone,
     A: 'a + 'static,
     B: Clone + 'a + 'static, {
     // 直接実装を使用
@@ -124,19 +129,19 @@ impl StaticParsersImpl {
   }
 
   /// 何もしないStaticParserを返します。
-  pub fn unit<'a, I>() -> StaticParser<'a, I, ()> {
+  pub fn unit<'a, I: Clone>() -> StaticParser<'a, I, ()> {
     StaticParser::new(move |_| ParseResult::successful((), 0))
   }
 
   /// 何もしないStaticParserを返します。unit()のエイリアスです。
-  pub fn empty<'a, I>() -> StaticParser<'a, I, ()> {
+  pub fn empty<'a, I: Clone>() -> StaticParser<'a, I, ()> {
     Self::unit()
   }
 
   /// 終端を表すStaticParserを返します。
   pub fn end<'a, I>() -> StaticParser<'a, I, ()>
   where
-    I: Debug + Display + 'a, {
+    I: Clone + Debug + Display + 'a + std::clone::Clone, {
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
@@ -153,7 +158,8 @@ impl StaticParsersImpl {
   /// 成功した解析結果を表すStaticParserを返します。
   pub fn successful<'a, I, A>(value: A) -> StaticParser<'a, I, A>
   where
-    A: Clone + 'a, {
+    A: Clone + 'a,
+    I: Clone + 'a, {
     StaticParser::new(move |_| ParseResult::successful(value.clone(), 0))
   }
 
@@ -161,7 +167,8 @@ impl StaticParsersImpl {
   pub fn successful_lazy<'a, I, A, F>(value: F) -> StaticParser<'a, I, A>
   where
     F: Fn() -> A + 'a,
-    A: 'a, {
+    A: 'a,
+    I: Clone + 'a, {
     StaticParser::new(move |_| ParseResult::successful(value(), 0))
   }
 
@@ -177,7 +184,7 @@ impl StaticParsersImpl {
   pub fn failed_lazy<'a, I, A, F>(f: F) -> StaticParser<'a, I, A>
   where
     F: Fn() -> (ParseError<'a, I>, CommittedStatus) + 'a,
-    I: 'a,
+    I: Clone + 'a,
     A: 'a, {
     StaticParser::new(move |_| {
       let (pe, committed) = f();
@@ -188,7 +195,7 @@ impl StaticParsersImpl {
   /// 任意の要素を解析するStaticParserを返します。(参照版)
   pub fn elm_any_ref<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
-    I: crate::core::Element + PartialEq + 'a, {
+    I: Clone + Element + PartialEq + 'a, {
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
@@ -724,7 +731,7 @@ impl StaticParsersImpl {
   }
 
   /// 遅延評価するStaticParserを返します。
-  pub fn lazy<'a, I, A, F>(f: F) -> StaticParser<'a, I, A>
+  pub fn lazy<'a, I: Clone, A, F>(f: F) -> StaticParser<'a, I, A>
   where
     F: Fn() -> StaticParser<'a, I, A> + 'a,
     A: Debug + 'a, {
@@ -803,7 +810,7 @@ impl StaticParsersImpl {
   }
 
   /// 指定した数の要素をスキップするStaticParserを返します。
-  pub fn skip<'a, I>(n: usize) -> StaticParser<'a, I, ()> {
+  pub fn skip<'a, I: std::clone::Clone>(n: usize) -> StaticParser<'a, I, ()> {
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();

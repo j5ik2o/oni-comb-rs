@@ -1,20 +1,21 @@
 use std::fmt;
 use std::fmt::Display;
+use std::borrow::Cow;
 
 /// The enum type representing the parsing error.<br/>
 /// 解析エラーを示す列挙型。
 #[derive(Debug, Clone, PartialOrd, PartialEq)]
-pub enum ParseError<'a, I> {
+pub enum ParseError<'a, I: Clone + 'a> {
   /// パーサの条件にマッチしなかった場合のエラー
   Mismatch {
-    input: &'a [I],
+    input: Cow<'a, [I]>,
     offset: usize,
     length: usize,
     message: String,
   },
   /// 変換に失敗した際のエラー
   Conversion {
-    input: &'a [I],
+    input: Cow<'a, [I]>,
     offset: usize,
     length: usize,
     message: String,
@@ -35,7 +36,7 @@ pub enum ParseError<'a, I> {
   },
 }
 
-impl<'a, I> Display for ParseError<'a, I> {
+impl<'a, I: Clone + 'a> Display for ParseError<'a, I> {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match self {
       ParseError::Incomplete => write!(f, "Incomplete"),
@@ -70,7 +71,7 @@ impl<'a, I> Display for ParseError<'a, I> {
 
 impl<'a> ParseError<'a, char> {
   pub fn input_string(&self) -> Option<String> {
-    self.input().map(|chars| String::from_iter(chars))
+    self.input().map(|chars| String::from_iter(chars.iter().cloned()))
   }
 }
 
@@ -86,8 +87,8 @@ impl<'a> ParseError<'a, u8> {
   }
 }
 
-impl<'a, I> ParseError<'a, I> {
-  pub fn input(&self) -> Option<&'a [I]> {
+impl<'a, I: Clone + 'a> ParseError<'a, I> {
+  pub fn input(&self) -> Option<&[I]> {
     match self {
       ParseError::Incomplete => None,
       ParseError::Mismatch {
@@ -149,7 +150,16 @@ impl<'a, I> ParseError<'a, I> {
 
   pub fn of_mismatch(input: &'a [I], offset: usize, length: usize, message: String) -> Self {
     ParseError::Mismatch {
-      input,
+      input: Cow::Borrowed(input),
+      offset,
+      length,
+      message,
+    }
+  }
+
+  pub fn of_mismatch_owned(input: Vec<I>, offset: usize, length: usize, message: String) -> Self {
+    ParseError::Mismatch {
+      input: Cow::Owned(input),
       offset,
       length,
       message,
@@ -158,7 +168,16 @@ impl<'a, I> ParseError<'a, I> {
 
   pub fn of_conversion(input: &'a [I], offset: usize, length: usize, message: String) -> Self {
     ParseError::Conversion {
-      input,
+      input: Cow::Borrowed(input),
+      offset,
+      length,
+      message,
+    }
+  }
+
+  pub fn of_conversion_owned(input: Vec<I>, offset: usize, length: usize, message: String) -> Self {
+    ParseError::Conversion {
+      input: Cow::Owned(input),
       offset,
       length,
       message,

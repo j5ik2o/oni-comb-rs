@@ -5,7 +5,7 @@ use crate::extension::parser::OperatorParser;
 use crate::extension::parsers::OperatorParsers;
 use crate::internal::ParsersImpl;
 
-impl<'a, I, A> OperatorParser<'a> for Parser<'a, I, A> {
+impl<'a, I: Clone, A> OperatorParser<'a> for Parser<'a, I, A> {
   fn and_then<B>(self, pb: Self::P<'a, Self::Input, B>) -> Self::P<'a, Self::Input, (Self::Output, B)>
   where
     Self::Output: Clone + Debug + 'a,

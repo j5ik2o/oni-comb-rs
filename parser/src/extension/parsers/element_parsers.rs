@@ -3,7 +3,7 @@ use crate::utils::Set;
 use std::fmt::{Debug, Display};
 
 pub trait ElementParsers: Parsers {
-  fn elm_any_ref<'a, I>() -> Self::P<'a, I, &'a I>
+  fn elm_any_ref<'a, I: Clone>() -> Self::P<'a, I, &'a I>
   where
     I: Element + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(|_| true)
@@ -17,7 +17,7 @@ pub trait ElementParsers: Parsers {
 
   fn elm_ref<'a, I>(element: I) -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(move |actual| *actual == element)
   }
 
@@ -30,7 +30,7 @@ pub trait ElementParsers: Parsers {
   fn elm_pred_ref<'a, I, F>(f: F) -> Self::P<'a, I, &'a I>
   where
     F: Fn(&I) -> bool + 'a + 'static,
-    I: Element + PartialEq + 'a + 'static;
+    I: Element + Clone + PartialEq + 'a + 'static;
 
   fn elm_pred<'a, I, F>(f: F) -> Self::P<'a, I, I>
   where
@@ -41,7 +41,7 @@ pub trait ElementParsers: Parsers {
 
   fn elm_space_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(|e: &I| e.is_ascii_space())
   }
 
@@ -53,7 +53,7 @@ pub trait ElementParsers: Parsers {
 
   fn elm_multi_space_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(|e: &I| e.is_ascii_multi_space())
   }
 
@@ -65,7 +65,7 @@ pub trait ElementParsers: Parsers {
 
   fn elm_alpha_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(|e: &I| e.is_ascii_alpha())
   }
 
@@ -77,19 +77,19 @@ pub trait ElementParsers: Parsers {
 
   fn elm_alpha_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(|e: &I| e.is_ascii_alpha_digit())
   }
 
   fn elm_alpha_digit<'a, I>() -> Self::P<'a, I, I>
   where
-    I: Element + Clone + PartialEq + 'a + 'static, {
+    I: Element + Clone + Clone + PartialEq + 'a + 'static, {
     Self::map(Self::elm_alpha_digit_ref(), Clone::clone)
   }
 
   fn elm_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(|e: &I| e.is_ascii_digit())
   }
 
@@ -101,7 +101,7 @@ pub trait ElementParsers: Parsers {
 
   fn elm_hex_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(|e: &I| e.is_ascii_hex_digit())
   }
 
@@ -113,7 +113,7 @@ pub trait ElementParsers: Parsers {
 
   fn elm_oct_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(|e: &I| e.is_ascii_oct_digit())
   }
 
@@ -125,7 +125,7 @@ pub trait ElementParsers: Parsers {
 
   fn elm_ref_of<'a, I, S>(set: &'static S) -> Self::P<'a, I, &'a I>
   where
-    I: PartialEq + Display + Debug + 'a + 'static,
+    I: PartialEq + Clone + Display + Debug + 'a + 'static,
     S: Set<I> + ?Sized + 'static;
 
   fn elm_of<'a, I, S>(set: &'static S) -> Self::P<'a, I, I>
@@ -137,17 +137,17 @@ pub trait ElementParsers: Parsers {
 
   fn elm_ref_in<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
-    I: PartialEq + PartialOrd + Display + Debug + Copy + 'a + 'static;
+    I: PartialEq + Clone + PartialOrd + Display + Debug + Copy + 'a + 'static;
 
   fn elm_in<'a, I>(start: I, end: I) -> Self::P<'a, I, I>
   where
-    I: PartialEq + PartialOrd + Display + Debug + Copy + Clone + 'a + 'static, {
+    I: PartialEq + Clone + PartialOrd + Display + Debug + Copy + Clone + 'a + 'static, {
     Self::map(Self::elm_ref_in(start, end), Clone::clone)
   }
 
   fn elm_ref_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
-    I: PartialEq + PartialOrd + Display + Debug + Copy + 'a + 'static;
+    I: PartialEq + Clone + PartialOrd + Display + Debug + Copy + 'a + 'static;
 
   fn elm_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, I>
   where
@@ -157,21 +157,21 @@ pub trait ElementParsers: Parsers {
 
   fn none_ref_of<'a, I, S>(set: &'static S) -> Self::P<'a, I, &'a I>
   where
-    I: PartialEq + Display + Debug + 'a + 'static,
+    I: PartialEq + Clone + Display + Debug + 'a + 'static,
     S: Set<I> + ?Sized + 'static;
 
   fn none_of<'a, I, S>(set: &'static S) -> Self::P<'a, I, I>
   where
-    I: PartialEq + Display + Clone + Debug + 'a + 'static,
+    I: PartialEq + Clone + Display + Clone + Debug + 'a + 'static,
     S: Set<I> + ?Sized + 'static, {
     Self::map(Self::none_ref_of(set), Clone::clone)
   }
 }
 
 pub trait StaticElementParsers: StaticParsers {
-  fn elm_any_ref<'a, I>() -> Self::P<'a, I, &'a I>
+  fn elm_any_ref<'a, I: Clone>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(|_| true)
   }
 
@@ -181,7 +181,7 @@ pub trait StaticElementParsers: StaticParsers {
 
   fn elm_ref<'a, I>(element: I) -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(move |actual| *actual == element)
   }
 
@@ -192,7 +192,7 @@ pub trait StaticElementParsers: StaticParsers {
   fn elm_pred_ref<'a, I, F>(f: F) -> Self::P<'a, I, &'a I>
   where
     F: Fn(&I) -> bool + 'a + 'static,
-    I: Element + PartialEq + 'a;
+    I: Element + Clone + PartialEq + 'a;
 
   fn elm_pred<'a, I, F>(f: F) -> Self::P<'a, I, I>
   where
@@ -201,7 +201,7 @@ pub trait StaticElementParsers: StaticParsers {
 
   fn elm_space_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(|e: &I| e.is_ascii_space())
   }
 
@@ -211,7 +211,7 @@ pub trait StaticElementParsers: StaticParsers {
 
   fn elm_multi_space_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(|e: &I| e.is_ascii_multi_space())
   }
 
@@ -221,7 +221,7 @@ pub trait StaticElementParsers: StaticParsers {
 
   fn elm_alpha_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(|e: &I| e.is_ascii_alpha())
   }
 
@@ -231,7 +231,7 @@ pub trait StaticElementParsers: StaticParsers {
 
   fn elm_alpha_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(|e: &I| e.is_ascii_alpha_digit())
   }
 
@@ -241,7 +241,7 @@ pub trait StaticElementParsers: StaticParsers {
 
   fn elm_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(|e: &I| e.is_ascii_digit())
   }
 
@@ -251,7 +251,7 @@ pub trait StaticElementParsers: StaticParsers {
 
   fn elm_hex_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(|e: &I| e.is_ascii_hex_digit())
   }
 
@@ -261,7 +261,7 @@ pub trait StaticElementParsers: StaticParsers {
 
   fn elm_oct_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     Self::elm_pred_ref(|e: &I| e.is_ascii_oct_digit())
   }
 
@@ -271,7 +271,7 @@ pub trait StaticElementParsers: StaticParsers {
 
   fn elm_ref_of<'a, I, S>(set: &'static S) -> Self::P<'a, I, &'a I>
   where
-    I: PartialEq + Display + Debug + 'a,
+    I: PartialEq + Clone + Display + Debug + 'a,
     S: Set<I> + ?Sized + 'static;
 
   fn elm_of<'a, I, S>(set: &'static S) -> Self::P<'a, I, I>
@@ -281,47 +281,47 @@ pub trait StaticElementParsers: StaticParsers {
 
   fn elm_ref_in<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
-    I: PartialEq + PartialOrd + Display + Debug + Copy + 'a;
+    I: PartialEq + Clone + PartialOrd + Display + Debug + Copy + 'a;
 
   fn elm_in<'a, I>(start: I, end: I) -> Self::P<'a, I, I>
   where
-    I: PartialEq + PartialOrd + Display + Debug + Copy + Clone + 'a + 'static;
+    I: PartialEq + Clone + PartialOrd + Display + Debug + Copy + Clone + 'a + 'static;
 
   fn elm_ref_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
-    I: PartialEq + PartialOrd + Display + Debug + Copy + 'a;
+    I: PartialEq + Clone + PartialOrd + Display + Debug + Copy + 'a;
 
   fn elm_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, I>
   where
-    I: PartialEq + PartialOrd + Display + Debug + Copy + Clone + 'a + 'static;
+    I: PartialEq + Clone + PartialOrd + Display + Debug + Copy + Clone + 'a + 'static;
 
   fn none_ref_of<'a, I, S>(set: &'static S) -> Self::P<'a, I, &'a I>
   where
-    I: PartialEq + Display + Debug + 'a,
+    I: PartialEq + Clone + Display + Debug + 'a,
     S: Set<I> + ?Sized + 'static;
 
   fn none_of<'a, I, S>(set: &'static S) -> Self::P<'a, I, I>
   where
-    I: PartialEq + Display + Clone + Debug + 'a + 'static,
+    I: PartialEq + Clone + Display + Debug + 'a + 'static,
     S: Set<I> + ?Sized + 'static;
 }
 
 // 既存のParserを使用する関数
-pub fn elm_any_ref<'a, I>() -> Parser<'a, I, &'a I>
+pub fn elm_any_ref<'a, I: Clone>() -> Parser<'a, I, &'a I>
 where
-  I: Element + PartialEq + 'a + 'static, {
+  I: Element + Clone + PartialEq + 'a + 'static, {
   crate::internal::parsers_impl::ParsersImpl::elm_any_ref()
 }
 
-pub fn elm_any<'a, I>() -> Parser<'a, I, I>
+pub fn elm_any<'a, I: Clone>() -> Parser<'a, I, I>
 where
   I: Element + Clone + PartialEq + 'a + 'static, {
   crate::internal::parsers_impl::ParsersImpl::elm_any()
 }
 
-pub fn elm_ref<'a, I>(element: I) -> Parser<'a, I, &'a I>
+pub fn elm_ref<'a, I: Clone>(element: I) -> Parser<'a, I, &'a I>
 where
-  I: Element + PartialEq + 'a + 'static, {
+  I: Element + Clone + PartialEq + 'a + 'static, {
   crate::internal::parsers_impl::ParsersImpl::elm_ref(element)
 }
 
@@ -331,10 +331,10 @@ where
   crate::internal::parsers_impl::ParsersImpl::elm(element)
 }
 
-pub fn elm_pred_ref<'a, I, F>(f: F) -> Parser<'a, I, &'a I>
+pub fn elm_pred_ref<'a, I: Clone, F>(f: F) -> Parser<'a, I, &'a I>
 where
   F: Fn(&I) -> bool + 'a + 'static,
-  I: Element + PartialEq + 'a + 'static, {
+  I: Element + Clone + PartialEq + 'a + 'static, {
   crate::internal::parsers_impl::ParsersImpl::elm_pred_ref(f)
 }
 
@@ -352,7 +352,7 @@ pub mod static_parsers {
   // StaticParserを使用する関数
   pub fn elm_any_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     StaticParser::new(move |state| {
       let input: &[I] = state.input();
       if input.is_empty() {
@@ -384,7 +384,7 @@ pub mod static_parsers {
 
   pub fn elm_ref<'a, I>(element: I) -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + Clone + 'a + 'static, {
+    I: Element + Clone + PartialEq + Clone + 'a + 'static, {
     let element_clone = element.clone();
     StaticParser::new(move |state| {
       let input: &[I] = state.input();
@@ -437,7 +437,7 @@ pub mod static_parsers {
   pub fn elm_pred_ref<'a, I, F>(f: F) -> StaticParser<'a, I, &'a I>
   where
     F: Fn(&I) -> bool + 'a + 'static,
-    I: Element + PartialEq + Clone + 'a + 'static, {
+    I: Element + Clone + PartialEq + Clone + 'a + 'static, {
     StaticParser::new(move |state| {
       let input: &[I] = state.input();
       if input.is_empty() {
@@ -488,7 +488,7 @@ pub mod static_parsers {
 
   pub fn elm_space_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + Clone + 'a + 'static, {
+    I: Element + Clone + PartialEq + Clone + 'a + 'static, {
     elm_pred_ref(|e: &I| e.is_ascii_space())
   }
 
@@ -500,7 +500,7 @@ pub mod static_parsers {
 
   pub fn elm_multi_space_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + Clone + 'a + 'static, {
+    I: Element + Clone + PartialEq + Clone + 'a + 'static, {
     elm_pred_ref(|e: &I| e.is_ascii_multi_space())
   }
 
@@ -512,7 +512,7 @@ pub mod static_parsers {
 
   pub fn elm_alpha_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + Clone + 'a + 'static, {
+    I: Element + Clone + PartialEq + Clone + 'a + 'static, {
     elm_pred_ref(|e: &I| e.is_ascii_alpha())
   }
 
@@ -524,7 +524,7 @@ pub mod static_parsers {
 
   pub fn elm_alpha_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + Clone + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     elm_pred_ref(|e: &I| e.is_ascii_alpha_digit())
   }
 
@@ -536,7 +536,7 @@ pub mod static_parsers {
 
   pub fn elm_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + Clone + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     elm_pred_ref(|e: &I| e.is_ascii_digit())
   }
 
@@ -548,7 +548,7 @@ pub mod static_parsers {
 
   pub fn elm_hex_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + Clone + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     elm_pred_ref(|e: &I| e.is_ascii_hex_digit())
   }
 
@@ -560,7 +560,7 @@ pub mod static_parsers {
 
   pub fn elm_oct_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + PartialEq + Clone + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'a + 'static, {
     elm_pred_ref(|e: &I| e.is_ascii_oct_digit())
   }
 
@@ -572,7 +572,7 @@ pub mod static_parsers {
 
   pub fn elm_ref_of<'a, I, S>(set: &'static S) -> StaticParser<'a, I, &'a I>
   where
-    I: PartialEq + Display + Debug + 'a,
+    I: PartialEq + Clone + Display + Debug + 'a,
     S: Set<I> + ?Sized + 'static + std::fmt::Debug, {
     StaticParser::new(move |state| {
       let input: &[I] = state.input();
@@ -624,7 +624,7 @@ pub mod static_parsers {
 
   pub fn elm_ref_in<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a I>
   where
-    I: PartialEq + PartialOrd + Display + Debug + Copy + 'a, {
+    I: PartialEq + Clone + PartialOrd + Display + Debug + Copy + 'a, {
     StaticParser::new(move |state| {
       let input: &[I] = state.input();
       if input.is_empty() {
@@ -649,7 +649,7 @@ pub mod static_parsers {
 
   pub fn elm_in<'a, I>(start: I, end: I) -> StaticParser<'a, I, I>
   where
-    I: PartialEq + PartialOrd + Display + Debug + Copy + Clone + 'a + 'static, {
+    I: PartialEq + Clone + PartialOrd + Display + Debug + Copy + 'a + 'static, {
     StaticParser::new(move |state| {
       let input: &[I] = state.input();
       if input.is_empty() {
@@ -674,7 +674,7 @@ pub mod static_parsers {
 
   pub fn elm_ref_from_until<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a I>
   where
-    I: PartialEq + PartialOrd + Display + Debug + Copy + 'a, {
+    I: PartialEq + Clone + PartialOrd + Display + Debug + Copy + 'a, {
     StaticParser::new(move |state| {
       let input: &[I] = state.input();
       if input.is_empty() {
@@ -699,7 +699,7 @@ pub mod static_parsers {
 
   pub fn elm_from_until<'a, I>(start: I, end: I) -> StaticParser<'a, I, I>
   where
-    I: PartialEq + PartialOrd + Display + Debug + Copy + Clone + 'a + 'static, {
+    I: PartialEq + Clone + PartialOrd + Display + Debug + Copy + 'a + 'static, {
     StaticParser::new(move |state| {
       let input: &[I] = state.input();
       if input.is_empty() {
@@ -724,7 +724,7 @@ pub mod static_parsers {
 
   pub fn none_ref_of<'a, I, S>(set: &'static S) -> StaticParser<'a, I, &'a I>
   where
-    I: PartialEq + Display + Debug + 'a,
+    I: PartialEq + Clone + Display + Debug + 'a,
     S: Set<I> + ?Sized + 'static + std::fmt::Debug, {
     StaticParser::new(move |state| {
       let input: &[I] = state.input();
@@ -750,7 +750,7 @@ pub mod static_parsers {
 
   pub fn none_of<'a, I, S>(set: &'static S) -> StaticParser<'a, I, I>
   where
-    I: PartialEq + Display + Clone + Debug + 'a + 'static,
+    I: PartialEq + Clone + Display + Debug + 'a + 'static,
     S: Set<I> + ?Sized + 'static + std::fmt::Debug, {
     StaticParser::new(move |state| {
       let input: &[I] = state.input();

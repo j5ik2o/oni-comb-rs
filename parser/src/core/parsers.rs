@@ -3,53 +3,50 @@ use crate::core::{CommittedStatus, ParseError, Parser, StaticParser};
 
 /// パーサー関数を提供するトレイト
 pub trait Parsers {
-  type P<'p, I, A>: ParserMonad<'p, Input = I, Output = A>
+  type P<'p, I: Clone, A>: ParserMonad<'p, Input = I, Output = A>
   where
     I: 'p,
     A: 'p;
 
-  fn parse<'a, 'b, I, A>(parser: &Self::P<'a, I, A>, input: &'b [I]) -> Result<A, ParseError<'a, I>>
+  fn parse<'a, 'b, I: Clone, A>(parser: &Self::P<'a, I, A>, input: &'b [I]) -> Result<A, ParseError<'a, I>>
   where
     A: 'a,
     'b: 'a;
 
-  fn unit<'a, I>() -> Self::P<'a, I, ()> {
+  fn unit<'a, I: Clone>() -> Self::P<'a, I, ()> {
     Self::successful(())
   }
 
-  fn successful<'a, I, A>(value: A) -> Self::P<'a, I, A>
+  fn successful<'a, I: Clone, A>(value: A) -> Self::P<'a, I, A>
   where
     A: Clone + 'a;
 
-  fn successful_lazy<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
+  fn successful_lazy<'a, I: Clone, A, F>(value: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> A + 'a,
     A: 'a;
 
-  fn failed<'a, I, A>(value: ParseError<'a, I>, committed: CommittedStatus) -> Self::P<'a, I, A>
+  fn failed<'a, I: Clone, A>(value: ParseError<'a, I>, committed: CommittedStatus) -> Self::P<'a, I, A>
   where
-    I: Clone + 'a,
     A: 'a;
 
-  fn failed_lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
+  fn failed_lazy<'a, I: Clone, A, F>(f: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> (ParseError<'a, I>, CommittedStatus) + 'a,
-    I: 'a,
     A: 'a;
 
-  fn filter<'a, I, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
+  fn filter<'a, I: Clone, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
   where
     F: Fn(&A) -> bool + 'a + Clone,
-    I: 'a + Clone,
     A: 'a + Clone;
 
-  fn flat_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  fn flat_map<'a, I: Clone, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> Self::P<'a, I, B> + 'a + Clone,
     A: 'a,
     B: 'a + Clone;
 
-  fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  fn map<'a, I: Clone, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> B + 'a + Clone,
     A: 'a,
@@ -58,7 +55,7 @@ pub trait Parsers {
 
 /// 静的ディスパッチを使用したパーサー関数を提供するトレイト
 pub trait StaticParsers {
-  type P<'p, I, A>: ParserMonad<'p, Input = I, Output = A>
+  type P<'p, I: Clone, A>: ParserMonad<'p, Input = I, Output = A>
   where
     I: 'p,
     A: 'p + 'static;
@@ -66,45 +63,43 @@ pub trait StaticParsers {
   fn parse<'a, 'b, I, A>(parser: &Self::P<'a, I, A>, input: &'b [I]) -> Result<A, ParseError<'a, I>>
   where
     A: 'a + 'static,
-    'b: 'a;
+    'b: 'a,
+    I: Clone;
 
-  fn unit<'a, I>() -> Self::P<'a, I, ()> {
+  fn unit<'a, I: Clone>() -> Self::P<'a, I, ()> {
     Self::successful(())
   }
 
-  fn successful<'a, I, A>(value: A) -> Self::P<'a, I, A>
+  fn successful<'a, I: Clone, A>(value: A) -> Self::P<'a, I, A>
   where
     A: Clone + 'a + 'static;
 
-  fn successful_lazy<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
+  fn successful_lazy<'a, I: Clone, A, F>(value: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> A + 'a,
     A: 'a + 'static;
 
-  fn failed<'a, I, A>(value: ParseError<'a, I>, committed: CommittedStatus) -> Self::P<'a, I, A>
+  fn failed<'a, I: Clone, A>(value: ParseError<'a, I>, committed: CommittedStatus) -> Self::P<'a, I, A>
   where
-    I: Clone + 'a,
     A: 'a + 'static;
 
-  fn failed_lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
+  fn failed_lazy<'a, I: Clone, A, F>(f: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> (ParseError<'a, I>, CommittedStatus) + 'a,
-    I: 'a,
     A: 'a + 'static;
 
-  fn filter<'a, I, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
+  fn filter<'a, I: Clone, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
   where
     F: Fn(&A) -> bool + 'a + Clone,
-    I: 'a + Clone,
     A: 'a + 'static + Clone;
 
-  fn flat_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  fn flat_map<'a, I: Clone, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> Self::P<'a, I, B> + 'a + Clone,
     A: 'a + 'static,
     B: 'a + 'static + Clone;
 
-  fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  fn map<'a, I: Clone, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> B + 'a + Clone,
     A: 'a + 'static,
@@ -115,7 +110,7 @@ pub trait StaticParsers {
 pub struct ParserParsers;
 
 impl Parsers for ParserParsers {
-  type P<'p, I, A>
+  type P<'p, I: Clone, A>
     = Parser<'p, I, A>
   where
     I: 'p,
@@ -124,7 +119,8 @@ impl Parsers for ParserParsers {
   fn parse<'a, 'b, I, A>(parser: &Self::P<'a, I, A>, input: &'b [I]) -> Result<A, ParseError<'a, I>>
   where
     A: 'a,
-    'b: 'a, {
+    'b: 'a,
+    I: Clone {
     use crate::core::parser_runner::ParserRunner;
     parser
       .parse(input)
@@ -132,30 +128,28 @@ impl Parsers for ParserParsers {
       .ok_or_else(|| ParseError::of_custom(0, None, "Parse failed".to_string()))
   }
 
-  fn successful<'a, I, A>(value: A) -> Self::P<'a, I, A>
+  fn successful<'a, I: Clone, A>(value: A) -> Self::P<'a, I, A>
   where
     A: Clone + 'a, {
     Parser::new(move |_| crate::core::ParseResult::successful(value.clone(), 0))
   }
 
-  fn successful_lazy<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
+  fn successful_lazy<'a, I: Clone, A, F>(value: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> A + 'a,
     A: 'a, {
     Parser::new(move |_| crate::core::ParseResult::successful(value(), 0))
   }
 
-  fn failed<'a, I, A>(value: ParseError<'a, I>, committed: CommittedStatus) -> Self::P<'a, I, A>
+  fn failed<'a, I: Clone, A>(value: ParseError<'a, I>, committed: CommittedStatus) -> Self::P<'a, I, A>
   where
-    I: Clone + 'a,
     A: 'a, {
     Parser::new(move |_| crate::core::ParseResult::failed(value.clone(), committed))
   }
 
-  fn failed_lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
+  fn failed_lazy<'a, I: Clone, A, F>(f: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> (ParseError<'a, I>, CommittedStatus) + 'a,
-    I: 'a,
     A: 'a, {
     Parser::new(move |_| {
       let (error, committed) = f();
@@ -163,10 +157,9 @@ impl Parsers for ParserParsers {
     })
   }
 
-  fn filter<'a, I, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
+  fn filter<'a, I: Clone, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
   where
     F: Fn(&A) -> bool + 'a + Clone,
-    I: 'a + Clone,
     A: 'a + Clone, {
     // 直接実装を使用
     Self::flat_map(parser, move |a| {
@@ -181,7 +174,7 @@ impl Parsers for ParserParsers {
     })
   }
 
-  fn flat_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  fn flat_map<'a, I: Clone, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> Self::P<'a, I, B> + 'a + Clone,
     A: 'a,
@@ -189,7 +182,7 @@ impl Parsers for ParserParsers {
     parser.flat_map(f)
   }
 
-  fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  fn map<'a, I: Clone, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> B + 'a + Clone,
     A: 'a,
@@ -203,7 +196,7 @@ impl Parsers for ParserParsers {
 pub struct StaticParserParsers;
 
 impl StaticParsers for StaticParserParsers {
-  type P<'p, I, A>
+  type P<'p, I: Clone, A>
     = StaticParser<'p, I, A>
   where
     I: 'p,
@@ -212,7 +205,8 @@ impl StaticParsers for StaticParserParsers {
   fn parse<'a, 'b, I, A>(parser: &Self::P<'a, I, A>, input: &'b [I]) -> Result<A, ParseError<'a, I>>
   where
     A: 'a + 'static,
-    'b: 'a, {
+    'b: 'a,
+    I: Clone {
     use crate::core::parser_runner::ParserRunner;
     parser
       .parse(input)
@@ -220,30 +214,28 @@ impl StaticParsers for StaticParserParsers {
       .ok_or_else(|| ParseError::of_custom(0, None, "Parse failed".to_string()))
   }
 
-  fn successful<'a, I, A>(value: A) -> Self::P<'a, I, A>
+  fn successful<'a, I: Clone, A>(value: A) -> Self::P<'a, I, A>
   where
     A: Clone + 'a + 'static, {
     StaticParser::new(move |_| crate::core::ParseResult::successful(value.clone(), 0))
   }
 
-  fn successful_lazy<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
+  fn successful_lazy<'a, I: Clone, A, F>(value: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> A + 'a,
     A: 'a + 'static, {
     StaticParser::new(move |_| crate::core::ParseResult::successful(value(), 0))
   }
 
-  fn failed<'a, I, A>(value: ParseError<'a, I>, committed: CommittedStatus) -> Self::P<'a, I, A>
+  fn failed<'a, I: Clone, A>(value: ParseError<'a, I>, committed: CommittedStatus) -> Self::P<'a, I, A>
   where
-    I: Clone + 'a,
     A: 'a + 'static, {
     StaticParser::new(move |_| crate::core::ParseResult::failed(value.clone(), committed))
   }
 
-  fn failed_lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
+  fn failed_lazy<'a, I: Clone, A, F>(f: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> (ParseError<'a, I>, CommittedStatus) + 'a,
-    I: 'a,
     A: 'a + 'static, {
     StaticParser::new(move |_| {
       let (error, committed) = f();
@@ -251,10 +243,9 @@ impl StaticParsers for StaticParserParsers {
     })
   }
 
-  fn filter<'a, I, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
+  fn filter<'a, I: Clone, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
   where
     F: Fn(&A) -> bool + 'a + Clone,
-    I: 'a + Clone,
     A: 'a + 'static + Clone, {
     // 直接実装を使用
     Self::flat_map(parser, move |a| {
@@ -269,7 +260,7 @@ impl StaticParsers for StaticParserParsers {
     })
   }
 
-  fn flat_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  fn flat_map<'a, I: Clone, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> Self::P<'a, I, B> + 'a + Clone,
     A: 'a + 'static,
@@ -277,7 +268,7 @@ impl StaticParsers for StaticParserParsers {
     parser.flat_map(f)
   }
 
-  fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  fn map<'a, I: Clone, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> B + 'a + Clone,
     A: 'a + 'static,

@@ -22,12 +22,13 @@ impl Parsers for ParsersImpl {
   type P<'p, I, A>
     = Parser<'p, I, A>
   where
-    I: 'p,
+    I: std::clone::Clone + 'p,
     A: 'p;
 
   fn parse<'a, 'b, I, A>(parser: &Self::P<'a, I, A>, input: &'b [I]) -> Result<A, ParseError<'a, I>>
   where
     A: 'a,
+    I: std::clone::Clone + 'a,
     'b: 'a, {
     let parse_state = ParseState::new(input, 0);
     parser.run(&parse_state).to_result()
@@ -35,14 +36,16 @@ impl Parsers for ParsersImpl {
 
   fn successful<'a, I, A>(value: A) -> Self::P<'a, I, A>
   where
-    A: Clone + 'a, {
+    A: Clone + 'a,
+    I: std::clone::Clone + 'a, {
     Parser::new(move |_| ParseResult::successful(value.clone(), 0))
   }
 
   fn successful_lazy<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> A + 'a,
-    A: 'a, {
+    A: 'a,
+    I: std::clone::Clone + 'a, {
     Parser::new(move |_| ParseResult::successful(value(), 0))
   }
 
@@ -56,7 +59,7 @@ impl Parsers for ParsersImpl {
   fn failed_lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> (ParseError<'a, I>, CommittedStatus) + 'a,
-    I: 'a,
+    I: std::clone::Clone + 'a,
     A: 'a, {
     Parser::new(move |_| {
       let (pe, committed) = f();
@@ -92,6 +95,7 @@ impl Parsers for ParsersImpl {
   fn flat_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> Self::P<'a, I, B> + 'a + Clone,
+    I: std::clone::Clone + 'a,
     A: 'a,
     B: 'a, {
     Parser::new(move |parse_state| match parser.run(&parse_state) {
@@ -109,6 +113,7 @@ impl Parsers for ParsersImpl {
   fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> B + 'a + Clone,
+    I: std::clone::Clone + 'a,
     A: 'a,
     B: Clone + 'a, {
     Self::flat_map(parser, move |e| Self::successful(f(e)))

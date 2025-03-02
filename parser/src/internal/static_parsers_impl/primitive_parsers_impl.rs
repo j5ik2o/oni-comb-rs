@@ -6,7 +6,7 @@ use std::fmt::{Debug, Display};
 impl StaticPrimitiveParsers for StaticParsersImpl {
   fn end<'a, I>() -> Self::P<'a, I, ()>
   where
-    I: Debug + Display + 'a, {
+    I: Debug + Display + 'a + Clone, {
     StaticParser::new(move |state| {
       let input = state.input();
       if input.is_empty() {
@@ -20,7 +20,9 @@ impl StaticPrimitiveParsers for StaticParsersImpl {
     })
   }
 
-  fn empty<'a, I>() -> Self::P<'a, I, ()> {
+  fn empty<'a, I>() -> Self::P<'a, I, ()>
+  where
+    I: Clone + 'a, {
     StaticParser::new(move |_| ParseResult::successful((), 0))
   }
 }

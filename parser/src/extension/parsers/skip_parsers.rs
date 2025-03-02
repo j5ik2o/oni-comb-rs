@@ -4,23 +4,23 @@ use crate::core::{Parser, Parsers, StaticParser, StaticParsers};
 use crate::extension::parsers::{OperatorParsers, StaticOperatorParsers};
 
 pub trait SkipParsers: OperatorParsers {
-  fn skip<'a, I>(n: usize) -> Self::P<'a, I, ()>;
+  fn skip<'a, I: Clone>(n: usize) -> Self::P<'a, I, ()>;
 
-  fn skip_left<'a, I, A, B>(pa: Self::P<'a, I, A>, pb: Self::P<'a, I, B>) -> Self::P<'a, I, B>
+  fn skip_left<'a, I: Clone, A, B>(pa: Self::P<'a, I, A>, pb: Self::P<'a, I, B>) -> Self::P<'a, I, B>
   where
     A: Clone + Debug + 'a,
     B: Clone + Debug + 'a, {
     Self::map(Self::and_then(pa, pb), |(_, b)| b)
   }
 
-  fn skip_right<'a, I, A, B>(pa: Self::P<'a, I, A>, pb: Self::P<'a, I, B>) -> Self::P<'a, I, A>
+  fn skip_right<'a, I: Clone, A, B>(pa: Self::P<'a, I, A>, pb: Self::P<'a, I, B>) -> Self::P<'a, I, A>
   where
     A: Clone + Debug + 'a,
     B: Clone + Debug + 'a, {
     Self::map(Self::and_then(pa, pb), |(a, _)| a)
   }
 
-  fn surround<'a, I, A, B, C>(
+  fn surround<'a, I: Clone, A, B, C>(
     left_parser: Self::P<'a, I, A>,
     parser: Self::P<'a, I, B>,
     right_parser: Self::P<'a, I, C>,
@@ -34,23 +34,23 @@ pub trait SkipParsers: OperatorParsers {
 }
 
 pub trait StaticSkipParsers: StaticOperatorParsers {
-  fn skip<'a, I>(n: usize) -> Self::P<'a, I, ()>;
+  fn skip<'a, I: Clone>(n: usize) -> Self::P<'a, I, ()>;
 
-  fn skip_left<'a, I, A, B>(pa: Self::P<'a, I, A>, pb: Self::P<'a, I, B>) -> Self::P<'a, I, B>
+  fn skip_left<'a, I: Clone, A, B>(pa: Self::P<'a, I, A>, pb: Self::P<'a, I, B>) -> Self::P<'a, I, B>
   where
     A: Clone + Debug + 'a + 'static,
     B: Clone + Debug + 'a + 'static, {
     Self::map(Self::and_then(pa, pb), |(_, b)| b)
   }
 
-  fn skip_right<'a, I, A, B>(pa: Self::P<'a, I, A>, pb: Self::P<'a, I, B>) -> Self::P<'a, I, A>
+  fn skip_right<'a, I: Clone, A, B>(pa: Self::P<'a, I, A>, pb: Self::P<'a, I, B>) -> Self::P<'a, I, A>
   where
     A: Clone + Debug + 'a + 'static,
     B: Clone + Debug + 'a + 'static, {
     Self::map(Self::and_then(pa, pb), |(a, _)| a)
   }
 
-  fn surround<'a, I, A, B, C>(
+  fn surround<'a, I: Clone, A, B, C>(
     left_parser: Self::P<'a, I, A>,
     parser: Self::P<'a, I, B>,
     right_parser: Self::P<'a, I, C>,
@@ -64,7 +64,7 @@ pub trait StaticSkipParsers: StaticOperatorParsers {
 }
 
 // 既存のParserを使用する関数
-pub fn skip<'a, I>(n: usize) -> Parser<'a, I, ()> {
+pub fn skip<'a, I: Clone>(n: usize) -> Parser<'a, I, ()> {
   use crate::prelude::OperatorParser;
   Parser::new(move |state| {
     let input = state.input();
@@ -79,7 +79,7 @@ pub fn skip<'a, I>(n: usize) -> Parser<'a, I, ()> {
   })
 }
 
-pub fn skip_left<'a, I, A, B>(pa: Parser<'a, I, A>, pb: Parser<'a, I, B>) -> Parser<'a, I, B>
+pub fn skip_left<'a, I: Clone, A, B>(pa: Parser<'a, I, A>, pb: Parser<'a, I, B>) -> Parser<'a, I, B>
 where
   A: Clone + Debug + 'a,
   B: Clone + Debug + 'a, {
@@ -98,7 +98,7 @@ where
   })
 }
 
-pub fn skip_right<'a, I, A, B>(pa: Parser<'a, I, A>, pb: Parser<'a, I, B>) -> Parser<'a, I, A>
+pub fn skip_right<'a, I: Clone, A, B>(pa: Parser<'a, I, A>, pb: Parser<'a, I, B>) -> Parser<'a, I, A>
 where
   A: Clone + Debug + 'a,
   B: Clone + Debug + 'a, {
@@ -117,7 +117,7 @@ where
   })
 }
 
-pub fn surround<'a, I, A, B, C>(
+pub fn surround<'a, I: Clone, A, B, C>(
   left_parser: Parser<'a, I, A>,
   parser: Parser<'a, I, B>,
   right_parser: Parser<'a, I, C>,
@@ -151,7 +151,7 @@ pub mod static_parsers {
   use super::*;
 
   // StaticParserを使用する関数
-  pub fn skip<'a, I>(n: usize) -> StaticParser<'a, I, ()> {
+  pub fn skip<'a, I: Clone>(n: usize) -> StaticParser<'a, I, ()> {
     StaticParser::new(move |state| {
       let input = state.input();
       if input.len() >= n {
@@ -165,7 +165,7 @@ pub mod static_parsers {
     })
   }
 
-  pub fn skip_left<'a, I, A, B>(pa: StaticParser<'a, I, A>, pb: StaticParser<'a, I, B>) -> StaticParser<'a, I, B>
+  pub fn skip_left<'a, I: Clone, A, B>(pa: StaticParser<'a, I, A>, pb: StaticParser<'a, I, B>) -> StaticParser<'a, I, B>
   where
     A: Clone + Debug + 'a + 'static,
     B: Clone + Debug + 'a + 'static, {
@@ -184,7 +184,7 @@ pub mod static_parsers {
     })
   }
 
-  pub fn skip_right<'a, I, A, B>(pa: StaticParser<'a, I, A>, pb: StaticParser<'a, I, B>) -> StaticParser<'a, I, A>
+  pub fn skip_right<'a, I: Clone, A, B>(pa: StaticParser<'a, I, A>, pb: StaticParser<'a, I, B>) -> StaticParser<'a, I, A>
   where
     A: Clone + Debug + 'a + 'static,
     B: Clone + Debug + 'a + 'static, {
@@ -203,7 +203,7 @@ pub mod static_parsers {
     })
   }
 
-  pub fn surround<'a, I, A, B, C>(
+  pub fn surround<'a, I: Clone, A, B, C>(
     left_parser: StaticParser<'a, I, A>,
     parser: StaticParser<'a, I, B>,
     right_parser: StaticParser<'a, I, C>,

@@ -12,7 +12,7 @@ pub enum LogLevel {
 pub trait LoggingParsers: Parsers {
   fn log<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str, log_level: LogLevel) -> Self::P<'a, I, A>
   where
-    I: Debug,
+    I: Debug + Clone,
     A: Debug + 'a, {
     Self::log_map(parser, name, log_level, move |a| format!("{:?}", a))
   }
@@ -20,25 +20,25 @@ pub trait LoggingParsers: Parsers {
   fn log_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, name: &'a str, log_level: LogLevel, f: F) -> Self::P<'a, I, A>
   where
     F: Fn(&ParseResult<'a, I, A>) -> B + 'a,
-    I: Debug,
+    I: Debug + Clone,
     A: Debug + 'a,
     B: Display + 'a;
 
   fn name<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str) -> Self::P<'a, I, A>
   where
-    I: Debug,
+    I: Debug + Clone,
     A: Debug + 'a;
 
   fn expect<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str) -> Self::P<'a, I, A>
   where
-    I: Debug,
+    I: Debug + Clone,
     A: Debug + 'a;
 }
 
 pub trait StaticLoggingParsers: StaticParsers {
   fn log<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str, log_level: LogLevel) -> Self::P<'a, I, A>
   where
-    I: Debug,
+    I: Debug + Clone,
     A: Debug + 'a + 'static, {
     Self::log_map(parser, name, log_level, move |a| format!("{:?}", a))
   }
@@ -46,25 +46,25 @@ pub trait StaticLoggingParsers: StaticParsers {
   fn log_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, name: &'a str, log_level: LogLevel, f: F) -> Self::P<'a, I, A>
   where
     F: Fn(&ParseResult<'a, I, A>) -> B + 'a,
-    I: Debug,
+    I: Debug + Clone,
     A: Debug + 'a + 'static,
     B: Display + 'a;
 
   fn name<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str) -> Self::P<'a, I, A>
   where
-    I: Debug,
+    I: Debug + Clone,
     A: Debug + 'a + 'static;
 
   fn expect<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str) -> Self::P<'a, I, A>
   where
-    I: Debug,
+    I: Debug + Clone,
     A: Debug + 'a + 'static;
 }
 
 // 既存のParserを使用する関数
 pub fn log<'a, I, A>(parser: Parser<'a, I, A>, name: &'a str, log_level: LogLevel) -> Parser<'a, I, A>
 where
-  I: Debug,
+  I: Debug + Clone,
   A: Debug + 'a, {
   use crate::internal::parsers_impl::ParsersImpl;
   ParsersImpl::log(parser, name, log_level)
@@ -73,7 +73,7 @@ where
 pub fn log_map<'a, I, A, B, F>(parser: Parser<'a, I, A>, name: &'a str, log_level: LogLevel, f: F) -> Parser<'a, I, A>
 where
   F: Fn(&ParseResult<'a, I, A>) -> B + 'a,
-  I: Debug,
+  I: Debug + Clone,
   A: Debug + 'a,
   B: Display + 'a, {
   use crate::internal::parsers_impl::ParsersImpl;
@@ -82,7 +82,7 @@ where
 
 pub fn name<'a, I, A>(parser: Parser<'a, I, A>, name: &'a str) -> Parser<'a, I, A>
 where
-  I: Debug,
+  I: Debug + Clone,
   A: Debug + 'a, {
   use crate::internal::parsers_impl::ParsersImpl;
   ParsersImpl::name(parser, name)
@@ -90,7 +90,7 @@ where
 
 pub fn expect<'a, I, A>(parser: Parser<'a, I, A>, name: &'a str) -> Parser<'a, I, A>
 where
-  I: Debug,
+  I: Debug + Clone,
   A: Debug + 'a, {
   use crate::internal::parsers_impl::ParsersImpl;
   ParsersImpl::expect(parser, name)
@@ -103,7 +103,7 @@ pub mod static_parsers {
   // StaticParserを使用する関数
   pub fn log<'a, I, A>(parser: StaticParser<'a, I, A>, name: &'a str, log_level: LogLevel) -> StaticParser<'a, I, A>
   where
-    I: Debug,
+    I: Debug + Clone,
     A: Debug + 'a + 'static, {
     use crate::internal::static_parsers_impl::StaticParsersImpl;
     StaticParsersImpl::log(parser, name, log_level)
@@ -117,7 +117,7 @@ pub mod static_parsers {
   ) -> StaticParser<'a, I, A>
   where
     F: Fn(&ParseResult<'a, I, A>) -> B + 'a,
-    I: Debug,
+    I: Debug + Clone,
     A: Debug + 'a + 'static,
     B: Display + 'a, {
     use crate::internal::static_parsers_impl::StaticParsersImpl;
@@ -126,7 +126,7 @@ pub mod static_parsers {
 
   pub fn name<'a, I, A>(parser: StaticParser<'a, I, A>, name: &'a str) -> StaticParser<'a, I, A>
   where
-    I: Debug,
+    I: Debug + Clone,
     A: Debug + 'a + 'static, {
     use crate::internal::static_parsers_impl::StaticParsersImpl;
     StaticParsersImpl::name(parser, name)
@@ -134,7 +134,7 @@ pub mod static_parsers {
 
   pub fn expect<'a, I, A>(parser: StaticParser<'a, I, A>, name: &'a str) -> StaticParser<'a, I, A>
   where
-    I: Debug,
+    I: Debug + Clone,
     A: Debug + 'a + 'static, {
     use crate::internal::static_parsers_impl::StaticParsersImpl;
     StaticParsersImpl::expect(parser, name)

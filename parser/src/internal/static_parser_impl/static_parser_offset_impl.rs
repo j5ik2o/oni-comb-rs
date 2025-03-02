@@ -10,7 +10,7 @@ use crate::core::{ParseResult, StaticParser};
 use crate::extension::parser::OffsetParser;
 use std::fmt::Debug;
 
-impl<'a, I, A: 'a> OffsetParser<'a> for StaticParser<'a, I, A> {
+impl<'a, I: Clone, A: 'a> OffsetParser<'a> for StaticParser<'a, I, A> {
   fn last_offset(self) -> Self::P<'a, Self::Input, usize>
   where
     Self::Output: Debug + 'a, {

@@ -4,7 +4,7 @@ use crate::extension::parsers::{LogLevel, LoggingParsers};
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;
 
-impl<'a, I, A> LoggingParser<'a> for Parser<'a, I, A> {
+impl<'a, I: Clone, A> LoggingParser<'a> for Parser<'a, I, A> {
   fn log(self, name: &'a str, log_level: LogLevel) -> Self::P<'a, Self::Input, Self::Output>
   where
     Self::Input: Debug,

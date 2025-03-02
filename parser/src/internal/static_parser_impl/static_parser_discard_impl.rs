@@ -10,7 +10,7 @@ use crate::core::{ParseResult, StaticParser};
 use crate::extension::parser::DiscardParser;
 use std::fmt::Debug;
 
-impl<'a, I, A: 'a> DiscardParser<'a> for StaticParser<'a, I, A> {
+impl<'a, I: std::clone::Clone, A: 'a> DiscardParser<'a> for StaticParser<'a, I, A> {
   fn discard(self) -> Self::P<'a, Self::Input, ()>
   where
     Self::Output: Debug + 'a, {

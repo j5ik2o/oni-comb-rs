@@ -4,7 +4,7 @@ use crate::internal::ParsersImpl;
 use std::fmt::Debug;
 
 impl ConversionParsers for ParsersImpl {
-  fn map_res<'a, I, A, B, E, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  fn map_res<'a, I: Clone, A, B, E, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> Result<B, E> + 'a,
     E: Debug,
@@ -27,7 +27,7 @@ impl ConversionParsers for ParsersImpl {
     })
   }
 
-  fn map_opt<'a, I, A, B, E, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
+  fn map_opt<'a, I: Clone, A, B, E, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
     F: Fn(A) -> Option<B> + 'a,
     A: Debug + 'a,

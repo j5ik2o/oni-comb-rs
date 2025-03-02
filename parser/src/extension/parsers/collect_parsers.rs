@@ -3,19 +3,19 @@ use crate::prelude::ParserRunner;
 use std::fmt::Debug;
 
 pub trait CollectParsers: Parsers {
-  fn collect<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, &'a [I]>
+  fn collect<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, &'a [I]>
   where
     A: Debug + 'a;
 }
 
 pub trait StaticCollectParsers: StaticParsers {
-  fn collect<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, &'a [I]>
+  fn collect<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, &'a [I]>
   where
     A: Debug + Clone + 'a + 'static;
 }
 
 // 既存のParserを使用する関数
-pub fn collect<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, &'a [I]>
+pub fn collect<'a, I: Clone, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, &'a [I]>
 where
   A: Debug + 'a, {
   // 直接実装を使用
@@ -40,7 +40,7 @@ pub mod static_parsers {
   use super::*;
 
   // StaticParserを使用する関数
-  pub fn collect<'a, I, A>(parser: StaticParser<'a, I, A>) -> StaticParser<'a, I, &'a [I]>
+  pub fn collect<'a, I: Clone, A>(parser: StaticParser<'a, I, A>) -> StaticParser<'a, I, &'a [I]>
   where
     A: Debug + Clone + 'a + 'static, {
     // 直接実装を使用

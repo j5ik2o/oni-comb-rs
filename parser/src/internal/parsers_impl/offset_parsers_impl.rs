@@ -5,7 +5,7 @@ use crate::internal::ParsersImpl;
 impl OffsetParsers for ParsersImpl {
   fn last_offset<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>
   where
-    A: 'a, {
+    A: 'a, I: std::clone::Clone {
     Parser::new(move |parse_state| match parser.run(parse_state) {
       ParseResult::Success { length, .. } => {
         let ps = parse_state.add_offset(length);
@@ -20,7 +20,7 @@ impl OffsetParsers for ParsersImpl {
 
   fn next_offset<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>
   where
-    A: 'a, {
+    A: 'a, I: std::clone::Clone {
     Parser::new(move |parse_state| match parser.run(parse_state) {
       ParseResult::Success { length, .. } => {
         let ps = parse_state.add_offset(length);

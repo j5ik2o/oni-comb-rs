@@ -6,7 +6,7 @@ use std::fmt::{Debug, Display};
 impl PrimitiveParsers for ParsersImpl {
   fn end<'a, I>() -> Self::P<'a, I, ()>
   where
-    I: Debug + Display + 'a, {
+    I: Debug + Display + 'a + std::clone::Clone, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       if let Some(actual) = input.get(0) {
@@ -20,7 +20,9 @@ impl PrimitiveParsers for ParsersImpl {
     })
   }
 
-  fn empty<'a, I>() -> Self::P<'a, I, ()> {
+  fn empty<'a, I>() -> Self::P<'a, I, ()>
+  where
+    I: std::clone::Clone + 'a {
     Self::unit()
   }
 }

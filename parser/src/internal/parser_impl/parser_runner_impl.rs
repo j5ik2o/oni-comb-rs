@@ -1,12 +1,12 @@
 use crate::core::{ParseResult, ParseState, Parser, ParserRunner};
 
-impl<'a, I, A> ParserRunner<'a> for Parser<'a, I, A> {
+impl<'a, I: Clone, A> ParserRunner<'a> for Parser<'a, I, A> {
   type Input = I;
   type Output = A;
   type P<'m, X, Y: 'm>
     = Parser<'m, X, Y>
   where
-    X: 'm;
+    X: Clone + 'm;
 
   fn parse(&self, input: &'a [Self::Input]) -> ParseResult<'a, Self::Input, Self::Output> {
     let parse_state = ParseState::new(input, 0);

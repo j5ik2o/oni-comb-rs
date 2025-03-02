@@ -37,7 +37,7 @@ pub mod prelude {
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), ());
   /// ```
-  pub fn unit<'a, I>() -> Parser<'a, I, ()> {
+  pub fn unit<'a, I: Clone>() -> Parser<'a, I, ()> {
     ParsersImpl::unit()
   }
 
@@ -59,7 +59,7 @@ pub mod prelude {
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), ());
   /// ```
-  pub fn unit_static<'a, I>() -> StaticParser<'a, I, ()> {
+  pub fn unit_static<'a, I: Clone>() -> StaticParser<'a, I, ()> {
     StaticParsersImpl::unit()
   }
 
@@ -81,7 +81,7 @@ pub mod prelude {
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), ());
   /// ```
-  pub fn empty<'a, I>() -> Parser<'a, I, ()> {
+  pub fn empty<'a, I: Clone>() -> Parser<'a, I, ()> {
     ParsersImpl::empty()
   }
 
@@ -103,7 +103,7 @@ pub mod prelude {
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), ());
   /// ```
-  pub fn empty_static<'a, I>() -> StaticParser<'a, I, ()> {
+  pub fn empty_static<'a, I: Clone>() -> StaticParser<'a, I, ()> {
     StaticParsersImpl::empty()
   }
 
@@ -130,7 +130,7 @@ pub mod prelude {
   ///
   /// assert!(result.is_err());
   /// ```
-  pub fn end<'a, I>() -> Parser<'a, I, ()>
+  pub fn end<'a, I: Clone>() -> Parser<'a, I, ()>
   where
     I: Debug + Display + 'a, {
     ParsersImpl::end()
@@ -161,7 +161,7 @@ pub mod prelude {
   /// ```
   pub fn end_static<'a, I>() -> StaticParser<'a, I, ()>
   where
-    I: Debug + Display + 'a, {
+    I: Clone + Debug + Display + 'a, {
     StaticParsersImpl::end()
   }
 
@@ -185,7 +185,7 @@ pub mod prelude {
   /// ```
   pub fn successful<'a, I, A>(value: A) -> Parser<'a, I, A>
   where
-    I: 'a,
+    I: Clone + 'a,
     A: Clone + 'a, {
     ParsersImpl::successful(value)
   }
@@ -210,7 +210,7 @@ pub mod prelude {
   /// ```
   pub fn successful_static<'a, I, A>(value: A) -> StaticParser<'a, I, A>
   where
-    I: 'a,
+    I: Clone + 'a,
     A: Clone + 'a, {
     StaticParsersImpl::successful(value)
   }
@@ -238,7 +238,7 @@ pub mod prelude {
   /// ```
   pub fn successful_lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
   where
-    I: 'a,
+    I: Clone + 'a,
     F: Fn() -> A + 'a,
     A: 'a, {
     ParsersImpl::successful_lazy(f)
@@ -267,7 +267,7 @@ pub mod prelude {
   /// ```
   pub fn successful_lazy_static<'a, I, A, F>(f: F) -> StaticParser<'a, I, A>
   where
-    I: 'a,
+    I: Clone + 'a,
     F: Fn() -> A + 'a,
     A: 'a, {
     StaticParsersImpl::successful_lazy(f)
@@ -481,7 +481,7 @@ pub mod prelude {
   pub fn failed_lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
   where
     F: Fn() -> (ParseError<'a, I>, CommittedStatus) + 'a,
-    I: 'a,
+    I: Clone + 'a,
     A: 'a, {
     ParsersImpl::failed_lazy(f)
   }
@@ -512,7 +512,7 @@ pub mod prelude {
   pub fn failed_lazy_static<'a, I, A, F>(f: F) -> StaticParser<'a, I, A>
   where
     F: Fn() -> (ParseError<'a, I>, CommittedStatus) + 'a,
-    I: 'a,
+    I: Clone + 'a,
     A: 'a, {
     StaticParsersImpl::failed_lazy(f)
   }
@@ -538,7 +538,7 @@ pub mod prelude {
   /// ```
   pub fn elm_any_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Clone + Element + PartialEq + 'a + 'static, {
     ParsersImpl::elm_any_ref()
   }
 
@@ -562,7 +562,7 @@ pub mod prelude {
   /// ```
   pub fn elm_any_ref_static<'a, I>() -> StaticParser<'a, I, &'a [I]>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + PartialEq + Clone + 'a + 'static, {
     StaticParsersImpl::elm_any_ref()
   }
 
@@ -639,7 +639,7 @@ pub mod prelude {
   /// ```
   pub fn elm_ref<'a, I>(element: I) -> Parser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Clone + Element + PartialEq + 'a + 'static, {
     ParsersImpl::elm_ref(element)
   }
 
@@ -748,7 +748,7 @@ pub mod prelude {
   pub fn elm_pred_ref<'a, I, F>(f: F) -> Parser<'a, I, &'a I>
   where
     F: Fn(&I) -> bool + 'a + 'static,
-    I: Element + PartialEq + 'a + 'static, {
+    I: Clone + Element + PartialEq + 'a + 'static, {
     ParsersImpl::elm_pred_ref(f)
   }
 
@@ -865,7 +865,7 @@ pub mod prelude {
   /// ```
   pub fn elm_ref_of<'a, I, S>(set: &'static S) -> Parser<'a, I, &'a I>
   where
-    I: PartialEq + Display + Debug + 'a + 'static,
+    I: PartialEq + Clone + Display + Debug + 'a + 'static,
     S: Set<I> + ?Sized + 'static, {
     ParsersImpl::elm_ref_of(set)
   }
@@ -1251,7 +1251,7 @@ pub mod prelude {
   /// ```
   pub fn none_ref_of<'a, I, S>(set: &'static S) -> Parser<'a, I, &'a I>
   where
-    I: PartialEq + Display + Debug + 'a + 'static,
+    I: PartialEq + Clone + Display + Debug + 'a + 'static,
     S: Set<I> + ?Sized + 'static, {
     ParsersImpl::none_ref_of(set)
   }
@@ -1384,7 +1384,7 @@ pub mod prelude {
   /// ```
   pub fn elm_space_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Clone + Element + PartialEq + 'a + 'static, {
     ParsersImpl::elm_space_ref()
   }
 
@@ -1486,7 +1486,7 @@ pub mod prelude {
   /// ```
   pub fn elm_multi_space_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Clone + Element + PartialEq + 'a + 'static, {
     ParsersImpl::elm_multi_space_ref()
   }
 
@@ -1588,7 +1588,7 @@ pub mod prelude {
   /// ```
   pub fn elm_alpha_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Clone + Element + PartialEq + 'a + 'static, {
     ParsersImpl::elm_alpha_ref()
   }
 
@@ -1692,7 +1692,7 @@ pub mod prelude {
   /// ```
   pub fn elm_alpha_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I:  Clone + Element + PartialEq + 'a + 'static, {
     ParsersImpl::elm_alpha_digit_ref()
   }
 
@@ -1796,7 +1796,7 @@ pub mod prelude {
   /// ```
   pub fn elm_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Clone + Element + PartialEq + 'a + 'static, {
     ParsersImpl::elm_digit_ref()
   }
 
@@ -1998,7 +1998,7 @@ pub mod prelude {
   /// ```
   pub fn elm_hex_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Clone + Element + PartialEq + 'a + 'static, {
     ParsersImpl::elm_hex_digit_ref()
   }
 
@@ -2100,7 +2100,7 @@ pub mod prelude {
   /// ```
   pub fn elm_oct_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Clone + Element + PartialEq + 'a + 'static, {
     ParsersImpl::elm_oct_digit_ref()
   }
 
@@ -2461,7 +2461,7 @@ pub mod prelude {
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), "abc");
   /// ```
-  pub fn take<'a, I>(n: usize) -> Parser<'a, I, &'a [I]> {
+  pub fn take<'a, I: Clone>(n: usize) -> Parser<'a, I, &'a [I]> {
     ParsersImpl::take(n)
   }
 
@@ -2539,7 +2539,7 @@ pub mod prelude {
   pub fn take_while0<'a, I, F>(f: F) -> Parser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I: Clone + Element + Debug + 'a, {
     ParsersImpl::take_while0(f)
   }
 
@@ -2639,7 +2639,7 @@ pub mod prelude {
   pub fn take_while1<'a, I, F>(f: F) -> Parser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I:Clone + Element + Debug + 'a, {
     ParsersImpl::take_while1(f)
   }
 
@@ -2739,7 +2739,7 @@ pub mod prelude {
   pub fn take_while_n_m<'a, I, F>(n: usize, m: usize, f: F) -> Parser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I:Clone + Element + Debug + 'a, {
     ParsersImpl::take_while_n_m(n, m, f)
   }
 
@@ -2833,7 +2833,7 @@ pub mod prelude {
   pub fn take_till0<'a, I, F>(f: F) -> Parser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I:Clone + Element + Debug + 'a, {
     ParsersImpl::take_till0(f)
   }
 
@@ -2921,7 +2921,7 @@ pub mod prelude {
   pub fn take_till1<'a, I, F>(f: F) -> Parser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I:Clone + Element + Debug + 'a, {
     ParsersImpl::take_till1(f)
   }
 
@@ -2992,7 +2992,7 @@ pub mod prelude {
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), "def");
   /// ```
-  pub fn skip<'a, I>(n: usize) -> Parser<'a, I, ()> {
+  pub fn skip<'a, I: Clone>(n: usize) -> Parser<'a, I, ()> {
     ParsersImpl::skip(n)
   }
 
@@ -3014,7 +3014,7 @@ pub mod prelude {
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), ());
   /// ```
-  pub fn skip_static<'a, I>(n: usize) -> StaticParser<'a, I, ()> {
+  pub fn skip_static<'a, I: Clone>(n: usize) -> StaticParser<'a, I, ()> {
     StaticParsersImpl::skip(n)
   }
 
@@ -3043,7 +3043,7 @@ pub mod prelude {
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), "abc");
   /// ```
-  pub fn surround<'a, I, A, B, C>(
+  pub fn surround<'a, I: Clone, A, B, C>(
     lp: Parser<'a, I, A>,
     parser: Parser<'a, I, B>,
     rp: Parser<'a, I, C>,
@@ -3115,7 +3115,7 @@ pub mod prelude {
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), "abc");
   /// ```
-  pub fn lazy<'a, I, A, F>(f: F) -> Parser<'a, I, A>
+  pub fn lazy<'a, I: Clone, A, F>(f: F) -> Parser<'a, I, A>
   where
     F: Fn() -> Parser<'a, I, A> + 'a + Clone,
     A: Clone + Debug + 'a, {
@@ -3147,7 +3147,7 @@ pub mod prelude {
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), "abc".to_string());
   /// ```
-  pub fn lazy_static<'a, I, A, F>(f: F) -> StaticParser<'a, I, A>
+  pub fn lazy_static<'a, I: Clone, A, F>(f: F) -> StaticParser<'a, I, A>
   where
     F: Fn() -> StaticParser<'a, I, A> + 'a + Clone,
     A: Clone + Debug + 'a + 'static, {
@@ -4606,7 +4606,7 @@ mod tests {
         let p: static_parser::StaticParser<'_, char, char> = failed_lazy_static(move || {
           counter_clone.set(counter_clone.get() + 1);
           (
-            ParseError::of_mismatch(&input, 0, 0, format!("error message: {}", counter_clone.get())),
+            ParseError::of_mismatch_owned(input.clone(), 0, 0, format!("error message: {}", counter_clone.get())),
             CommittedStatus::Uncommitted,
           )
         });
@@ -4641,7 +4641,7 @@ mod tests {
     init();
     {
       let input = "abc".chars().collect::<Vec<_>>();
-      let p: StaticParser<'_, char, ()> = failed_static(ParseError::of_mismatch(&[], 0, 0, String::from("error message")), CommittedStatus::Committed);
+      let p: StaticParser<'_, char, ()> = failed_static(ParseError::of_mismatch_owned(input.clone(), 0, 0, String::from("error message")), CommittedStatus::Committed);
 
       let result = p.parse_as_result(&input);
       assert!(result.is_err());
@@ -4670,7 +4670,7 @@ mod tests {
       let input = "abc".chars().collect::<Vec<_>>();
 
       // Create a parser that fails with commit
-      let p1 = failed_with_commit_static(ParseError::of_mismatch(&[], 0, 0, String::from("error message")));
+      let p1 = failed_with_commit_static(ParseError::of_mismatch_owned(input.clone(), 0, 0, String::from("error message")));
 
       // Create a parser that succeeds
       let p2 = elm_static('a');
@@ -4705,7 +4705,7 @@ mod tests {
       let input = "abc".chars().collect::<Vec<_>>();
 
       // Create a parser that fails with uncommit
-      let p1 = failed_with_uncommit_static(ParseError::of_mismatch(&[], 0, 0, String::from("error message")));
+      let p1 = failed_with_uncommit_static(ParseError::of_mismatch_owned(input.clone(), 0, 0, String::from("error message")));
 
       // Create a parser that succeeds
       let p2 = elm_static('a');

@@ -6,12 +6,12 @@ use std::rc::Rc;
 pub type StaticParseFn<'a, I, A> = dyn Fn(&ParseState<'a, I>) -> ParseResult<'a, I, A> + 'a;
 
 /// 静的ディスパッチを使用した最適化されたパーサー実装
-pub struct StaticParser<'a, I, A: 'a> {
+pub struct StaticParser<'a, I: Clone, A: 'a> {
   pub(crate) method: Rc<StaticParseFn<'a, I, A>>,
   _phantom: PhantomData<&'a I>,
 }
 
-impl<'a, I, A: 'a> Clone for StaticParser<'a, I, A> {
+impl<'a, I: Clone, A: 'a> Clone for StaticParser<'a, I, A> {
   fn clone(&self) -> Self {
     Self {
       method: Rc::clone(&self.method),
@@ -20,7 +20,7 @@ impl<'a, I, A: 'a> Clone for StaticParser<'a, I, A> {
   }
 }
 
-impl<'a, I, A: 'a> StaticParser<'a, I, A> {
+impl<'a, I: Clone, A: 'a> StaticParser<'a, I, A> {
   /// 新しいStaticParserを作成
   pub fn new<F>(parse: F) -> Self
   where
@@ -266,7 +266,7 @@ impl<'a, I, A: 'a> StaticParser<'a, I, A> {
 }
 
 /// ParserからStaticParserへの変換
-impl<'a, I, A: 'a> Parser<'a, I, A> {
+impl<'a, I: Clone, A: 'a> Parser<'a, I, A> {
   #[deprecated(
     since = "1.0.0",
     note = "直接StaticParserを使用してください。将来のバージョンで削除される予定です。"

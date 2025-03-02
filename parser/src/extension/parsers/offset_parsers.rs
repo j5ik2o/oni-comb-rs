@@ -3,27 +3,27 @@ use crate::prelude::ParserRunner;
 use std::fmt::Debug;
 
 pub trait OffsetParsers: Parsers {
-  fn last_offset<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>
+  fn last_offset<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>
   where
     A: Debug + 'a;
 
-  fn next_offset<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>
+  fn next_offset<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>
   where
     A: Debug + 'a;
 }
 
 pub trait StaticOffsetParsers: StaticParsers {
-  fn last_offset<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>
+  fn last_offset<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>
   where
     A: Debug + 'a + 'static;
 
-  fn next_offset<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>
+  fn next_offset<'a, I: Clone, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>
   where
     A: Debug + 'a + 'static;
 }
 
 // 既存のParserを使用する関数
-pub fn last_offset<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, usize>
+pub fn last_offset<'a, I: Clone, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, usize>
 where
   A: Debug + 'a, {
   // 直接実装を使用
@@ -42,7 +42,7 @@ where
   })
 }
 
-pub fn next_offset<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, usize>
+pub fn next_offset<'a, I: Clone, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, usize>
 where
   A: Debug + 'a, {
   // 直接実装を使用
@@ -66,7 +66,7 @@ pub mod static_parsers {
   use super::*;
 
   // StaticParserを使用する関数
-  pub fn last_offset<'a, I, A>(parser: StaticParser<'a, I, A>) -> StaticParser<'a, I, usize>
+  pub fn last_offset<'a, I: Clone, A>(parser: StaticParser<'a, I, A>) -> StaticParser<'a, I, usize>
   where
     A: Debug + 'a + 'static, {
     // 直接実装を使用
@@ -85,7 +85,7 @@ pub mod static_parsers {
     })
   }
 
-  pub fn next_offset<'a, I, A>(parser: StaticParser<'a, I, A>) -> StaticParser<'a, I, usize>
+  pub fn next_offset<'a, I: Clone, A>(parser: StaticParser<'a, I, A>) -> StaticParser<'a, I, usize>
   where
     A: Debug + 'a + 'static, {
     // 直接実装を使用

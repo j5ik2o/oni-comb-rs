@@ -8,7 +8,7 @@ impl ElementParsers for ParsersImpl {
   fn elm_pred_ref<'a, I, F>(f: F) -> Self::P<'a, I, &'a I>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + PartialEq + 'a + 'static + std::clone::Clone, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       if let Some(actual) = input.get(0) {
@@ -26,49 +26,49 @@ impl ElementParsers for ParsersImpl {
 
   fn elm_space_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + PartialEq + 'a + 'static + std::clone::Clone, {
     Self::elm_pred_ref(Element::is_ascii_space)
   }
 
   fn elm_multi_space_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + PartialEq + 'a + 'static + std::clone::Clone, {
     Self::elm_pred_ref(Element::is_ascii_multi_space)
   }
 
   fn elm_alpha_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + PartialEq + 'a + 'static + std::clone::Clone, {
     Self::elm_pred_ref(Element::is_ascii_alpha)
   }
 
   fn elm_alpha_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + PartialEq + 'a + 'static + std::clone::Clone, {
     Self::elm_pred_ref(Element::is_ascii_alpha_digit)
   }
 
   fn elm_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + PartialEq + 'a + 'static + std::clone::Clone, {
     Self::elm_pred_ref(Element::is_ascii_digit)
   }
 
   fn elm_hex_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + PartialEq + 'a + 'static + std::clone::Clone, {
     Self::elm_pred_ref(Element::is_ascii_hex_digit)
   }
 
   fn elm_oct_digit_ref<'a, I>() -> Self::P<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + PartialEq + 'a + 'static + std::clone::Clone, {
     Self::elm_pred_ref(Element::is_ascii_oct_digit)
   }
 
   fn elm_ref_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
   where
-    I: PartialEq + Display + Debug + 'a,
+    I: PartialEq + Display + Debug + 'a + std::clone::Clone,
     S: Set<I> + ?Sized, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
@@ -89,7 +89,7 @@ impl ElementParsers for ParsersImpl {
 
   fn elm_ref_in<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
-    I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+    I: PartialEq + PartialOrd + Display + Copy + Debug + 'a + std::clone::Clone, {
     Parser::new(move |parse_state| {
       let set = start..=end;
       let input = parse_state.input();
@@ -110,7 +110,7 @@ impl ElementParsers for ParsersImpl {
 
   fn elm_ref_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
-    I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+    I: PartialEq + PartialOrd + Display + Copy + Debug + 'a + std::clone::Clone, {
     Parser::new(move |parse_state| {
       let set = start..end;
       let input = parse_state.input();
@@ -131,7 +131,7 @@ impl ElementParsers for ParsersImpl {
 
   fn none_ref_of<'a, I, S>(set: &'a S) -> Self::P<'a, I, &'a I>
   where
-    I: PartialEq + Display + Debug + 'a,
+    I: PartialEq + Display + Debug + 'a + std::clone::Clone,
     S: Set<I> + ?Sized, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
