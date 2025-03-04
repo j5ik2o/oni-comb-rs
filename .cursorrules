@@ -7,4 +7,4 @@
 
 # ナレッジ
 
-- `cmd:include('docs/knowledge/*.md')`
+- `cmd:include('docs/knowledge.md')`

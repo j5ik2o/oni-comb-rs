@@ -1,0 +1,3 @@
+[submodule "docs/common"]
+	path = docs/common
+	url = git@github.com:j5ik2o/okite-ai.git
