@@ -1,3 +1,4 @@
+use oni_comb_parser_rs::extension::parser::*;
 use crate::parsers::basic_parsers::pchar;
 use oni_comb_parser_rs::prelude::*;
 

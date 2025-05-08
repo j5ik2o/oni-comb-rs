@@ -1,5 +1,6 @@
 //  authority     = [ userinfo "@" ] host [ ":" port ]
 
+use oni_comb_parser_rs::extension::parser::*;
 use crate::models::authority::Authority;
 use crate::parsers::host_parsers::host;
 use crate::parsers::port_parsers::port;

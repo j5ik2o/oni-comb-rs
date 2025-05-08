@@ -6,11 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use oni_comb_parser_rs::extension::parser::*;
 use oni_comb_parser_rs::prelude::*;
-use oni_comb_parser_rs::prelude::{
-  CacheParser, ConversionParser, DiscardParser, FilterParsers, LoggingParser, OffsetParser, OperatorParser, ParserPure,
-  PeekParser, RepeatParser, SkipParser,
-};
 use oni_comb_parser_rs::StaticParser;
 
 #[test]
@@ -20,7 +17,7 @@ fn test_static_parser_runner() {
 
   // 直接StaticParserを使用する例
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a')
   };
   let result = parser.parse(&input);
@@ -47,7 +44,7 @@ fn test_static_parser_functor() {
   let input = text.chars().collect::<Vec<_>>();
 
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').map(|c| c.to_ascii_uppercase())
   };
   let result = parser.parse(&input);
@@ -62,8 +59,7 @@ fn test_static_parser_filter() {
   let input = text.chars().collect::<Vec<_>>();
 
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::FilterParsers;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').filter(|c| **c == 'a')
   };
   let result = parser.parse(&input);
@@ -72,8 +68,7 @@ fn test_static_parser_filter() {
   assert_eq!(result.success().unwrap(), &'a');
 
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::FilterParsers;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').filter(|c| **c == 'b')
   };
   let result = parser.parse(&input);
@@ -87,7 +82,7 @@ fn test_static_parser_monad() {
   let input = text.chars().collect::<Vec<_>>();
 
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').flat_map(|_| elm_ref('b'))
   };
   let result = parser.parse(&input);
@@ -102,7 +97,7 @@ fn test_static_parser_add() {
   let input = text.chars().collect::<Vec<_>>();
 
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a') + elm_ref('b')
   };
   let result = parser.parse(&input);
@@ -117,7 +112,7 @@ fn test_static_parser_bitor() {
   let input = text.chars().collect::<Vec<_>>();
 
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('x') | elm_ref('a')
   };
   let result = parser.parse(&input);
@@ -132,7 +127,7 @@ fn test_static_parser_mul() {
   let input = text.chars().collect::<Vec<_>>();
 
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a') * elm_ref('b')
   };
   let result = parser.parse(&input);
@@ -147,7 +142,7 @@ fn test_static_parser_not() {
   let input = text.chars().collect::<Vec<_>>();
 
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
+    use oni_comb_parser_rs::prelude_static::*;
     !elm_ref('x')
   };
   let result = parser.parse(&input);
@@ -162,7 +157,7 @@ fn test_static_parser_sub() {
   let input = text.chars().collect::<Vec<_>>();
 
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a') - elm_ref('b')
   };
   let result = parser.parse(&input);
@@ -177,8 +172,7 @@ fn test_static_parser_cache() {
   let input = text.chars().collect::<Vec<_>>();
 
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::CacheParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').cache()
   };
   let result = parser.parse(&input);
@@ -193,7 +187,7 @@ fn test_static_parser_collect() {
   let input = text.chars().collect::<Vec<_>>();
 
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').collect()
   };
   let result = parser.parse(&input);
@@ -212,8 +206,7 @@ fn test_static_parser_conversion() {
 
     // 数値文字列を解析するパーサーを作成
     let digit_parser = {
-      use oni_comb_parser_rs::prelude::static_parsers::*;
-      use oni_comb_parser_rs::prelude::{ConversionParser, RepeatParser};
+      use oni_comb_parser_rs::prelude_static::*;
       elm_digit().of_many1().map(|digits| {
         let s: String = digits.into_iter().map(|c: &char| *c).collect();
         s
@@ -221,7 +214,6 @@ fn test_static_parser_conversion() {
     };
 
     let parser = {
-      use oni_comb_parser_rs::prelude::ConversionParser;
       digit_parser.map_res(|s| s.parse::<i32>())
     };
     let result = parser.parse(&char_refs);
@@ -238,8 +230,7 @@ fn test_static_parser_conversion() {
 
     // 数値文字列を解析するパーサーを作成
     let digit_parser = {
-      use oni_comb_parser_rs::prelude::static_parsers::*;
-      use oni_comb_parser_rs::prelude::{ConversionParser, RepeatParser};
+      use oni_comb_parser_rs::prelude_static::*;
       elm_digit().of_many1().map(|digits| {
         let s: String = digits.into_iter().map(|c: &char| *c).collect();
         s
@@ -247,7 +238,7 @@ fn test_static_parser_conversion() {
     };
 
     let parser = {
-      use oni_comb_parser_rs::prelude::ConversionParser;
+      use oni_comb_parser_rs::prelude_static::*;
       digit_parser.map_res(|s| s.parse::<i32>())
     };
     let result = parser.parse(&char_refs);
@@ -262,8 +253,7 @@ fn test_static_parser_discard() {
   let input = text.chars().collect::<Vec<_>>();
 
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::DiscardParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').discard()
   };
   let result = parser.parse(&input);
@@ -278,8 +268,7 @@ fn test_static_parser_logging() {
   let input = text.chars().collect::<Vec<_>>();
 
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::LoggingParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').name("a_parser")
   };
   let result = parser.parse(&input);
@@ -294,8 +283,7 @@ fn test_static_parser_offset() {
   let input = text.chars().collect::<Vec<_>>();
 
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::OffsetParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').last_offset()
   };
   let result = parser.parse(&input);
@@ -305,8 +293,7 @@ fn test_static_parser_offset() {
   assert_eq!(result.success().unwrap(), 0);
 
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::OffsetParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').next_offset()
   };
   let result = parser.parse(&input);
@@ -322,8 +309,7 @@ fn test_static_parser_operator() {
 
   // and_then
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::OperatorParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').and_then(elm_ref('b'))
   };
   let result = parser.parse(&input);
@@ -332,8 +318,7 @@ fn test_static_parser_operator() {
 
   // or
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::OperatorParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('x').or(elm_ref('a'))
   };
   let result = parser.parse(&input);
@@ -342,8 +327,7 @@ fn test_static_parser_operator() {
 
   // exists
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::OperatorParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').exists()
   };
   let result = parser.parse(&input);
@@ -352,8 +336,7 @@ fn test_static_parser_operator() {
 
   // not
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::OperatorParser;
+    use oni_comb_parser_rs::prelude_static::*;;
     elm_ref('x').not()
   };
   let result = parser.parse(&input);
@@ -362,8 +345,7 @@ fn test_static_parser_operator() {
 
   // opt
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::OperatorParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').opt()
   };
   let result = parser.parse(&input);
@@ -372,8 +354,7 @@ fn test_static_parser_operator() {
 
   // attempt
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::OperatorParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').attempt()
   };
   let result = parser.parse(&input);
@@ -387,8 +368,7 @@ fn test_static_parser_peek() {
   let input = text.chars().collect::<Vec<_>>();
 
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::PeekParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').peek()
   };
   let result = parser.parse(&input);
@@ -398,8 +378,7 @@ fn test_static_parser_peek() {
 
   // Verify that peek doesn't consume input
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::PeekParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').peek() + elm_ref('a')
   };
   let result = parser.parse(&input);
@@ -415,8 +394,7 @@ fn test_static_parser_repeat() {
 
   // many0
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::RepeatParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').of_many0()
   };
   let result = parser.parse(&input);
@@ -425,8 +403,7 @@ fn test_static_parser_repeat() {
 
   // many1
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::RepeatParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').of_many1()
   };
   let result = parser.parse(&input);
@@ -435,8 +412,7 @@ fn test_static_parser_repeat() {
 
   // many_n_m
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::RepeatParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').of_many_n_m(1, 2)
   };
   let result = parser.parse(&input);
@@ -445,8 +421,7 @@ fn test_static_parser_repeat() {
 
   // count
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::RepeatParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').of_count(2)
   };
   let result = parser.parse(&input);
@@ -457,8 +432,7 @@ fn test_static_parser_repeat() {
   let text = "bbb";
   let input = text.chars().collect::<Vec<_>>();
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::RepeatParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').of_many0()
   };
   let result = parser.parse(&input);
@@ -467,8 +441,7 @@ fn test_static_parser_repeat() {
 
   // Edge case: required repetitions not found
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::RepeatParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').of_many1()
   };
   let result = parser.parse(&input);
@@ -482,8 +455,7 @@ fn test_static_parser_skip() {
 
   // skip_left
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::SkipParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').skip_left(elm_ref('b'))
   };
   let result = parser.parse(&input);
@@ -492,8 +464,7 @@ fn test_static_parser_skip() {
 
   // skip_right
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::SkipParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('a').skip_right(elm_ref('b'))
   };
   let result = parser.parse(&input);
@@ -502,8 +473,7 @@ fn test_static_parser_skip() {
 
   // surround
   let parser = {
-    use oni_comb_parser_rs::prelude::static_parsers::*;
-    use oni_comb_parser_rs::prelude::SkipParser;
+    use oni_comb_parser_rs::prelude_static::*;
     elm_ref('b').surround(elm_ref('a'), elm_ref('c'))
   };
   let result = parser.parse(&input);

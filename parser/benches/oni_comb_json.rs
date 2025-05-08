@@ -3,6 +3,7 @@ use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::collections::HashMap;
 use std::iter::FromIterator;
 use std::str::FromStr;
+use oni_comb_parser_rs::extension::parser::*;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum JsonValue {
@@ -135,6 +136,7 @@ mod byte_json {
   use oni_comb_parser_rs::prelude::*;
   use std::collections::HashMap;
   use std::str::FromStr;
+  use oni_comb_parser_rs::extension::parser::*;
 
   #[derive(Clone, Debug, PartialEq)]
   pub enum JsonValue {

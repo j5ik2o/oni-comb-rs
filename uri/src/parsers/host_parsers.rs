@@ -1,3 +1,4 @@
+use oni_comb_parser_rs::extension::parser::*;
 use crate::models::host_name::{HostName, IpLiteral};
 use oni_comb_parser_rs::prelude::*;
 

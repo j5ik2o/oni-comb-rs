@@ -89,7 +89,7 @@ impl ElementParsers for ParsersImpl {
 
   fn elm_ref_in<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
-    I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+    I: Element + 'a, {
     Parser::new(move |parse_state| {
       let set = start..=end;
       let input = parse_state.input();
@@ -110,7 +110,7 @@ impl ElementParsers for ParsersImpl {
 
   fn elm_ref_from_until<'a, I>(start: I, end: I) -> Self::P<'a, I, &'a I>
   where
-    I: PartialEq + PartialOrd + Display + Copy + Debug + 'a, {
+    I: Element + 'a, {
     Parser::new(move |parse_state| {
       let set = start..end;
       let input = parse_state.input();

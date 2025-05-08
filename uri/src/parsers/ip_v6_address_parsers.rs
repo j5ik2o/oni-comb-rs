@@ -3,6 +3,7 @@ use oni_comb_parser_rs::prelude::*;
 use std::fmt::Formatter;
 
 use std::net::{Ipv4Addr, Ipv6Addr};
+use oni_comb_parser_rs::extension::parser::*;
 
 //  IPv6address   =                            6( h16 ":" ) ls32
 fn ip_v6_address1<'a>() -> Parser<'a, u8, Ipv6Addr> {

@@ -3,6 +3,7 @@ use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::collections::HashMap;
 use std::iter::FromIterator;
 use std::str::FromStr;
+use oni_comb_parser_rs::extension::parser::*;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum JsonValue {
@@ -85,11 +86,11 @@ pub fn json<'a>() -> Parser<'a, char, JsonValue> {
 // StaticParser実装
 pub mod static_parsers {
   use super::{decode_utf16, JsonValue, REPLACEMENT_CHARACTER};
-  use oni_comb_parser_rs::prelude::static_parsers::*;
-  use oni_comb_parser_rs::prelude::{ConversionParser, DiscardParser, OperatorParser, RepeatParser};
+  use oni_comb_parser_rs::prelude_static::*;
   use oni_comb_parser_rs::StaticParser;
   use std::collections::HashMap;
   use std::str::FromStr;
+  use oni_comb_parser_rs::extension::parser::*;
 
   pub fn space_static<'a>() -> StaticParser<'a, char, ()> {
     elm_of(" \t\r\n").of_many0().discard()

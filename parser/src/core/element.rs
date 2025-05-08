@@ -1,8 +1,8 @@
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 /// A Element.<br/>
 /// 要素。
-pub trait Element: Debug {
+pub trait Element: PartialEq + PartialOrd + Display + Copy + Debug {
   /// 文字に変換する。
   fn to_char(self) -> char;
   /// 空白かどうか。

@@ -65,7 +65,6 @@ pub trait StaticSkipParsers: StaticOperatorParsers {
 
 // 既存のParserを使用する関数
 pub fn skip<'a, I>(n: usize) -> Parser<'a, I, ()> {
-  use crate::prelude::OperatorParser;
   Parser::new(move |state| {
     let input = state.input();
     if input.len() >= n {

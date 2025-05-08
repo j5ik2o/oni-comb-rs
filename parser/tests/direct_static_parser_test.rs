@@ -6,12 +6,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-// Import necessary traits and types for StaticParser
-use oni_comb_parser_rs::prelude::static_parsers::*;
-use oni_comb_parser_rs::prelude::{
-  CacheParser, ConversionParser, DiscardParser, FilterParsers, LoggingParser, OffsetParser, OperatorParser, ParserPure,
-  PeekParser, RepeatParser, SkipParser,
-};
+use oni_comb_parser_rs::extension::parser::*;
+use oni_comb_parser_rs::prelude_static::*;
 use oni_comb_parser_rs::StaticParser;
 
 // 直接StaticParserを使用するテスト

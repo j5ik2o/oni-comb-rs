@@ -2,7 +2,7 @@
 
 use crate::models::scheme::Scheme;
 use oni_comb_parser_rs::prelude::*;
-
+use oni_comb_parser_rs::extension::parser::*;
 pub fn scheme<'a>() -> Parser<'a, u8, Scheme> {
   ((elm_alpha_ref() + (elm_alpha_ref() | elm_digit_ref() | elm_ref_of(b"+-.")).of_many0()).collect())
     .map(|e| e.to_vec())

@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use rust_decimal::prelude::FromStr;
 use rust_decimal::Decimal;
-
+use oni_comb_parser_rs::extension::parser::*;
 use oni_comb_parser_rs::prelude::*;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -114,11 +114,11 @@ fn value<'a>() -> Parser<'a, char, Rc<Expr>> {
 mod static_parsers {
   use super::Decimal;
   use super::Expr;
-  use oni_comb_parser_rs::prelude::static_parsers::*;
-  use oni_comb_parser_rs::prelude::{ConversionParser, DiscardParser, OperatorParser, RepeatParser};
+  use oni_comb_parser_rs::prelude_static::*;
   use oni_comb_parser_rs::StaticParser;
   use std::rc::Rc;
   use std::str::FromStr;
+  use oni_comb_parser_rs::extension::parser::*;
 
   pub fn space_static<'a>() -> StaticParser<'a, char, ()> {
     elm_of(" \t\r\n").of_many0().discard()

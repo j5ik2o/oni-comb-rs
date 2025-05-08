@@ -7,9 +7,9 @@ fn test_surround_static() {
   let input = text.chars().collect::<Vec<_>>();
 
   // 個別のパーサーをテスト
-  let left_parser = elm_ref_static('(');
-  let middle_parser = take_static(3);
-  let right_parser = elm_ref_static(')');
+  let left_parser = elm_ref('(');
+  let middle_parser = take(3);
+  let right_parser = elm_ref(')');
 
   // 左側のパーサーをテスト
   let left_result = left_parser.parse(&input);
@@ -29,7 +29,7 @@ fn test_surround_static() {
   assert!(right_result.is_success());
 
   // surround_staticパーサーをテスト
-  let parser = surround_static(elm_ref_static('('), take_static(3), elm_ref_static(')'));
+  let parser = surround(elm_ref('('), take(3), elm_ref(')'));
 
   let result = parser.parse(&input);
   println!("Surround parser result: {:?}", result);
