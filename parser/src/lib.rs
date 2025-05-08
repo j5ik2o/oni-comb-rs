@@ -352,7 +352,7 @@ pub mod prelude {
   /// # Example
   ///
   /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
+  /// # use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
@@ -366,8 +366,8 @@ pub mod prelude {
   /// ```
   pub fn elm_pred_ref<'a, I, F>(f: F) -> Parser<'a, I, &'a I>
   where
-    F: Fn(&I) -> bool + 'static,
-    I: Element + 'static, {
+    I: Element + 'static,
+    F: Fn(&I) -> bool + 'static, {
     ParsersImpl::elm_pred_ref(f)
   }
 

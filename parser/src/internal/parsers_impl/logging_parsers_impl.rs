@@ -1,4 +1,4 @@
-use crate::core::{ParseError, ParseResult, Parser, ParserRunner};
+use crate::core::{ParseError, ParseResult, Parser};
 use crate::extension::parsers::{LogLevel, LoggingParsers};
 use crate::internal::ParsersImpl;
 use std::fmt::{Debug, Display};
