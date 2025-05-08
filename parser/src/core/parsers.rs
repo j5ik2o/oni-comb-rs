@@ -213,7 +213,6 @@ impl StaticParsers for StaticParserParsers {
   where
     A: 'a + 'static,
     'b: 'a, {
-    use crate::core::parser_runner::ParserRunner;
     parser
       .parse(input)
       .success()

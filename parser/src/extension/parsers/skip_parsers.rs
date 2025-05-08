@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::core::{Parser, Parsers, StaticParser, StaticParsers};
+use crate::core::{Parser, StaticParser};
 use crate::extension::parsers::{OperatorParsers, StaticOperatorParsers};
 
 pub trait SkipParsers: OperatorParsers {
@@ -169,7 +169,6 @@ pub mod static_parsers {
     A: Clone + Debug + 'a + 'static,
     B: Clone + Debug + 'a + 'static, {
     use crate::extension::parsers::operator_parsers::static_parsers::and_then;
-    use crate::prelude::ParserRunner;
 
     StaticParser::new(move |state| {
       let result = and_then(pa.clone(), pb.clone()).run(state);
@@ -188,7 +187,6 @@ pub mod static_parsers {
     A: Clone + Debug + 'a + 'static,
     B: Clone + Debug + 'a + 'static, {
     use crate::extension::parsers::operator_parsers::static_parsers::and_then;
-    use crate::prelude::ParserRunner;
 
     StaticParser::new(move |state| {
       let result = and_then(pa.clone(), pb.clone()).run(state);
@@ -212,8 +210,6 @@ pub mod static_parsers {
     B: Clone + Debug + 'a + 'static,
     C: Clone + Debug + 'a + 'static, {
     use crate::extension::parsers::operator_parsers::static_parsers::and_then;
-    use crate::prelude::ParserRunner;
-
     StaticParser::new(move |state| {
       let left_and_parser = and_then(left_parser.clone(), parser.clone());
       let left_and_parser_and_right = and_then(left_and_parser, right_parser.clone());

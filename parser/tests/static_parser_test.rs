@@ -193,7 +193,7 @@ fn test_static_parser_collect() {
   let result = parser.parse(&input);
 
   assert!(result.is_success());
-  assert_eq!(result.success().unwrap(), vec![&'a']);
+  assert_eq!(result.success().unwrap().to_str(), "a");
 }
 
 #[test]

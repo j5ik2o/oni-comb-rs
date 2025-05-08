@@ -1,5 +1,4 @@
 use crate::core::{Parser, Parsers, StaticParser, StaticParsers};
-use crate::prelude::ParserRunner;
 use std::fmt::Debug;
 
 pub trait DiscardParsers: Parsers {

@@ -1,13 +1,8 @@
 use crate::core::{CommittedStatus, Element, ParseError, ParseResult, StaticParser, StaticParsers};
-use crate::extension::parsers::{
-  StaticElementsParsers, StaticLoggingParsers, StaticPrimitiveParsers, StaticRepeatParsers,
-};
-use regex::Regex;
 use std::char;
 use std::fmt::{Debug, Display};
 use std::str;
 use crate::prelude::Set;
-use crate::prelude_static::elm_any_ref;
 
 pub mod elements_parsers_impl;
 pub mod logging_parsers_impl;
@@ -28,7 +23,6 @@ impl StaticParsers for StaticParsersImpl {
   where
     A: 'a + 'static,
     'b: 'a, {
-    use crate::prelude::ParserRunner;
     parser
       .parse(input)
       .success()
@@ -706,7 +700,7 @@ impl StaticParsersImpl {
     B: Clone + Debug + 'a,
     C: Clone + Debug + 'a,
     I: Element + 'a, {
-    todo!() 
+    todo!()
   }
 
   /// 指定した数の要素をスキップするStaticParserを返します。

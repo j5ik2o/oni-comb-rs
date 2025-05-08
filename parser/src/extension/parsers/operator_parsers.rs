@@ -280,8 +280,7 @@ pub mod static_parsers {
       match result {
         crate::core::ParseResult::Success { value: _, length: _ } => crate::core::ParseResult::successful(true, 0),
         crate::core::ParseResult::Failure {
-          error: _,
-          committed_status,
+          ..
         } => crate::core::ParseResult::successful(false, 0),
       }
     })
@@ -568,19 +567,20 @@ pub mod static_parsers {
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a + 'static, {
-    // 直接実装を使用
-    StaticParser::new(move |state| {
-      let result = p.run(state);
-      match result {
-        crate::core::ParseResult::Success {
-          value,
-          length: consumed,
-        } => crate::core::ParseResult::successful(value, consumed),
-        crate::core::ParseResult::Failure {
-          error: _,
-          committed_status: _,
-        } => crate::core::ParseResult::successful(x.clone(), 0),
-      }
-    })
+    todo!()
+    // // 直接実装を使用
+    // StaticParser::new(move |state| {
+    //   let result = p.run(state);
+    //   match result {
+    //     crate::core::ParseResult::Success {
+    //       value,
+    //       length: consumed,
+    //     } => crate::core::ParseResult::successful(value, consumed),
+    //     crate::core::ParseResult::Failure {
+    //       error: _,
+    //       committed_status: _,
+    //     } => crate::core::ParseResult::successful(x.clone(), 0),
+    //   }
+    // })
   }
 }

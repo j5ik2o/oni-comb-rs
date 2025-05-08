@@ -1398,9 +1398,9 @@ pub mod prelude {
   /// let text: &str = "abcdef";
   /// let input = text.chars().collect::<Vec<_>>();
   ///
-  /// let parser: Parser<char, String> = take_till1(|e| matches!(*e, 'c')).map(String::from_iter);
+  /// let parser = take_till1(|e| matches!(*e, 'c')).map(String::from_iter);
   ///
-  /// let result: ParseResult<char, String> = parser.parse(&input);
+  /// let result = parser.parse(&input);
   ///
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), "abc");

@@ -1,11 +1,11 @@
 
 
 use std::fmt::{Debug, Display};
-use crate::core::{CommittedStatus, Element, ParseError, Parser};
+use crate::core::{CommittedStatus, Element, ParseError};
 use crate::internal::{StaticParsersImpl};
 use crate::prelude::Set;
 pub use crate::StaticParser;
-
+use crate::core::ParserFunctor;
 
 /// Returns a [Parser] that does nothing.<br/>
 /// 何もしない[Parser]を返します。
@@ -426,6 +426,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "xyz";
@@ -455,6 +456,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "xyz";
@@ -487,6 +489,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "xyz";
@@ -518,6 +521,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "xyz";
@@ -551,6 +555,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "wxy";
@@ -584,6 +589,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "wxy";
@@ -613,6 +619,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "xyz";
@@ -642,6 +649,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "xyz";
@@ -668,6 +676,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "   ";
@@ -694,6 +703,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "   ";
@@ -720,6 +730,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = " \n ";
@@ -747,6 +758,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = " \n ";
@@ -772,6 +784,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "abcxyz";
@@ -798,6 +811,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "abcxyz";
@@ -823,6 +837,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "abc0123xyz";
@@ -849,6 +864,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "abc0123xyz";
@@ -875,6 +891,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "0123456789";
@@ -889,7 +906,7 @@ where
 /// ```
 pub fn elm_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
 where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + 'a + 'static, {
     StaticParsersImpl::elm_digit_ref()
 }
 
@@ -901,6 +918,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "0123456789";
@@ -927,6 +945,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "123456789";
@@ -941,7 +960,7 @@ where
 /// ```
 pub fn elm_digit_1_9_ref<'a, I>() -> StaticParser<'a, I, &'a I>
 where
-    I: Element + Clone + PartialEq + 'a + 'static, {
+    I: Element + 'a + 'static, {
     elm_digit_ref().with_filter_not(|c: &&I| c.is_ascii_digit_zero())
 }
 
@@ -952,6 +971,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "123456789";
@@ -966,7 +986,7 @@ where
 /// ```
 pub fn elm_digit_1_9<'a, I>() -> StaticParser<'a, I, I>
 where
-    I: Element + Clone + PartialEq + 'a + 'static, {
+    I: Element + 'a + 'static, {
     elm_digit_1_9_ref().map(Clone::clone)
 }
 
@@ -979,6 +999,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "0123456789ABCDEFabcdef";
@@ -1005,6 +1026,7 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "0123456789ABCDEFabcdef";
@@ -1030,14 +1052,15 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "012345678";
 /// let input = text.chars().collect::<Vec<_>>();
 ///
-/// let parser: Parser<char, String> = elm_oct_digit_ref().of_many1().map(String::from_iter);
+/// let parser: StaticParser<char, String> = elm_oct_digit_ref().of_many1().map(String::from_iter);
 ///
-/// let result: ParseResult<char, String> = parser.parse(&input);
+/// let result = parser.parse(&input);
 ///
 /// assert!(result.is_success());
 /// assert_eq!(result.success().unwrap(), text);
@@ -1056,14 +1079,16 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
+///
 ///
 /// let text: &str = "012345678";
 /// let input = text.chars().collect::<Vec<_>>();
 ///
-/// let parser: Parser<char, String> = elm_oct_digit().of_many1().map(String::from_iter);
+/// let parser = elm_oct_digit().of_many1().map(String::from_iter);
 ///
-/// let result: ParseResult<char, String> = parser.parse(&input);
+/// let result = parser.parse(&input);
 ///
 /// assert!(result.is_success());
 /// assert_eq!(result.success().unwrap(), text);
@@ -1084,14 +1109,15 @@ where
 ///
 /// ```rust
 /// use std::iter::FromIterator;
+/// use oni_comb_parser_rs::extension::parser::*;
 /// use oni_comb_parser_rs::prelude_static::*;
 ///
 /// let text: &str = "abc";
 /// let input = text.as_bytes();
 ///
-/// let parser: Parser<u8, &str> = seq(b"abc").collect().map_res(std::str::from_utf8);
+/// let parser = seq(b"abc").collect().map_res(std::str::from_utf8);
 ///
-/// let result: ParseResult<u8, &str> = parser.parse(input);
+/// let result = parser.parse(input);
 ///
 /// assert!(result.is_success());
 /// assert_eq!(result.success().unwrap(), text);
@@ -1217,34 +1243,6 @@ where
     StaticParsersImpl::take(n)
 }
 
-/// Returns a [StaticParser] that returns an element of the specified length.<br/>
-/// 指定された長さの要素を返す[StaticParser]を返す。
-///
-/// - n: Length of the reading element
-/// - n: 読む要素の長さ
-///
-/// # Example
-///
-/// ```rust
-/// use std::iter::FromIterator;
-/// use oni_comb_parser_rs::prelude_static::*;
-///
-/// let text: &str = "abcdef";
-/// let input = text.chars().collect::<Vec<_>>();
-///
-/// let parser: StaticParser<char, String> = take_static(3).map(|chars| chars.into_iter().collect::<String>());
-///
-/// let result: ParseResult<char, String> = parser.parse(&input);
-///
-/// assert!(result.is_success());
-/// assert_eq!(result.success().unwrap(), "abc");
-/// ```
-pub fn take_static<'a, I>(n: usize) -> StaticParser<'a, I, &'a [I]>
-where
-    I: Element + 'a, {
-    StaticParsersImpl::take(n)
-}
-
 /// クロージャの結果が真である間は要素を返す[Parser]を返す。<br/>
 /// Returns a [Parser] that returns elements, while the result of the closure is true.
 ///
@@ -1275,38 +1273,6 @@ pub fn take_while0<'a, I, F>(f: F) -> StaticParser<'a, I, &'a [I]>
 where
     F: Fn(&I) -> bool + 'a,
     I: Element + 'a, {
-    StaticParsersImpl::take_while0(f)
-}
-
-/// クロージャの結果が真である間は要素を返す[StaticParser]を返す。<br/>
-/// Returns a [StaticParser] that returns elements, while the result of the closure is true.
-///
-/// 解析結果の長さは必須ではありません。<br/>
-/// The length of the analysis result is not required.
-///
-/// # Example
-///
-/// ```rust
-/// use std::iter::FromIterator;
-/// use oni_comb_parser_rs::prelude_static::*;
-///
-/// let text: &str = "abcdef";
-/// let input = text.chars().collect::<Vec<_>>();
-///
-/// let parser = take_while0_static(|e| match *e {
-///  'a'..='c' => true,
-///   _ => false
-/// }).map(|chars| chars.into_iter().collect::<String>());
-///
-/// let result: ParseResult<char, String> = parser.parse(&input);
-///
-/// assert!(result.is_success());
-/// assert_eq!(result.success().unwrap(), "abc");
-/// ```
-pub fn take_while0_static<'a, I, F>(f: F) -> StaticParser<'a, I, &'a [I]>
-where
-    F: Fn(&I) -> bool + 'a,
-    I: Element + Clone + PartialEq + Debug + 'a, {
     StaticParsersImpl::take_while0(f)
 }
 
@@ -1342,38 +1308,6 @@ where
     StaticParsersImpl::take_while1(f)
 }
 
-/// クロージャの結果が真である間は要素を返す[StaticParser]を返す。<br/>
-/// Returns a [StaticParser] that returns elements, while the result of the closure is true.
-///
-/// 解析結果の長さは1要素以上必要です。<br/>
-/// The length of the analysis result must be at least one element.
-///
-/// # Example
-///
-/// ```rust
-/// use std::iter::FromIterator;
-/// use oni_comb_parser_rs::prelude_static::*;
-///
-/// let text: &str = "abcdef";
-/// let input = text.chars().collect::<Vec<_>>();
-///
-/// let parser: StaticParser<char, String> = take_while1_static(|e| match *e {
-///  'a'..='c' => true,
-///   _ => false
-/// }).map(|chars| chars.into_iter().collect::<String>());
-///
-/// let result: ParseResult<char, String> = parser.parse(&input);
-///
-/// assert!(result.is_success());
-/// assert_eq!(result.success().unwrap(), "abc");
-/// ```
-pub fn take_while1_static<'a, I, F>(f: F) -> StaticParser<'a, I, &'a [I]>
-where
-    F: Fn(&I) -> bool + 'a,
-    I: Element + 'a, {
-    StaticParsersImpl::take_while1(f)
-}
-
 /// クロージャの結果が真である間は要素を返す[Parser]を返す。<br/>
 /// Returns a [Parser] that returns elements, while the result of the closure is true.
 ///
@@ -1400,38 +1334,6 @@ where
 /// assert_eq!(result.success().unwrap(), "abc");
 /// ```
 pub fn take_while_n_m<'a, I, F>(n: usize, m: usize, f: F) -> StaticParser<'a, I, &'a [I]>
-where
-    F: Fn(&I) -> bool + 'a,
-    I: Element + 'a, {
-    StaticParsersImpl::take_while_n_m(n, m, f)
-}
-
-/// クロージャの結果が真である間は要素を返す[StaticParser]を返す。<br/>
-/// Returns a [StaticParser] that returns elements, while the result of the closure is true.
-///
-/// 解析結果の長さはn要素以上m要素以下である必要があります。<br/>
-/// The length of the analysis result should be between n and m elements.
-///
-/// # Example
-///
-/// ```rust
-/// use std::iter::FromIterator;
-/// use oni_comb_parser_rs::prelude_static::*;
-///
-/// let text: &str = "abcdef";
-/// let input = text.chars().collect::<Vec<_>>();
-///
-/// let parser: StaticParser<char, String> = take_while_n_m_static(1, 3, |e| match *e {
-///  'a'..='c' => true,
-///   _ => false
-/// }).map(|chars| chars.into_iter().collect::<String>());
-///
-/// let result: ParseResult<char, String> = parser.parse(&input);
-///
-/// assert!(result.is_success());
-/// assert_eq!(result.success().unwrap(), "abc");
-/// ```
-pub fn take_while_n_m_static<'a, I, F>(n: usize, m: usize, f: F) -> StaticParser<'a, I, &'a [I]>
 where
     F: Fn(&I) -> bool + 'a,
     I: Element + 'a, {
