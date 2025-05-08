@@ -2,7 +2,6 @@ use crate::core::{Element, ParseError, ParseResult, Parser};
 use crate::extension::parsers::ElementParsers;
 use crate::internal::ParsersImpl;
 use crate::utils::Set;
-use std::fmt::{Debug, Display};
 
 impl ElementParsers for ParsersImpl {
   fn elm_pred_ref<'a, I, F>(f: F) -> Self::P<'a, I, &'a I>

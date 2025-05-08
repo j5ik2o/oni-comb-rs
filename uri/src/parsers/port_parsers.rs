@@ -1,5 +1,5 @@
-use oni_comb_parser_rs::extension::parser::*;
 use oni_comb_parser_rs::prelude::*;
+
 pub fn port<'a>() -> Parser<'a, u8, u16> {
   elm_digit()
     .of_many0()
@@ -10,25 +10,25 @@ pub fn port<'a>() -> Parser<'a, u8, u16> {
 
 #[cfg(test)]
 pub mod gens {
-    use prop_check_rs::gen::{Gen, Gens};
+  use prop_check_rs::gen::{Gen, Gens};
 
-    pub fn port_gen() -> Gen<String> {
+  pub fn port_gen() -> Gen<String> {
     Gens::choose_u16(1, u16::MAX - 1).map(move |n| n.to_string())
   }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::env;
+  use std::env;
 
-    use anyhow::Result;
-    use prop_check_rs::prop;
-    use prop_check_rs::prop::TestCases;
-    use prop_check_rs::rng::RNG;
+  use anyhow::Result;
+  use prop_check_rs::prop;
+  use prop_check_rs::prop::TestCases;
+  use prop_check_rs::rng::RNG;
 
-    use super::*;
+  use super::*;
 
-    const TEST_COUNT: TestCases = 100;
+  const TEST_COUNT: TestCases = 100;
 
   fn init() {
     env::set_var("RUST_LOG", "debug");

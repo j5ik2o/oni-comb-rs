@@ -1,8 +1,8 @@
 //  scheme        = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
 
 use crate::models::scheme::Scheme;
-use oni_comb_parser_rs::extension::parser::*;
 use oni_comb_parser_rs::prelude::*;
+
 pub fn scheme<'a>() -> Parser<'a, u8, Scheme> {
   ((elm_alpha_ref() + (elm_alpha_ref() | elm_digit_ref() | elm_ref_of(b"+-.")).of_many0()).collect())
     .map(|e| e.to_vec())
@@ -12,11 +12,11 @@ pub fn scheme<'a>() -> Parser<'a, u8, Scheme> {
 
 #[cfg(test)]
 pub mod gens {
-    use prop_check_rs::gen::{Gen, Gens};
+  use prop_check_rs::gen::{Gen, Gens};
 
-    use crate::parsers::basic_parsers::gens::*;
+  use crate::parsers::basic_parsers::gens::*;
 
-    pub fn scheme_gen() -> Gen<String> {
+  pub fn scheme_gen() -> Gen<String> {
     repeat_gen_of_char(
       5,
       Gens::frequency([
@@ -33,17 +33,17 @@ pub mod gens {
 
 #[cfg(test)]
 mod tests {
-    use std::env;
+  use std::env;
 
-    use anyhow::Result;
-    use prop_check_rs::prop;
-    use prop_check_rs::prop::TestCases;
-    use prop_check_rs::rng::RNG;
+  use anyhow::Result;
+  use prop_check_rs::prop;
+  use prop_check_rs::prop::TestCases;
+  use prop_check_rs::rng::RNG;
 
-    use super::gens::*;
-    use super::*;
+  use super::gens::*;
+  use super::*;
 
-    const TEST_COUNT: TestCases = 100;
+  const TEST_COUNT: TestCases = 100;
 
   #[ctor::ctor]
   fn init_logger() {

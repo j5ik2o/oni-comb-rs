@@ -1,4 +1,4 @@
-use crate::core::{Parser, ParserRunner};
+use crate::core::Parser;
 use crate::extension::parsers::CacheParsers;
 use crate::internal::ParsersImpl;
 use std::cell::RefCell;

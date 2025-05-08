@@ -1,5 +1,4 @@
 use crate::core::Parsers;
-use crate::prelude::ParserRunner;
 use std::fmt::Debug;
 
 pub trait OffsetParsers: Parsers {

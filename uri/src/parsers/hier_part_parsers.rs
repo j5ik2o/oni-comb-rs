@@ -1,7 +1,6 @@
 use crate::models::hier_part::HierPart;
 use crate::parsers::authority_parsers::authority;
 use crate::parsers::path_parsers::{path_abempty, path_rootless};
-use oni_comb_parser_rs::extension::parser::*;
 use oni_comb_parser_rs::prelude::*;
 
 //  hier-part     = "//" authority path-abempty
@@ -16,12 +15,12 @@ pub fn hier_part<'a>() -> Parser<'a, u8, Option<HierPart>> {
 
 #[cfg(test)]
 pub mod gens {
-    use crate::parsers::authority_parsers::gens::authority_gen;
-    use prop_check_rs::gen::{Gen, Gens};
+  use crate::parsers::authority_parsers::gens::authority_gen;
+  use prop_check_rs::gen::{Gen, Gens};
 
-    use crate::parsers::path_parsers::gens::{path_abempty_gen, path_str_without_abempty_gen, Pair};
+  use crate::parsers::path_parsers::gens::{path_abempty_gen, path_str_without_abempty_gen, Pair};
 
-    pub fn hier_part_gen() -> Gen<Pair<String, Option<bool>>> {
+  pub fn hier_part_gen() -> Gen<Pair<String, Option<bool>>> {
     let gen1 = {
       authority_gen().flat_map(move |authority| {
         path_abempty_gen().map(move |path_abempty| format!("//{}{}", authority, path_abempty))
@@ -40,18 +39,18 @@ pub mod gens {
 
 #[cfg(test)]
 mod tests {
-    use std::env;
+  use std::env;
 
-    use crate::parsers::path_parsers::gens::Pair;
-    use anyhow::Result;
-    use prop_check_rs::prop;
-    use prop_check_rs::prop::TestCases;
-    use prop_check_rs::rng::RNG;
+  use crate::parsers::path_parsers::gens::Pair;
+  use anyhow::Result;
+  use prop_check_rs::prop;
+  use prop_check_rs::prop::TestCases;
+  use prop_check_rs::rng::RNG;
 
-    use super::gens::*;
-    use super::*;
+  use super::gens::*;
+  use super::*;
 
-    const TEST_COUNT: TestCases = 100;
+  const TEST_COUNT: TestCases = 100;
 
   #[ctor::ctor]
   fn init_logger() {

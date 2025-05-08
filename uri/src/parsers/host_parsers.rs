@@ -1,5 +1,4 @@
 use crate::models::host_name::{HostName, IpLiteral};
-use oni_comb_parser_rs::extension::parser::*;
 use oni_comb_parser_rs::prelude::*;
 
 use crate::parsers::basic_parsers::{pct_encoded, sub_delims, unreserved};

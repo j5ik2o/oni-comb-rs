@@ -1,4 +1,3 @@
-use oni_comb_parser_rs::extension::parser::*;
 use oni_comb_parser_rs::prelude::*;
 
 // pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"

@@ -1,4 +1,3 @@
-use oni_comb_parser_rs::extension::parser::*;
 use oni_comb_parser_rs::prelude::*;
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::collections::HashMap;
@@ -133,7 +132,6 @@ pub fn oni_comb_parse_json(s: &str) {
 // バイトレベルでのJSONパーサー
 // 注: 現在は使用していませんが、将来的にはこちらに移行する予定
 mod byte_json {
-  use oni_comb_parser_rs::extension::parser::*;
   use oni_comb_parser_rs::prelude::*;
   use std::collections::HashMap;
   use std::str::FromStr;

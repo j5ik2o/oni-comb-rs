@@ -4,7 +4,6 @@ use crate::models::authority::Authority;
 use crate::parsers::host_parsers::host;
 use crate::parsers::port_parsers::port;
 use crate::parsers::user_info_parsers::user_info;
-use oni_comb_parser_rs::extension::parser::*;
 use oni_comb_parser_rs::prelude::*;
 
 pub fn authority<'a>() -> Parser<'a, u8, Authority> {
@@ -14,13 +13,13 @@ pub fn authority<'a>() -> Parser<'a, u8, Authority> {
 
 #[cfg(test)]
 pub mod gens {
-    use crate::parsers::basic_parsers::gens::to_option;
-    use crate::parsers::host_parsers::gens::host_gen;
-    use crate::parsers::port_parsers::gens::port_gen;
-    use crate::parsers::user_info_parsers::gens::user_info_gen;
-    use prop_check_rs::gen::Gen;
+  use crate::parsers::basic_parsers::gens::to_option;
+  use crate::parsers::host_parsers::gens::host_gen;
+  use crate::parsers::port_parsers::gens::port_gen;
+  use crate::parsers::user_info_parsers::gens::user_info_gen;
+  use prop_check_rs::gen::Gen;
 
-    pub fn authority_gen() -> Gen<String> {
+  pub fn authority_gen() -> Gen<String> {
     let user_info_opt_gen = to_option(user_info_gen());
     user_info_opt_gen.flat_map(move |ui| {
       let port_opt_gen = to_option(port_gen());
@@ -41,17 +40,17 @@ pub mod gens {
 
 #[cfg(test)]
 mod tests {
-    use std::env;
+  use std::env;
 
-    use anyhow::Result;
-    use prop_check_rs::prop;
-    use prop_check_rs::prop::TestCases;
-    use prop_check_rs::rng::RNG;
+  use anyhow::Result;
+  use prop_check_rs::prop;
+  use prop_check_rs::prop::TestCases;
+  use prop_check_rs::rng::RNG;
 
-    use super::gens::*;
-    use super::*;
+  use super::gens::*;
+  use super::*;
 
-    const TEST_COUNT: TestCases = 100;
+  const TEST_COUNT: TestCases = 100;
 
   #[ctor::ctor]
   fn init_logger() {

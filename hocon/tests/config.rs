@@ -4,10 +4,10 @@ use rust_decimal::prelude::ToPrimitive;
 // test_generator::test_expand_paths! { snapshot; "tests/data/*.conf" }
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use std::env;
+  use super::*;
+  use std::env;
 
-    #[ctor::ctor]
+  #[ctor::ctor]
   fn init_logger() {
     env::set_var("RUST_LOG", "debug");
     let _ = env_logger::builder().is_test(true).try_init();

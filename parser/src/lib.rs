@@ -1,12 +1,13 @@
 #![warn(dead_code)]
 #![allow(incomplete_features)]
 mod core;
-pub mod extension;
+mod extension;
 mod internal;
 pub mod utils;
 
 pub mod prelude {
   pub use crate::core::*;
+  pub use crate::extension::parser::*;
   use crate::extension::parsers::*;
   use crate::internal::*;
   pub use crate::utils::*;
@@ -38,7 +39,7 @@ pub mod prelude {
   /// # Example
   ///
   /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
+  /// # use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "a";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
@@ -61,7 +62,7 @@ pub mod prelude {
   /// # Example
   ///
   /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
+  /// # use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "a";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
@@ -109,7 +110,7 @@ pub mod prelude {
   /// # Example
   ///
   /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
+  /// # use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
@@ -136,7 +137,7 @@ pub mod prelude {
   /// # Example
   ///
   /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
+  /// # use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
@@ -164,7 +165,7 @@ pub mod prelude {
   /// # Example
   ///
   /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
+  /// # use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
@@ -194,7 +195,7 @@ pub mod prelude {
   /// # Example
   ///
   /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
+  /// # use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
@@ -224,7 +225,7 @@ pub mod prelude {
   /// # Example
   ///
   /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
+  /// # use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
@@ -247,12 +248,13 @@ pub mod prelude {
   }
 
   // --- Element Parsers ---
+
   /// Returns a [Parser] that parses an any element.(for reference)
   ///
   /// # Example
   ///
   /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
+  /// # use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
@@ -266,7 +268,7 @@ pub mod prelude {
   /// ```
   pub fn elm_any_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'static, {
+    I: Element, {
     ParsersImpl::elm_any_ref()
   }
 
@@ -275,7 +277,7 @@ pub mod prelude {
   /// # Example
   ///
   /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
+  /// # use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
@@ -289,7 +291,7 @@ pub mod prelude {
   /// ```
   pub fn elm_any<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_any()
   }
 
@@ -300,7 +302,7 @@ pub mod prelude {
   /// # Example
   ///
   /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
+  /// # use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
@@ -314,7 +316,7 @@ pub mod prelude {
   /// ```
   pub fn elm_ref<'a, I>(element: I) -> Parser<'a, I, &'a I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_ref(element)
   }
 
@@ -325,7 +327,7 @@ pub mod prelude {
   /// # Example
   ///
   /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
+  /// # use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "x";
   /// let input: Vec<char> = text.chars().collect::<Vec<_>>();
@@ -339,7 +341,7 @@ pub mod prelude {
   /// ```
   pub fn elm<'a, I>(element: I) -> Parser<'a, I, I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm(element)
   }
 
@@ -378,7 +380,7 @@ pub mod prelude {
   /// ## Success case
   ///
   /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
+  /// # use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "x";
   /// let input = text.chars().collect::<Vec<_>>();
@@ -393,7 +395,7 @@ pub mod prelude {
   pub fn elm_pred<'a, I, F>(f: F) -> Parser<'a, I, I>
   where
     F: Fn(&I) -> bool + 'static,
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_pred(f)
   }
 
@@ -405,7 +407,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "xyz";
@@ -420,7 +421,7 @@ pub mod prelude {
   /// ```
   pub fn elm_ref_of<'a, I, S>(set: &'static S) -> Parser<'a, I, &'a I>
   where
-    I: Element + 'static,
+    I: Element,
     S: Set<I> + ?Sized + 'static, {
     ParsersImpl::elm_ref_of(set)
   }
@@ -432,9 +433,8 @@ pub mod prelude {
   /// # Example
   ///
   /// ```rust
-  /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
-  /// use oni_comb_parser_rs::prelude::*;
+  /// # use std::iter::FromIterator;
+  /// # use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "xyz";
   /// let input = text.chars().collect::<Vec<_>>();
@@ -448,7 +448,7 @@ pub mod prelude {
   /// ```
   pub fn elm_of<'a, I, S>(set: &'static S) -> Parser<'a, I, I>
   where
-    I: Element + 'static,
+    I: Element,
     S: Set<I> + ?Sized + 'static, {
     ParsersImpl::elm_of(set)
   }
@@ -462,7 +462,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "xyz";
@@ -477,7 +476,7 @@ pub mod prelude {
   /// ```
   pub fn elm_in_ref<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_ref_in(start, end)
   }
 
@@ -490,7 +489,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "xyz";
@@ -505,7 +503,7 @@ pub mod prelude {
   /// ```
   pub fn elm_in<'a, I>(start: I, end: I) -> Parser<'a, I, I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_in(start, end)
   }
 
@@ -518,7 +516,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "wxy";
@@ -533,7 +530,7 @@ pub mod prelude {
   /// ```
   pub fn elm_from_until_ref<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_ref_from_until(start, end)
   }
 
@@ -549,7 +546,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "wxy";
@@ -564,7 +560,7 @@ pub mod prelude {
   /// ```
   pub fn elm_from_until<'a, I>(start: I, end: I) -> Parser<'a, I, I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_from_until(start, end)
   }
 
@@ -576,7 +572,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "xyz";
@@ -591,7 +586,7 @@ pub mod prelude {
   /// ```
   pub fn none_ref_of<'a, I, S>(set: &'static S) -> Parser<'a, I, &'a I>
   where
-    I: Element + 'static,
+    I: Element,
     S: Set<I> + ?Sized + 'static, {
     ParsersImpl::none_ref_of(set)
   }
@@ -604,7 +599,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "xyz";
@@ -619,7 +613,7 @@ pub mod prelude {
   /// ```
   pub fn none_of<'a, I, S>(set: &'static S) -> Parser<'a, I, I>
   where
-    I: Element + 'static,
+    I: Element,
     S: Set<I> + ?Sized + 'static, {
     ParsersImpl::none_of(set)
   }
@@ -630,7 +624,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "   ";
@@ -645,7 +638,7 @@ pub mod prelude {
   /// ```
   pub fn elm_space_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_space_ref()
   }
 
@@ -655,7 +648,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "   ";
@@ -670,7 +662,7 @@ pub mod prelude {
   /// ```
   pub fn elm_space<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_space()
   }
 
@@ -680,7 +672,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = " \n ";
@@ -695,7 +686,7 @@ pub mod prelude {
   /// ```
   pub fn elm_multi_space_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_multi_space_ref()
   }
 
@@ -705,7 +696,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = " \n ";
@@ -720,7 +710,7 @@ pub mod prelude {
   /// ```
   pub fn elm_multi_space<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + Clone + PartialEq + 'static, {
+    I: Element, {
     ParsersImpl::elm_multi_space()
   }
 
@@ -730,7 +720,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "abcxyz";
@@ -745,7 +734,7 @@ pub mod prelude {
   /// ```
   pub fn elm_alpha_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_alpha_ref()
   }
 
@@ -755,7 +744,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "abcxyz";
@@ -770,7 +758,7 @@ pub mod prelude {
   /// ```
   pub fn elm_alpha<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_alpha()
   }
 
@@ -780,7 +768,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "abc0123xyz";
@@ -795,7 +782,7 @@ pub mod prelude {
   /// ```
   pub fn elm_alpha_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_alpha_digit_ref()
   }
 
@@ -805,7 +792,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "abc0123xyz";
@@ -820,7 +806,7 @@ pub mod prelude {
   /// ```
   pub fn elm_alpha_digit<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_alpha_digit()
   }
 
@@ -830,7 +816,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "0123456789";
@@ -845,7 +830,7 @@ pub mod prelude {
   /// ```
   pub fn elm_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_digit_ref()
   }
 
@@ -855,7 +840,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "0123456789";
@@ -870,7 +854,7 @@ pub mod prelude {
   /// ```
   pub fn elm_digit<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_digit()
   }
 
@@ -880,9 +864,8 @@ pub mod prelude {
   /// # Example
   ///
   /// ```rust
-  /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
-  /// use oni_comb_parser_rs::prelude::*;
+  /// # use std::iter::FromIterator;
+  /// # use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "123456789";
   /// let input = text.chars().collect::<Vec<_>>();
@@ -896,7 +879,7 @@ pub mod prelude {
   /// ```
   pub fn elm_digit_1_9_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + 'static, {
+    I: Element, {
     elm_digit_ref().with_filter_not(|c: &&I| c.is_ascii_digit_zero())
   }
 
@@ -906,7 +889,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "123456789";
@@ -921,7 +903,7 @@ pub mod prelude {
   /// ```
   pub fn elm_digit_1_9<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + 'static, {
+    I: Element, {
     elm_digit_1_9_ref().map(Clone::clone)
   }
 
@@ -931,7 +913,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "0123456789ABCDEFabcdef";
@@ -946,7 +927,7 @@ pub mod prelude {
   /// ```
   pub fn elm_hex_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_hex_digit_ref()
   }
 
@@ -956,7 +937,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "0123456789ABCDEFabcdef";
@@ -971,7 +951,7 @@ pub mod prelude {
   /// ```
   pub fn elm_hex_digit<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_hex_digit()
   }
 
@@ -981,7 +961,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "012345678";
@@ -996,7 +975,7 @@ pub mod prelude {
   /// ```
   pub fn elm_oct_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_oct_digit_ref()
   }
 
@@ -1006,7 +985,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "012345678";
@@ -1021,7 +999,7 @@ pub mod prelude {
   /// ```
   pub fn elm_oct_digit<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + 'static, {
+    I: Element, {
     ParsersImpl::elm_oct_digit()
   }
 
@@ -1033,7 +1011,6 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "abc";
@@ -1048,7 +1025,7 @@ pub mod prelude {
   /// ```
   pub fn seq<'a, 'b, I>(seq: &'b [I]) -> Parser<'a, I, Vec<I>>
   where
-    I: Element + 'a,
+    I: Element,
     'b: 'a, {
     ParsersImpl::seq(seq)
   }
@@ -1113,7 +1090,7 @@ pub mod prelude {
   /// # Example
   ///
   /// ```rust
-  /// use oni_comb_parser_rs::prelude::*;
+  /// # use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "abcdef";
   /// let input = text.chars().collect::<Vec<_>>();
@@ -1150,7 +1127,9 @@ pub mod prelude {
   /// assert!(result.is_success());
   /// assert_eq!(result.success().unwrap(), "abc");
   /// ```
-  pub fn take<'a, I>(n: usize) -> Parser<'a, I, &'a [I]> {
+  pub fn take<'a, I>(n: usize) -> Parser<'a, I, &'a [I]>
+  where
+    I: Element, {
     ParsersImpl::take(n)
   }
 
@@ -1180,7 +1159,7 @@ pub mod prelude {
   pub fn take_while0<'a, I, F>(f: F) -> Parser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I: Element, {
     ParsersImpl::take_while0(f)
   }
 
@@ -1191,8 +1170,8 @@ pub mod prelude {
   /// # Example
   ///
   /// ```rust
-  /// use std::iter::FromIterator;
-  /// use oni_comb_parser_rs::prelude::*;
+  /// # use std::iter::FromIterator;
+  /// # use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "abcdef";
   /// let input = text.chars().collect::<Vec<_>>();
@@ -1210,7 +1189,7 @@ pub mod prelude {
   pub fn take_while1<'a, I, F>(f: F) -> Parser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I: Element, {
     ParsersImpl::take_while1(f)
   }
 
@@ -1240,7 +1219,7 @@ pub mod prelude {
   pub fn take_while_n_m<'a, I, F>(n: usize, m: usize, f: F) -> Parser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I: Element, {
     ParsersImpl::take_while_n_m(n, m, f)
   }
 
@@ -1267,7 +1246,7 @@ pub mod prelude {
   pub fn take_till0<'a, I, F>(f: F) -> Parser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I: Element, {
     ParsersImpl::take_till0(f)
   }
 
@@ -1294,7 +1273,7 @@ pub mod prelude {
   pub fn take_till1<'a, I, F>(f: F) -> Parser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I: Element, {
     ParsersImpl::take_till1(f)
   }
 

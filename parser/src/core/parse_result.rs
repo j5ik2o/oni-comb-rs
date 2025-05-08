@@ -157,7 +157,7 @@ impl<'a, I, A> ParseResult<'a, I, A> {
   pub fn map_err<F>(mut self, f: F) -> Self
   where
     F: Fn(&ParseError<'a, I>) -> ParseError<'a, I>, {
-    if let  ParseResult::Failure { error, .. } = &mut self {
+    if let ParseResult::Failure { error, .. } = &mut self {
       *error = f(error);
     }
     self

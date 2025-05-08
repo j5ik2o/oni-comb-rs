@@ -1,4 +1,4 @@
-use crate::core::{ParseResult, Parser, ParserRunner};
+use crate::core::{ParseResult, Parser};
 use crate::extension::parsers::CollectParsers;
 use crate::internal::ParsersImpl;
 

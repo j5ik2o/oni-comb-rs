@@ -1,4 +1,4 @@
-use crate::core::{Parser, ParserRunner, Parsers};
+use crate::core::{Parser, ParserRunner};
 use crate::extension::parsers::LazyParsers;
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;

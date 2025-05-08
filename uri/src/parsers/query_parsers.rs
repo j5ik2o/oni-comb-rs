@@ -1,7 +1,7 @@
 use crate::models::query::Query;
 use crate::parsers::basic_parsers::pchar_without_eq_amp;
-use oni_comb_parser_rs::extension::parser::*;
 use oni_comb_parser_rs::prelude::*;
+
 //  query         = *( pchar / "/" / "?" )
 pub fn query<'a>() -> Parser<'a, u8, Query> {
   let code_point = || {

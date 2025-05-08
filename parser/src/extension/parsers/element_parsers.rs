@@ -1,6 +1,5 @@
 use crate::core::{Element, Parsers};
 use crate::utils::Set;
-use std::fmt::{Debug, Display};
 
 pub trait ElementParsers: Parsers {
   fn elm_any_ref<'a, I>() -> Self::P<'a, I, &'a I>
