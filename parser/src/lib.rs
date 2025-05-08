@@ -23,8 +23,7 @@ pub mod prelude {
   pub use crate::utils::*;
   use std::fmt::{Debug, Display};
 
-  /// Returns a [Parser] that does nothing.<br/>
-  /// 何もしない[Parser]を返します。
+  /// Returns a [Parser] that does nothing.
   ///
   /// # Example
   ///
@@ -45,8 +44,7 @@ pub mod prelude {
     ParsersImpl::unit()
   }
 
-  /// Returns a [Parser] that does nothing. It is an alias for `unit()`.<br/>
-  /// 何もしない[Parser]を返します。`unit()`のエイリアスです。
+  /// Returns a [Parser] that does nothing. It is an alias for `unit()`.
   ///
   /// # Example
   ///
@@ -67,16 +65,11 @@ pub mod prelude {
     ParsersImpl::empty()
   }
 
-  /// Returns a [Parser] representing the termination.<br/>
-  /// 終端を表す[Parser]を返します。
+  /// Returns a [Parser] representing the termination.
   ///
   /// Returns `Ok(())` if the termination is parsed successfully, `Err(Mismatch)` if the parsing fails.
   ///
-  /// 終端の解析に成功したら`Ok(())`を返し、解析に失敗したら`Err(Mismatch)`を返します。
-  ///
-  /// # Example(例)
-  ///
-  /// ## Success case
+  /// # Example
   ///
   /// ```rust
   /// use oni_comb_parser_rs::prelude::*;
@@ -96,8 +89,7 @@ pub mod prelude {
     ParsersImpl::end()
   }
 
-  /// Returns a [Parser] representing the successful parsing result.<br/>
-  /// 成功した解析結果を表す[Parser]を返します。
+  /// Returns a [Parser] representing the successful parsing result.
   ///
   /// # Example
   ///
@@ -121,11 +113,9 @@ pub mod prelude {
     ParsersImpl::successful(value)
   }
 
-  /// Returns a [Parser] representing the successful parsing result.<br/>
-  /// 成功した解析結果を表す[Parser]を返します。
+  /// Returns a [Parser] representing the successful parsing result.
   ///
   /// - f: a closure that returns the parsed result value.
-  /// - f: 解析結果の値を返すクロージャ
   ///
   /// # Example
   ///
@@ -150,8 +140,7 @@ pub mod prelude {
     ParsersImpl::successful_lazy(f)
   }
 
-  /// Returns a [Parser] that represents the result of the failed parsing.<br/>
-  /// 失敗した解析結果を表す[Parser]を返します。
+  /// Returns a [Parser] that represents the result of the failed parsing.
   ///
   /// - value: [ParseError]
   ///
@@ -179,8 +168,7 @@ pub mod prelude {
     ParsersImpl::failed(value, commit)
   }
 
-  /// Returns a [Parser] that returns and commits the failed parsing result.<br/>
-  /// 失敗した解析結果を返しコミットする[Parser]を返します。
+  /// Returns a [Parser] that returns and commits the failed parsing result.
   ///
   /// - value: [ParseError]
   ///
@@ -210,8 +198,7 @@ pub mod prelude {
     ParsersImpl::failed(value, CommittedStatus::Committed)
   }
 
-  /// Returns a [Parser] that returns failed parsing results and does not commit.<br/>
-  /// 失敗した解析結果を返しコミットしない[Parser]を返します。
+  /// Returns a [Parser] that returns failed parsing results and does not commit.
   ///
   /// - value: [ParseError]
   ///
@@ -241,10 +228,8 @@ pub mod prelude {
     ParsersImpl::failed(value, CommittedStatus::Uncommitted)
   }
 
-  /// Returns a [Parser] that represents the result of the failed parsing.<br/>
-  /// 失敗した解析結果を表す[Parser]を返します。
+  /// Returns a [Parser] that represents the result of the failed parsing.
   ///
-  /// - f: 失敗した解析結果を返すクロージャ
   /// - f: Closure that returns failed analysis results.
   ///
   /// # Example
@@ -273,8 +258,7 @@ pub mod prelude {
   }
 
   // --- Element Parsers ---
-  /// Returns a [Parser] that parses an any element.(for reference)<br/>
-  /// 任意の要素を解析する[Parser]を返します。(参照版)
+  /// Returns a [Parser] that parses an any element.(for reference)
   ///
   /// # Example
   ///
@@ -293,12 +277,11 @@ pub mod prelude {
   /// ```
   pub fn elm_any_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + PartialEq + 'a + 'static, {
+    I: Element + PartialEq + 'static, {
     ParsersImpl::elm_any_ref()
   }
 
-  /// Returns a [Parser] that parses an any element.<br/>
-  /// 任意の要素を解析する[Parser]を返します。
+  /// Returns a [Parser] that parses an any element.
   ///
   /// # Example
   ///
@@ -317,17 +300,15 @@ pub mod prelude {
   /// ```
   pub fn elm_any<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_any()
   }
 
-  /// Returns a [Parser] that parses the specified element.(for reference)<br/>
-  /// 指定した要素を解析する[Parser]を返します。(参照版)
+  /// Returns a [Parser] that parses the specified element.(for reference)
   ///
   /// - element: element
-  /// - element: 要素
   ///
-  /// # Example(例)
+  /// # Example
   ///
   /// ```rust
   /// use oni_comb_parser_rs::prelude::*;
@@ -344,15 +325,13 @@ pub mod prelude {
   /// ```
   pub fn elm_ref<'a, I>(element: I) -> Parser<'a, I, &'a I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_ref(element)
   }
 
-  /// Returns a [Parser] that parses the specified element.<br/>
-  /// 指定した要素を解析する[Parser]を返します。
+  /// Returns a [Parser] that parses the specified element.
   ///
   /// - element: an element
-  /// - element: 要素
   ///
   /// # Example
   ///
@@ -371,12 +350,11 @@ pub mod prelude {
   /// ```
   pub fn elm<'a, I>(element: I) -> Parser<'a, I, I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm(element)
   }
 
-  /// Returns a [Parser] that parses the elements that satisfy the specified closure conditions.(for reference)<br/>
-  /// 指定されたクロージャの条件を満たす要素を解析する[Parser]を返します。(参照版)
+  /// Returns a [Parser] that parses the elements that satisfy the specified closure conditions.(for reference)
   ///
   /// - f: Closure(クロージャ)
   ///
@@ -397,16 +375,14 @@ pub mod prelude {
   /// ```
   pub fn elm_pred_ref<'a, I, F>(f: F) -> Parser<'a, I, &'a I>
   where
-    F: Fn(&I) -> bool + 'a + 'static,
-    I: Element + 'a + 'static, {
+    F: Fn(&I) -> bool + 'static,
+    I: Element + 'static, {
     ParsersImpl::elm_pred_ref(f)
   }
 
-  /// Returns a [Parser] that parses the elements that satisfy the specified closure conditions.<br/>
-  /// 指定されたクロージャの条件を満たす要素を解析するパーサーを返します。
+  /// Returns a [Parser] that parses the elements that satisfy the specified closure conditions.
   ///
   /// - f: closure
-  /// - f: クロージャ
   ///
   /// # Example
   ///
@@ -427,16 +403,14 @@ pub mod prelude {
   /// ```
   pub fn elm_pred<'a, I, F>(f: F) -> Parser<'a, I, I>
   where
-    F: Fn(&I) -> bool + 'a + 'static,
-    I: Element + 'a + 'static, {
+    F: Fn(&I) -> bool + 'static,
+    I: Element + 'static, {
     ParsersImpl::elm_pred(f)
   }
 
-  /// Returns a [Parser] that parses the elements in the specified set. (for reference)<br/>
-  /// 指定した集合の要素を解析する[Parser]を返します。(参照版)
+  /// Returns a [Parser] that parses the elements in the specified set. (for reference)
   ///
   /// - set: element of sets
-  /// - set: 要素の集合
   ///
   /// # Example
   ///
@@ -457,16 +431,14 @@ pub mod prelude {
   /// ```
   pub fn elm_ref_of<'a, I, S>(set: &'static S) -> Parser<'a, I, &'a I>
   where
-    I: Element + 'a + 'static,
+    I: Element + 'static,
     S: Set<I> + ?Sized + 'static, {
     ParsersImpl::elm_ref_of(set)
   }
 
-  /// Returns a [Parser] that parses the elements in the specified set.<br/>
-  /// 指定した集合の要素を解析する[Parser]を返します。
+  /// Returns a [Parser] that parses the elements in the specified set.
   ///
   /// - set: element of sets
-  /// - set: 要素の集合
   ///
   /// # Example
   ///
@@ -487,19 +459,15 @@ pub mod prelude {
   /// ```
   pub fn elm_of<'a, I, S>(set: &'static S) -> Parser<'a, I, I>
   where
-    I: Element + 'a + 'static,
+    I: Element + 'static,
     S: Set<I> + ?Sized + 'static, {
     ParsersImpl::elm_of(set)
   }
 
-  /// Returns a [Parser] that parses the elements in the specified range. (for reference)<br/>
-  /// 指定した範囲の要素を解析する[Parser]を返します。(参照版)
+  /// Returns a [Parser] that parses the elements in the specified range. (for reference)
   ///
   /// - start: start element
   /// - end: end element
-  ///
-  /// - start: 開始要素
-  /// - end: 終了要素
   ///
   /// # Example
   ///
@@ -520,18 +488,14 @@ pub mod prelude {
   /// ```
   pub fn elm_in_ref<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_ref_in(start, end)
   }
 
-  /// Returns a [Parser] that parses the elements in the specified range.<br/>
-  /// 指定した範囲の要素を解析する[Parser]を返します。
+  /// Returns a [Parser] that parses the elements in the specified range.
   ///
   /// - start: start element
   /// - end: end element
-  ///
-  /// - start: 開始要素
-  /// - end: 終了要素
   ///
   /// # Example
   ///
@@ -552,18 +516,14 @@ pub mod prelude {
   /// ```
   pub fn elm_in<'a, I>(start: I, end: I) -> Parser<'a, I, I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_in(start, end)
   }
 
-  /// Returns a [Parser] that parses the elements in the specified range. (for reference)<br/>
-  /// 指定した範囲の要素を解析する[Parser]を返します。(参照版)
+  /// Returns a [Parser] that parses the elements in the specified range. (for reference)
   ///
   /// - start: a start element
   /// - end: an end element, process up to the element at end - 1
-  ///
-  /// - start: 開始要素
-  /// - end: 終了要素, end - 1の要素まで処理
   ///
   /// # Example
   ///
@@ -584,12 +544,11 @@ pub mod prelude {
   /// ```
   pub fn elm_from_until_ref<'a, I>(start: I, end: I) -> Parser<'a, I, &'a I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_ref_from_until(start, end)
   }
 
-  /// Returns a [Parser] that parses the elements in the specified range.<br/>
-  /// 指定した範囲の要素を解析する[Parser]を返します。
+  /// Returns a [Parser] that parses the elements in the specified range.
   ///
   /// - start: a start element
   /// - end: an end element, process up to the element at end - 1
@@ -616,15 +575,13 @@ pub mod prelude {
   /// ```
   pub fn elm_from_until<'a, I>(start: I, end: I) -> Parser<'a, I, I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_from_until(start, end)
   }
 
-  /// Returns a [Parser] that parses elements that do not contain elements of the specified set.(for reference)<br/>
-  /// 指定した集合の要素を含まない要素を解析する[Parser]を返します。(参照版)
+  /// Returns a [Parser] that parses elements that do not contain elements of the specified set.(for reference)
   ///
   /// - set: a element of sets
-  /// - set: 要素の集合
   ///
   /// # Example
   ///
@@ -645,16 +602,14 @@ pub mod prelude {
   /// ```
   pub fn none_ref_of<'a, I, S>(set: &'static S) -> Parser<'a, I, &'a I>
   where
-    I: Element + 'a + 'static,
+    I: Element + 'static,
     S: Set<I> + ?Sized + 'static, {
     ParsersImpl::none_ref_of(set)
   }
 
-  /// Returns a [Parser] that parses elements that do not contain elements of the specified set.<br/>
-  /// 指定した集合の要素を含まない要素を解析する[Parser]を返します。
+  /// Returns a [Parser] that parses elements that do not contain elements of the specified set.
   ///
   /// - set: an element of sets
-  /// - set: 要素の集合
   ///
   /// # Example
   ///
@@ -675,13 +630,12 @@ pub mod prelude {
   /// ```
   pub fn none_of<'a, I, S>(set: &'static S) -> Parser<'a, I, I>
   where
-    I: Element + 'a + 'static,
+    I: Element + 'static,
     S: Set<I> + ?Sized + 'static, {
     ParsersImpl::none_of(set)
   }
 
-  /// Returns a [Parser] that parses the space (' ', '\t'). (for reference)<br/>
-  /// スペース(' ', '\t')を解析する[Parser]を返します。(参照版)
+  /// Returns a [Parser] that parses the space (' ', '\t'). (for reference)
   ///
   /// # Example
   ///
@@ -702,12 +656,11 @@ pub mod prelude {
   /// ```
   pub fn elm_space_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_space_ref()
   }
 
-  /// Returns a [Parser] that parses the space (' ', '\t').<br/>
-  /// スペース(' ', '\t')を解析する[Parser]を返します。
+  /// Returns a [Parser] that parses the space (' ', '\t').
   ///
   /// # Example
   ///
@@ -728,12 +681,11 @@ pub mod prelude {
   /// ```
   pub fn elm_space<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_space()
   }
 
-  /// Returns a [Parser] that parses spaces containing newlines (' ', '\t', '\n', '\r'). (for reference)<br/>
-  /// 改行を含むスペース(' ', '\t', '\n', '\r')を解析する[Parser]を返します。(参照版)
+  /// Returns a [Parser] that parses spaces containing newlines (' ', '\t', '\n', '\r'). (for reference)
   ///
   /// # Example
   ///
@@ -754,12 +706,11 @@ pub mod prelude {
   /// ```
   pub fn elm_multi_space_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_multi_space_ref()
   }
 
-  /// Returns a [Parser] that parses spaces containing newlines (' ', '\t', '\n', '\r').<br/>
-  /// 改行を含むスペース(' ', '\t', '\n', '\r')を解析する[Parser]を返します。
+  /// Returns a [Parser] that parses spaces containing newlines (' ', '\t', '\n', '\r').
   ///
   /// # Example
   ///
@@ -780,12 +731,11 @@ pub mod prelude {
   /// ```
   pub fn elm_multi_space<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + Clone + PartialEq + 'a + 'static, {
+    I: Element + Clone + PartialEq + 'static, {
     ParsersImpl::elm_multi_space()
   }
 
-  /// Returns a [Parser] that parses alphabets ('A'..='Z', 'a'..='z').(for reference)<br/>
-  /// 英字('A'..='Z', 'a'..='z')を解析する[Parser]を返します。(参照版)
+  /// Returns a [Parser] that parses alphabets ('A'..='Z', 'a'..='z').(for reference)
   ///
   /// # Example
   ///
@@ -806,12 +756,11 @@ pub mod prelude {
   /// ```
   pub fn elm_alpha_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_alpha_ref()
   }
 
-  /// Returns a [Parser] that parses alphabets ('A'..='Z', 'a'..='z').<br/>
-  /// 英字('A'..='Z', 'a'..='z')を解析する[Parser]を返します。
+  /// Returns a [Parser] that parses alphabets ('A'..='Z', 'a'..='z').
   ///
   /// # Example
   ///
@@ -832,12 +781,11 @@ pub mod prelude {
   /// ```
   pub fn elm_alpha<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_alpha()
   }
 
-  /// Returns a [Parser] that parses alphabets and digits ('0'..='9', 'A'..='Z', 'a'..='z').(for reference)<br/>
-  /// 英数字('0'..='9', 'A'..='Z', 'a'..='z')を解析する[Parser]を返します。(参照版)
+  /// Returns a [Parser] that parses alphabets and digits ('0'..='9', 'A'..='Z', 'a'..='z').(for reference)
   ///
   /// # Example
   ///
@@ -858,12 +806,11 @@ pub mod prelude {
   /// ```
   pub fn elm_alpha_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_alpha_digit_ref()
   }
 
-  /// Returns a [Parser] that parses alphabets and digits ('0'..='9', 'A'..='Z', 'a'..='z').<br/>
-  /// 英数字('0'..='9', 'A'..='Z', 'a'..='z')を解析する[Parser]を返します。
+  /// Returns a [Parser] that parses alphabets and digits ('0'..='9', 'A'..='Z', 'a'..='z').
   ///
   /// # Example
   ///
@@ -884,12 +831,11 @@ pub mod prelude {
   /// ```
   pub fn elm_alpha_digit<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_alpha_digit()
   }
 
-  /// Returns a [Parser] that parses digits ('0'..='9').(for reference)<br/>
-  /// 数字('0'..='9')を解析する[Parser]を返します。(参照版)
+  /// Returns a [Parser] that parses digits ('0'..='9').(for reference)
   ///
   /// # Example
   ///
@@ -910,12 +856,11 @@ pub mod prelude {
   /// ```
   pub fn elm_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_digit_ref()
   }
 
-  /// Returns a [Parser] that parses digits ('0'..='9').<br/>
-  /// 数字('0'..='9')を解析する[Parser]を返します。
+  /// Returns a [Parser] that parses digits ('0'..='9').
   ///
   /// # Example
   ///
@@ -936,7 +881,7 @@ pub mod prelude {
   /// ```
   pub fn elm_digit<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_digit()
   }
 
@@ -962,12 +907,11 @@ pub mod prelude {
   /// ```
   pub fn elm_digit_1_9_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     elm_digit_ref().with_filter_not(|c: &&I| c.is_ascii_digit_zero())
   }
 
-  /// Returns a [Parser] that parses digits ('1'..='9').<br/>
-  /// 数字('1'..='9')を解析する[Parser]を返します。
+  /// Returns a [Parser] that parses digits ('1'..='9').
   ///
   /// # Example
   ///
@@ -988,12 +932,11 @@ pub mod prelude {
   /// ```
   pub fn elm_digit_1_9<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     elm_digit_1_9_ref().map(Clone::clone)
   }
 
-  /// Returns a [Parser] that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f').(for reference)<br/>
-  /// 16進の数字('0'..='9', 'A'..='F', 'a'..='f')を解析する[Parser]を返します。(参照版)
+  /// Returns a [Parser] that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f').(for reference)
   ///
   /// # Example
   ///
@@ -1014,12 +957,11 @@ pub mod prelude {
   /// ```
   pub fn elm_hex_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_hex_digit_ref()
   }
 
-  /// Returns a [Parser] that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f').<br/>
-  /// 16進の数字('0'..='9', 'A'..='F', 'a'..='f')を解析する[Parser]を返します。
+  /// Returns a [Parser] that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f').
   ///
   /// # Example
   ///
@@ -1040,12 +982,11 @@ pub mod prelude {
   /// ```
   pub fn elm_hex_digit<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_hex_digit()
   }
 
-  /// Returns a [Parser] that parses oct digits ('0'..='8').(for reference)<br/>
-  /// 8進の数字('0'..='8')を解析する[Parser]を返します。(参照版)
+  /// Returns a [Parser] that parses oct digits ('0'..='8').(for reference)
   ///
   /// # Example
   ///
@@ -1066,12 +1007,11 @@ pub mod prelude {
   /// ```
   pub fn elm_oct_digit_ref<'a, I>() -> Parser<'a, I, &'a I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_oct_digit_ref()
   }
 
-  /// Returns a [Parser] that parses oct digits ('0'..='8').<br/>
-  /// 8進の数字('0'..='8')を解析する[Parser]を返します。
+  /// Returns a [Parser] that parses oct digits ('0'..='8').
   ///
   /// # Example
   ///
@@ -1092,14 +1032,13 @@ pub mod prelude {
   /// ```
   pub fn elm_oct_digit<'a, I>() -> Parser<'a, I, I>
   where
-    I: Element + 'a + 'static, {
+    I: Element + 'static, {
     ParsersImpl::elm_oct_digit()
   }
 
   // --- Elements Parsers ---
 
-  /// Returns a [Parser] that parses a sequence of elements.<br/>
-  /// 要素の列を解析する[Parser]を返す。
+  /// Returns a [Parser] that parses a sequence of elements.
   ///
   /// # Example
   ///
@@ -1125,8 +1064,7 @@ pub mod prelude {
     ParsersImpl::seq(seq)
   }
 
-  /// Returns a [Parser] that parses a string.<br/>
-  /// 文字列を解析する[Parser]を返す。
+  /// Returns a [Parser] that parses a string.
   ///
   /// - tag: a string
   /// - tag: 文字列
@@ -1152,8 +1090,7 @@ pub mod prelude {
     ParsersImpl::tag(tag)
   }
 
-  /// Returns a [Parser] that parses a string. However, it is not case-sensitive.<br/>
-  /// 文字列を解析する[Parser]を返す。ただし大文字小文字を区別しない。
+  /// Returns a [Parser] that parses a string. However, it is not case-sensitive.
   ///
   /// - tag: a string
   /// - tag: 文字列
@@ -1179,8 +1116,7 @@ pub mod prelude {
     ParsersImpl::tag_no_case(tag)
   }
 
-  /// Returns a [Parser] that parses a string that match a regular expression.<br/>
-  /// 正規表現に合致する文字列を解析する[Parser]を返す。
+  /// Returns a [Parser] that parses a string that match a regular expression.
   ///
   /// - pattern: a regular expression
   /// - pattern: 正規表現
@@ -1204,8 +1140,7 @@ pub mod prelude {
     ParsersImpl::regex(pattern)
   }
 
-  /// Returns a [Parser] that returns an element of the specified length.<br/>
-  /// 指定された長さの要素を返す[Parser]を返す。
+  /// Returns a [Parser] that returns an element of the specified length.
   ///
   /// - n: Length of the reading element
   /// - n: 読む要素の長さ
@@ -1230,10 +1165,8 @@ pub mod prelude {
     ParsersImpl::take(n)
   }
 
-  /// クロージャの結果が真である間は要素を返す[Parser]を返す。<br/>
   /// Returns a [Parser] that returns elements, while the result of the closure is true.
   ///
-  /// 解析結果の長さは必須ではありません。<br/>
   /// The length of the analysis result is not required.
   ///
   /// # Example
@@ -1262,10 +1195,8 @@ pub mod prelude {
     ParsersImpl::take_while0(f)
   }
 
-  /// クロージャの結果が真である間は要素を返す[Parser]を返す。<br/>
   /// Returns a [Parser] that returns elements, while the result of the closure is true.
   ///
-  /// 解析結果の長さは1要素以上必要です。<br/>
   /// The length of the analysis result must be at least one element.
   ///
   /// # Example
@@ -1294,10 +1225,8 @@ pub mod prelude {
     ParsersImpl::take_while1(f)
   }
 
-  /// クロージャの結果が真である間は要素を返す[Parser]を返す。<br/>
   /// Returns a [Parser] that returns elements, while the result of the closure is true.
   ///
-  /// 解析結果の長さはn要素以上m要素以下である必要があります。<br/>
   /// The length of the analysis result should be between n and m elements.
   ///
   /// # Example
@@ -1326,10 +1255,8 @@ pub mod prelude {
     ParsersImpl::take_while_n_m(n, m, f)
   }
 
-  /// Returns a [Parser] that returns a sequence up to either the end element or the element that matches the condition.<br/>
-  /// 条件に一致する要素もしくは最後の要素までの連続を返す[Parser]を返す。
+  /// Returns a [Parser] that returns a sequence up to either the end element or the element that matches the condition.
   ///
-  /// 解析結果の長さは1要素以上必要です。<br/>
   /// The length of the analysis result must be at least one element.
   ///
   /// # Example
@@ -1355,10 +1282,8 @@ pub mod prelude {
     ParsersImpl::take_till0(f)
   }
 
-  /// Returns a [Parser] that returns a sequence up to either the end element or the element that matches the condition.<br/>
-  /// 条件に一致する要素もしくは最後の要素までの連続を返す[Parser]を返す。
+  /// Returns a [Parser] that returns a sequence up to either the end element or the element that matches the condition.
   ///
-  /// 解析結果の長さは1要素以上必要です。<br/>
   /// The length of the analysis result must be at least one element.
   ///
   /// # Example
@@ -1386,11 +1311,9 @@ pub mod prelude {
 
   // --- Offset Control Parsers ---
 
-  /// Returns a [Parser] that skips the specified number of elements.<br/>
-  /// 指定された数の要素をスキップする[Parser]を返す。
+  /// Returns a [Parser] that skips the specified number of elements.
   ///
   /// - size: a size of elements
-  /// - size: スキップする要素数
   ///
   /// # Example
   ///
@@ -1414,12 +1337,11 @@ pub mod prelude {
 
   // --- Enhanced Parsers ---
 
-  /// Return a [Parser] that skips the previous and following [Parser]s.<br/>
-  /// 前後のパーサーをスキップするパーサーを返す。
+  /// Return a [Parser] that skips the previous and following [Parser]s.
   ///
-  /// - lp: 左側のパーサー
-  /// - parser: 中央のパーサー
-  /// - rp: 右側のパーサー
+  /// - lp: left parser
+  /// - parser: central parser
+  /// - rp: right parser
   ///
   /// # Example
   ///
@@ -1449,11 +1371,9 @@ pub mod prelude {
     ParsersImpl::surround(lp, parser, rp)
   }
 
-  /// Returns a [Parser] that lazily evaluates the specified [Parser].<br/>
-  /// 指定した[Parser]を遅延評価する[Parser]を返す。
+  /// Returns a [Parser] that lazily evaluates the specified [Parser].
   ///
   /// - f: Function to generate parser
-  /// - f: パーサーを生成する関数
   ///
   /// # Example
   ///
