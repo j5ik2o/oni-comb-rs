@@ -14,10 +14,10 @@ pub fn fragment<'a>() -> Parser<'a, u8, String> {
 
 #[cfg(test)]
 pub mod gens {
-  use crate::parsers::basic_parsers::gens::{pchar_gen, repeat_gen_of_string};
-  use prop_check_rs::gen::{Gen, Gens};
+    use crate::parsers::basic_parsers::gens::{pchar_gen, repeat_gen_of_string};
+    use prop_check_rs::gen::{Gen, Gens};
 
-  pub fn fragment_gen() -> Gen<String> {
+    pub fn fragment_gen() -> Gen<String> {
     repeat_gen_of_string(1, u8::MAX - 1, {
       Gens::frequency([
         (1, pchar_gen(1, 1)),
@@ -29,17 +29,17 @@ pub mod gens {
 
 #[cfg(test)]
 mod tests {
-  use std::env;
+    use std::env;
 
-  use anyhow::Result;
-  use prop_check_rs::prop;
-  use prop_check_rs::prop::TestCases;
-  use prop_check_rs::rng::RNG;
+    use anyhow::Result;
+    use prop_check_rs::prop;
+    use prop_check_rs::prop::TestCases;
+    use prop_check_rs::rng::RNG;
 
-  use super::gens::*;
-  use super::*;
+    use super::gens::*;
+    use super::*;
 
-  const TEST_COUNT: TestCases = 100;
+    const TEST_COUNT: TestCases = 100;
 
   #[ctor::ctor]
   fn init_logger() {

@@ -18,14 +18,14 @@ pub fn uri<'a>() -> Parser<'a, u8, Uri> {
 
 #[cfg(test)]
 pub mod gens {
-  use crate::parsers::fragment_parsers::gens::fragment_gen;
-  use crate::parsers::hier_part_parsers::gens::hier_part_gen;
-  use crate::parsers::path_parsers::gens::Pair;
-  use crate::parsers::query_parsers::gens::query_gen;
-  use crate::parsers::scheme_parsers::gens::scheme_gen;
-  use prop_check_rs::gen::{Gen, Gens};
+    use crate::parsers::fragment_parsers::gens::fragment_gen;
+    use crate::parsers::hier_part_parsers::gens::hier_part_gen;
+    use crate::parsers::path_parsers::gens::Pair;
+    use crate::parsers::query_parsers::gens::query_gen;
+    use crate::parsers::scheme_parsers::gens::scheme_gen;
+    use prop_check_rs::gen::{Gen, Gens};
 
-  // URI = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
+    // URI = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
   pub fn uri_gen() -> Gen<String> {
     scheme_gen().flat_map(|scheme| {
       let base_gen =
@@ -51,17 +51,17 @@ pub mod gens {
 
 #[cfg(test)]
 mod tests {
-  use std::env;
+    use std::env;
 
-  use anyhow::Result;
-  use prop_check_rs::prop;
-  use prop_check_rs::prop::TestCases;
-  use prop_check_rs::rng::RNG;
+    use anyhow::Result;
+    use prop_check_rs::prop;
+    use prop_check_rs::prop::TestCases;
+    use prop_check_rs::rng::RNG;
 
-  use super::gens::*;
-  use super::*;
+    use super::gens::*;
+    use super::*;
 
-  const TEST_COUNT: TestCases = 100;
+    const TEST_COUNT: TestCases = 100;
 
   #[ctor::ctor]
   fn init_logger() {

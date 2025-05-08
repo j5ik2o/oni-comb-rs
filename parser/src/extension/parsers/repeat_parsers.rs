@@ -1,4 +1,4 @@
-use crate::core::{Parsers, StaticParsers};
+use crate::core::Parsers;
 use crate::prelude::RangeArgument;
 use std::fmt::Debug;
 

@@ -5,10 +5,10 @@ mod parsers;
 
 #[cfg(test)]
 mod tests {
-  use crate::models::uri::Uri;
-  use http::Uri as HttpUri;
+    use crate::models::uri::Uri;
+    use http::Uri as HttpUri;
 
-  #[test]
+    #[test]
   fn compare_uri_parsing() {
     let text = "http://localhost";
     let http_uri = text.parse::<HttpUri>().unwrap();

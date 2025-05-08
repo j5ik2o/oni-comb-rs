@@ -1,4 +1,4 @@
-use crate::core::{Parsers, StaticParsers};
+use crate::core::Parsers;
 use std::fmt::Debug;
 
 pub trait PeekParsers: Parsers {

@@ -107,11 +107,13 @@ impl Parsers for ParsersImpl {
 
   fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
-    F: Fn(A) -> B + 'a + Clone,
+    F: Fn(A) -> B + 'a,
     A: 'a,
-    B: Clone + 'a, {
+    B: 'a, {
     Parser::new(move |parse_state| match parser.run(&parse_state) {
-      ParseResult::Success { value, length } => ParseResult::successful(f(value), length),
+      ParseResult::Success { value, length } => ParseResult::successful(f(value), 0)
+        .add_commit(length != 0)
+        .advance_success(length),
       ParseResult::Failure {
         error,
         committed_status,

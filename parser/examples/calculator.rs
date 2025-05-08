@@ -1,10 +1,10 @@
 use std::env;
 use std::rc::Rc;
 
+use oni_comb_parser_rs::extension::parser::{ConversionParser, DiscardParser, OperatorParser, RepeatParser};
 use oni_comb_parser_rs::prelude::*;
 use rust_decimal::prelude::FromStr;
 use rust_decimal::Decimal;
-use oni_comb_parser_rs::extension::parser::{ConversionParser, DiscardParser, OperatorParser, RepeatParser};
 
 #[derive(Debug, Clone, PartialEq)]
 enum Expr {
@@ -98,13 +98,11 @@ fn multitive<'a>() -> Parser<'a, char, Rc<Expr>> {
   let aster = elm_ref('*');
   let slash = elm_ref('/');
 
-  let p = primary().chain_left1(
-    (space() * (aster | slash) - space()).map(|e| match e {
-      '*' => Expr::of_multiply,
-      '/' => Expr::of_divide,
-      _ => panic!("unexpected operator"),
-    }),
-  );
+  let p = primary().chain_left1((space() * (aster | slash) - space()).map(|e| match e {
+    '*' => Expr::of_multiply,
+    '/' => Expr::of_divide,
+    _ => panic!("unexpected operator"),
+  }));
   p
 }
 
@@ -112,13 +110,11 @@ fn additive<'a>() -> Parser<'a, char, Rc<Expr>> {
   let plus = elm_ref('+');
   let minus = elm_ref('-');
 
-  let p = multitive().chain_left1(
-    (space() * (plus | minus) - space()).map(|e| match e {
-      '+' => Expr::of_add,
-      '-' => Expr::of_subtract,
-      _ => panic!("unexpected operator"),
-    }),
-  );
+  let p = multitive().chain_left1((space() * (plus | minus) - space()).map(|e| match e {
+    '+' => Expr::of_add,
+    '-' => Expr::of_subtract,
+    _ => panic!("unexpected operator"),
+  }));
   p
 }
 

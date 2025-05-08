@@ -154,25 +154,30 @@ impl<'a, I, A> ParseResult<'a, I, A> {
     })
   }
 
-  pub fn map_err<F>(self, f: F) -> Self
+  pub fn map_err<F>(mut self, f: F) -> Self
   where
-    F: Fn(ParseError<'a, I>) -> ParseError<'a, I>, {
-    match self {
-      ParseResult::Failure {
-        error: e,
-        committed_status: c,
-      } => ParseResult::Failure {
-        error: f(e),
-        committed_status: c,
-      },
-      _ => self,
+    F: Fn(&ParseError<'a, I>) -> ParseError<'a, I>, {
+    if let  ParseResult::Failure { error, .. } = &mut self {
+      *error = f(error);
     }
+    self
+
+    // match self {
+    //   ParseResult::Failure {
+    //     error: e,
+    //     committed_status: c,
+    //   } => ParseResult::Failure {
+    //     error: f(e),
+    //     committed_status: c,
+    //   },
+    //   _ => self,
+    // }
   }
 
-  pub fn advance_success(self, n: usize) -> Self {
-    match self {
-      ParseResult::Success { value, length: m } => ParseResult::Success { value, length: n + m },
-      _ => self,
+  pub fn advance_success(mut self, n: usize) -> Self {
+    if let ParseResult::Success { length, .. } = &mut self {
+      *length += n;
     }
+    self
   }
 }

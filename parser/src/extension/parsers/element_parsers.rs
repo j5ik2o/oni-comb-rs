@@ -1,4 +1,4 @@
-use crate::core::{Element, Parsers, StaticParsers};
+use crate::core::{Element, Parsers};
 use crate::utils::Set;
 use std::fmt::{Debug, Display};
 

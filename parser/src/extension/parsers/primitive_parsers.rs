@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Display};
 
-use crate::core::{Parsers, StaticParsers};
+use crate::core::Parsers;
 
 pub trait PrimitiveParsers: Parsers {
   fn begin<'a, I>() -> Self::P<'a, I, ()> {

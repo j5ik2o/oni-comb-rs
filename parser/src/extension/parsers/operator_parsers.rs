@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::core::{Parsers, StaticParsers};
+use crate::core::Parsers;
 
 pub trait OperatorParsers: Parsers {
   fn exists<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
@@ -23,8 +23,8 @@ pub trait OperatorParsers: Parsers {
 
   fn and_then<'a, I, A, B>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, B>) -> Self::P<'a, I, (A, B)>
   where
-    A: Clone + Debug + 'a,
-    B: Clone + Debug + 'a;
+    A: 'a,
+    B: 'a;
 
   fn attempt<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
   where
@@ -32,35 +32,35 @@ pub trait OperatorParsers: Parsers {
 
   fn chain_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
-    BOP: Fn(A, A) -> A + 'a + Clone,
+    BOP: Fn(A, A) -> A + 'a,
     A: Clone + Debug + 'a;
 
   fn chain_right0<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
-    BOP: Fn(A, A) -> A + 'a + Clone,
+    BOP: Fn(A, A) -> A + 'a,
     A: Clone + Debug + 'a, {
     Self::or(Self::chain_right1(p, op), Self::successful(x.clone()))
   }
 
   fn chain_left0<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
-    BOP: Fn(A, A) -> A + 'a + Clone,
+    BOP: Fn(A, A) -> A + 'a,
     A: Clone + Debug + 'a, {
     Self::or(Self::chain_left1(p, op), Self::successful(x.clone()))
   }
 
   fn chain_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
-    BOP: Fn(A, A) -> A + 'a + Clone,
+    BOP: Fn(A, A) -> A + 'a,
     A: Clone + Debug + 'a;
 
   fn rest_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
-    BOP: Fn(A, A) -> A + 'a + Clone,
+    BOP: Fn(A, A) -> A + 'a,
     A: Clone + Debug + 'a;
 
   fn rest_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
-    BOP: Fn(A, A) -> A + 'a + Clone,
+    BOP: Fn(A, A) -> A + 'a,
     A: Clone + Debug + 'a;
 }

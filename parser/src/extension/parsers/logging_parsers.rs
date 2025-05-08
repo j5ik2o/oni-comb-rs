@@ -1,4 +1,4 @@
-use crate::core::{ParseResult, Parsers, StaticParsers};
+use crate::core::{ParseResult, Parsers};
 use std::fmt::{Debug, Display};
 
 #[derive(Debug, Clone)]

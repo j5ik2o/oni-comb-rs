@@ -1,4 +1,5 @@
-use crate::core::parser_monad::ParserMonad;
+use crate::core::ParserFunctor;
+use crate::core::ParserMonad;
 use crate::core::{CommittedStatus, ParseError, Parser};
 
 /// パーサー関数を提供するトレイト
@@ -51,64 +52,9 @@ pub trait Parsers {
 
   fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
-    F: Fn(A) -> B + 'a + Clone,
+    F: Fn(A) -> B + 'a,
     A: 'a,
-    B: Clone + 'a;
-}
-
-/// 静的ディスパッチを使用したパーサー関数を提供するトレイト
-pub trait StaticParsers {
-  type P<'p, I, A>: ParserMonad<'p, Input = I, Output = A>
-  where
-    I: 'p,
-    A: 'p + 'static;
-
-  fn parse<'a, 'b, I, A>(parser: &Self::P<'a, I, A>, input: &'b [I]) -> Result<A, ParseError<'a, I>>
-  where
-    A: 'static,
-    'b: 'a;
-
-  fn unit<'a, I>() -> Self::P<'a, I, ()> {
-    Self::successful(())
-  }
-
-  fn successful<'a, I, A>(value: A) -> Self::P<'a, I, A>
-  where
-    A: Clone + 'static;
-
-  fn successful_lazy<'a, I, A, F>(value: F) -> Self::P<'a, I, A>
-  where
-    F: Fn() -> A + 'a,
-    A: 'static;
-
-  fn failed<'a, I, A>(value: ParseError<'a, I>, committed: CommittedStatus) -> Self::P<'a, I, A>
-  where
-    I: Clone + 'a,
-    A: 'static;
-
-  fn failed_lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
-  where
-    F: Fn() -> (ParseError<'a, I>, CommittedStatus) + 'a,
-    I: 'a,
-    A: 'static;
-
-  fn filter<'a, I, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
-  where
-    F: Fn(&A) -> bool + 'a + Clone,
-    I: 'a + Clone,
-    A: 'static + Clone;
-
-  fn flat_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
-  where
-    F: Fn(A) -> Self::P<'a, I, B> + 'a + Clone,
-    A: 'static,
-    B: 'static + Clone;
-
-  fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
-  where
-    F: Fn(A) -> B + 'a + Clone,
-    A: 'static,
-    B: Clone + 'static;
+    B: 'a;
 }
 
 /// 既存のParserを使用するParsers実装
@@ -191,10 +137,9 @@ impl Parsers for ParserParsers {
 
   fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
-    F: Fn(A) -> B + 'a + Clone,
+    F: Fn(A) -> B + 'a,
     A: 'a,
-    B: Clone + 'a, {
-    // 直接実装を使用
-    Self::flat_map(parser, move |a| Self::successful(f(a)))
+    B: 'a, {
+    parser.map(f)
   }
 }

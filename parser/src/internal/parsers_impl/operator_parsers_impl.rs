@@ -49,8 +49,8 @@ impl OperatorParsers for ParsersImpl {
 
   fn and_then<'a, I, A, B>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, B>) -> Self::P<'a, I, (A, B)>
   where
-    A: Clone + 'a,
-    B: Clone + 'a, {
+    A: 'a,
+    B: 'a, {
     let method1 = parser1.method.clone();
     let method2 = parser2.method.clone();
     Parser::new(move |parse_state| match method1(parse_state) {
@@ -79,21 +79,21 @@ impl OperatorParsers for ParsersImpl {
 
   fn chain_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
-    BOP: Fn(A, A) -> A + 'a + Clone,
+    BOP: Fn(A, A) -> A + 'a,
     A: Clone + Debug + 'a, {
     Self::flat_map(p.clone(), move |x| Self::rest_left1(p.clone(), op.clone(), x.clone()))
   }
 
   fn chain_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
-    BOP: Fn(A, A) -> A + 'a + Clone,
+    BOP: Fn(A, A) -> A + 'a,
     A: Clone + Debug + 'a, {
     Self::flat_map(p.clone(), move |x| Self::rest_left1(p.clone(), op.clone(), x))
   }
 
   fn rest_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
-    BOP: Fn(A, A) -> A + 'a + Clone,
+    BOP: Fn(A, A) -> A + 'a,
     A: Clone + Debug + 'a, {
     let default_value = x.clone();
     Self::or(
@@ -107,7 +107,7 @@ impl OperatorParsers for ParsersImpl {
 
   fn rest_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
-    BOP: Fn(A, A) -> A + 'a + Clone,
+    BOP: Fn(A, A) -> A + 'a,
     A: Clone + Debug + 'a, {
     let default_value = x.clone();
     let method = p.method.clone();

@@ -31,9 +31,9 @@ pub fn dec_octet<'a>() -> Parser<'a, u8, u8> {
 
 #[cfg(test)]
 pub mod gens {
-  use prop_check_rs::gen::*;
+    use prop_check_rs::gen::*;
 
-  pub fn dec_octet_gen() -> Gen<String> {
+    pub fn dec_octet_gen() -> Gen<String> {
     Gens::choose_u32(1, 255).map(|n| n.to_string())
   }
 
@@ -44,18 +44,18 @@ pub mod gens {
 
 #[cfg(test)]
 mod tests {
-  use std::env;
+    use std::env;
 
-  use anyhow::Result;
-  use prop_check_rs::prop;
-  use prop_check_rs::prop::TestCases;
-  use prop_check_rs::rng::RNG;
+    use anyhow::Result;
+    use prop_check_rs::prop;
+    use prop_check_rs::prop::TestCases;
+    use prop_check_rs::rng::RNG;
 
-  use crate::parsers::ip_v4_address_parsers::gens::dec_octet_gen;
+    use crate::parsers::ip_v4_address_parsers::gens::dec_octet_gen;
 
-  use super::*;
+    use super::*;
 
-  const TEST_COUNT: TestCases = 100;
+    const TEST_COUNT: TestCases = 100;
 
   #[ctor::ctor]
   fn init_logger() {

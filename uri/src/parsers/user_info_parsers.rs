@@ -13,11 +13,11 @@ pub fn user_info<'a>() -> Parser<'a, u8, UserInfo> {
 
 #[cfg(test)]
 pub mod gens {
-  use prop_check_rs::gen::{Gen, Gens};
+    use prop_check_rs::gen::{Gen, Gens};
 
-  use crate::parsers::basic_parsers::gens::{pct_encoded_gen, repeat_gen_of_string, sub_delims_gen, unreserved_gen};
+    use crate::parsers::basic_parsers::gens::{pct_encoded_gen, repeat_gen_of_string, sub_delims_gen, unreserved_gen};
 
-  pub fn user_info_gen() -> Gen<String> {
+    pub fn user_info_gen() -> Gen<String> {
     let gen = {
       repeat_gen_of_string(1, 5, {
         Gens::frequency([(1, unreserved_gen(1)), (1, pct_encoded_gen()), (1, sub_delims_gen(1))])
@@ -38,17 +38,17 @@ pub mod gens {
 
 #[cfg(test)]
 mod tests {
-  use std::env;
+    use std::env;
 
-  use anyhow::Result;
-  use prop_check_rs::prop;
-  use prop_check_rs::prop::TestCases;
-  use prop_check_rs::rng::RNG;
+    use anyhow::Result;
+    use prop_check_rs::prop;
+    use prop_check_rs::prop::TestCases;
+    use prop_check_rs::rng::RNG;
 
-  use super::gens::*;
-  use super::*;
+    use super::gens::*;
+    use super::*;
 
-  const TEST_COUNT: TestCases = 100;
+    const TEST_COUNT: TestCases = 100;
 
   #[ctor::ctor]
   fn init_logger() {
