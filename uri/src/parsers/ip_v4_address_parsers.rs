@@ -1,6 +1,5 @@
-use std::net::Ipv4Addr;
-
 use oni_comb_parser_rs::prelude::*;
+use std::net::Ipv4Addr;
 
 // IPv4address   = dec-octet "." dec-octet "." dec-octet "." dec-octet
 pub fn ip_v4_address<'a>() -> Parser<'a, u8, Ipv4Addr> {

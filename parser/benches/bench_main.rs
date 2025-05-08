@@ -14,15 +14,11 @@ use criterion::*;
 
 use crate::nom_json::nom_parse_json;
 use crate::oni_comb_json::oni_comb_parse_json;
-use crate::oni_comb_json_optimized::oni_comb_parse_json_optimized;
-use crate::oni_comb_json_static::oni_comb_parse_json_static;
 use crate::pom_json::pom_parse_json;
 // use pprof::criterion::{Output, PProfProfiler};
 
 mod nom_json;
 mod oni_comb_json;
-mod oni_comb_json_optimized;
-mod oni_comb_json_static;
 mod pom_json;
 
 /// 異なる複雑さのJSONデータを用意
@@ -74,16 +70,6 @@ fn criterion_benchmark(criterion: &mut Criterion) {
     // oni-comb-rsパーサーのベンチマーク
     group.bench_with_input(BenchmarkId::new("oni-comb-rs", name), data, |b, i| {
       b.iter(|| oni_comb_parse_json(i))
-    });
-
-    // 最適化されたoni-comb-rsパーサーのベンチマーク
-    group.bench_with_input(BenchmarkId::new("oni-comb-rs-optimized", name), data, |b, i| {
-      b.iter(|| oni_comb_parse_json_optimized(i))
-    });
-
-    // 直接StaticParserを使用したoni-comb-rsパーサーのベンチマーク
-    group.bench_with_input(BenchmarkId::new("oni-comb-rs-static", name), data, |b, i| {
-      b.iter(|| oni_comb_parse_json_static(i))
     });
 
     // nomパーサーのベンチマーク

@@ -69,48 +69,53 @@ impl Parsers for ParsersImpl {
     F: Fn(&A) -> bool + 'a + Clone,
     I: 'a + Clone,
     A: 'a + Clone, {
-    Parser::new(move |parse_state| match parser.run(parse_state) {
+    Parser::new(move |state| match parser.run(state) {
       ParseResult::Success { value, length } => {
         if f(&value) {
           ParseResult::successful(value, length)
         } else {
-          let input = parse_state.input();
-          let offset = parse_state.last_offset().unwrap_or(0);
-          let msg = format!("no matched to predicate: last offset: {}", offset);
-          let ps = parse_state.add_offset(length);
-          let pe = ParseError::of_mismatch(input, ps.next_offset(), length, msg);
-          ParseResult::failed_with_uncommitted(pe)
+          let offset = state.current_offset() + length;
+          let msg = "filter: predicate returned false".to_string();
+          let pe = ParseError::of_custom(offset, None, msg);
+          ParseResult::failed(pe, CommittedStatus::Uncommitted)
         }
       }
       ParseResult::Failure {
         error,
-        committed_status: is_committed,
-      } => ParseResult::failed(error, is_committed),
+        committed_status,
+      } => ParseResult::failed(error, committed_status),
     })
   }
 
   fn flat_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
-    F: Fn(A) -> Self::P<'a, I, B> + 'a + Clone,
+    F: Fn(A) -> Self::P<'a, I, B> + 'a,
     A: 'a,
     B: 'a, {
-    Parser::new(move |parse_state| match parser.run(&parse_state) {
-      ParseResult::Success { value: a, length: n } => {
-        let ps = parse_state.add_offset(n);
-        f(a).run(&ps).with_committed_fallback(n != 0).with_add_length(n)
-      }
+    let method = parser.method.clone();
+    Parser::new(move |state| match method(state) {
+      ParseResult::Success { value, length } => f(value)
+        .run(&state.advance_by(length))
+        .add_commit(length != 0)
+        .advance_success(length),
       ParseResult::Failure {
         error,
-        committed_status: is_committed,
-      } => ParseResult::failed(error, is_committed),
+        committed_status,
+      } => ParseResult::failed(error, committed_status),
     })
   }
 
   fn map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
-    F: Fn(A) -> B + 'a + Clone,
+    F: Fn(A) -> B + 'a,
     A: 'a,
-    B: Clone + 'a, {
-    Self::flat_map(parser, move |e| Self::successful(f(e)))
+    B: 'a, {
+    Parser::new(move |parse_state| match parser.run(&parse_state) {
+      ParseResult::Success { value, length } => ParseResult::successful(f(value), length),
+      ParseResult::Failure {
+        error,
+        committed_status,
+      } => ParseResult::failed(error, committed_status),
+    })
   }
 }

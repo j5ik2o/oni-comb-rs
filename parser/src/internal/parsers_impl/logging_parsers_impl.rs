@@ -1,16 +1,18 @@
-use crate::core::{ParseError, ParseResult, Parser, ParserRunner};
+use crate::core::{ParseError, ParseResult, Parser};
 use crate::extension::parsers::{LogLevel, LoggingParsers};
 use crate::internal::ParsersImpl;
 use std::fmt::{Debug, Display};
 
 impl LoggingParsers for ParsersImpl {
+  #[inline]
   fn log_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, name: &'a str, log_level: LogLevel, f: F) -> Self::P<'a, I, A>
   where
     F: Fn(&ParseResult<'a, I, A>) -> B + 'a,
     A: Debug + 'a,
     B: Display + 'a, {
+    let method = parser.method.clone();
     Parser::new(move |parse_state| {
-      let ps = parser.run(parse_state);
+      let ps = method(parse_state);
       let s = format!("{} = {}", name, f(&ps));
       match log_level {
         LogLevel::Debug => log::debug!("{}", s),
@@ -22,11 +24,13 @@ impl LoggingParsers for ParsersImpl {
     })
   }
 
+  #[inline]
   fn name<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str) -> Self::P<'a, I, A>
   where
     I: Debug,
     A: Debug + 'a, {
-    Parser::new(move |parse_state| match parser.run(parse_state) {
+    let method = parser.method.clone();
+    Parser::new(move |parse_state| match method(parse_state) {
       res @ ParseResult::Success { .. } => res,
       ParseResult::Failure {
         error,
@@ -45,11 +49,13 @@ impl LoggingParsers for ParsersImpl {
     })
   }
 
+  #[inline]
   fn expect<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str) -> Self::P<'a, I, A>
   where
     I: Debug,
     A: Debug + 'a, {
-    Parser::new(move |parse_state| match parser.run(parse_state) {
+    let method = parser.method.clone();
+    Parser::new(move |parse_state| match method(parse_state) {
       res @ ParseResult::Success { .. } => res,
       ParseResult::Failure {
         error,

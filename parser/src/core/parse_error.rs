@@ -1,33 +1,32 @@
 use std::fmt;
 use std::fmt::Display;
 
-/// The enum type representing the parsing error.<br/>
-/// 解析エラーを示す列挙型。
+/// The enum type representing the parsing error.
 #[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub enum ParseError<'a, I> {
-  /// パーサの条件にマッチしなかった場合のエラー
+  /// Error when the parser's condition does not match
   Mismatch {
     input: &'a [I],
     offset: usize,
     length: usize,
     message: String,
   },
-  /// 変換に失敗した際のエラー
+  /// Error when conversion fails
   Conversion {
     input: &'a [I],
     offset: usize,
     length: usize,
     message: String,
   },
-  /// 解析中断のエラー
+  /// Error when parsing is interrupted or incomplete
   Incomplete,
-  /// 期待から逸れた際のエラー
+  /// Error when the result deviates from expectations
   Expect {
     offset: usize,
     inner: Box<ParseError<'a, I>>,
     message: String,
   },
-  /// カスタムエラー
+  /// Custom error
   Custom {
     offset: usize,
     inner: Option<Box<ParseError<'a, I>>>,

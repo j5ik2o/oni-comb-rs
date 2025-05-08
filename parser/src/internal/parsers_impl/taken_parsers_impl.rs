@@ -5,6 +5,7 @@ use crate::extension::parsers::TakenParsers;
 use crate::internal::ParsersImpl;
 
 impl TakenParsers for ParsersImpl {
+  #[inline]
   fn take<'a, I>(n: usize) -> Self::P<'a, I, &'a [I]> {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
@@ -16,6 +17,7 @@ impl TakenParsers for ParsersImpl {
     })
   }
 
+  #[inline]
   fn take_while0<'a, I, F>(f: F) -> Self::P<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
@@ -41,10 +43,11 @@ impl TakenParsers for ParsersImpl {
     })
   }
 
+  #[inline]
   fn take_while1<'a, I, F>(f: F) -> Self::P<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I: Element + 'a, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       let mut start: Option<usize> = None;
@@ -66,10 +69,11 @@ impl TakenParsers for ParsersImpl {
     })
   }
 
+  #[inline]
   fn take_while_n_m<'a, I, F>(n: usize, m: usize, f: F) -> Self::P<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I: Element + 'a, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       let mut start: Option<usize> = None;
@@ -98,10 +102,11 @@ impl TakenParsers for ParsersImpl {
     })
   }
 
+  #[inline]
   fn take_till0<'a, I, F>(f: F) -> Self::P<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I: Element + 'a, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       let mut index = 0;
@@ -122,10 +127,11 @@ impl TakenParsers for ParsersImpl {
     })
   }
 
+  #[inline]
   fn take_till1<'a, I, F>(f: F) -> Self::P<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
+    I: Element + 'a, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
       let mut index = 0;

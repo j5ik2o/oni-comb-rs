@@ -6,6 +6,7 @@ use std::fmt::Debug;
 use std::iter::FromIterator;
 
 impl ElementsParsers for ParsersImpl {
+  #[inline]
   fn seq<'a, 'b, I>(seq: &'b [I]) -> Self::P<'a, I, Vec<I>>
   where
     I: PartialEq + Debug + Clone + 'a,
@@ -20,8 +21,8 @@ impl ElementsParsers for ParsersImpl {
         if let Some(str) = input.get(index) {
           if seq[index] != *str {
             let msg = format!("seq {:?} expect: {:?}, found: {:?}", seq, seq[index], str);
-            let ps = parse_state.add_offset(index);
-            let pe = ParseError::of_mismatch(input, ps.next_offset(), index, msg);
+            let ps = parse_state.advance_by(index);
+            let pe = ParseError::of_mismatch(input, ps.current_offset(), index, msg);
             return ParseResult::failed(pe, (index != 0).into());
           }
         } else {
@@ -43,8 +44,8 @@ impl ElementsParsers for ParsersImpl {
         if let Some(&actual) = input.get(index) {
           if c != actual {
             let msg = format!("tag {:?} expect: {:?}, found: {}", tag, c, actual);
-            let ps = parse_state.add_offset(index);
-            let pe = ParseError::of_mismatch(input, ps.next_offset(), index, msg);
+            let ps = parse_state.advance_by(index);
+            let pe = ParseError::of_mismatch(input, ps.current_offset(), index, msg);
             return ParseResult::failed(pe, (index != 0).into());
           }
         } else {
@@ -66,8 +67,8 @@ impl ElementsParsers for ParsersImpl {
         if let Some(actual) = input.get(index) {
           if !c.eq_ignore_ascii_case(actual) {
             let msg = format!("tag_no_case {:?} expect: {:?}, found: {}", tag, c, actual);
-            let ps = parse_state.add_offset(index);
-            let pe = ParseError::of_mismatch(input, ps.next_offset(), index, msg);
+            let ps = parse_state.advance_by(index);
+            let pe = ParseError::of_mismatch(input, ps.current_offset(), index, msg);
             return ParseResult::failed(pe, (index != 0).into());
           }
         } else {
@@ -96,7 +97,7 @@ impl ElementsParsers for ParsersImpl {
           ParseResult::successful(str.to_string(), str.len())
         } else {
           let msg = format!("regex {:?} found: {:?}", regex, str);
-          let pe = ParseError::of_mismatch(input, parse_state.next_offset(), str.len(), msg);
+          let pe = ParseError::of_mismatch(input, parse_state.current_offset(), str.len(), msg);
           return ParseResult::failed(pe, (captures.len() != 0).into());
         }
       } else {

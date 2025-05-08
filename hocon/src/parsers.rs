@@ -1,7 +1,6 @@
+use crate::model::*;
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
 use std::collections::HashMap;
-
-use crate::model::*;
 
 use oni_comb_parser_rs::prelude::*;
 
