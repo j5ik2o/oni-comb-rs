@@ -111,9 +111,7 @@ impl Parsers for ParsersImpl {
     A: 'a,
     B: 'a, {
     Parser::new(move |parse_state| match parser.run(&parse_state) {
-      ParseResult::Success { value, length } => ParseResult::successful(f(value), 0)
-        .add_commit(length != 0)
-        .advance_success(length),
+      ParseResult::Success { value, length } => ParseResult::successful(f(value), length),
       ParseResult::Failure {
         error,
         committed_status,

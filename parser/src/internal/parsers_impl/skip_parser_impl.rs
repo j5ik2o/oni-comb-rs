@@ -32,7 +32,7 @@ impl SkipParsers for ParsersImpl {
           ParseResult::Failure {
             error,
             committed_status,
-          } => ParseResult::failed(error, committed_status).advance_success(n1),
+          } => ParseResult::failed(error, committed_status), //.advance_success(n1),
         }
       }
       ParseResult::Failure {

@@ -440,7 +440,6 @@ mod test {
     let input = source.chars().collect::<Vec<_>>();
     let result = line().parse_as_result(&input).unwrap();
     println!("{:?}", result);
-    // assert_eq!(Expr::Println(Rc::new(Expr::IntegerLiteral(10))), *result);
     Interpreter::new().interpret(result);
   }
 

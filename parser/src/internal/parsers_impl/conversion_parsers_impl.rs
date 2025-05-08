@@ -16,9 +16,9 @@ impl ConversionParsers for ParsersImpl {
       ParseResult::Success { value: a, length } => match f(a) {
         Ok(value) => ParseResult::successful(value, length),
         Err(err) => {
-          let ps = parse_state.advance_by(0);
           let msg = format!("Conversion error: {:?}", err);
-          let parser_error = ParseError::of_conversion(ps.input(), ps.last_offset().unwrap_or(0), 0, msg);
+          let parser_error =
+            ParseError::of_conversion(parse_state.input(), parse_state.last_offset().unwrap_or(0), 0, msg);
           ParseResult::failed_with_uncommitted(parser_error)
         }
       },
@@ -39,10 +39,9 @@ impl ConversionParsers for ParsersImpl {
       ParseResult::Success { value: a, length } => match f(a) {
         Some(value) => ParseResult::successful(value, length),
         None => {
-          let ps = parse_state.advance_by(0);
           let parser_error = ParseError::of_conversion(
-            ps.input(),
-            ps.last_offset().unwrap_or(0),
+            parse_state.input(),
+            parse_state.last_offset().unwrap_or(0),
             0,
             "Conversion error".to_string(),
           );

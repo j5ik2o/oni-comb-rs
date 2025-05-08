@@ -17,7 +17,7 @@ impl ElementParsers for ParsersImpl {
       }
       let offset = parse_state.current_offset();
       let msg = format!("offset: {}", offset);
-      let pe = ParseError::of_mismatch(input, offset+1, 1, msg);
+      let pe = ParseError::of_mismatch(input, offset + 1, 1, msg);
       ParseResult::failed_with_uncommitted(pe)
     })
   }

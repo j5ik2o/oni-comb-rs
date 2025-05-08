@@ -65,7 +65,7 @@ impl OperatorParsers for ParsersImpl {
           ParseResult::Failure {
             error,
             committed_status,
-          } => ParseResult::failed(error, committed_status).advance_success(n1),
+          } => ParseResult::failed(error, committed_status), //.advance_success(n1),
         }
       }
       ParseResult::Failure {
@@ -136,16 +136,16 @@ impl OperatorParsers for ParsersImpl {
               }
               ParseResult::Failure {
                 error,
-                committed_status: is_committed,
-              } => ParseResult::failed(error, is_committed),
+                committed_status,
+              } => ParseResult::failed(error, committed_status),
             })
             .add_commit(n1 != 0)
             .advance_success(n1)
           }
           ParseResult::Failure {
             error,
-            committed_status: is_committed,
-          } => ParseResult::failed(error, is_committed),
+            committed_status,
+          } => ParseResult::failed(error, committed_status),
         }
       }),
       Self::successful(x.clone()),
