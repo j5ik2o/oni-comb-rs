@@ -4,6 +4,7 @@ use crate::internal::ParsersImpl;
 use std::fmt::{Debug, Display};
 
 impl LoggingParsers for ParsersImpl {
+  #[inline]
   fn log_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, name: &'a str, log_level: LogLevel, f: F) -> Self::P<'a, I, A>
   where
     F: Fn(&ParseResult<'a, I, A>) -> B + 'a,
@@ -23,6 +24,7 @@ impl LoggingParsers for ParsersImpl {
     })
   }
 
+  #[inline]
   fn name<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str) -> Self::P<'a, I, A>
   where
     I: Debug,
@@ -47,6 +49,7 @@ impl LoggingParsers for ParsersImpl {
     })
   }
 
+  #[inline]
   fn expect<'a, I, A>(parser: Self::P<'a, I, A>, name: &'a str) -> Self::P<'a, I, A>
   where
     I: Debug,

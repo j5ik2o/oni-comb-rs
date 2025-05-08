@@ -4,6 +4,7 @@ use crate::internal::ParsersImpl;
 use std::fmt::Debug;
 
 impl PeekParsers for ParsersImpl {
+  #[inline]
   fn peek<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
   where
     A: Debug + 'a, {

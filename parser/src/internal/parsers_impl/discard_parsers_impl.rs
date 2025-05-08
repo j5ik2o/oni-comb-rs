@@ -4,6 +4,7 @@ use crate::internal::ParsersImpl;
 use std::fmt::Debug;
 
 impl DiscardParsers for ParsersImpl {
+  #[inline]
   fn discard<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, ()>
   where
     A: Debug + 'a, {

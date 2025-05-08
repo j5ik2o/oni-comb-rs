@@ -6,6 +6,7 @@ use crate::extension::parsers::OperatorParsers;
 use crate::internal::ParsersImpl;
 
 impl OperatorParsers for ParsersImpl {
+  #[inline]
   fn exists<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, bool>
   where
     A: Debug + 'a, {
@@ -15,12 +16,13 @@ impl OperatorParsers for ParsersImpl {
     })
   }
 
+  #[inline]
   fn not<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, ()>
   where
     A: 'a, {
     Parser::new(move |parse_state| match parser.run(parse_state) {
       ParseResult::Success { .. } => {
-        let ps = parse_state.add_offset(0);
+        let ps = parse_state.advance_by(0);
         let parser_error = ParseError::of_mismatch(
           ps.input(),
           ps.last_offset().unwrap_or(0),
@@ -33,6 +35,7 @@ impl OperatorParsers for ParsersImpl {
     })
   }
 
+  #[inline]
   fn or<'a, I, A>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, A>) -> Self::P<'a, I, A>
   where
     A: 'a, {
@@ -47,6 +50,7 @@ impl OperatorParsers for ParsersImpl {
     })
   }
 
+  #[inline]
   fn and_then<'a, I, A, B>(parser1: Self::P<'a, I, A>, parser2: Self::P<'a, I, B>) -> Self::P<'a, I, (A, B)>
   where
     A: 'a,
@@ -55,7 +59,7 @@ impl OperatorParsers for ParsersImpl {
     let method2 = parser2.method.clone();
     Parser::new(move |parse_state| match method1(parse_state) {
       ParseResult::Success { value: a, length: n1 } => {
-        let ps = parse_state.add_offset(n1);
+        let ps = parse_state.advance_by(n1);
         match method2(&ps) {
           ParseResult::Success { value: b, length: n2 } => ParseResult::successful((a, b), n1 + n2),
           ParseResult::Failure {
@@ -71,12 +75,14 @@ impl OperatorParsers for ParsersImpl {
     })
   }
 
+  #[inline]
   fn attempt<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
   where
     A: Debug + 'a, {
     Parser::new(move |parse_state| parser.run(parse_state).with_uncommitted())
   }
 
+  #[inline]
   fn chain_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a,
@@ -84,6 +90,7 @@ impl OperatorParsers for ParsersImpl {
     Self::flat_map(p.clone(), move |x| Self::rest_left1(p.clone(), op.clone(), x.clone()))
   }
 
+  #[inline]
   fn chain_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a,
@@ -91,6 +98,7 @@ impl OperatorParsers for ParsersImpl {
     Self::flat_map(p.clone(), move |x| Self::rest_left1(p.clone(), op.clone(), x))
   }
 
+  #[inline]
   fn rest_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a,
@@ -105,6 +113,7 @@ impl OperatorParsers for ParsersImpl {
     )
   }
 
+  #[inline]
   fn rest_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>, x: A) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a,
@@ -114,13 +123,13 @@ impl OperatorParsers for ParsersImpl {
     let op_method = op.method.clone();
     Self::or(
       Parser::new(move |parse_state| {
-        let mut ps = parse_state.add_offset(0);
+        let mut ps = parse_state.advance_by(0);
         match op_method(&ps) {
           ParseResult::Success { value: f, length: n1 } => {
-            ps = ps.add_offset(n1);
+            ps = ps.advance_by(n1);
             (match method(&ps) {
               ParseResult::Success { value: y, length: n2 } => {
-                ps = ps.add_offset(n2);
+                ps = ps.advance_by(n2);
                 Self::rest_left1(p.clone(), op.clone(), f(default_value.clone(), y))
                   .run(&ps)
                   .advance_success(n2)

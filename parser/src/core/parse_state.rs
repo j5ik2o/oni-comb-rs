@@ -26,7 +26,7 @@ impl<'a, I> ParseState<'a, I> {
   }
 
   /// Creates a new parse state with an offset increased by the specified number of characters.
-  pub fn add_offset(&self, num_chars: usize) -> ParseState<'a, I> {
+  pub fn advance_by(&self, num_chars: usize) -> ParseState<'a, I> {
     Self::new(self.input, self.offset + num_chars)
   }
 

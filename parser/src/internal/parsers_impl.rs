@@ -95,7 +95,7 @@ impl Parsers for ParsersImpl {
     let method = parser.method.clone();
     Parser::new(move |state| match method(state) {
       ParseResult::Success { value, length } => f(value)
-        .run(&state.add_offset(length))
+        .run(&state.advance_by(length))
         .add_commit(length != 0)
         .advance_success(length),
       ParseResult::Failure {

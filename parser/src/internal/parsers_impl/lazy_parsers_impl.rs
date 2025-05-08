@@ -4,6 +4,7 @@ use crate::internal::ParsersImpl;
 use std::fmt::Debug;
 
 impl LazyParsers for ParsersImpl {
+  #[inline]
   fn lazy<'a, I, A, F>(f: F) -> Self::P<'a, I, A>
   where
     F: Fn() -> Self::P<'a, I, A> + 'a + Clone,

@@ -9,6 +9,7 @@ use std::fmt::Debug;
 use std::ptr;
 
 impl CacheParsers for ParsersImpl {
+  #[inline]
   fn cache<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
   where
     I: Clone + 'a,

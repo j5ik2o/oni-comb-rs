@@ -5,6 +5,7 @@ use crate::utils::{Bound, RangeArgument};
 use std::fmt::Debug;
 
 impl RepeatParsers for ParsersImpl {
+  #[inline]
   fn repeat<'a, I, A, R>(parser: Self::P<'a, I, A>, range: R) -> Self::P<'a, I, Vec<A>>
   where
     R: RangeArgument<usize> + Debug + 'a,
@@ -13,6 +14,7 @@ impl RepeatParsers for ParsersImpl {
     Self::repeat_sep::<'a, I, A, (), R>(parser, range, None)
   }
 
+  #[inline]
   fn many0<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, Vec<A>>
   where
     I: Clone + 'a,
@@ -20,6 +22,7 @@ impl RepeatParsers for ParsersImpl {
     Self::repeat_sep(parser, 0.., None as Option<Self::P<'a, I, ()>>)
   }
 
+  #[inline]
   fn many1<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, Vec<A>>
   where
     I: Clone + 'a,
@@ -27,6 +30,7 @@ impl RepeatParsers for ParsersImpl {
     Self::repeat_sep(parser, 1.., None as Option<Self::P<'a, I, ()>>)
   }
 
+  #[inline]
   fn count<'a, I, A>(parser: Self::P<'a, I, A>, count: usize) -> Self::P<'a, I, Vec<A>>
   where
     I: Clone + 'a,
@@ -34,6 +38,7 @@ impl RepeatParsers for ParsersImpl {
     Self::repeat_sep(parser, count..=count, None as Option<Self::P<'a, I, ()>>)
   }
 
+  #[inline]
   fn many0_sep<'a, I, A, B>(parser: Self::P<'a, I, A>, sep: Self::P<'a, I, B>) -> Self::P<'a, I, Vec<A>>
   where
     I: Clone + 'a,
@@ -42,6 +47,7 @@ impl RepeatParsers for ParsersImpl {
     Self::repeat_sep(parser, 0.., Some(sep))
   }
 
+  #[inline]
   fn many1_sep<'a, I, A, B>(parser: Self::P<'a, I, A>, sep: Self::P<'a, I, B>) -> Self::P<'a, I, Vec<A>>
   where
     I: Clone + 'a,
@@ -50,6 +56,7 @@ impl RepeatParsers for ParsersImpl {
     Self::repeat_sep(parser, 1.., Some(sep))
   }
 
+  #[inline]
   fn repeat_sep<'a, I, A, B, R>(
     parser: Self::P<'a, I, A>,
     range: R,
@@ -68,7 +75,7 @@ impl RepeatParsers for ParsersImpl {
       let mut items = vec![];
 
       if let ParseResult::Success { value, length } = (method)(parse_state) {
-        let mut current_parse_state = parse_state.add_offset(length);
+        let mut current_parse_state = parse_state.advance_by(length);
         items.push(value);
         all_length += length;
         loop {
@@ -88,14 +95,14 @@ impl RepeatParsers for ParsersImpl {
 
           if let Some(sep) = &separator_clone {
             if let ParseResult::Success { length, .. } = (sep.method)(&current_parse_state) {
-              current_parse_state = current_parse_state.add_offset(length);
+              current_parse_state = current_parse_state.advance_by(length);
               all_length += length;
             } else {
               break;
             }
           }
           if let ParseResult::Success { value, length } = (method)(&current_parse_state) {
-            current_parse_state = current_parse_state.add_offset(length);
+            current_parse_state = current_parse_state.advance_by(length);
             items.push(value);
             all_length += length;
           } else {
@@ -106,7 +113,7 @@ impl RepeatParsers for ParsersImpl {
 
       if let Bound::Included(&min_count) = range.start() {
         if items.len() < min_count {
-          let ps = parse_state.add_offset(all_length);
+          let ps = parse_state.advance_by(all_length);
           let pe = ParseError::of_mismatch(
             ps.input(),
             ps.last_offset().unwrap_or(0),

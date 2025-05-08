@@ -17,8 +17,7 @@ impl ElementParsers for ParsersImpl {
       }
       let offset = parse_state.current_offset();
       let msg = format!("offset: {}", offset);
-      let ps = parse_state.add_offset(1);
-      let pe = ParseError::of_mismatch(input, ps.current_offset(), 1, msg);
+      let pe = ParseError::of_mismatch(input, offset+1, 1, msg);
       ParseResult::failed_with_uncommitted(pe)
     })
   }
@@ -71,13 +70,12 @@ impl ElementParsers for ParsersImpl {
     S: Set<I> + ?Sized + 'a, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
-      if let Some(s) = input.get(0) {
+      if let Some(s) = input.first() {
         if set.contains(s) {
           ParseResult::successful(s, 1)
         } else {
           let msg = format!("expect one of: {}, found: {}", set.to_str(), s);
-          let ps = parse_state.add_offset(1);
-          let pe = ParseError::of_mismatch(input, ps.current_offset(), 1, msg);
+          let pe = ParseError::of_mismatch(input, parse_state.current_offset() + 1, 1, msg);
           ParseResult::failed_with_uncommitted(pe)
         }
       } else {
@@ -92,13 +90,12 @@ impl ElementParsers for ParsersImpl {
     Parser::new(move |parse_state| {
       let set = start..=end;
       let input = parse_state.input();
-      if let Some(s) = input.get(0) {
+      if let Some(s) = input.first() {
         if set.contains(s) {
           ParseResult::successful(s, 1)
         } else {
           let msg = format!("expect elm of: {}, found: {}", set.to_str(), s);
-          let ps = parse_state.add_offset(1);
-          let pe = ParseError::of_mismatch(input, ps.current_offset(), 1, msg);
+          let pe = ParseError::of_mismatch(input, parse_state.current_offset() + 1, 1, msg);
           ParseResult::failed_with_uncommitted(pe)
         }
       } else {
@@ -113,13 +110,12 @@ impl ElementParsers for ParsersImpl {
     Parser::new(move |parse_state| {
       let set = start..end;
       let input = parse_state.input();
-      if let Some(s) = input.get(0) {
+      if let Some(s) = input.first() {
         if set.contains(s) {
           ParseResult::successful(s, 1)
         } else {
           let msg = format!("expect elm of: {}, found: {}", set.to_str(), s);
-          let ps = parse_state.add_offset(1);
-          let pe = ParseError::of_mismatch(input, ps.current_offset(), 1, msg);
+          let pe = ParseError::of_mismatch(input, parse_state.current_offset() + 1, 1, msg);
           ParseResult::failed_with_uncommitted(pe)
         }
       } else {
@@ -134,13 +130,12 @@ impl ElementParsers for ParsersImpl {
     S: Set<I> + ?Sized + 'a, {
     Parser::new(move |parse_state| {
       let input = parse_state.input();
-      if let Some(s) = input.get(0) {
+      if let Some(s) = input.first() {
         if !set.contains(s) {
           ParseResult::successful(s, 1)
         } else {
           let msg = format!("expect none of: {}, found: {}", set.to_str(), s);
-          let ps = parse_state.add_offset(1);
-          let pe = ParseError::of_mismatch(input, ps.current_offset(), 1, msg);
+          let pe = ParseError::of_mismatch(input, parse_state.current_offset() + 1, 1, msg);
           ParseResult::failed_with_uncommitted(pe)
         }
       } else {
