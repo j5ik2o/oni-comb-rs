@@ -8,7 +8,7 @@
 
 use std::ops::Not;
 
-use crate::core::{ParseError, StaticParser};
+use crate::core::{CommittedStatus, ParseError, ParseResult, StaticParser};
 
 impl<'a, I, A> Not for StaticParser<'a, I, A>
 where
@@ -21,23 +21,23 @@ where
     let method = self.method.clone();
 
     StaticParser::new(move |state| match method(state) {
-      crate::core::ParseResult::Success { value: _, length: _ } => {
+      ParseResult::Success { value: _, length: _ } => {
         let offset = state.next_offset();
         let msg = "not: parser succeeded".to_string();
         let pe = ParseError::of_custom(offset, None, msg);
-        crate::core::ParseResult::failed(pe, crate::core::CommittedStatus::Uncommitted)
+        ParseResult::failed(pe, crate::core::CommittedStatus::Uncommitted)
       }
-      crate::core::ParseResult::Failure {
+      ParseResult::Failure {
         error: _,
         committed_status,
       } => match committed_status {
-        crate::core::CommittedStatus::Committed => {
+        CommittedStatus::Committed => {
           let offset = state.next_offset();
           let msg = "not: parser failed with committed status".to_string();
           let pe = ParseError::of_custom(offset, None, msg);
-          crate::core::ParseResult::failed(pe, committed_status)
+          ParseResult::failed(pe, committed_status)
         }
-        crate::core::CommittedStatus::Uncommitted => crate::core::ParseResult::successful((), 0),
+        CommittedStatus::Uncommitted => ParseResult::successful((), 0),
       },
     })
   }

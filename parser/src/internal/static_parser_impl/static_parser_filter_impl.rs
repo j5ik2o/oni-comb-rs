@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::core::{ParseError, ParserFilter, StaticParser};
+use crate::core::{ParseError, ParseResult, ParserFilter, StaticParser};
 
 impl<'a, I, A: 'a> ParserFilter<'a> for StaticParser<'a, I, A> {
   fn with_filter<F>(self, f: F) -> Self
@@ -16,20 +16,20 @@ impl<'a, I, A: 'a> ParserFilter<'a> for StaticParser<'a, I, A> {
     Self::Output: 'a,
     Self: Sized, {
     StaticParser::new(move |state| match self.run(state) {
-      crate::core::ParseResult::Success { value, length } => {
+      ParseResult::Success { value, length } => {
         if f(&value) {
-          crate::core::ParseResult::successful(value, length)
+          ParseResult::successful(value, length)
         } else {
           let offset = state.next_offset() + length;
           let msg = "filter: predicate returned false".to_string();
           let pe = ParseError::of_custom(offset, None, msg);
-          crate::core::ParseResult::failed(pe, crate::core::CommittedStatus::Uncommitted)
+          ParseResult::failed(pe, crate::core::CommittedStatus::Uncommitted)
         }
       }
-      crate::core::ParseResult::Failure {
+      ParseResult::Failure {
         error,
         committed_status,
-      } => crate::core::ParseResult::failed(error, committed_status),
+      } => ParseResult::failed(error, committed_status),
     })
   }
 

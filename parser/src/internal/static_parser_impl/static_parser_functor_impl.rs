@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::core::{ParserFunctor, StaticParser};
+use crate::core::{ParseResult, ParserFunctor, StaticParser};
 
 impl<'a, I, A: 'a> ParserFunctor<'a> for StaticParser<'a, I, A> {
   fn map<B, F>(self, f: F) -> Self::P<'a, Self::Input, B>
@@ -16,11 +16,11 @@ impl<'a, I, A: 'a> ParserFunctor<'a> for StaticParser<'a, I, A> {
     Self::Output: Clone + 'a,
     B: Clone + 'a, {
     StaticParser::new(move |state| match self.run(state) {
-      crate::core::ParseResult::Success { value, length } => crate::core::ParseResult::successful(f(value), length),
-      crate::core::ParseResult::Failure {
+      ParseResult::Success { value, length } => ParseResult::successful(f(value), length),
+      ParseResult::Failure {
         error,
         committed_status,
-      } => crate::core::ParseResult::failed(error, committed_status),
+      } => ParseResult::failed(error, committed_status),
     })
   }
 }

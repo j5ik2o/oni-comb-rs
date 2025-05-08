@@ -8,7 +8,7 @@
 
 use std::ops::BitOr;
 
-use crate::core::{ParseError, StaticParser};
+use crate::core::{CommittedStatus, ParseError, ParseResult, StaticParser};
 
 impl<'a, I, A> BitOr<StaticParser<'a, I, A>> for StaticParser<'a, I, A>
 where
@@ -22,22 +22,22 @@ where
     let rhs_method = rhs.method.clone();
 
     StaticParser::new(move |state| match lhs_method(state) {
-      crate::core::ParseResult::Success { value, length } => crate::core::ParseResult::successful(value, length),
-      crate::core::ParseResult::Failure {
+      ParseResult::Success { value, length } => crate::core::ParseResult::successful(value, length),
+      ParseResult::Failure {
         error: lhs_error,
         committed_status: lhs_committed_status,
       } => match lhs_committed_status {
-        crate::core::CommittedStatus::Committed => crate::core::ParseResult::failed(lhs_error, lhs_committed_status),
-        crate::core::CommittedStatus::Uncommitted => match rhs_method(state) {
-          crate::core::ParseResult::Success { value, length } => crate::core::ParseResult::successful(value, length),
-          crate::core::ParseResult::Failure {
+        CommittedStatus::Committed => ParseResult::failed(lhs_error, lhs_committed_status),
+        CommittedStatus::Uncommitted => match rhs_method(state) {
+          ParseResult::Success { value, length } => ParseResult::successful(value, length),
+          ParseResult::Failure {
             error: rhs_error,
             committed_status: rhs_committed_status,
           } => {
             let offset = state.next_offset();
             let msg = format!("{} or {}", lhs_error, rhs_error);
             let pe = ParseError::of_custom(offset, None, msg);
-            crate::core::ParseResult::failed(pe, rhs_committed_status)
+            ParseResult::failed(pe, rhs_committed_status)
           }
         },
       },
