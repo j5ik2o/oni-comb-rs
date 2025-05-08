@@ -1,5 +1,4 @@
 use crate::core::{CommittedStatus, ParseError, ParseResult, ParseState, Parser, ParserRunner, Parsers};
-use crate::StaticParser;
 
 pub struct ParsersImpl;
 
@@ -75,7 +74,7 @@ impl Parsers for ParsersImpl {
         if f(&value) {
           ParseResult::successful(value, length)
         } else {
-          let offset = state.next_offset() + length;
+          let offset = state.current_offset() + length;
           let msg = "filter: predicate returned false".to_string();
           let pe = ParseError::of_custom(offset, None, msg);
           ParseResult::failed(pe, CommittedStatus::Uncommitted)
@@ -90,24 +89,15 @@ impl Parsers for ParsersImpl {
 
   fn flat_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
-    F: Fn(A) -> Self::P<'a, I, B> + 'a + Clone,
+    F: Fn(A) -> Self::P<'a, I, B> + 'a,
     A: 'a,
     B: 'a, {
-    Parser::new(move |state| match parser.run(state) {
-      ParseResult::Success { value, length } => {
-        let next_state = state.add_offset(length);
-        let next_parser = f(value);
-        match next_parser.run(&next_state) {
-          ParseResult::Success {
-            value: next_value,
-            length: next_length,
-          } => ParseResult::successful(next_value, length + next_length),
-          ParseResult::Failure {
-            error,
-            committed_status,
-          } => ParseResult::failed(error, committed_status),
-        }
-      }
+    let method = parser.method.clone();
+    Parser::new(move |state| match method(state) {
+      ParseResult::Success { value, length } => f(value)
+        .run(&state.add_offset(length))
+        .add_commit(length != 0)
+        .advance_success(length),
       ParseResult::Failure {
         error,
         committed_status,

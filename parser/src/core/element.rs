@@ -1,41 +1,45 @@
 use std::fmt::{Debug, Display};
 
-/// A Element.<br/>
-/// 要素。
+/// A Element.
 pub trait Element: PartialEq + PartialOrd + Display + Copy + Debug {
-  /// 文字に変換する。
+  /// Convert to a character.
   fn to_char(self) -> char;
-  /// 空白かどうか。
+  /// Check if it is an ASCII space.
   fn is_ascii_space(&self) -> bool;
-  /// 改行を含む空白かどうか。
+  /// Check if it is an ASCII space including newlines.
   fn is_ascii_multi_space(&self) -> bool;
-  /// 空白かどうか。
+  /// Check if it is an ASCII whitespace.
   fn is_ascii_whitespace(&self) -> bool;
 
-  /// アスキー文字かどうか。
+  /// Check if it is an ASCII character.
   fn is_ascii(&self) -> bool;
-  /// アルファベットの大文字かどうか。
+  /// Check if it is an uppercase ASCII alphabet character.
   fn is_ascii_alpha_uppercase(&self) -> bool;
-  /// アルファベットの小文字かどうか。
+  /// Check if it is a lowercase ASCII alphabet character.
   fn is_ascii_alpha_lowercase(&self) -> bool;
 
-  /// アルファベットかどうか。
+  /// Check if it is an ASCII alphabet character.
   fn is_ascii_alpha(&self) -> bool;
 
-  /// 数字かどうか。
+  /// Check if it is an ASCII digit.
   fn is_ascii_digit(&self) -> bool;
-  /// 数字のゼロかどうか。
+  /// Check if it is the digit zero.
   fn is_ascii_digit_zero(&self) -> bool;
-  /// 数字の非ゼロかどうか。
+  /// Check if it is a non-zero digit.
   fn is_ascii_digit_non_zero(&self) -> bool;
-  /// 英数文字かどうか。
+  /// Check if it is an ASCII alphanumeric character.
   fn is_ascii_alpha_digit(&self) -> bool;
 
+  /// Check if it is an ASCII hexadecimal digit.
   fn is_ascii_hex_digit(&self) -> bool;
+  /// Check if it is an ASCII octal digit.
   fn is_ascii_oct_digit(&self) -> bool;
 
+  /// Check if it is an ASCII punctuation character.
   fn is_ascii_punctuation(&self) -> bool;
+  /// Check if it is an ASCII graphic character.
   fn is_ascii_graphic(&self) -> bool;
+  /// Check if it is an ASCII control character.
   fn is_ascii_control(&self) -> bool;
 }
 

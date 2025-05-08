@@ -6,7 +6,7 @@ type Parse<'a, I, A> = dyn Fn(&ParseState<'a, I>) -> ParseResult<'a, I, A> + 'a;
 
 pub struct Parser<'a, I, A> {
   pub(crate) method: Rc<Parse<'a, I, A>>,
-  _phantom: PhantomData<&'a I>,
+  _phantom: PhantomData<(&'a I, A)>,
 }
 
 impl<'a, I, A> Clone for Parser<'a, I, A> {

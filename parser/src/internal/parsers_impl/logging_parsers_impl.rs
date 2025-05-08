@@ -9,8 +9,9 @@ impl LoggingParsers for ParsersImpl {
     F: Fn(&ParseResult<'a, I, A>) -> B + 'a,
     A: Debug + 'a,
     B: Display + 'a, {
+    let method = parser.method.clone();
     Parser::new(move |parse_state| {
-      let ps = parser.run(parse_state);
+      let ps = method(parse_state);
       let s = format!("{} = {}", name, f(&ps));
       match log_level {
         LogLevel::Debug => log::debug!("{}", s),
@@ -26,7 +27,8 @@ impl LoggingParsers for ParsersImpl {
   where
     I: Debug,
     A: Debug + 'a, {
-    Parser::new(move |parse_state| match parser.run(parse_state) {
+    let method = parser.method.clone();
+    Parser::new(move |parse_state| match method(parse_state) {
       res @ ParseResult::Success { .. } => res,
       ParseResult::Failure {
         error,
@@ -49,7 +51,8 @@ impl LoggingParsers for ParsersImpl {
   where
     I: Debug,
     A: Debug + 'a, {
-    Parser::new(move |parse_state| match parser.run(parse_state) {
+    let method = parser.method.clone();
+    Parser::new(move |parse_state| match method(parse_state) {
       res @ ParseResult::Success { .. } => res,
       ParseResult::Failure {
         error,

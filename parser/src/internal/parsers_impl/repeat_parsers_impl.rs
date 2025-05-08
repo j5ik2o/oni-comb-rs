@@ -3,7 +3,6 @@ use crate::extension::parsers::RepeatParsers;
 use crate::internal::ParsersImpl;
 use crate::utils::{Bound, RangeArgument};
 use std::fmt::Debug;
-use crate::StaticParser;
 
 impl RepeatParsers for ParsersImpl {
   fn repeat<'a, I, A, R>(parser: Self::P<'a, I, A>, range: R) -> Self::P<'a, I, Vec<A>>

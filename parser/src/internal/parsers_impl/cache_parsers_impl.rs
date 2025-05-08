@@ -3,6 +3,7 @@ use crate::extension::parsers::CacheParsers;
 use crate::internal::ParsersImpl;
 use std::cell::RefCell;
 
+use crate::core::ParseResult;
 use fnv::FnvHashMap;
 use std::fmt::Debug;
 use std::ptr;
@@ -34,6 +35,3 @@ impl CacheParsers for ParsersImpl {
     })
   }
 }
-
-// ParseResultの型をインポート
-use crate::core::ParseResult;

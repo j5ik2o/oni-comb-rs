@@ -1,13 +1,13 @@
 use nom::{
   branch::alt,
   bytes::complete::{escaped, tag, take_while},
-  character::complete::{alphanumeric1 as alphanumeric, char, one_of},
+  character::complete::{char, one_of},
   combinator::{cut, map, opt, value},
   error::{context, ContextError, ErrorKind, ParseError},
   multi::separated_list0,
   number::complete::double,
   sequence::{delimited, preceded, separated_pair, terminated},
-  Err, IResult, Parser,
+  IResult, Parser,
 };
 use std::collections::HashMap;
 use std::str;

@@ -51,7 +51,24 @@ impl OperatorParsers for ParsersImpl {
   where
     A: Clone + 'a,
     B: Clone + 'a, {
-    Self::flat_map(parser1, move |a| Self::map(parser2.clone(), move |b| (a.clone(), b)))
+    let method1 = parser1.method.clone();
+    let method2 = parser2.method.clone();
+    Parser::new(move |parse_state| match method1(parse_state) {
+      ParseResult::Success { value: a, length: n1 } => {
+        let ps = parse_state.add_offset(n1);
+        match method2(&ps) {
+          ParseResult::Success { value: b, length: n2 } => ParseResult::successful((a, b), n1 + n2),
+          ParseResult::Failure {
+            error,
+            committed_status,
+          } => ParseResult::failed(error, committed_status).advance_success(n1),
+        }
+      }
+      ParseResult::Failure {
+        error,
+        committed_status,
+      } => ParseResult::failed(error, committed_status),
+    })
   }
 
   fn attempt<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>
@@ -93,26 +110,28 @@ impl OperatorParsers for ParsersImpl {
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a, {
     let default_value = x.clone();
+    let method = p.method.clone();
+    let op_method = op.method.clone();
     Self::or(
       Parser::new(move |parse_state| {
         let mut ps = parse_state.add_offset(0);
-        match op.run(&ps) {
+        match op_method(&ps) {
           ParseResult::Success { value: f, length: n1 } => {
             ps = ps.add_offset(n1);
-            (match p.run(&ps) {
+            (match method(&ps) {
               ParseResult::Success { value: y, length: n2 } => {
                 ps = ps.add_offset(n2);
                 Self::rest_left1(p.clone(), op.clone(), f(default_value.clone(), y))
                   .run(&ps)
-                  .with_add_length(n2)
+                  .advance_success(n2)
               }
               ParseResult::Failure {
                 error,
                 committed_status: is_committed,
               } => ParseResult::failed(error, is_committed),
             })
-            .with_committed_fallback(n1 != 0)
-            .with_add_length(n1)
+            .add_commit(n1 != 0)
+            .advance_success(n1)
           }
           ParseResult::Failure {
             error,

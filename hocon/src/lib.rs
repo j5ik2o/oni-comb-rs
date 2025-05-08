@@ -1,7 +1,6 @@
-pub mod model;
-mod parsers;
-
+extern crate core;
 #[cfg(test)]
 #[macro_use]
 extern crate serial_test;
-extern crate core;
+pub mod model;
+mod parsers;

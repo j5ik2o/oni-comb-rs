@@ -3,18 +3,7 @@
 mod core;
 pub mod extension;
 mod internal;
-mod lib_static;
 pub mod utils;
-
-// Re-export StaticParser for public use
-pub use crate::core::static_parser::StaticParser;
-
-pub mod prelude_static {
-  pub use crate::core::*;
-  pub use crate::lib_static::*;
-  pub use crate::utils::*;
-  pub use static_parser::StaticParser;
-}
 
 pub mod prelude {
   pub use crate::core::*;

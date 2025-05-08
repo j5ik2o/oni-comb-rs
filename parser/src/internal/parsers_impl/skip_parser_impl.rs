@@ -1,8 +1,8 @@
 use crate::core::{ParseError, ParseResult, Parser};
+use crate::extension::parser::SkipParser;
 use crate::extension::parsers::SkipParsers;
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;
-use crate::extension::parser::SkipParser;
 
 impl SkipParsers for ParsersImpl {
   fn skip<'a, I>(n: usize) -> Self::P<'a, I, ()> {
@@ -18,9 +18,8 @@ impl SkipParsers for ParsersImpl {
 
   fn skip_left<'a, I, A, B>(pa: Self::P<'a, I, A>, pb: Self::P<'a, I, B>) -> Self::P<'a, I, B>
   where
-      A: Clone + Debug + 'a,
-      B: Clone + Debug + 'a
-  {
+    A: Clone + Debug + 'a,
+    B: Clone + Debug + 'a, {
     let method1 = pa.method.clone();
     let method2 = pb.method.clone();
     Parser::new(move |parse_state| match (method1)(parse_state) {
@@ -31,7 +30,7 @@ impl SkipParsers for ParsersImpl {
           ParseResult::Failure {
             error,
             committed_status,
-          } => ParseResult::failed(error, committed_status).with_add_length(n1),
+          } => ParseResult::failed(error, committed_status).advance_success(n1),
         }
       }
       ParseResult::Failure {
@@ -43,9 +42,8 @@ impl SkipParsers for ParsersImpl {
 
   fn skip_right<'a, I, A, B>(pa: Self::P<'a, I, A>, pb: Self::P<'a, I, B>) -> Self::P<'a, I, A>
   where
-      A: Clone + Debug + 'a,
-      B: Clone + Debug + 'a
-  {
+    A: Clone + Debug + 'a,
+    B: Clone + Debug + 'a, {
     let method1 = pa.method.clone();
     let method2 = pb.method.clone();
 
@@ -57,7 +55,7 @@ impl SkipParsers for ParsersImpl {
           ParseResult::Failure {
             error,
             committed_status,
-          } => ParseResult::failed(error, committed_status).with_add_length(n1),
+          } => ParseResult::failed(error, committed_status).advance_success(n1),
         }
       }
       ParseResult::Failure {
@@ -67,12 +65,15 @@ impl SkipParsers for ParsersImpl {
     })
   }
 
-  fn surround<'a, I, A, B, C>(left_parser: Self::P<'a, I, A>, parser: Self::P<'a, I, B>, right_parser: Self::P<'a, I, C>) -> Self::P<'a, I, B>
+  fn surround<'a, I, A, B, C>(
+    left_parser: Self::P<'a, I, A>,
+    parser: Self::P<'a, I, B>,
+    right_parser: Self::P<'a, I, C>,
+  ) -> Self::P<'a, I, B>
   where
-      A: Clone + Debug + 'a,
-      B: Clone + Debug + 'a,
-      C: Clone + Debug + 'a
-  {
+    A: Clone + Debug + 'a,
+    B: Clone + Debug + 'a,
+    C: Clone + Debug + 'a, {
     left_parser.skip_left(parser.skip_right(right_parser))
   }
 }
