@@ -3,8 +3,8 @@ use crate::parsers::fragment_parsers::fragment;
 use crate::parsers::hier_part_parsers::hier_part;
 use crate::parsers::query_parsers::query;
 use crate::parsers::scheme_parsers::scheme;
-use oni_comb_parser_rs::prelude::*;
 use oni_comb_parser_rs::extension::parser::*;
+use oni_comb_parser_rs::prelude::*;
 //  absolute-URI  = scheme ":" hier-part [ "?" query ]
 pub fn absolute_uri<'a>() -> Parser<'a, u8, Uri> {
   ((scheme().opt() - elm(b':')) + hier_part() + (elm(b'?') * query()).opt()).map(|((a, b), c)| Uri::new(a, b, c, None))

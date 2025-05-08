@@ -10,7 +10,8 @@ impl ConversionParsers for ParsersImpl {
     E: Debug,
     A: 'a,
     B: 'a, {
-    Parser::new(move |parse_state| match parser.run(parse_state) {
+    let method = parser.method.clone();
+    Parser::new(move |parse_state| match method(parse_state) {
       ParseResult::Success { value: a, length } => match f(a) {
         Ok(value) => ParseResult::successful(value, length),
         Err(err) => {
@@ -22,8 +23,8 @@ impl ConversionParsers for ParsersImpl {
       },
       ParseResult::Failure {
         error,
-        committed_status: is_committed,
-      } => ParseResult::failed(error, is_committed),
+        committed_status,
+      } => ParseResult::failed(error, committed_status),
     })
   }
 
@@ -32,7 +33,8 @@ impl ConversionParsers for ParsersImpl {
     F: Fn(A) -> Option<B> + 'a,
     A: Debug + 'a,
     B: Debug + 'a, {
-    Parser::new(move |parse_state| match parser.run(parse_state) {
+    let method = parser.method.clone();
+    Parser::new(move |parse_state| match method(parse_state) {
       ParseResult::Success { value: a, length } => match f(a) {
         Some(value) => ParseResult::successful(value, length),
         None => {

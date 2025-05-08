@@ -1,10 +1,10 @@
 //  authority     = [ userinfo "@" ] host [ ":" port ]
 
-use oni_comb_parser_rs::extension::parser::*;
 use crate::models::authority::Authority;
 use crate::parsers::host_parsers::host;
 use crate::parsers::port_parsers::port;
 use crate::parsers::user_info_parsers::user_info;
+use oni_comb_parser_rs::extension::parser::*;
 use oni_comb_parser_rs::prelude::*;
 
 pub fn authority<'a>() -> Parser<'a, u8, Authority> {

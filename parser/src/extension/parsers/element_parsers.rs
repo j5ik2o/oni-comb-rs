@@ -17,13 +17,13 @@ pub trait ElementParsers: Parsers {
 
   fn elm_ref<'a, I>(element: I) -> Self::P<'a, I, &'a I>
   where
-    I: Element+ 'a + 'static, {
+    I: Element + 'a + 'static, {
     Self::elm_pred_ref(move |actual| *actual == element)
   }
 
   fn elm<'a, I>(element: I) -> Self::P<'a, I, I>
   where
-    I: Element+ 'a + 'static, {
+    I: Element + 'a + 'static, {
     Self::map(Self::elm_ref(element), Clone::clone)
   }
 

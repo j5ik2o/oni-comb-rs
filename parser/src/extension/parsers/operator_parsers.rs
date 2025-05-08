@@ -30,7 +30,7 @@ pub trait OperatorParsers: Parsers {
   where
     A: Debug + 'a;
 
-  fn scan_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
+  fn chain_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
     BOP: Fn(A, A) -> A + 'a + Clone,
     A: Clone + Debug + 'a;
@@ -49,12 +49,6 @@ pub trait OperatorParsers: Parsers {
     Self::or(Self::chain_left1(p, op), Self::successful(x.clone()))
   }
 
-  fn chain_right1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
-  where
-    BOP: Fn(A, A) -> A + 'a + Clone,
-    A: Clone + Debug + 'a, {
-    Self::scan_right1(p, op)
-  }
 
   fn chain_left1<'a, I, A, BOP>(p: Self::P<'a, I, A>, op: Self::P<'a, I, BOP>) -> Self::P<'a, I, A>
   where
@@ -191,7 +185,7 @@ where
   BOP: Fn(A, A) -> A + 'a + Clone,
   A: Clone + Debug + 'a, {
   use crate::internal::parsers_impl::ParsersImpl;
-  <ParsersImpl as OperatorParsers>::scan_right1(p, op)
+  <ParsersImpl as OperatorParsers>::chain_right1(p, op)
 }
 
 pub fn chain_right0<'a, I, A, BOP>(p: Parser<'a, I, A>, op: Parser<'a, I, BOP>, x: A) -> Parser<'a, I, A>
@@ -279,9 +273,7 @@ pub mod static_parsers {
       let result = parser.run(state);
       match result {
         crate::core::ParseResult::Success { value: _, length: _ } => crate::core::ParseResult::successful(true, 0),
-        crate::core::ParseResult::Failure {
-          ..
-        } => crate::core::ParseResult::successful(false, 0),
+        crate::core::ParseResult::Failure { .. } => crate::core::ParseResult::successful(false, 0),
       }
     })
   }

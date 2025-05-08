@@ -47,7 +47,7 @@ impl<'a, I, A> OperatorParser<'a> for Parser<'a, I, A> {
   where
     BOP: Fn(Self::Output, Self::Output) -> Self::Output + 'a + Clone,
     Self::Output: Clone + Debug + 'a, {
-    ParsersImpl::scan_right1(self, op)
+    ParsersImpl::chain_right1(self, op)
   }
 
   fn chain_right0<BOP>(

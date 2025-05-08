@@ -1,7 +1,7 @@
-use oni_comb_parser_rs::extension::parser::*;
 use crate::models::hier_part::HierPart;
 use crate::parsers::authority_parsers::authority;
 use crate::parsers::path_parsers::{path_abempty, path_rootless};
+use oni_comb_parser_rs::extension::parser::*;
 use oni_comb_parser_rs::prelude::*;
 
 //  hier-part     = "//" authority path-abempty

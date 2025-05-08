@@ -1,11 +1,9 @@
-
-
-use std::fmt::{Debug, Display};
+use crate::core::ParserFunctor;
 use crate::core::{CommittedStatus, Element, ParseError};
-use crate::internal::{StaticParsersImpl};
+use crate::internal::StaticParsersImpl;
 use crate::prelude::Set;
 pub use crate::StaticParser;
-use crate::core::ParserFunctor;
+use std::fmt::{Debug, Display};
 
 /// Returns a [Parser] that does nothing.<br/>
 /// 何もしない[Parser]を返します。
@@ -26,7 +24,7 @@ use crate::core::ParserFunctor;
 /// assert_eq!(result.success().unwrap(), ());
 /// ```
 pub fn unit<'a, I>() -> StaticParser<'a, I, ()> {
-    StaticParsersImpl::unit()
+  StaticParsersImpl::unit()
 }
 
 /// Returns a [Parser] that does nothing. It is an alias for `unit()`.<br/>
@@ -48,7 +46,7 @@ pub fn unit<'a, I>() -> StaticParser<'a, I, ()> {
 /// assert_eq!(result.success().unwrap(), ());
 /// ```
 pub fn empty<'a, I>() -> StaticParser<'a, I, ()> {
-    StaticParsersImpl::empty()
+  StaticParsersImpl::empty()
 }
 
 /// Returns a [Parser] representing the termination.<br/>
@@ -76,8 +74,8 @@ pub fn empty<'a, I>() -> StaticParser<'a, I, ()> {
 /// ```
 pub fn end<'a, I>() -> StaticParser<'a, I, ()>
 where
-    I: Debug + Display + 'a, {
-    StaticParsersImpl::end()
+  I: Debug + Display + 'a, {
+  StaticParsersImpl::end()
 }
 
 /// Returns a [Parser] representing the successful parsing result.<br/>
@@ -100,9 +98,9 @@ where
 /// ```
 pub fn successful<'a, I, A>(value: A) -> StaticParser<'a, I, A>
 where
-    I: 'a,
-    A: Clone + 'a, {
-    StaticParsersImpl::successful(value)
+  I: 'a,
+  A: Clone + 'a, {
+  StaticParsersImpl::successful(value)
 }
 
 /// Returns a [Parser] representing the successful parsing result.<br/>
@@ -128,10 +126,10 @@ where
 /// ```
 pub fn successful_lazy<'a, I, A, F>(f: F) -> StaticParser<'a, I, A>
 where
-    I: 'a,
-    F: Fn() -> A + 'a,
-    A: 'a, {
-    StaticParsersImpl::successful_lazy(f)
+  I: 'a,
+  F: Fn() -> A + 'a,
+  A: 'a, {
+  StaticParsersImpl::successful_lazy(f)
 }
 
 /// Returns a [Parser] that represents the result of the failed parsing.<br/>
@@ -158,9 +156,9 @@ where
 /// ```
 pub fn failed<'a, I, A>(value: ParseError<'a, I>, commit: CommittedStatus) -> StaticParser<'a, I, A>
 where
-    I: Clone + 'a,
-    A: 'a, {
-    StaticParsersImpl::failed(value, commit)
+  I: Clone + 'a,
+  A: 'a, {
+  StaticParsersImpl::failed(value, commit)
 }
 
 /// Returns a [Parser] that returns and commits the failed parsing result.<br/>
@@ -189,9 +187,9 @@ where
 /// ```
 pub fn failed_with_commit<'a, I, A>(value: ParseError<'a, I>) -> StaticParser<'a, I, A>
 where
-    I: Clone + 'a,
-    A: 'a, {
-    StaticParsersImpl::failed(value, CommittedStatus::Committed)
+  I: Clone + 'a,
+  A: 'a, {
+  StaticParsersImpl::failed(value, CommittedStatus::Committed)
 }
 
 /// Returns a [Parser] that returns failed parsing results and does not commit.<br/>
@@ -220,9 +218,9 @@ where
 /// ```
 pub fn failed_with_uncommit<'a, I, A>(value: ParseError<'a, I>) -> StaticParser<'a, I, A>
 where
-    I: Clone + 'a,
-    A: 'a, {
-    StaticParsersImpl::failed(value, CommittedStatus::Uncommitted)
+  I: Clone + 'a,
+  A: 'a, {
+  StaticParsersImpl::failed(value, CommittedStatus::Uncommitted)
 }
 
 /// Returns a [Parser] that represents the result of the failed parsing.<br/>
@@ -250,10 +248,10 @@ where
 /// ```
 pub fn failed_lazy<'a, I, A, F>(f: F) -> StaticParser<'a, I, A>
 where
-    F: Fn() -> (ParseError<'a, I>, CommittedStatus) + 'a,
-    I: 'a,
-    A: 'a, {
-    StaticParsersImpl::failed_lazy(f)
+  F: Fn() -> (ParseError<'a, I>, CommittedStatus) + 'a,
+  I: 'a,
+  A: 'a, {
+  StaticParsersImpl::failed_lazy(f)
 }
 
 // --- Element Parsers ---
@@ -277,8 +275,8 @@ where
 /// ```
 pub fn elm_any_ref<'a, I>() -> StaticParser<'a, I, &'a I>
 where
-    I: Element + PartialEq + Clone + 'a + 'static, {
-    StaticParsersImpl::elm_any_ref()
+  I: Element + PartialEq + Clone + 'a + 'static, {
+  StaticParsersImpl::elm_any_ref()
 }
 
 /// Returns a [Parser] that parses an any element.<br/>
@@ -301,8 +299,8 @@ where
 /// ```
 pub fn elm_any<'a, I>() -> StaticParser<'a, I, I>
 where
-    I: Element + PartialEq + Clone + 'a + 'static, {
-    StaticParsersImpl::elm_any()
+  I: Element + PartialEq + Clone + 'a + 'static, {
+  StaticParsersImpl::elm_any()
 }
 
 /// Returns a [Parser] that parses the specified element.(for reference)<br/>
@@ -328,8 +326,8 @@ where
 /// ```
 pub fn elm_ref<'a, I>(element: I) -> StaticParser<'a, I, &'a I>
 where
-    I: Element + PartialEq + Clone + 'a + 'static, {
-    StaticParsersImpl::elm_ref(element)
+  I: Element + PartialEq + Clone + 'a + 'static, {
+  StaticParsersImpl::elm_ref(element)
 }
 
 /// Returns a [Parser] that parses the specified element.<br/>
@@ -355,8 +353,8 @@ where
 /// ```
 pub fn elm<'a, I>(element: I) -> StaticParser<'a, I, I>
 where
-    I: Element + PartialEq + Clone + 'a + 'static, {
-    StaticParsersImpl::elm(element)
+  I: Element + PartialEq + Clone + 'a + 'static, {
+  StaticParsersImpl::elm(element)
 }
 
 /// Returns a [Parser] that parses the elements that satisfy the specified closure conditions.(for reference)<br/>
@@ -381,9 +379,9 @@ where
 /// ```
 pub fn elm_pred_ref<'a, I, F>(f: F) -> StaticParser<'a, I, &'a I>
 where
-    F: Fn(&I) -> bool + 'a + 'static,
-    I: Element + PartialEq + Clone + 'a + 'static, {
-    StaticParsersImpl::elm_pred_ref(f)
+  F: Fn(&I) -> bool + 'a + 'static,
+  I: Element + PartialEq + Clone + 'a + 'static, {
+  StaticParsersImpl::elm_pred_ref(f)
 }
 
 /// Returns a [Parser] that parses the elements that satisfy the specified closure conditions.<br/>
@@ -411,9 +409,9 @@ where
 /// ```
 pub fn elm_pred<'a, I, F>(f: F) -> StaticParser<'a, I, I>
 where
-    F: Fn(&I) -> bool + 'a + 'static,
-    I: Element + Clone + PartialEq + 'a + 'static, {
-    StaticParsersImpl::elm_pred(f)
+  F: Fn(&I) -> bool + 'a + 'static,
+  I: Element + Clone + PartialEq + 'a + 'static, {
+  StaticParsersImpl::elm_pred(f)
 }
 
 /// Returns a [Parser] that parses the elements in the specified set. (for reference)<br/>
@@ -441,9 +439,9 @@ where
 /// ```
 pub fn elm_ref_of<'a, I, S>(set: &'static S) -> StaticParser<'a, I, &'a I>
 where
-    I: Element + PartialEq + Clone + 'a + 'static,
-    S: Set<I> + ?Sized + 'static, {
-    StaticParsersImpl::elm_ref_of(set)
+  I: Element + PartialEq + Clone + 'a + 'static,
+  S: Set<I> + ?Sized + 'static, {
+  StaticParsersImpl::elm_ref_of(set)
 }
 
 /// Returns a [Parser] that parses the elements in the specified set.<br/>
@@ -471,9 +469,9 @@ where
 /// ```
 pub fn elm_of<'a, I, S>(set: &'static S) -> StaticParser<'a, I, I>
 where
-    I: Element + PartialEq + Display + Clone + Debug + 'a + 'static,
-    S: Set<I> + ?Sized + 'static, {
-    StaticParsersImpl::elm_of(set)
+  I: Element + PartialEq + Display + Clone + Debug + 'a + 'static,
+  S: Set<I> + ?Sized + 'static, {
+  StaticParsersImpl::elm_of(set)
 }
 
 /// Returns a [Parser] that parses the elements in the specified range. (for reference)<br/>
@@ -504,8 +502,8 @@ where
 /// ```
 pub fn elm_in_ref<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a I>
 where
-    I: Element + PartialEq + PartialOrd + Display + Clone + Debug + 'a + 'static, {
-    StaticParsersImpl::elm_ref_in(start, end)
+  I: Element + PartialEq + PartialOrd + Display + Clone + Debug + 'a + 'static, {
+  StaticParsersImpl::elm_ref_in(start, end)
 }
 
 /// Returns a [Parser] that parses the elements in the specified range.<br/>
@@ -536,11 +534,9 @@ where
 /// ```
 pub fn elm_in<'a, I>(start: I, end: I) -> StaticParser<'a, I, I>
 where
-    I: Element + PartialEq + PartialOrd + Display + Clone + Debug + 'a + 'static, {
-    StaticParsersImpl::elm_in(start, end)
+  I: Element + PartialEq + PartialOrd + Display + Clone + Debug + 'a + 'static, {
+  StaticParsersImpl::elm_in(start, end)
 }
-
-
 
 /// Returns a [Parser] that parses the elements in the specified range. (for reference)<br/>
 /// 指定した範囲の要素を解析する[Parser]を返します。(参照版)
@@ -570,11 +566,9 @@ where
 /// ```
 pub fn elm_from_until_ref<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a I>
 where
-    I: Element + 'static, {
-    StaticParsersImpl::elm_ref_from_until(start, end)
+  I: Element + 'static, {
+  StaticParsersImpl::elm_ref_from_until(start, end)
 }
-
-
 
 /// Returns a [Parser] that parses the elements in the specified range.<br/>
 /// 指定した範囲の要素を解析する[Parser]を返します。
@@ -604,10 +598,9 @@ where
 /// ```
 pub fn elm_from_until<'a, I>(start: I, end: I) -> StaticParser<'a, I, I>
 where
-    I: Element + 'a + 'static, {
-    StaticParsersImpl::elm_from_until(start, end)
+  I: Element + 'a + 'static, {
+  StaticParsersImpl::elm_from_until(start, end)
 }
-
 
 /// Returns a [Parser] that parses elements that do not contain elements of the specified set.(for reference)<br/>
 /// 指定した集合の要素を含まない要素を解析する[Parser]を返します。(参照版)
@@ -634,9 +627,9 @@ where
 /// ```
 pub fn none_ref_of<'a, I, S>(set: &'a S) -> StaticParser<'a, I, &'a I>
 where
-    I: Element + 'a,
-    S: Set<I> + ?Sized + 'a, {
-    StaticParsersImpl::none_ref_of(set)
+  I: Element + 'a,
+  S: Set<I> + ?Sized + 'a, {
+  StaticParsersImpl::none_ref_of(set)
 }
 
 /// Returns a [Parser] that parses elements that do not contain elements of the specified set.<br/>
@@ -664,9 +657,9 @@ where
 /// ```
 pub fn none_of<'a, I, S>(set: &'a S) -> StaticParser<'a, I, I>
 where
-    I: Element + 'a,
-    S: Set<I> + ?Sized + 'a, {
-    StaticParsersImpl::none_of(set)
+  I: Element + 'a,
+  S: Set<I> + ?Sized + 'a, {
+  StaticParsersImpl::none_of(set)
 }
 
 /// Returns a [Parser] that parses the space (' ', '\t'). (for reference)<br/>
@@ -691,10 +684,9 @@ where
 /// ```
 pub fn elm_space_ref<'a, I>() -> StaticParser<'a, I, &'a I>
 where
-    I: Element + PartialEq + 'a + 'static, {
-    StaticParsersImpl::elm_space_ref()
+  I: Element + PartialEq + 'a + 'static, {
+  StaticParsersImpl::elm_space_ref()
 }
-
 
 /// Returns a [Parser] that parses the space (' ', '\t').<br/>
 /// スペース(' ', '\t')を解析する[Parser]を返します。
@@ -718,10 +710,9 @@ where
 /// ```
 pub fn elm_space<'a, I>() -> StaticParser<'a, I, I>
 where
-    I: Element + Clone + PartialEq + 'a + 'static, {
-    StaticParsersImpl::elm_space()
+  I: Element + Clone + PartialEq + 'a + 'static, {
+  StaticParsersImpl::elm_space()
 }
-
 
 /// Returns a [Parser] that parses spaces containing newlines (' ', '\t', '\n', '\r'). (for reference)<br/>
 /// 改行を含むスペース(' ', '\t', '\n', '\r')を解析する[Parser]を返します。(参照版)
@@ -745,11 +736,9 @@ where
 /// ```
 pub fn elm_multi_space_ref<'a, I>() -> StaticParser<'a, I, &'a I>
 where
-    I: Element + PartialEq + 'a + 'static, {
-    StaticParsersImpl::elm_multi_space_ref()
+  I: Element + PartialEq + 'a + 'static, {
+  StaticParsersImpl::elm_multi_space_ref()
 }
-
-
 
 /// Returns a [Parser] that parses spaces containing newlines (' ', '\t', '\n', '\r').<br/>
 /// 改行を含むスペース(' ', '\t', '\n', '\r')を解析する[Parser]を返します。
@@ -773,8 +762,8 @@ where
 /// ```
 pub fn elm_multi_space<'a, I>() -> StaticParser<'a, I, I>
 where
-    I: Element + Clone + PartialEq + 'a + 'static, {
-    StaticParsersImpl::elm_multi_space()
+  I: Element + Clone + PartialEq + 'a + 'static, {
+  StaticParsersImpl::elm_multi_space()
 }
 
 /// Returns a [Parser] that parses alphabets ('A'..='Z', 'a'..='z').(for reference)<br/>
@@ -799,10 +788,9 @@ where
 /// ```
 pub fn elm_alpha_ref<'a, I>() -> StaticParser<'a, I, &'a I>
 where
-    I: Element + PartialEq + 'a + 'static, {
-    StaticParsersImpl::elm_alpha_ref()
+  I: Element + PartialEq + 'a + 'static, {
+  StaticParsersImpl::elm_alpha_ref()
 }
-
 
 /// Returns a [Parser] that parses alphabets ('A'..='Z', 'a'..='z').<br/>
 /// 英字('A'..='Z', 'a'..='z')を解析する[Parser]を返します。
@@ -826,8 +814,8 @@ where
 /// ```
 pub fn elm_alpha<'a, I>() -> StaticParser<'a, I, I>
 where
-    I: Element + Clone + PartialEq + 'a + 'static, {
-    StaticParsersImpl::elm_alpha()
+  I: Element + Clone + PartialEq + 'a + 'static, {
+  StaticParsersImpl::elm_alpha()
 }
 
 /// Returns a [Parser] that parses alphabets and digits ('0'..='9', 'A'..='Z', 'a'..='z').(for reference)<br/>
@@ -852,10 +840,9 @@ where
 /// ```
 pub fn elm_alpha_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
 where
-    I: Element + PartialEq + 'a + 'static, {
-    StaticParsersImpl::elm_alpha_digit_ref()
+  I: Element + PartialEq + 'a + 'static, {
+  StaticParsersImpl::elm_alpha_digit_ref()
 }
-
 
 /// Returns a [Parser] that parses alphabets and digits ('0'..='9', 'A'..='Z', 'a'..='z').<br/>
 /// 英数字('0'..='9', 'A'..='Z', 'a'..='z')を解析する[Parser]を返します。
@@ -879,10 +866,9 @@ where
 /// ```
 pub fn elm_alpha_digit<'a, I>() -> StaticParser<'a, I, I>
 where
-    I: Element + Clone + PartialEq + 'a + 'static, {
-    StaticParsersImpl::elm_alpha_digit()
+  I: Element + Clone + PartialEq + 'a + 'static, {
+  StaticParsersImpl::elm_alpha_digit()
 }
-
 
 /// Returns a [Parser] that parses digits ('0'..='9').(for reference)<br/>
 /// 数字('0'..='9')を解析する[Parser]を返します。(参照版)
@@ -906,10 +892,9 @@ where
 /// ```
 pub fn elm_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
 where
-    I: Element + 'a + 'static, {
-    StaticParsersImpl::elm_digit_ref()
+  I: Element + 'a + 'static, {
+  StaticParsersImpl::elm_digit_ref()
 }
-
 
 /// Returns a [Parser] that parses digits ('0'..='9').<br/>
 /// 数字('0'..='9')を解析する[Parser]を返します。
@@ -933,10 +918,9 @@ where
 /// ```
 pub fn elm_digit<'a, I>() -> StaticParser<'a, I, I>
 where
-    I: Element + Clone + PartialEq + 'a + 'static, {
-    StaticParsersImpl::elm_digit()
+  I: Element + Clone + PartialEq + 'a + 'static, {
+  StaticParsersImpl::elm_digit()
 }
-
 
 /// Returns a [Parser] that parses digits ('1'..='9').(for reference)<br/>
 /// 数字('1'..='9')を解析する[Parser]を返します。(参照版)
@@ -960,8 +944,8 @@ where
 /// ```
 pub fn elm_digit_1_9_ref<'a, I>() -> StaticParser<'a, I, &'a I>
 where
-    I: Element + 'a + 'static, {
-    elm_digit_ref().with_filter_not(|c: &&I| c.is_ascii_digit_zero())
+  I: Element + 'a + 'static, {
+  elm_digit_ref().with_filter_not(|c: &&I| c.is_ascii_digit_zero())
 }
 
 /// Returns a [Parser] that parses digits ('1'..='9').<br/>
@@ -986,11 +970,9 @@ where
 /// ```
 pub fn elm_digit_1_9<'a, I>() -> StaticParser<'a, I, I>
 where
-    I: Element + 'a + 'static, {
-    elm_digit_1_9_ref().map(Clone::clone)
+  I: Element + 'a + 'static, {
+  elm_digit_1_9_ref().map(Clone::clone)
 }
-
-
 
 /// Returns a [Parser] that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f').(for reference)<br/>
 /// 16進の数字('0'..='9', 'A'..='F', 'a'..='f')を解析する[Parser]を返します。(参照版)
@@ -1014,10 +996,9 @@ where
 /// ```
 pub fn elm_hex_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
 where
-    I: Element + PartialEq + 'a + 'static, {
-    StaticParsersImpl::elm_hex_digit_ref()
+  I: Element + PartialEq + 'a + 'static, {
+  StaticParsersImpl::elm_hex_digit_ref()
 }
-
 
 /// Returns a [Parser] that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f').<br/>
 /// 16進の数字('0'..='9', 'A'..='F', 'a'..='f')を解析する[Parser]を返します。
@@ -1041,8 +1022,8 @@ where
 /// ```
 pub fn elm_hex_digit<'a, I>() -> StaticParser<'a, I, I>
 where
-    I: Element + 'a + 'static, {
-    StaticParsersImpl::elm_hex_digit()
+  I: Element + 'a + 'static, {
+  StaticParsersImpl::elm_hex_digit()
 }
 
 /// Returns a [Parser] that parses oct digits ('0'..='8').(for reference)<br/>
@@ -1067,10 +1048,9 @@ where
 /// ```
 pub fn elm_oct_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
 where
-    I: Element + PartialEq + 'a + 'static, {
-    StaticParsersImpl::elm_oct_digit_ref()
+  I: Element + PartialEq + 'a + 'static, {
+  StaticParsersImpl::elm_oct_digit_ref()
 }
-
 
 /// Returns a [Parser] that parses oct digits ('0'..='8').<br/>
 /// 8進の数字('0'..='8')を解析する[Parser]を返します。
@@ -1095,10 +1075,9 @@ where
 /// ```
 pub fn elm_oct_digit<'a, I>() -> StaticParser<'a, I, I>
 where
-    I: Element + PartialEq + Clone + 'a + 'static, {
-    StaticParsersImpl::elm_oct_digit()
+  I: Element + PartialEq + Clone + 'a + 'static, {
+  StaticParsersImpl::elm_oct_digit()
 }
-
 
 // --- Elements Parsers ---
 
@@ -1124,12 +1103,10 @@ where
 /// ```
 pub fn seq<'a, 'b, I>(seq: &'b [I]) -> StaticParser<'a, I, Vec<I>>
 where
-    I: Element + 'a,
-    'b: 'a, {
-    StaticParsersImpl::seq(seq)
+  I: Element + 'a,
+  'b: 'a, {
+  StaticParsersImpl::seq(seq)
 }
-
-
 
 /// Returns a [Parser] that parses a string.<br/>
 /// 文字列を解析する[Parser]を返す。
@@ -1154,11 +1131,9 @@ where
 /// ```
 pub fn tag<'a, 'b>(tag: &'b str) -> StaticParser<'a, char, String>
 where
-    'b: 'a, {
-    StaticParsersImpl::tag(tag)
+  'b: 'a, {
+  StaticParsersImpl::tag(tag)
 }
-
-
 
 /// Returns a [Parser] that parses a string. However, it is not case-sensitive.<br/>
 /// 文字列を解析する[Parser]を返す。ただし大文字小文字を区別しない。
@@ -1183,8 +1158,8 @@ where
 /// ```
 pub fn tag_no_case<'a, 'b>(tag: &'b str) -> StaticParser<'a, char, String>
 where
-    'b: 'a, {
-    StaticParsersImpl::tag_no_case(tag)
+  'b: 'a, {
+  StaticParsersImpl::tag_no_case(tag)
 }
 
 /// Returns a [Parser] that parses a string that match a regular expression.<br/>
@@ -1210,8 +1185,8 @@ where
 /// ```
 pub fn regex<'a, S>(pattern: S) -> StaticParser<'a, char, String>
 where
-    S: AsRef<str> + 'a,{
-    StaticParsersImpl::regex(pattern)
+  S: AsRef<str> + 'a, {
+  StaticParsersImpl::regex(pattern)
 }
 
 /// Returns a [Parser] that returns an element of the specified length.<br/>
@@ -1238,9 +1213,8 @@ where
 /// ```
 pub fn take<'a, I>(n: usize) -> StaticParser<'a, I, &'a [I]>
 where
-    I: Element + 'a,
-{
-    StaticParsersImpl::take(n)
+  I: Element + 'a, {
+  StaticParsersImpl::take(n)
 }
 
 /// クロージャの結果が真である間は要素を返す[Parser]を返す。<br/>
@@ -1268,12 +1242,11 @@ where
 /// assert!(result.is_success());
 /// assert_eq!(result.success().unwrap(), "abc");
 /// ```
-///
 pub fn take_while0<'a, I, F>(f: F) -> StaticParser<'a, I, &'a [I]>
 where
-    F: Fn(&I) -> bool + 'a,
-    I: Element + 'a, {
-    StaticParsersImpl::take_while0(f)
+  F: Fn(&I) -> bool + 'a,
+  I: Element + 'a, {
+  StaticParsersImpl::take_while0(f)
 }
 
 /// クロージャの結果が真である間は要素を返す[Parser]を返す。<br/>
@@ -1303,9 +1276,9 @@ where
 /// ```
 pub fn take_while1<'a, I, F>(f: F) -> StaticParser<'a, I, &'a [I]>
 where
-    F: Fn(&I) -> bool + 'a,
-    I: Element + 'a, {
-    StaticParsersImpl::take_while1(f)
+  F: Fn(&I) -> bool + 'a,
+  I: Element + 'a, {
+  StaticParsersImpl::take_while1(f)
 }
 
 /// クロージャの結果が真である間は要素を返す[Parser]を返す。<br/>
@@ -1335,9 +1308,9 @@ where
 /// ```
 pub fn take_while_n_m<'a, I, F>(n: usize, m: usize, f: F) -> StaticParser<'a, I, &'a [I]>
 where
-    F: Fn(&I) -> bool + 'a,
-    I: Element + 'a, {
-    StaticParsersImpl::take_while_n_m(n, m, f)
+  F: Fn(&I) -> bool + 'a,
+  I: Element + 'a, {
+  StaticParsersImpl::take_while_n_m(n, m, f)
 }
 
 /// Returns a [Parser] that returns a sequence up to either the end element or the element that matches the condition.<br/>
@@ -1364,9 +1337,9 @@ where
 /// ```
 pub fn take_till0<'a, I, F>(f: F) -> StaticParser<'a, I, &'a [I]>
 where
-    F: Fn(&I) -> bool + 'a,
-    I: Element + 'a, {
-    StaticParsersImpl::take_till0(f)
+  F: Fn(&I) -> bool + 'a,
+  I: Element + 'a, {
+  StaticParsersImpl::take_till0(f)
 }
 
 /// Returns a [Parser] that returns a sequence up to either the end element or the element that matches the condition.<br/>
@@ -1393,9 +1366,9 @@ where
 /// ```
 pub fn take_till1<'a, I, F>(f: F) -> StaticParser<'a, I, &'a [I]>
 where
-    F: Fn(&I) -> bool + 'a,
-    I: Element + Debug + 'a, {
-    StaticParsersImpl::take_till1(f)
+  F: Fn(&I) -> bool + 'a,
+  I: Element + Debug + 'a, {
+  StaticParsersImpl::take_till1(f)
 }
 
 // --- Offset Control Parsers ---
@@ -1423,7 +1396,7 @@ where
 /// assert_eq!(result.success().unwrap(), "def");
 /// ```
 pub fn skip<'a, I>(n: usize) -> StaticParser<'a, I, ()> {
-    StaticParsersImpl::skip(n)
+  StaticParsersImpl::skip(n)
 }
 
 // --- Enhanced Parsers ---
@@ -1452,16 +1425,16 @@ pub fn skip<'a, I>(n: usize) -> StaticParser<'a, I, ()> {
 /// assert_eq!(result.success().unwrap(), "abc");
 /// ```
 pub fn surround<'a, I, A, B, C>(
-    lp: StaticParser<'a, I, A>,
-    parser: StaticParser<'a, I, B>,
-    rp: StaticParser<'a, I, C>,
+  lp: StaticParser<'a, I, A>,
+  parser: StaticParser<'a, I, B>,
+  rp: StaticParser<'a, I, C>,
 ) -> StaticParser<'a, I, B>
 where
-    A: Clone + Debug + 'a,
-    B: Clone + Debug + 'a,
-    C: Clone + Debug + 'a,
-    I: Element + 'a,{
-    StaticParsersImpl::surround(lp, parser, rp)
+  A: Clone + Debug + 'a,
+  B: Clone + Debug + 'a,
+  C: Clone + Debug + 'a,
+  I: Element + 'a, {
+  StaticParsersImpl::surround(lp, parser, rp)
 }
 
 /// Returns a [Parser] that lazily evaluates the specified [Parser].<br/>
@@ -1491,8 +1464,7 @@ where
 /// ```
 pub fn lazy<'a, I, A, F>(f: F) -> StaticParser<'a, I, A>
 where
-    F: Fn() -> StaticParser<'a, I, A> + 'a + Clone,
-    A: Clone + Debug + 'a, {
-    StaticParsersImpl::lazy(f)
+  F: Fn() -> StaticParser<'a, I, A> + 'a + Clone,
+  A: Clone + Debug + 'a, {
+  StaticParsersImpl::lazy(f)
 }
-

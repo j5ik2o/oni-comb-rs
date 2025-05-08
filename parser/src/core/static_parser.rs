@@ -42,8 +42,6 @@ impl<'a, I, A: 'a> StaticParser<'a, I, A> {
     self.run(&parse_state)
   }
 
-
-  
   /// 条件に基づいてフィルタリング
   pub fn filter<G>(self, f: G) -> StaticParser<'a, I, A>
   where
@@ -88,6 +86,7 @@ impl<'a, I, A: 'a> StaticParser<'a, I, A> {
     let f_clone = f.clone();
     self.with_filter(move |a| !f_clone(a))
   }
+
   /// フラットマップ操作
   pub fn flat_map<B, G>(self, f: G) -> StaticParser<'a, I, B>
   where
@@ -108,7 +107,7 @@ impl<'a, I, A: 'a> StaticParser<'a, I, A> {
       } => ParseResult::failed(error, committed_status),
     })
   }
-  //
+
   // /// 区切り文字を使用して複数の要素をパースする
   // pub fn of_many0_sep<B, G>(self, sep: G) -> StaticParser<'a, I, Vec<A>>
   // where

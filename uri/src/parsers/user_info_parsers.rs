@@ -1,7 +1,7 @@
 use crate::models::user_info::UserInfo;
 use crate::parsers::basic_parsers::*;
-use oni_comb_parser_rs::prelude::*;
 use oni_comb_parser_rs::extension::parser::*;
+use oni_comb_parser_rs::prelude::*;
 //  userinfo      = *( unreserved / pct-encoded / sub-delims / ":" )
 pub fn user_info<'a>() -> Parser<'a, u8, UserInfo> {
   let p = || (unreserved().attempt() | pct_encoded().attempt() | sub_delims());

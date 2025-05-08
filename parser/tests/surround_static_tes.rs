@@ -1,7 +1,7 @@
 use oni_comb_parser_rs::prelude::*;
 
 #[test]
-fn test_surround_static() {
+fn test_surround() {
   // 入力文字列 "(abc)" を解析するテスト
   let text = "(abc)";
   let input = text.chars().collect::<Vec<_>>();

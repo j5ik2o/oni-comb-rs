@@ -3,6 +3,7 @@ use crate::extension::parsers::RepeatParsers;
 use crate::internal::ParsersImpl;
 use crate::utils::{Bound, RangeArgument};
 use std::fmt::Debug;
+use crate::StaticParser;
 
 impl RepeatParsers for ParsersImpl {
   fn repeat<'a, I, A, R>(parser: Self::P<'a, I, A>, range: R) -> Self::P<'a, I, Vec<A>>
@@ -60,11 +61,14 @@ impl RepeatParsers for ParsersImpl {
     I: Clone + 'a,
     A: Clone + Debug + 'a,
     B: Clone + Debug + 'a, {
+    let method = parser.method.clone();
+    let separator_clone = separator.clone();
+
     Parser::new(move |parse_state| {
       let mut all_length = 0;
       let mut items = vec![];
 
-      if let ParseResult::Success { value, length } = parser.run(parse_state) {
+      if let ParseResult::Success { value, length } = (method)(parse_state) {
         let mut current_parse_state = parse_state.add_offset(length);
         items.push(value);
         all_length += length;
@@ -83,15 +87,15 @@ impl RepeatParsers for ParsersImpl {
             _ => (),
           }
 
-          if let Some(sep) = &separator {
-            if let ParseResult::Success { length, .. } = sep.run(&current_parse_state) {
+          if let Some(sep) = &separator_clone {
+            if let ParseResult::Success { length, .. } = (sep.method)(&current_parse_state) {
               current_parse_state = current_parse_state.add_offset(length);
               all_length += length;
             } else {
               break;
             }
           }
-          if let ParseResult::Success { value, length } = parser.run(&current_parse_state) {
+          if let ParseResult::Success { value, length } = (method)(&current_parse_state) {
             current_parse_state = current_parse_state.add_offset(length);
             items.push(value);
             all_length += length;

@@ -3,25 +3,25 @@
 mod core;
 pub mod extension;
 mod internal;
-pub mod utils;
 mod lib_static;
+pub mod utils;
 
 // Re-export StaticParser for public use
 pub use crate::core::static_parser::StaticParser;
 
 pub mod prelude_static {
   pub use crate::core::*;
+  pub use crate::lib_static::*;
   pub use crate::utils::*;
   pub use static_parser::StaticParser;
-  pub use crate::lib_static::*;
 }
 
 pub mod prelude {
   pub use crate::core::*;
+  use crate::extension::parsers::*;
   use crate::internal::*;
   pub use crate::utils::*;
   use std::fmt::{Debug, Display};
-  use crate::extension::parsers::*;
 
   /// Returns a [Parser] that does nothing.<br/>
   /// 何もしない[Parser]を返します。
@@ -556,8 +556,6 @@ pub mod prelude {
     ParsersImpl::elm_in(start, end)
   }
 
-
-
   /// Returns a [Parser] that parses the elements in the specified range. (for reference)<br/>
   /// 指定した範囲の要素を解析する[Parser]を返します。(参照版)
   ///
@@ -589,8 +587,6 @@ pub mod prelude {
     I: Element + 'a + 'static, {
     ParsersImpl::elm_ref_from_until(start, end)
   }
-
-
 
   /// Returns a [Parser] that parses the elements in the specified range.<br/>
   /// 指定した範囲の要素を解析する[Parser]を返します。
@@ -624,7 +620,6 @@ pub mod prelude {
     ParsersImpl::elm_from_until(start, end)
   }
 
-
   /// Returns a [Parser] that parses elements that do not contain elements of the specified set.(for reference)<br/>
   /// 指定した集合の要素を含まない要素を解析する[Parser]を返します。(参照版)
   ///
@@ -654,8 +649,6 @@ pub mod prelude {
     S: Set<I> + ?Sized + 'static, {
     ParsersImpl::none_ref_of(set)
   }
-
-
 
   /// Returns a [Parser] that parses elements that do not contain elements of the specified set.<br/>
   /// 指定した集合の要素を含まない要素を解析する[Parser]を返します。
@@ -687,8 +680,6 @@ pub mod prelude {
     ParsersImpl::none_of(set)
   }
 
-
-
   /// Returns a [Parser] that parses the space (' ', '\t'). (for reference)<br/>
   /// スペース(' ', '\t')を解析する[Parser]を返します。(参照版)
   ///
@@ -714,7 +705,6 @@ pub mod prelude {
     I: Element + 'a + 'static, {
     ParsersImpl::elm_space_ref()
   }
-
 
   /// Returns a [Parser] that parses the space (' ', '\t').<br/>
   /// スペース(' ', '\t')を解析する[Parser]を返します。
@@ -742,7 +732,6 @@ pub mod prelude {
     ParsersImpl::elm_space()
   }
 
-
   /// Returns a [Parser] that parses spaces containing newlines (' ', '\t', '\n', '\r'). (for reference)<br/>
   /// 改行を含むスペース(' ', '\t', '\n', '\r')を解析する[Parser]を返します。(参照版)
   ///
@@ -768,8 +757,6 @@ pub mod prelude {
     I: Element + 'a + 'static, {
     ParsersImpl::elm_multi_space_ref()
   }
-
-
 
   /// Returns a [Parser] that parses spaces containing newlines (' ', '\t', '\n', '\r').<br/>
   /// 改行を含むスペース(' ', '\t', '\n', '\r')を解析する[Parser]を返します。
@@ -797,8 +784,6 @@ pub mod prelude {
     ParsersImpl::elm_multi_space()
   }
 
-
-
   /// Returns a [Parser] that parses alphabets ('A'..='Z', 'a'..='z').(for reference)<br/>
   /// 英字('A'..='Z', 'a'..='z')を解析する[Parser]を返します。(参照版)
   ///
@@ -824,7 +809,6 @@ pub mod prelude {
     I: Element + 'a + 'static, {
     ParsersImpl::elm_alpha_ref()
   }
-
 
   /// Returns a [Parser] that parses alphabets ('A'..='Z', 'a'..='z').<br/>
   /// 英字('A'..='Z', 'a'..='z')を解析する[Parser]を返します。
@@ -878,7 +862,6 @@ pub mod prelude {
     ParsersImpl::elm_alpha_digit_ref()
   }
 
-
   /// Returns a [Parser] that parses alphabets and digits ('0'..='9', 'A'..='Z', 'a'..='z').<br/>
   /// 英数字('0'..='9', 'A'..='Z', 'a'..='z')を解析する[Parser]を返します。
   ///
@@ -904,7 +887,6 @@ pub mod prelude {
     I: Element + 'a + 'static, {
     ParsersImpl::elm_alpha_digit()
   }
-
 
   /// Returns a [Parser] that parses digits ('0'..='9').(for reference)<br/>
   /// 数字('0'..='9')を解析する[Parser]を返します。(参照版)
@@ -932,7 +914,6 @@ pub mod prelude {
     ParsersImpl::elm_digit_ref()
   }
 
-
   /// Returns a [Parser] that parses digits ('0'..='9').<br/>
   /// 数字('0'..='9')を解析する[Parser]を返します。
   ///
@@ -958,7 +939,6 @@ pub mod prelude {
     I: Element + 'a + 'static, {
     ParsersImpl::elm_digit()
   }
-
 
   /// Returns a [Parser] that parses digits ('1'..='9').(for reference)<br/>
   /// 数字('1'..='9')を解析する[Parser]を返します。(参照版)
@@ -1012,8 +992,6 @@ pub mod prelude {
     elm_digit_1_9_ref().map(Clone::clone)
   }
 
-
-
   /// Returns a [Parser] that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f').(for reference)<br/>
   /// 16進の数字('0'..='9', 'A'..='F', 'a'..='f')を解析する[Parser]を返します。(参照版)
   ///
@@ -1039,7 +1017,6 @@ pub mod prelude {
     I: Element + 'a + 'static, {
     ParsersImpl::elm_hex_digit_ref()
   }
-
 
   /// Returns a [Parser] that parses hex digits ('0'..='9', 'A'..='F', 'a'..='f').<br/>
   /// 16進の数字('0'..='9', 'A'..='F', 'a'..='f')を解析する[Parser]を返します。
@@ -1093,7 +1070,6 @@ pub mod prelude {
     ParsersImpl::elm_oct_digit_ref()
   }
 
-
   /// Returns a [Parser] that parses oct digits ('0'..='8').<br/>
   /// 8進の数字('0'..='8')を解析する[Parser]を返します。
   ///
@@ -1120,7 +1096,6 @@ pub mod prelude {
     ParsersImpl::elm_oct_digit()
   }
 
-
   // --- Elements Parsers ---
 
   /// Returns a [Parser] that parses a sequence of elements.<br/>
@@ -1130,6 +1105,7 @@ pub mod prelude {
   ///
   /// ```rust
   /// use std::iter::FromIterator;
+  /// use oni_comb_parser_rs::extension::parser::*;
   /// use oni_comb_parser_rs::prelude::*;
   ///
   /// let text: &str = "abc";
@@ -1148,8 +1124,6 @@ pub mod prelude {
     'b: 'a, {
     ParsersImpl::seq(seq)
   }
-
-
 
   /// Returns a [Parser] that parses a string.<br/>
   /// 文字列を解析する[Parser]を返す。
@@ -1177,8 +1151,6 @@ pub mod prelude {
     'b: 'a, {
     ParsersImpl::tag(tag)
   }
-
-
 
   /// Returns a [Parser] that parses a string. However, it is not case-sensitive.<br/>
   /// 文字列を解析する[Parser]を返す。ただし大文字小文字を区別しない。
@@ -1477,8 +1449,6 @@ pub mod prelude {
     ParsersImpl::surround(lp, parser, rp)
   }
 
-
-
   /// Returns a [Parser] that lazily evaluates the specified [Parser].<br/>
   /// 指定した[Parser]を遅延評価する[Parser]を返す。
   ///
@@ -1510,8 +1480,6 @@ pub mod prelude {
     A: Clone + Debug + 'a, {
     ParsersImpl::lazy(f)
   }
-
-
 }
 
 #[cfg(test)]
@@ -1521,7 +1489,10 @@ mod tests {
 
   use crate::core::{ParserFunctor, ParserMonad, ParserRunner};
 
-  use crate::extension::parser::{CollectParser, ConversionParser, DiscardParser, LoggingParser, OffsetParser, OperatorParser, PeekParser, RepeatParser};
+  use crate::extension::parser::{
+    CollectParser, ConversionParser, DiscardParser, LoggingParser, OffsetParser, OperatorParser, PeekParser,
+    RepeatParser,
+  };
 
   use super::prelude::*;
 
@@ -1922,9 +1893,7 @@ mod tests {
 
     let result = p.parse_as_result(b"ab").unwrap();
     log::debug!("result = {:?}", result);
-    //  let (a, b) = result;
-    //  assert_eq!(a, pv1);
-    //  assert_eq!(b, pv2);
+    assert_eq!(result, 1);
   }
 
   #[test]

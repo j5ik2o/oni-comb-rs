@@ -7,7 +7,8 @@ impl CollectParsers for ParsersImpl {
   fn collect<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, &'a [I]>
   where
     A: 'a, {
-    Parser::new(move |parse_state| match parser.run(parse_state) {
+    let method = parser.method.clone();
+    Parser::new(move |parse_state| match method(parse_state) {
       ParseResult::Success { length, .. } => {
         let slice = parse_state.slice_with_len(length);
         ParseResult::successful(slice, length)

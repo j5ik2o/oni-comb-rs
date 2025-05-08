@@ -1,6 +1,6 @@
 use crate::core::{Parser, Parsers, StaticParser, StaticParsers};
-use std::fmt::Debug;
 use crate::extension::parser::CacheParser;
+use std::fmt::Debug;
 
 pub trait CacheParsers: Parsers {
   fn cache<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, A>

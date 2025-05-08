@@ -1,8 +1,8 @@
 use crate::core::{CommittedStatus, Element, ParseError, ParseResult, StaticParser, StaticParsers};
+use crate::prelude::Set;
 use std::char;
 use std::fmt::{Debug, Display};
 use std::str;
-use crate::prelude::Set;
 
 pub mod elements_parsers_impl;
 pub mod logging_parsers_impl;
@@ -189,7 +189,7 @@ impl StaticParsersImpl {
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
-      if offset < input.len(){
+      if offset < input.len() {
         if let Some(v) = input.get(0) {
           return ParseResult::successful(v, 1);
         }
@@ -204,11 +204,11 @@ impl StaticParsersImpl {
   /// 任意の要素を解析するStaticParserを返します。
   pub fn elm_any<'a, I>() -> StaticParser<'a, I, I>
   where
-    I: Element + 'a,{
+    I: Element + 'a, {
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();
-      if offset < input.len(){
+      if offset < input.len() {
         if let Some(v) = input.get(0) {
           return ParseResult::successful(v.clone(), 1);
         }
@@ -220,7 +220,6 @@ impl StaticParsersImpl {
     })
   }
 
-
   /// 指定した要素を解析するStaticParserを返します。(参照版)
   pub fn elm_ref<'a, I>(element: I) -> StaticParser<'a, I, &'a I>
   where
@@ -231,7 +230,7 @@ impl StaticParsersImpl {
   /// 指定した要素を解析するStaticParserを返します。
   pub fn elm<'a, I>(element: I) -> StaticParser<'a, I, I>
   where
-    I: Element + 'a,{
+    I: Element + 'a, {
     todo!()
   }
 
@@ -247,14 +246,14 @@ impl StaticParsersImpl {
   pub fn elm_pred<'a, I, F>(f: F) -> StaticParser<'a, I, I>
   where
     F: Fn(&I) -> bool + 'a,
-    I:Element + 'a,{
+    I: Element + 'a, {
     todo!()
   }
 
   /// 16進数を解析するStaticParserを返します。(参照版)
   pub fn elm_hex_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + 'a,{
+    I: Element + 'a, {
     todo!()
   }
 
@@ -283,7 +282,7 @@ impl StaticParsersImpl {
   pub fn elm_ref_of<'a, I, S>(set: &'a S) -> StaticParser<'a, I, &'a I>
   where
     I: Element + 'a,
-    S: Set<I> + ?Sized + 'a,{
+    S: Set<I> + ?Sized + 'a, {
     todo!()
   }
 
@@ -291,7 +290,7 @@ impl StaticParsersImpl {
   pub fn elm_of<'a, I, S>(set: &'a S) -> StaticParser<'a, I, I>
   where
     I: Element + 'a,
-    S: Set<I> + ?Sized + 'a,{
+    S: Set<I> + ?Sized + 'a, {
     todo!()
   }
 
@@ -308,7 +307,6 @@ impl StaticParsersImpl {
     I: Element + 'a, {
     todo!()
   }
-
 
   /// 指定した範囲の要素を解析するStaticParserを返します。(参照版)
   pub fn elm_ref_from_until<'a, I>(start: I, end: I) -> StaticParser<'a, I, &'a I>
@@ -327,8 +325,8 @@ impl StaticParsersImpl {
   /// 指定した要素のいずれでもない要素を解析するStaticParserを返します。(参照版)
   pub fn none_ref_of<'a, I, S>(set: &'a S) -> StaticParser<'a, I, &'a I>
   where
-    I:Element + 'a,
-  S: Set<I> + ?Sized + 'a {
+    I: Element + 'a,
+    S: Set<I> + ?Sized + 'a, {
     todo!()
   }
 
@@ -336,8 +334,7 @@ impl StaticParsersImpl {
   pub fn none_of<'a, I, S>(set: &'a S) -> StaticParser<'a, I, I>
   where
     I: Element + 'a,
-    S: Set<I> + ?Sized + 'a
-  {
+    S: Set<I> + ?Sized + 'a, {
     todo!()
   }
 
@@ -372,14 +369,14 @@ impl StaticParsersImpl {
   /// アルファベットを解析するStaticParserを返します。(参照版)
   pub fn elm_alpha_ref<'a, I>() -> StaticParser<'a, I, &'a I>
   where
-    I: Element + 'a,{
+    I: Element + 'a, {
     todo!()
   }
 
   /// アルファベットを解析するStaticParserを返します。
   pub fn elm_alpha<'a, I>() -> StaticParser<'a, I, I>
   where
-    I: Element + 'a,{
+    I: Element + 'a, {
     todo!()
   }
 
@@ -396,7 +393,6 @@ impl StaticParsersImpl {
     I: Element + PartialEq + Debug + Clone + 'a, {
     todo!()
   }
-
 
   /// 数字を解析するStaticParserを返します。(参照版)
   pub fn elm_digit_ref<'a, I>() -> StaticParser<'a, I, &'a I>
@@ -481,7 +477,7 @@ impl StaticParsersImpl {
   pub fn take_while_n_m<'a, I, F>(n: usize, m: usize, f: F) -> StaticParser<'a, I, &'a [I]>
   where
     F: Fn(&I) -> bool + 'a,
-    I:Element + 'a,{
+    I: Element + 'a, {
     StaticParser::new(move |parse_state| {
       let input: &[I] = parse_state.input();
       let offset = parse_state.next_offset();

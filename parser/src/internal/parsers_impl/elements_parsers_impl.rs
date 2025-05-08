@@ -4,6 +4,7 @@ use crate::internal::ParsersImpl;
 use regex::Regex;
 use std::fmt::Debug;
 use std::iter::FromIterator;
+use crate::StaticParser;
 
 impl ElementsParsers for ParsersImpl {
   fn seq<'a, 'b, I>(seq: &'b [I]) -> Self::P<'a, I, Vec<I>>

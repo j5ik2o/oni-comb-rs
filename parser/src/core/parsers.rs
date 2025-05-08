@@ -174,8 +174,8 @@ impl Parsers for ParserParsers {
         Self::successful(a)
       } else {
         Self::failed(
-          crate::core::ParseError::of_custom(0, None, "Filter predicate failed".to_string()),
-          crate::core::CommittedStatus::Uncommitted,
+          ParseError::of_custom(0, None, "Filter predicate failed".to_string()),
+          CommittedStatus::Uncommitted,
         )
       }
     })
