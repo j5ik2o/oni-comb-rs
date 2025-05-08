@@ -8,7 +8,7 @@
 
 use std::ops::Add;
 
-use crate::core::StaticParser;
+use crate::core::{ParseResult, StaticParser};
 
 impl<'a, I, A, B> Add<StaticParser<'a, I, B>> for StaticParser<'a, I, A>
 where
@@ -23,26 +23,26 @@ where
     let rhs_method = rhs.method.clone();
 
     StaticParser::new(move |state| match lhs_method(state) {
-      crate::core::ParseResult::Success {
+      ParseResult::Success {
         value: lhs_value,
         length: lhs_length,
       } => {
         let next_state = state.add_offset(lhs_length);
         match rhs_method(&next_state) {
-          crate::core::ParseResult::Success {
+          ParseResult::Success {
             value: rhs_value,
             length: rhs_length,
-          } => crate::core::ParseResult::successful((lhs_value, rhs_value), lhs_length + rhs_length),
-          crate::core::ParseResult::Failure {
+          } => ParseResult::successful((lhs_value, rhs_value), lhs_length + rhs_length),
+          ParseResult::Failure {
             error,
             committed_status,
-          } => crate::core::ParseResult::failed(error, committed_status),
+          } => ParseResult::failed(error, committed_status),
         }
       }
-      crate::core::ParseResult::Failure {
+      ParseResult::Failure {
         error,
         committed_status,
-      } => crate::core::ParseResult::failed(error, committed_status),
+      } => ParseResult::failed(error, committed_status),
     })
   }
 }

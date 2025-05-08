@@ -8,7 +8,7 @@ use std::str;
 impl StaticElementsParsers for StaticParsersImpl {
   fn seq<'a, 'b, I>(tag: &'b [I]) -> Self::P<'a, I, Vec<I>>
   where
-    I: crate::core::Element + PartialEq + Debug + Clone + 'a + 'static,
+    I: Element + PartialEq + Debug + Clone + 'a + 'static,
     'b: 'a, {
     let tag_len = tag.len();
     let tag = tag.to_vec();
