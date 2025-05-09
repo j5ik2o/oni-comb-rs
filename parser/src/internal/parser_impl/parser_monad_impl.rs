@@ -1,12 +1,12 @@
-use crate::core::{Parser, ParserFilter, ParserMonad, Parsers};
+use crate::core::{Element, Parser, ParserFilter, ParserMonad, Parsers};
 use crate::internal::ParsersImpl;
 
 impl<'a, I, A> ParserFilter<'a> for Parser<'a, I, A> {
   fn with_filter<F>(self, f: F) -> Self::P<'a, Self::Input, Self::Output>
   where
-    F: Fn(&Self::Output) -> bool + 'a + Clone,
-    Self::Input: 'a + Clone,
-    Self::Output: 'a + Clone, {
+    F: Fn(&Self::Output) -> bool + 'a,
+    Self::Input: Element,
+    Self::Output: Clone + 'a, {
     ParsersImpl::filter(self, move |e| f(e))
   }
 }

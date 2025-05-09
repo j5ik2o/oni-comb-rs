@@ -167,10 +167,6 @@ fn string_config_value<'a>() -> Parser<'a, u8, ConfigValue> {
   string().map(ConfigValue::String)
 }
 
-fn string_config_value2<'a>() -> Parser<'a, u8, ConfigValue> {
-  string().map(ConfigValue::String)
-}
-
 fn array_left_bracket<'a>() -> Parser<'a, u8, &'a u8> {
   elm_ref(b'[').surround(space_or_comment(), space_or_comment())
 }

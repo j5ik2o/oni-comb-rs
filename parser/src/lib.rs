@@ -55,6 +55,12 @@ pub mod prelude {
     ParsersImpl::empty()
   }
 
+  pub fn begin<'a, I>() -> Parser<'a, I, ()>
+  where
+    I: Debug + Display + 'a, {
+    ParsersImpl::begin()
+  }
+
   /// Returns a [Parser] representing the termination.
   ///
   /// Returns `Ok(())` if the termination is parsed successfully, `Err(Mismatch)` if the parsing fails.
