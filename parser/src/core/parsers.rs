@@ -1,6 +1,7 @@
 use crate::core::ParserFunctor;
 use crate::core::ParserMonad;
 use crate::core::{CommittedStatus, ParseError, Parser};
+use crate::prelude::Element;
 
 /// パーサー関数を提供するトレイト
 pub trait Parsers {
@@ -40,9 +41,9 @@ pub trait Parsers {
 
   fn filter<'a, I, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
   where
-    F: Fn(&A) -> bool + 'a + Clone,
-    I: 'a + Clone,
-    A: 'a + Clone;
+    F: Fn(&A) -> bool + 'a,
+    I: Element,
+    A: Clone + 'a;
 
   fn flat_map<'a, I, A, B, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, B>
   where
@@ -111,9 +112,9 @@ impl Parsers for ParserParsers {
 
   fn filter<'a, I, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
   where
-    F: Fn(&A) -> bool + 'a + Clone,
-    I: 'a + Clone,
-    A: 'a + Clone, {
+    F: Fn(&A) -> bool + 'a,
+    I: Element,
+    A: Clone + 'a, {
     // 直接実装を使用
     Self::flat_map(parser, move |a| {
       if f(&a) {

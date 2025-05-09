@@ -1,4 +1,4 @@
-use crate::core::{CommittedStatus, ParseError, ParseResult, ParseState, Parser, ParserRunner, Parsers};
+use crate::core::{CommittedStatus, Element, ParseError, ParseResult, ParseState, Parser, ParserRunner, Parsers};
 
 pub struct ParsersImpl;
 
@@ -66,9 +66,9 @@ impl Parsers for ParsersImpl {
 
   fn filter<'a, I, A, F>(parser: Self::P<'a, I, A>, f: F) -> Self::P<'a, I, A>
   where
-    F: Fn(&A) -> bool + 'a + Clone,
-    I: 'a + Clone,
-    A: 'a + Clone, {
+    F: Fn(&A) -> bool + 'a,
+    I: Element,
+    A: 'a, {
     Parser::new(move |state| match parser.run(state) {
       ParseResult::Success { value, length } => {
         if f(&value) {
