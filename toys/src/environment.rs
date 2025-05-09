@@ -9,7 +9,7 @@ pub struct Environment {
 }
 
 impl Environment {
-  pub fn as_bindings_mut(&mut self) -> &HashMap<String, Value> {
+  pub fn as_bindings_mut(&mut self) -> &mut HashMap<String, Value> {
     &mut self.bindings
   }
 

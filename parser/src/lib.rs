@@ -54,6 +54,12 @@ pub mod prelude {
   pub fn empty<'a, I>() -> Parser<'a, I, ()> {
     ParsersImpl::empty()
   }
+  
+  pub fn begin<'a, I>() -> Parser<'a, I, ()>
+  where
+      I: Debug + Display + 'a, {
+    ParsersImpl::begin()
+  }
 
   /// Returns a [Parser] representing the termination.
   ///
