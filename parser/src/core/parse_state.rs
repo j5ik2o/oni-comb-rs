@@ -1,7 +1,18 @@
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub struct ParseState<'a, I> {
     original: &'a [I],
     offset: usize,
+}
+
+impl<'a, I> Copy for ParseState<'a, I> {}
+
+impl<'a, I> Clone for ParseState<'a, I> {
+    fn clone(&self) -> Self {
+        Self {
+            original: self.original,
+            offset: self.offset,
+        }
+    }
 }
 
 impl<'a, I> ParseState<'a, I> {

@@ -138,6 +138,65 @@ impl<'a, I, A> ParseResult<'a, I, A> {
         }
     }
 
+    pub fn flat_map<B, F>(self, f: F) -> ParseResult<'a, I, B>
+    where
+        F: FnOnce(A, usize, Option<ParseState<'a, I>>) -> ParseResult<'a, I, B>,
+    {
+        match self {
+            ParseResult::Success {
+                value,
+                length,
+                state,
+            } => {
+                let consumed = length > 0;
+                let fallback_state = state;
+                match f(value, length, state) {
+                    ParseResult::Success {
+                        value,
+                        length: next_length,
+                        state: next_state,
+                    } => {
+                        let combined_length = length + next_length;
+                        let combined_state = match (next_state, fallback_state) {
+                            (Some(state), _) => Some(state),
+                            (None, Some(state)) if next_length > 0 => {
+                                Some(state.advance_by(next_length))
+                            }
+                            (None, Some(state)) => Some(state),
+                            (None, None) => None,
+                        };
+                        ParseResult::Success {
+                            value,
+                            length: combined_length,
+                            state: combined_state,
+                        }
+                    }
+                    ParseResult::Failure {
+                        error,
+                        committed_status,
+                    } => ParseResult::Failure {
+                        error,
+                        committed_status: committed_status.or(CommittedStatus::from(consumed)),
+                    },
+                }
+            }
+            ParseResult::Failure {
+                error,
+                committed_status,
+            } => ParseResult::Failure {
+                error,
+                committed_status,
+            },
+        }
+    }
+
+    pub fn and_then<B, F>(self, f: F) -> ParseResult<'a, I, B>
+    where
+        F: FnOnce(A, usize, Option<ParseState<'a, I>>) -> ParseResult<'a, I, B>,
+    {
+        self.flat_map(f)
+    }
+
     pub fn advance_success(self, n: usize) -> Self {
         match self {
             ParseResult::Success {
@@ -162,5 +221,88 @@ impl<'a, I, A> ParseResult<'a, I, A> {
             },
             failure => failure,
         }
+    }
+
+    pub fn state(&self) -> Option<ParseState<'a, I>> {
+        match self {
+            ParseResult::Success { state, .. } => *state,
+            _ => None,
+        }
+    }
+
+    pub fn length(&self) -> Option<usize> {
+        match self {
+            ParseResult::Success { length, .. } => Some(*length),
+            _ => None,
+        }
+    }
+
+    pub fn rest(&self) -> Option<&'a [I]> {
+        self.state().map(|state| state.input())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn flat_map_combines_length_and_state() {
+        let input = b"abcd";
+        let base_state = ParseState::new(input, 0);
+        let next_state = base_state.advance_by(2);
+        let result = ParseResult::successful_with_state(next_state, 41, 2);
+
+        let combined = result.flat_map(|value, length, state| {
+            assert_eq!(value, 41);
+            assert_eq!(length, 2);
+            let state = state.expect("state must be present");
+            assert_eq!(state.current_offset(), 2);
+            let final_state = state.advance_by(1);
+            ParseResult::successful_with_state(final_state, value + 1, 1)
+        });
+
+        match combined {
+            ParseResult::Success {
+                value,
+                length,
+                state,
+            } => {
+                assert_eq!(value, 42);
+                assert_eq!(length, 3);
+                assert_eq!(state.expect("state").current_offset(), 3);
+            }
+            _ => panic!("expected success"),
+        }
+    }
+
+    #[test]
+    fn flat_map_failure_marks_commit_when_consumed() {
+        let input = b"xyz";
+        let initial = ParseState::new(input, 0);
+        let consumed = initial.advance_by(1);
+        let result = ParseResult::successful_with_state(consumed, (), 1);
+
+        let failure: ParseResult<'_, u8, ()> = result.flat_map(|_, _, _| {
+            ParseResult::failed(
+                ParseError::of_custom(1, Some(&input[1..]), "failure"),
+                CommittedStatus::Uncommitted,
+            )
+        });
+
+        match failure {
+            ParseResult::Failure {
+                committed_status, ..
+            } => assert!(committed_status.is_committed()),
+            _ => panic!("expected failure"),
+        }
+    }
+
+    #[test]
+    fn rest_returns_remaining_input() {
+        let input = b"hello";
+        let state = ParseState::new(input, 0).advance_by(2);
+        let result = ParseResult::successful_with_state(state, (), 2);
+        assert_eq!(result.rest(), Some(&input[2..]));
     }
 }
