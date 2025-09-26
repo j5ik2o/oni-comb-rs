@@ -134,6 +134,57 @@ where
     parser.attempt()
 }
 
+pub fn or<'a, I, A>(left: Parser<'a, I, A>, right: Parser<'a, I, A>) -> Parser<'a, I, A>
+where
+    I: 'a,
+    A: 'a,
+{
+    left.or(right)
+}
+
+pub fn or_else<'a, I, A, F>(parser: Parser<'a, I, A>, fallback: F) -> Parser<'a, I, A>
+where
+    F: Fn() -> Parser<'a, I, A> + 'a,
+    I: 'a,
+    A: 'a,
+{
+    parser.or_else(fallback)
+}
+
+pub fn optional<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, Option<A>>
+where
+    I: 'a,
+    A: 'a,
+{
+    parser.optional()
+}
+
+pub fn unwrap_or<'a, I, A>(parser: Parser<'a, I, A>, default: A) -> Parser<'a, I, A>
+where
+    I: 'a,
+    A: Clone + 'a,
+{
+    parser.unwrap_or(default)
+}
+
+pub fn unwrap_or_else<'a, I, A, F>(parser: Parser<'a, I, A>, f: F) -> Parser<'a, I, A>
+where
+    F: Fn() -> A + 'a,
+    I: 'a,
+    A: 'a,
+{
+    parser.unwrap_or_else(f)
+}
+
+pub fn choice<'a, I, A, It>(parsers: It) -> Parser<'a, I, A>
+where
+    I: 'a,
+    A: 'a,
+    It: IntoIterator<Item = Parser<'a, I, A>>,
+{
+    Parser::or_list(parsers)
+}
+
 pub fn exists<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, bool>
 where
     I: 'a,
@@ -172,6 +223,27 @@ where
             ),
             ParseResult::Failure { .. } => {
                 ParseResult::successful_with_state(original_state, (), 0)
+            }
+        }
+    })
+}
+
+pub fn peek<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, A>
+where
+    I: 'a,
+    A: 'a,
+{
+    let probe = parser.clone();
+    Parser::new(move |input, state| {
+        let original_state = state;
+        match probe.run(input, state) {
+            ParseResult::Success { value, .. } => ParseResult::Success {
+                value,
+                length: 0,
+                state: Some(original_state),
+            },
+            ParseResult::Failure { error, .. } => {
+                ParseResult::failed(error, CommittedStatus::Uncommitted)
             }
         }
     })
@@ -228,6 +300,241 @@ where
     parser.many1()
 }
 
+pub fn skip_many0<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, ()>
+where
+    I: 'a,
+    A: 'a,
+{
+    parser.skip_many0()
+}
+
+pub fn skip_many1<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, ()>
+where
+    I: 'a,
+    A: 'a,
+{
+    parser.skip_many1()
+}
+
+pub fn chain_left1<'a, I, A, OpFn>(
+    element: Parser<'a, I, A>,
+    operator: Parser<'a, I, OpFn>,
+) -> Parser<'a, I, A>
+where
+    I: 'a,
+    A: 'a,
+    OpFn: Fn(A, A) -> A + 'a,
+{
+    let element_parser = element.clone();
+    let operator_parser = operator.clone();
+
+    Parser::new(move |input, state| match element_parser.run(input, state) {
+        ParseResult::Success {
+            mut value,
+            length,
+            state: Some(mut current_state),
+        } => {
+            let mut total_length = length;
+
+            loop {
+                let operator_start_state = current_state;
+                match operator_parser.run(input, current_state) {
+                    ParseResult::Success {
+                        value: combine,
+                        length: op_length,
+                        state: Some(next_state),
+                    } => {
+                        if op_length == 0
+                            && next_state.current_offset() == operator_start_state.current_offset()
+                        {
+                            current_state = next_state;
+                            break;
+                        }
+
+                        total_length += op_length;
+
+                        match element_parser.run(input, next_state) {
+                            ParseResult::Success {
+                                value: rhs,
+                                length: rhs_length,
+                                state: Some(final_state),
+                            } => {
+                                if rhs_length == 0
+                                    && final_state.current_offset() == next_state.current_offset()
+                                {
+                                    return ParseResult::failed_with_uncommitted(
+                                        ParseError::of_custom(
+                                            next_state.current_offset(),
+                                            Some(next_state.input()),
+                                            "chain_left1 element parser did not advance state",
+                                        ),
+                                    );
+                                }
+
+                                total_length += rhs_length;
+                                current_state = final_state;
+                                value = combine(value, rhs);
+                            }
+                            ParseResult::Success { state: None, .. } => {
+                                return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                                    next_state.current_offset(),
+                                    Some(next_state.input()),
+                                    "chain_left1 element parser did not return state",
+                                ))
+                            }
+                            ParseResult::Failure {
+                                error,
+                                committed_status,
+                            } => {
+                                return ParseResult::Failure {
+                                    error,
+                                    committed_status: committed_status
+                                        .or(CommittedStatus::Committed),
+                                };
+                            }
+                        }
+                    }
+                    ParseResult::Success { state: None, .. } => {
+                        return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                            operator_start_state.current_offset(),
+                            Some(operator_start_state.input()),
+                            "chain_left1 operator parser did not return state",
+                        ))
+                    }
+                    ParseResult::Failure {
+                        error,
+                        committed_status,
+                    } => {
+                        if committed_status.is_committed() {
+                            return ParseResult::Failure {
+                                error,
+                                committed_status,
+                            };
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            ParseResult::Success {
+                value,
+                length: total_length,
+                state: Some(current_state),
+            }
+        }
+        ParseResult::Success { state: None, .. } => {
+            ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(state.input()),
+                "chain_left1 element parser did not return state",
+            ))
+        }
+        failure => failure,
+    })
+}
+
+pub fn chain_left0<'a, I, A, OpFn>(
+    element: Parser<'a, I, A>,
+    operator: Parser<'a, I, OpFn>,
+) -> Parser<'a, I, Option<A>>
+where
+    I: 'a,
+    A: 'a,
+    OpFn: Fn(A, A) -> A + 'a,
+{
+    chain_left1(element, operator).optional()
+}
+
+pub fn chain_right1<'a, I, A, OpFn>(
+    element: Parser<'a, I, A>,
+    operator: Parser<'a, I, OpFn>,
+) -> Parser<'a, I, A>
+where
+    I: 'a,
+    A: Clone + 'a,
+    OpFn: Fn(A, A) -> A + 'a,
+{
+    let element_parser = element.clone();
+    let operator_parser = operator.clone();
+
+    Parser::new(move |input, state| {
+        chain_right1_internal(input, &element_parser, &operator_parser, state)
+    })
+}
+
+pub fn chain_right0<'a, I, A, OpFn>(
+    element: Parser<'a, I, A>,
+    operator: Parser<'a, I, OpFn>,
+) -> Parser<'a, I, Option<A>>
+where
+    I: 'a,
+    A: Clone + 'a,
+    OpFn: Fn(A, A) -> A + 'a,
+{
+    chain_right1(element, operator).optional()
+}
+
+pub fn elm<'a, I>(expected: I) -> Parser<'a, I, I>
+where
+    I: PartialEq + Copy + Debug + 'a,
+{
+    Parser::new(move |_: &'a [I], state: ParseState<'a, I>| {
+        let slice = state.input();
+        match slice.first().copied() {
+            Some(found) if found == expected => {
+                let next_state = state.advance_by(1);
+                ParseResult::successful_with_state(next_state, found, 1)
+            }
+            Some(found) => ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(slice),
+                format!("elm: expected {:?} but found {:?}", expected, found),
+            )),
+            None => ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                None,
+                format!("elm: expected {:?} but reached end of input", expected),
+            )),
+        }
+    })
+}
+
+pub fn seq<'a, I>(expected: Vec<I>) -> Parser<'a, I, &'a [I]>
+where
+    I: PartialEq + Debug + 'a,
+{
+    Parser::new(move |_: &'a [I], state: ParseState<'a, I>| {
+        let expected_slice = expected.as_slice();
+        let slice = state.input();
+        let expected_len = expected_slice.len();
+
+        if slice.len() < expected_len {
+            return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(slice),
+                format!(
+                    "seq: expected sequence {:?} but input shorter ({} < {})",
+                    expected_slice,
+                    slice.len(),
+                    expected_len,
+                ),
+            ));
+        }
+
+        if slice.starts_with(expected_slice) {
+            let next_state = state.advance_by(expected_len);
+            ParseResult::successful_with_state(next_state, &slice[..expected_len], expected_len)
+        } else {
+            ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(slice),
+                format!("seq: expected prefix {:?}", expected_slice),
+            ))
+        }
+    })
+}
+
 pub fn byte<'a>(value: u8) -> Parser<'a, u8, u8> {
     Parser::new(move |_: &'a [u8], state: ParseState<'a, u8>| {
         let slice = state.input();
@@ -250,7 +557,36 @@ pub fn byte<'a>(value: u8) -> Parser<'a, u8, u8> {
     })
 }
 
-pub fn take_while1<'a, F>(predicate: F) -> Parser<'a, u8, &'a [u8]>
+pub fn one_of<'a>(candidates: Vec<u8>) -> Parser<'a, u8, u8> {
+    Parser::new(move |_: &'a [u8], state: ParseState<'a, u8>| {
+        let slice = state.input();
+        match slice.first().copied() {
+            Some(found) => {
+                if candidates.contains(&found) {
+                    let next_state = state.advance_by(1);
+                    ParseResult::successful_with_state(next_state, found, 1)
+                } else {
+                    ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                        state.current_offset(),
+                        Some(slice),
+                        format!("one_of: byte {} not in set", found),
+                    ))
+                }
+            }
+            None => ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                None,
+                "one_of: reached end of input",
+            )),
+        }
+    })
+}
+
+fn take_while_internal<'a, F>(
+    predicate: F,
+    require_one: bool,
+    label: &'static str,
+) -> Parser<'a, u8, &'a [u8]>
 where
     F: Fn(u8) -> bool + 'a,
 {
@@ -261,16 +597,319 @@ where
             len += 1;
         }
 
-        if len == 0 {
+        if require_one && len == 0 {
             return ParseResult::failed_with_uncommitted(ParseError::of_custom(
                 state.current_offset(),
                 Some(slice),
-                "take_while1: predicate rejected at start",
+                format!("{}: predicate rejected at start", label),
             ));
         }
 
         let next_state = state.advance_by(len);
         ParseResult::successful_with_state(next_state, &slice[..len], len)
+    })
+}
+
+pub fn take<'a, I>(count: usize) -> Parser<'a, I, &'a [I]>
+where
+    I: 'a,
+{
+    Parser::new(move |_: &'a [I], state: ParseState<'a, I>| {
+        let slice = state.input();
+        if slice.len() < count {
+            return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(slice),
+                format!(
+                    "take: expected at least {} elements but found {}",
+                    count,
+                    slice.len(),
+                ),
+            ));
+        }
+
+        let next_state = state.advance_by(count);
+        ParseResult::successful_with_state(next_state, &slice[..count], count)
+    })
+}
+
+pub fn take_while<'a, F>(predicate: F) -> Parser<'a, u8, &'a [u8]>
+where
+    F: Fn(u8) -> bool + 'a,
+{
+    take_while_internal(predicate, false, "take_while")
+}
+
+pub fn take_while0<'a, F>(predicate: F) -> Parser<'a, u8, &'a [u8]>
+where
+    F: Fn(u8) -> bool + 'a,
+{
+    take_while_internal(predicate, false, "take_while0")
+}
+
+pub fn take_while1<'a, F>(predicate: F) -> Parser<'a, u8, &'a [u8]>
+where
+    F: Fn(u8) -> bool + 'a,
+{
+    take_while_internal(predicate, true, "take_while1")
+}
+
+fn take_until_internal<'a>(
+    target: Vec<u8>,
+    require_match: bool,
+    label: &'static str,
+) -> Parser<'a, u8, &'a [u8]> {
+    Parser::new(move |_: &'a [u8], state: ParseState<'a, u8>| {
+        let slice = state.input();
+        let target_len = target.len();
+
+        if target_len == 0 {
+            return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(slice),
+                format!("{}: target pattern must not be empty", label),
+            ));
+        }
+
+        if slice.len() < target_len {
+            return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(slice),
+                format!(
+                    "{}: input shorter than target ({} < {})",
+                    label,
+                    slice.len(),
+                    target_len,
+                ),
+            ));
+        }
+
+        let mut index = 0usize;
+        while index + target_len <= slice.len() {
+            if slice[index..index + target_len] == target[..] {
+                if require_match && index == 0 {
+                    return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                        state.current_offset(),
+                        Some(slice),
+                        format!("{}: found target at start", label),
+                    ));
+                }
+
+                let next_state = state.advance_by(index);
+                return ParseResult::successful_with_state(next_state, &slice[..index], index);
+            }
+            index += 1;
+        }
+
+        ParseResult::failed_with_uncommitted(ParseError::of_custom(
+            state.current_offset(),
+            Some(slice),
+            format!("{}: target sequence not found", label),
+        ))
+    })
+}
+
+pub fn take_until<'a>(target: Vec<u8>) -> Parser<'a, u8, &'a [u8]> {
+    take_until_internal(target, false, "take_until")
+}
+
+pub fn take_until1<'a>(target: Vec<u8>) -> Parser<'a, u8, &'a [u8]> {
+    take_until_internal(target, true, "take_until1")
+}
+
+pub fn many_till<'a, I, A, B>(
+    parser: Parser<'a, I, A>,
+    end: Parser<'a, I, B>,
+) -> Parser<'a, I, (Vec<A>, B)>
+where
+    I: 'a,
+    A: 'a,
+    B: 'a,
+{
+    parser.many_till(end)
+}
+
+pub fn skip_till<'a, I, A, B>(parser: Parser<'a, I, A>, end: Parser<'a, I, B>) -> Parser<'a, I, B>
+where
+    I: 'a,
+    A: 'a,
+    B: 'a,
+{
+    parser.skip_till(end)
+}
+
+pub fn repeat<'a, I, A>(parser: Parser<'a, I, A>, count: usize) -> Parser<'a, I, Vec<A>>
+where
+    I: 'a,
+    A: 'a,
+{
+    let element_parser = parser.clone();
+    Parser::new(move |input, state| {
+        if count == 0 {
+            return ParseResult::Success {
+                value: Vec::new(),
+                length: 0,
+                state: Some(state),
+            };
+        }
+
+        let mut items = Vec::with_capacity(count);
+        let mut total_length = 0usize;
+        let mut current_state = state;
+
+        for _ in 0..count {
+            match element_parser.run(input, current_state) {
+                ParseResult::Success {
+                    value,
+                    length,
+                    state: Some(next_state),
+                } => {
+                    if length == 0 && next_state.current_offset() == current_state.current_offset()
+                    {
+                        return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                            current_state.current_offset(),
+                            Some(current_state.input()),
+                            "repeat element parser did not advance state",
+                        ));
+                    }
+                    total_length += length;
+                    current_state = next_state;
+                    items.push(value);
+                }
+                ParseResult::Success { state: None, .. } => {
+                    return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                        current_state.current_offset(),
+                        Some(current_state.input()),
+                        "repeat element parser did not return state",
+                    ))
+                }
+                ParseResult::Failure {
+                    error,
+                    committed_status,
+                } => {
+                    return ParseResult::Failure {
+                        error,
+                        committed_status,
+                    };
+                }
+            }
+        }
+
+        ParseResult::Success {
+            value: items,
+            length: total_length,
+            state: Some(current_state),
+        }
+    })
+}
+
+pub fn repeat_sep<'a, I, A, B>(
+    parser: Parser<'a, I, A>,
+    separator: Parser<'a, I, B>,
+    count: usize,
+) -> Parser<'a, I, Vec<A>>
+where
+    I: 'a,
+    A: 'a,
+    B: 'a,
+{
+    let element_parser = parser.clone();
+    let separator_parser = separator.clone();
+
+    Parser::new(move |input, state| {
+        if count == 0 {
+            return ParseResult::Success {
+                value: Vec::new(),
+                length: 0,
+                state: Some(state),
+            };
+        }
+
+        let mut values = Vec::with_capacity(count);
+        let mut total_length = 0usize;
+        let mut current_state = state;
+
+        for index in 0..count {
+            match element_parser.run(input, current_state) {
+                ParseResult::Success {
+                    value,
+                    length,
+                    state: Some(next_state),
+                } => {
+                    if length == 0 && next_state.current_offset() == current_state.current_offset()
+                    {
+                        return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                            current_state.current_offset(),
+                            Some(current_state.input()),
+                            "repeat_sep element parser did not advance state",
+                        ));
+                    }
+                    total_length += length;
+                    current_state = next_state;
+                    values.push(value);
+                }
+                ParseResult::Success { state: None, .. } => {
+                    return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                        current_state.current_offset(),
+                        Some(current_state.input()),
+                        "repeat_sep element parser did not return state",
+                    ))
+                }
+                ParseResult::Failure {
+                    error,
+                    committed_status,
+                } => {
+                    return ParseResult::Failure {
+                        error,
+                        committed_status,
+                    };
+                }
+            }
+
+            if index + 1 < count {
+                match separator_parser.run(input, current_state) {
+                    ParseResult::Success {
+                        length,
+                        state: Some(next_state),
+                        ..
+                    } => {
+                        if length == 0
+                            && next_state.current_offset() == current_state.current_offset()
+                        {
+                            return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                                current_state.current_offset(),
+                                Some(current_state.input()),
+                                "repeat_sep separator did not advance state",
+                            ));
+                        }
+                        total_length += length;
+                        current_state = next_state;
+                    }
+                    ParseResult::Success { state: None, .. } => {
+                        return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                            current_state.current_offset(),
+                            Some(current_state.input()),
+                            "repeat_sep separator did not return state",
+                        ))
+                    }
+                    ParseResult::Failure {
+                        error,
+                        committed_status,
+                    } => {
+                        return ParseResult::Failure {
+                            error,
+                            committed_status,
+                        };
+                    }
+                }
+            }
+        }
+
+        ParseResult::Success {
+            value: values,
+            length: total_length,
+            state: Some(current_state),
+        }
     })
 }
 
@@ -316,6 +955,107 @@ where
         let next_state = state.advance_by(len);
         ParseResult::successful_with_state(next_state, acc, len)
     })
+}
+
+fn chain_right1_internal<'a, I, A, OpFn>(
+    input: &'a [I],
+    element: &Parser<'a, I, A>,
+    operator: &Parser<'a, I, OpFn>,
+    state: ParseState<'a, I>,
+) -> ParseResult<'a, I, A>
+where
+    I: 'a,
+    A: Clone + 'a,
+    OpFn: Fn(A, A) -> A + 'a,
+{
+    match element.run(input, state) {
+        ParseResult::Success {
+            value,
+            length,
+            state: Some(next_state),
+        } => {
+            let mut total_length = length;
+
+            match operator.run(input, next_state) {
+                ParseResult::Success {
+                    value: combine,
+                    length: op_length,
+                    state: Some(op_state),
+                } => {
+                    if op_length == 0 && op_state.current_offset() == next_state.current_offset() {
+                        return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                            next_state.current_offset(),
+                            Some(next_state.input()),
+                            "chain_right1 operator did not advance state",
+                        ));
+                    }
+
+                    total_length += op_length;
+
+                    match chain_right1_internal(input, element, operator, op_state) {
+                        ParseResult::Success {
+                            value: rhs,
+                            length: rhs_length,
+                            state: Some(final_state),
+                        } => {
+                            total_length += rhs_length;
+                            ParseResult::Success {
+                                value: combine(value, rhs),
+                                length: total_length,
+                                state: Some(final_state),
+                            }
+                        }
+                        ParseResult::Success { state: None, .. } => {
+                            ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                                op_state.current_offset(),
+                                Some(op_state.input()),
+                                "chain_right1 recursive parser did not return state",
+                            ))
+                        }
+                        ParseResult::Failure {
+                            error,
+                            committed_status,
+                        } => ParseResult::Failure {
+                            error,
+                            committed_status: committed_status.or(CommittedStatus::Committed),
+                        },
+                    }
+                }
+                ParseResult::Success { state: None, .. } => {
+                    ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                        next_state.current_offset(),
+                        Some(next_state.input()),
+                        "chain_right1 operator did not return state",
+                    ))
+                }
+                ParseResult::Failure {
+                    error,
+                    committed_status,
+                } => {
+                    if committed_status.is_committed() {
+                        ParseResult::Failure {
+                            error,
+                            committed_status,
+                        }
+                    } else {
+                        ParseResult::Success {
+                            value,
+                            length: total_length,
+                            state: Some(next_state),
+                        }
+                    }
+                }
+            }
+        }
+        ParseResult::Success { state: None, .. } => {
+            ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(state.input()),
+                "chain_right1 element parser did not return state",
+            ))
+        }
+        failure => failure,
+    }
 }
 
 pub fn separated_list1<'a, I, A, B>(
@@ -436,6 +1176,132 @@ where
             value: values,
             length: total_length,
             state: Some(current_state),
+        }
+    })
+}
+
+pub fn separated_list0<'a, I, A, B>(
+    element: Parser<'a, I, A>,
+    separator: Parser<'a, I, B>,
+) -> Parser<'a, I, Vec<A>>
+where
+    I: 'a,
+    A: 'a,
+    B: 'a,
+{
+    let element_parser = element.clone();
+    let separator_parser = separator.clone();
+
+    Parser::new(move |input, state| match element_parser.run(input, state) {
+        ParseResult::Success {
+            value,
+            length,
+            state: Some(next_state),
+        } => {
+            let mut values = vec![value];
+            let mut total_length = length;
+            let mut current_state = next_state;
+
+            loop {
+                match separator_parser.run(input, current_state) {
+                    ParseResult::Success {
+                        length: sep_length,
+                        state: Some(after_sep),
+                        ..
+                    } => {
+                        if sep_length == 0
+                            && after_sep.current_offset() == current_state.current_offset()
+                        {
+                            break;
+                        }
+                        total_length += sep_length;
+                        current_state = after_sep;
+                    }
+                    ParseResult::Success { state: None, .. } => {
+                        return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                            current_state.current_offset(),
+                            Some(current_state.input()),
+                            "separated_list0 separator did not return state",
+                        ))
+                    }
+                    ParseResult::Failure {
+                        error,
+                        committed_status,
+                    } => {
+                        if committed_status.is_committed() {
+                            return ParseResult::Failure {
+                                error,
+                                committed_status,
+                            };
+                        } else {
+                            break;
+                        }
+                    }
+                }
+
+                match element_parser.run(input, current_state) {
+                    ParseResult::Success {
+                        value,
+                        length: elem_length,
+                        state: Some(next_state),
+                    } => {
+                        if elem_length == 0
+                            && next_state.current_offset() == current_state.current_offset()
+                        {
+                            break;
+                        }
+                        total_length += elem_length;
+                        current_state = next_state;
+                        values.push(value);
+                    }
+                    ParseResult::Success { state: None, .. } => {
+                        return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                            current_state.current_offset(),
+                            Some(current_state.input()),
+                            "separated_list0 element did not return state",
+                        ))
+                    }
+                    ParseResult::Failure {
+                        error,
+                        committed_status,
+                    } => {
+                        return ParseResult::Failure {
+                            error,
+                            committed_status,
+                        };
+                    }
+                }
+            }
+
+            ParseResult::Success {
+                value: values,
+                length: total_length,
+                state: Some(current_state),
+            }
+        }
+        ParseResult::Success { state: None, .. } => {
+            ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(state.input()),
+                "separated_list0 element parser did not return state",
+            ))
+        }
+        ParseResult::Failure {
+            error,
+            committed_status,
+        } => {
+            if committed_status.is_committed() {
+                ParseResult::Failure {
+                    error,
+                    committed_status,
+                }
+            } else {
+                ParseResult::Success {
+                    value: Vec::new(),
+                    length: 0,
+                    state: Some(state),
+                }
+            }
         }
     })
 }
