@@ -6,3 +6,12 @@ license = "MIT OR Apache-2.0"
 description = "Rebooted parser combinator library"
 
 [dependencies]
+
+[dev-dependencies]
+criterion = { version = "0.5", default-features = false }
+nom = "7"
+pom = "3"
+
+[[bench]]
+name = "compare"
+harness = false
