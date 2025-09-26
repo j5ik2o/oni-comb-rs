@@ -30,19 +30,24 @@
 ### 主要コンビネータ（概略）
 
 - `map(parser, f)` : パーサー成功時の値に関数 `f` を適用。
+- `map_err(parser, f)` : 失敗時の `ParseError` を変換。
 - `flat_map(parser, f)` : パーサー成功後に新たなパーサーへ遷移。
 - `filter(parser, predicate)` : 成功値に対して述語を適用し、偽なら失敗。
 - `attempt(parser)` : 成功しても入力をコミット扱いしない（バックトラック可能）。
 - `exists(parser)` / `not(parser)` : 述語的な補助パーサー。
 - `optional(parser)` : 非コミット失敗を `Option` に変換。
 - `unwrap_or(parser, default)` / `unwrap_or_else(parser, f)` : 非コミット失敗時に既定値を返す。
+- `optional(parser)` : 非コミット失敗を `Option` に変換。
+- `unwrap_or(parser, default)` / `unwrap_or_else(parser, f)` : 非コミット失敗時に既定値を返す。
+- `ok_or(parser, err)` / `ok_or_else(parser, f)` : `Option` を `Result` に変換。
+- `expect(parser, message)` : 非コミット失敗をメッセージ付きコミット失敗へ変換。
 - `chain_left1`, `chain_right1` : 左結合・右結合の演算子チェーンを構築。
 - `chain_left0`, `chain_right0` : 零回許容の演算子チェーンを構築し `Option` を返す。
 - `many0`, `many1`, `repeat`, `repeat_sep` : 繰り返し系。
 - `skip_many0`, `skip_many1` : 結果を破棄しつつ入力を消費。
 - `many_till(parser, end)` / `skip_till(parser, end)` : 終端条件付きの繰り返し。
 - `skip_left`, `skip_right`, `surround` : 前後のパーサーを評価しつつ中央の値のみ返す。
-- `peek(parser)` : 入力を消費せずに成功値を覗く。
+- `peek(parser)` / `peek_not(parser)` : 入力を消費せずに先読み。`peek_not` は対象が失敗したときのみ成功。
 - `cache(parser)` : 入力位置に対する結果をメモ化。
 - `log_map`, `name`, `expect` : ログやエラーメッセージ拡張。
 

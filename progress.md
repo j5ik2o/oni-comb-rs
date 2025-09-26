@@ -60,3 +60,23 @@
 - `prelude` の `optional`/`skip_many*`/`many_till`/`skip_till`/`chain_*0` をメソッド呼び出しベースへリファクタリングし、重複ロジックを削減。
 - メソッド版 API を検証するテスト (`parser_optional_method_behaves_like_function` など) を追加し、総テスト件数を35に更新。
 - `cargo fmt` / `cargo test` を実行し、新規 API の安定動作を確認。
+
+## 2025-09-27 00:33 JST
+- `Parser` に `map_err` / `expect` / `unwrap_or*` / `peek` / `or_list` を追加し、エラー処理や先読み、複数候補の結合をメソッドチェーンで記述可能に改善。
+- `prelude` をリファクタリングして新メソッドを再公開、`choice` を `IntoIterator` 対応に拡張。
+- `parser/tests/combinators.rs` に `map_err_changes_failure_message` や `parser_peek_method_preserves_input` などのテストを追加し、総テスト件数を42に拡充。
+- `README.md` と `API_SPEC.md` を更新し、新 API とコード例 (`Parser::or_list` ほか) をドキュメント化。
+- `cargo fmt` / `cargo test` を実行し、全テスト成功を確認。
+
+## 2025-09-27 00:51 JST
+- JSON ベンチマーク計画を PLAN.md / benchmarks/JSON_PLAN.md に整理し、測定方針と実装タスクを明文化。
+- `parser/benches/json/` に `oni_comb.rs` / `nom.rs` / `pom.rs` / `mod.rs` を追加し、各ライブラリで `serde_json::Value` を返すパーサーを実装。
+- `parser/benches/json.rs` でベンチマークハーネスを作成し、成功/失敗ケースで `oni-comb`・`nom`・`pom`・`serde_json` を比較できるように準備。
+- ベンチ入力データ（`heavy.json`・失敗ケース）を追加し、`README.md` / `API_SPEC.md` に JSON ベンチ案内を追記。
+- `cargo fmt` / `cargo test` を実行し、新規コードの整合性を確認。
+
+## 2025-09-27 01:34 JST
+- `nom` 版 JSON パーサーを既存サンプルベースで再構築し、`serde_json::Value` 変換を追加。ユニットテスト (`parser/tests/json_nom.rs`) で `heavy`/`simple`/`number` ケースを確認。
+- `pom` 実装を文字ベースの combinator で書き直し、`cargo test -p oni-comb-parser --test json_nom` を通過。
+- `cargo bench --bench json -- --warm-up-time 1 --measurement-time 1` を実行し性能測定を取得。結果を `benchmarks/JSON_PLAN.md` に追記。
+- 現状のベンチでは `oni_comb` が `heavy.json` 成功ケースで ~425µs、`nom` が ~23µs、`pom` が ~329µs、`serde_json` が ~5.7µs。失敗入力の計測も実施済み。

@@ -22,6 +22,31 @@ cargo test
 
 上記で単体テストおよび統合テストが実行されます。`parser/tests/combinators.rs` にサンプルとなる `byte` パーサーが含まれているので、API の利用例として参照してください。
 
+### クイックスタート例
+
+```rust
+use oni_comb_parser::core::Parser;
+use oni_comb_parser::prelude::*;
+
+// `'a'` または `'b'` が来ればそのまま返し、来なければ `'-'` を返す。
+// 失敗時にはメッセージ付きでコミットさせる。
+let parser = choice([byte(b'a'), byte(b'b')])
+    .optional()
+    .unwrap_or(b'-')
+    .expect("expected 'a' or 'b'")
+    .peek();
+
+let result = parser.parse(b"axy");
+assert!(matches!(result, ParseResult::Success { value: b'a', length: 0, .. }));
+
+// `Parser::or_list` を直接使用すれば、任意のイテレータで論理和を組み立てられます。
+let parser_from_vec = Parser::or_list(vec![byte(b'1'), byte(b'2')]);
+assert!(parser_from_vec.parse(b"2").is_success());
+
+// 文字 '!' が続かないことを確認する先読み。
+assert!(byte(b'!').peek_not().parse(b"abc").is_success());
+```
+
 ## ベンチマーク
 
 `criterion` を利用して `nom` / `pom` と比較する CPU バウンドベンチマークを用意しています。
@@ -31,6 +56,16 @@ cargo bench --bench compare
 ```
 
 入力サイズ 1,024 / 16,384 / 131,072 バイトの数字列に対する `sum_digits`、およびカンマ区切り整数列（要素数 256 / 4,096 / 32,768）に対する `csv_numbers` の 2 系列で、各ライブラリによるパース＋総和計算性能を比較します。結果は `target/criterion` 以下に HTML レポートとして出力されます。
+
+### JSON ベンチマーク
+
+重量級の JSON を対象に `oni-comb` / `nom` / `pom` / `serde_json` を比較するベンチマークも追加しています。
+
+```bash
+cargo bench --bench json -- --verbose
+```
+
+`parser/benches/data/` にある `heavy.json` と、意図的な失敗入力（`fail/*.json`）を読み込んで成功・失敗ケースを測定します。結果は `target/criterion/json_*` 以下に保存されます。
 
 ## 次のステップ
 
