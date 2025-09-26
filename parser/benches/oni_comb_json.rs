@@ -113,7 +113,7 @@ fn value<'a>() -> Parser<'a, char, JsonValue> {
     - space()
 }
 
-pub fn json<'a>() -> Parser<'a, char, JsonValue> {
+fn json<'a>() -> Parser<'a, char, JsonValue> {
   // 先頭の空白をスキップし、値をパースし、終端を確認
   space() * value().cache() - end()
 }
@@ -129,136 +129,121 @@ pub fn oni_comb_parse_json(s: &str) {
   let _ = parser.parse(&input).success().unwrap();
 }
 
-// バイトレベルでのJSONパーサー
-// 注: 現在は使用していませんが、将来的にはこちらに移行する予定
-mod byte_json {
-  use oni_comb_parser_rs::prelude::*;
-  use std::collections::HashMap;
-  use std::str::FromStr;
+// バイトレベルでのJSONパーサー実装
+// バイトベースのパーサーをベンチマークにも含める
 
-  #[derive(Clone, Debug, PartialEq)]
-  pub enum JsonValue {
-    Null,
-    Bool(bool),
-    Str(String),
-    Num(f64),
-    Array(Vec<JsonValue>),
-    Object(HashMap<String, JsonValue>),
-  }
+// 空白文字をスキップ
+fn space_bytes<'a>() -> Parser<'a, u8, ()> {
+  elm_of(&b" \t\r\n"[..]).of_many0().discard()
+}
 
-  // 空白文字をスキップ
-  pub fn space<'a>() -> Parser<'a, u8, ()> {
-    elm_of(&b" \t\r\n"[..]).of_many0().discard()
-  }
+// 数値のパース
+fn number_bytes<'a>() -> Parser<'a, u8, f64> {
+  // 整数部分
+  let integer =
+    elm_pred(|b: &u8| *b >= b'1' && *b <= b'9') - elm_pred(|b: &u8| *b >= b'0' && *b <= b'9').of_many0() | elm(b'0');
 
-  // 数値のパース
-  pub fn number<'a>() -> Parser<'a, u8, f64> {
-    // 整数部分
-    let integer =
-      elm_pred(|b: &u8| *b >= b'1' && *b <= b'9') - elm_pred(|b: &u8| *b >= b'0' && *b <= b'9').of_many0() | elm(b'0');
+  // 小数部分
+  let frac = elm(b'.') + elm_pred(|b: &u8| *b >= b'0' && *b <= b'9').of_many1();
 
-    // 小数部分
-    let frac = elm(b'.') + elm_pred(|b: &u8| *b >= b'0' && *b <= b'9').of_many1();
+  // 指数部分
+  let exp = elm_of(&b"eE"[..]) + elm_of(&b"+-"[..]).opt() + elm_pred(|b: &u8| *b >= b'0' && *b <= b'9').of_many1();
 
-    // 指数部分
-    let exp = elm_of(&b"eE"[..]) + elm_of(&b"+-"[..]).opt() + elm_pred(|b: &u8| *b >= b'0' && *b <= b'9').of_many1();
+  // 数値全体
+  let number = elm(b'-').opt() + integer + frac.opt() + exp.opt();
 
-    // 数値全体
-    let number = elm(b'-').opt() + integer + frac.opt() + exp.opt();
+  // バイト列を文字列に変換し、さらに浮動小数点数に変換
+  number.collect().map(|bytes| {
+    let s = std::str::from_utf8(bytes).unwrap();
+    f64::from_str(s).unwrap()
+  })
+}
 
-    // バイト列を文字列に変換し、さらに浮動小数点数に変換
-    number.collect().map(|bytes| {
-      let s = std::str::from_utf8(bytes).unwrap();
-      f64::from_str(s).unwrap()
-    })
-  }
+// 文字列のパース
+fn string_bytes<'a>() -> Parser<'a, u8, String> {
+  // エスケープシーケンスの処理
+  let escape_char = elm_ref(b'\\')
+    * (elm(b'\\')
+      | elm(b'/')
+      | elm(b'"')
+      | elm(b'b').map(|_| b'\x08')
+      | elm(b'f').map(|_| b'\x0C')
+      | elm(b'n').map(|_| b'\n')
+      | elm(b'r').map(|_| b'\r')
+      | elm(b't').map(|_| b'\t'));
 
-  // 文字列のパース
-  pub fn string<'a>() -> Parser<'a, u8, String> {
-    // エスケープシーケンスの処理
-    let escape_char = elm_ref(b'\\')
-      * (elm(b'\\')
-        | elm(b'/')
-        | elm(b'"')
-        | elm(b'b').map(|_| b'\x08')
-        | elm(b'f').map(|_| b'\x0C')
-        | elm(b'n').map(|_| b'\n')
-        | elm(b'r').map(|_| b'\r')
-        | elm(b't').map(|_| b'\t'));
+  // 通常の文字（エスケープや引用符以外）
+  let regular_char = elm_pred(|b: &u8| *b != b'\\' && *b != b'"');
 
-    // 通常の文字（エスケープや引用符以外）
-    let regular_char = elm_pred(|b: &u8| *b != b'\\' && *b != b'"');
+  // 文字列内の任意の文字
+  let string_char = regular_char | escape_char;
 
-    // 文字列内の任意の文字
-    let string_char = regular_char | escape_char;
+  // 文字列全体
+  let string_parser = elm(b'"') * string_char.of_many0().collect().cache() - elm(b'"');
 
-    // 文字列全体
-    let string_parser = elm(b'"') * string_char.of_many0().collect().cache() - elm(b'"');
+  // バイト列を文字列に変換
+  string_parser.map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
+}
 
-    // バイト列を文字列に変換
-    string_parser.map(|bytes| String::from_utf8_lossy(&bytes).into_owned())
-  }
+// 真偽値のパース
+fn boolean_bytes<'a>() -> Parser<'a, u8, bool> {
+  seq(b"true").map(|_| true) | seq(b"false").map(|_| false)
+}
 
-  // 真偽値のパース
-  pub fn boolean<'a>() -> Parser<'a, u8, bool> {
-    seq(b"true").map(|_| true) | seq(b"false").map(|_| false)
-  }
+// 配列のパース
+fn array_bytes<'a>() -> Parser<'a, u8, Vec<JsonValue>> {
+  // 空白を含むカンマ区切りのパターン
+  let comma_sep = space_bytes() * elm(b',') - space_bytes();
 
-  // 配列のパース
-  pub fn array<'a>() -> Parser<'a, u8, Vec<JsonValue>> {
-    // 空白を含むカンマ区切りのパターン
-    let comma_sep = space() * elm(b',') - space();
+  // 配列要素のパーサー（遅延評価）
+  let elems = lazy(value_bytes).cache().of_many0_sep(comma_sep);
 
-    // 配列要素のパーサー（遅延評価）
-    let elems = lazy(value).cache().of_many0_sep(comma_sep);
+  // 配列全体のパーサー（角括弧で囲まれた要素）
+  surround(elm(b'[') - space_bytes(), elems, space_bytes() * elm(b']'))
+}
 
-    // 配列全体のパーサー（角括弧で囲まれた要素）
-    surround(elm(b'[') - space(), elems, space() * elm(b']'))
-  }
+// オブジェクトのパース
+fn object_bytes<'a>() -> Parser<'a, u8, HashMap<String, JsonValue>> {
+  // キーと値のペアのパーサー
+  let member = string_bytes().cache() - space_bytes() - elm(b':') - space_bytes() + lazy(value_bytes).cache();
 
-  // オブジェクトのパース
-  pub fn object<'a>() -> Parser<'a, u8, HashMap<String, JsonValue>> {
-    // キーと値のペアのパーサー
-    let member = string().cache() - space() - elm(b':') - space() + lazy(value).cache();
+  // 空白を含むカンマ区切りのパターン
+  let comma_sep = space_bytes() * elm(b',') - space_bytes();
 
-    // 空白を含むカンマ区切りのパターン
-    let comma_sep = space() * elm(b',') - space();
+  // オブジェクトメンバーのパーサー
+  let members = member.of_many0_sep(comma_sep);
 
-    // オブジェクトメンバーのパーサー
-    let members = member.of_many0_sep(comma_sep);
+  // オブジェクト全体のパーサー（波括弧で囲まれたメンバー）
+  let obj = surround(elm(b'{') - space_bytes(), members, space_bytes() * elm(b'}'));
 
-    // オブジェクト全体のパーサー（波括弧で囲まれたメンバー）
-    let obj = surround(elm(b'{') - space(), members, space() * elm(b'}'));
+  // メンバーをHashMapに変換
+  obj.map(|members| members.into_iter().collect::<HashMap<_, _>>())
+}
 
-    // メンバーをHashMapに変換
-    obj.map(|members| members.into_iter().collect::<HashMap<_, _>>())
-  }
+// JSON値のパース
+fn value_bytes<'a>() -> Parser<'a, u8, JsonValue> {
+  // 各種JSONの値をパースするパーサーを組み合わせる
+  // 最も頻度の高いものから順に試す（パフォーマンス向上のため）
+  (
+    // 単純な値（頻度が高い順）
+    string_bytes().map(|text| JsonValue::Str(text)).cache()
+      | number_bytes().map(|num| JsonValue::Num(num)).cache()
+      | boolean_bytes().map(|b| JsonValue::Bool(b)).cache()
+      | seq(b"null").map(|_| JsonValue::Null).cache()
+      | array_bytes().map(|arr| JsonValue::Array(arr)).cache()
+      | object_bytes().map(|obj| JsonValue::Object(obj)).cache()
+  ) - space_bytes()
+}
 
-  // JSON値のパース
-  pub fn value<'a>() -> Parser<'a, u8, JsonValue> {
-    // 各種JSONの値をパースするパーサーを組み合わせる
-    // 最も頻度の高いものから順に試す（パフォーマンス向上のため）
-    (
-      // 単純な値（頻度が高い順）
-      string().map(|text| JsonValue::Str(text)).cache()
-        | number().map(|num| JsonValue::Num(num)).cache()
-        | boolean().map(|b| JsonValue::Bool(b)).cache()
-        | seq(b"null").map(|_| JsonValue::Null).cache()
-        | array().map(|arr| JsonValue::Array(arr)).cache()
-        | object().map(|obj| JsonValue::Object(obj)).cache()
-    ) - space()
-  }
+// JSONドキュメント全体のパース
+fn json_bytes<'a>() -> Parser<'a, u8, JsonValue> {
+  // 先頭の空白をスキップし、値をパースし、終端を確認
+  space_bytes() * value_bytes().cache() - end()
+}
 
-  // JSONドキュメント全体のパース
-  pub fn json<'a>() -> Parser<'a, u8, JsonValue> {
-    // 先頭の空白をスキップし、値をパースし、終端を確認
-    space() * value().cache() - end()
-  }
-
-  // ベンチマーク用の関数
-  pub fn parse_json(s: &str) -> JsonValue {
-    // 文字列をバイト列として直接処理
-    let input = s.as_bytes();
-    json().parse(input).success().unwrap()
-  }
+// ベンチマーク用の関数
+pub fn oni_comb_parse_json_bytes(s: &str) {
+  // 文字列をバイト列として直接処理
+  let input = s.as_bytes();
+  let _ = json_bytes().parse(input).success().unwrap();
 }

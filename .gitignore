@@ -7,3 +7,5 @@ Cargo.lock
 
 # ベンチマーク結果
 /benchmark_results
+
+**/.claude/settings.local.json
