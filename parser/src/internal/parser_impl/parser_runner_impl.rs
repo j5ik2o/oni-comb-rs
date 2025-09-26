@@ -14,6 +14,6 @@ impl<'a, I, A> ParserRunner<'a> for Parser<'a, I, A> {
   }
 
   fn run(&self, param: &ParseState<'a, Self::Input>) -> ParseResult<'a, Self::Input, Self::Output> {
-    (self.method)(param)
+    self.call(param)
   }
 }

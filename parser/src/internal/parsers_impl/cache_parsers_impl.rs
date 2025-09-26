@@ -14,7 +14,7 @@ impl CacheParsers for ParsersImpl {
     A: Clone + Debug + 'a, {
     // FnvHashMapを使用してキャッシュを作成（キーは単純な文字列ではなくタプル）
     let caches = RefCell::new(FnvHashMap::<(usize, usize, usize), ParseResult<'a, I, A>>::default());
-    let parser_addr = std::rc::Rc::as_ptr(&parser.method) as *const () as usize;
+    let parser_addr = parser.method_ptr() as *const () as usize;
     Parser::new(move |parser_state| {
       // キーをタプルとして生成（文字列変換なし）
       let key = (
