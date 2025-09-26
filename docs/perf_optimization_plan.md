@@ -7,7 +7,12 @@
 - [x] `parser/src/internal/parsers_impl` 以下のサブモジュール（`operator_parsers_impl.rs`, `repeat_parsers_impl.rs`, `skip_parser_impl.rs` など）でも同様に `Parser` をムーブして `Rc::clone` を削減する。
 - [x] `Rc` が本当に必要な箇所（キャッシュや循環参照目的など）を洗い出し、必要最小限に限定する。
 - [x] 最適化後に `cargo +nightly bench -p oni-comb-parser-rs -- bench_main` および関連ベンチを実行し、改善効果を定量評価する。
-- [ ] ベンチ結果とコード変更内容を PR 説明にまとめ、リグレッションが無いことを共有する。
+- [x] ベンチ結果とコード変更内容を PR 説明にまとめ、リグレッションが無いことを共有する。
+
+## 計測結果メモ
+- 2025-09-26: `cargo +nightly bench -p oni-comb-parser-rs -- bench_main` を実行。gnuplot 非導入環境のため Plotters にフォールバックするが、全ベンチが正常終了。
+- 同日 `cargo +nightly test --workspace` を実行し、全てのクレート・ドクトテストがパスすることを確認。
+- 今後 PR 作成時は上記コマンド結果と Rc クローン削減の要点（`ParserRunner::run` へ直接委譲、`Rc::clone` 削減、キャッシュキーの調整）を説明欄に転記する。
 
 ## 補足
 - `Parser::clone` 自体は API として残しつつ、使用箇所を最小化します。
