@@ -1,4 +1,4 @@
-use crate::core::{CommittedStatus, ParseError, ParseResult, ParseState, Parser};
+use crate::core::{CommittedStatus, ParseCursor, ParseError, ParseResult, ParseState, Parser};
 use std::fmt::{Debug, Display};
 
 pub type ParseResultType<'a, I, A> = ParseResult<'a, I, A>;
@@ -286,18 +286,58 @@ where
     A: 'a,
     B: 'a,
 {
-    left.flat_map(move |_| right.clone())
+    Parser::new(move |input, state| {
+        let mut cursor = ParseCursor::new(input, state);
+        let mut total_length = 0usize;
+
+        match cursor.consume(&left) {
+            Ok((_, len)) => total_length += len,
+            Err(failure) => return failure.into_result(),
+        }
+
+        match cursor.consume(&right) {
+            Ok((value, len)) => {
+                total_length += len;
+                ParseResult::Success {
+                    value,
+                    length: total_length,
+                    state: Some(cursor.state()),
+                }
+            }
+            Err(failure) => failure.into_result(),
+        }
+    })
 }
 
 pub fn skip_right<'a, I, A, B>(left: Parser<'a, I, A>, right: Parser<'a, I, B>) -> Parser<'a, I, A>
 where
     I: 'a,
-    A: Clone + 'a,
+    A: 'a,
     B: 'a,
 {
-    left.flat_map(move |value| {
-        let right_clone = right.clone();
-        right_clone.map(move |_| value.clone())
+    Parser::new(move |input, state| {
+        let mut cursor = ParseCursor::new(input, state);
+        let mut total_length = 0usize;
+
+        let value = match cursor.consume(&left) {
+            Ok((value, len)) => {
+                total_length += len;
+                value
+            }
+            Err(failure) => return failure.into_result(),
+        };
+
+        match cursor.consume(&right) {
+            Ok((_, len)) => {
+                total_length += len;
+                ParseResult::Success {
+                    value,
+                    length: total_length,
+                    state: Some(cursor.state()),
+                }
+            }
+            Err(failure) => failure.into_result(),
+        }
     })
 }
 
@@ -320,7 +360,39 @@ where
     I: 'a,
     A: 'a,
 {
-    parser.many0()
+    Parser::new(move |input, state| {
+        let mut cursor = ParseCursor::new(input, state);
+        let mut values = Vec::new();
+        let mut total_length = 0usize;
+
+        loop {
+            let before = cursor.state();
+            match cursor.consume(&parser) {
+                Ok((value, len)) => {
+                    if len == 0 {
+                        cursor.set_state(before);
+                        break;
+                    }
+                    total_length += len;
+                    values.push(value);
+                }
+                Err(failure) => {
+                    if failure.is_committed() {
+                        return failure.into_result();
+                    } else {
+                        cursor.set_state(before);
+                        break;
+                    }
+                }
+            }
+        }
+
+        ParseResult::Success {
+            value: values,
+            length: total_length,
+            state: Some(cursor.state()),
+        }
+    })
 }
 
 pub fn many1<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, Vec<A>>
@@ -328,7 +400,54 @@ where
     I: 'a,
     A: 'a,
 {
-    parser.many1()
+    Parser::new(move |input, state| {
+        let mut cursor = ParseCursor::new(input, state);
+        let mut values = Vec::new();
+        let mut total_length = 0usize;
+
+        match cursor.consume(&parser) {
+            Ok((value, len)) => {
+                if len == 0 {
+                    return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                        state.current_offset(),
+                        Some(state.input()),
+                        "many1: parser did not advance state",
+                    ));
+                }
+                total_length += len;
+                values.push(value);
+            }
+            Err(failure) => return failure.into_result(),
+        }
+
+        loop {
+            let before = cursor.state();
+            match cursor.consume(&parser) {
+                Ok((value, len)) => {
+                    if len == 0 {
+                        cursor.set_state(before);
+                        break;
+                    }
+                    total_length += len;
+                    values.push(value);
+                }
+                Err(failure) => {
+                    if failure.is_committed() {
+                        return failure.into_result();
+                    } else {
+                        cursor.set_state(before);
+                        break;
+                    }
+                }
+            }
+        }
+
+        ParseResult::Success {
+            value: values,
+            length: total_length,
+            state: Some(cursor.state()),
+        }
+    })
 }
 
 pub fn skip_many0<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, ()>
@@ -336,7 +455,37 @@ where
     I: 'a,
     A: 'a,
 {
-    parser.skip_many0()
+    Parser::new(move |input, state| {
+        let mut cursor = ParseCursor::new(input, state);
+        let mut total_length = 0usize;
+
+        loop {
+            let before = cursor.state();
+            match cursor.consume(&parser) {
+                Ok((_, len)) => {
+                    if len == 0 {
+                        cursor.set_state(before);
+                        break;
+                    }
+                    total_length += len;
+                }
+                Err(failure) => {
+                    if failure.is_committed() {
+                        return failure.into_result();
+                    } else {
+                        cursor.set_state(before);
+                        break;
+                    }
+                }
+            }
+        }
+
+        ParseResult::Success {
+            value: (),
+            length: total_length,
+            state: Some(cursor.state()),
+        }
+    })
 }
 
 pub fn skip_many1<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, ()>
@@ -344,7 +493,51 @@ where
     I: 'a,
     A: 'a,
 {
-    parser.skip_many1()
+    Parser::new(move |input, state| {
+        let mut cursor = ParseCursor::new(input, state);
+        let mut total_length = 0usize;
+
+        match cursor.consume(&parser) {
+            Ok((_, len)) => {
+                if len == 0 {
+                    return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                        state.current_offset(),
+                        Some(state.input()),
+                        "skip_many1: parser did not advance state",
+                    ));
+                }
+                total_length += len;
+            }
+            Err(failure) => return failure.into_result(),
+        }
+
+        loop {
+            let before = cursor.state();
+            match cursor.consume(&parser) {
+                Ok((_, len)) => {
+                    if len == 0 {
+                        cursor.set_state(before);
+                        break;
+                    }
+                    total_length += len;
+                }
+                Err(failure) => {
+                    if failure.is_committed() {
+                        return failure.into_result();
+                    } else {
+                        cursor.set_state(before);
+                        break;
+                    }
+                }
+            }
+        }
+
+        ParseResult::Success {
+            value: (),
+            length: total_length,
+            state: Some(cursor.state()),
+        }
+    })
 }
 
 pub fn chain_left1<'a, I, A, OpFn>(
@@ -752,7 +945,47 @@ where
     A: 'a,
     B: 'a,
 {
-    parser.many_till(end)
+    Parser::new(move |input, state| {
+        let mut cursor = ParseCursor::new(input, state);
+        let mut items = Vec::new();
+        let mut total_length = 0usize;
+
+        loop {
+            let checkpoint = cursor.state();
+            match cursor.consume(&end) {
+                Ok((end_value, len)) => {
+                    total_length += len;
+                    return ParseResult::Success {
+                        value: (items, end_value),
+                        length: total_length,
+                        state: Some(cursor.state()),
+                    };
+                }
+                Err(failure) => {
+                    if failure.is_committed() {
+                        return failure.into_result();
+                    } else {
+                        cursor.set_state(checkpoint);
+                    }
+                }
+            }
+
+            match cursor.consume(&parser) {
+                Ok((value, len)) => {
+                    if len == 0 {
+                        return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                            cursor.state().current_offset(),
+                            Some(cursor.state().input()),
+                            "many_till: parser did not advance state",
+                        ));
+                    }
+                    total_length += len;
+                    items.push(value);
+                }
+                Err(failure) => return failure.into_result(),
+            }
+        }
+    })
 }
 
 pub fn skip_till<'a, I, A, B>(parser: Parser<'a, I, A>, end: Parser<'a, I, B>) -> Parser<'a, I, B>
@@ -761,7 +994,7 @@ where
     A: 'a,
     B: 'a,
 {
-    parser.skip_till(end)
+    many_till(parser, end).map(|(_, end_value)| end_value)
 }
 
 pub fn repeat<'a, I, A>(parser: Parser<'a, I, A>, count: usize) -> Parser<'a, I, Vec<A>>
@@ -769,7 +1002,6 @@ where
     I: 'a,
     A: 'a,
 {
-    let element_parser = parser.clone();
     Parser::new(move |input, state| {
         if count == 0 {
             return ParseResult::Success {
@@ -779,52 +1011,32 @@ where
             };
         }
 
+        let mut cursor = ParseCursor::new(input, state);
         let mut items = Vec::with_capacity(count);
         let mut total_length = 0usize;
-        let mut current_state = state;
 
         for _ in 0..count {
-            match element_parser.run(input, current_state) {
-                ParseResult::Success {
-                    value,
-                    length,
-                    state: Some(next_state),
-                } => {
-                    if length == 0 && next_state.current_offset() == current_state.current_offset()
-                    {
+            let before = cursor.state();
+            match cursor.consume(&parser) {
+                Ok((value, len)) => {
+                    if len == 0 {
                         return ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                            current_state.current_offset(),
-                            Some(current_state.input()),
+                            before.current_offset(),
+                            Some(before.input()),
                             "repeat element parser did not advance state",
                         ));
                     }
-                    total_length += length;
-                    current_state = next_state;
+                    total_length += len;
                     items.push(value);
                 }
-                ParseResult::Success { state: None, .. } => {
-                    return ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                        current_state.current_offset(),
-                        Some(current_state.input()),
-                        "repeat element parser did not return state",
-                    ))
-                }
-                ParseResult::Failure {
-                    error,
-                    committed_status,
-                } => {
-                    return ParseResult::Failure {
-                        error,
-                        committed_status,
-                    };
-                }
+                Err(failure) => return failure.into_result(),
             }
         }
 
         ParseResult::Success {
             value: items,
             length: total_length,
-            state: Some(current_state),
+            state: Some(cursor.state()),
         }
     })
 }
@@ -839,9 +1051,6 @@ where
     A: 'a,
     B: 'a,
 {
-    let element_parser = parser.clone();
-    let separator_parser = separator.clone();
-
     Parser::new(move |input, state| {
         if count == 0 {
             return ParseResult::Success {
@@ -851,82 +1060,41 @@ where
             };
         }
 
+        let mut cursor = ParseCursor::new(input, state);
         let mut values = Vec::with_capacity(count);
         let mut total_length = 0usize;
-        let mut current_state = state;
 
         for index in 0..count {
-            match element_parser.run(input, current_state) {
-                ParseResult::Success {
-                    value,
-                    length,
-                    state: Some(next_state),
-                } => {
-                    if length == 0 && next_state.current_offset() == current_state.current_offset()
-                    {
+            let before_element = cursor.state();
+            match cursor.consume(&parser) {
+                Ok((value, len)) => {
+                    if len == 0 {
                         return ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                            current_state.current_offset(),
-                            Some(current_state.input()),
+                            before_element.current_offset(),
+                            Some(before_element.input()),
                             "repeat_sep element parser did not advance state",
                         ));
                     }
-                    total_length += length;
-                    current_state = next_state;
+                    total_length += len;
                     values.push(value);
                 }
-                ParseResult::Success { state: None, .. } => {
-                    return ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                        current_state.current_offset(),
-                        Some(current_state.input()),
-                        "repeat_sep element parser did not return state",
-                    ))
-                }
-                ParseResult::Failure {
-                    error,
-                    committed_status,
-                } => {
-                    return ParseResult::Failure {
-                        error,
-                        committed_status,
-                    };
-                }
+                Err(failure) => return failure.into_result(),
             }
 
             if index + 1 < count {
-                match separator_parser.run(input, current_state) {
-                    ParseResult::Success {
-                        length,
-                        state: Some(next_state),
-                        ..
-                    } => {
-                        if length == 0
-                            && next_state.current_offset() == current_state.current_offset()
-                        {
+                let before_separator = cursor.state();
+                match cursor.consume(&separator) {
+                    Ok((_, len)) => {
+                        if len == 0 {
                             return ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                                current_state.current_offset(),
-                                Some(current_state.input()),
+                                before_separator.current_offset(),
+                                Some(before_separator.input()),
                                 "repeat_sep separator did not advance state",
                             ));
                         }
-                        total_length += length;
-                        current_state = next_state;
+                        total_length += len;
                     }
-                    ParseResult::Success { state: None, .. } => {
-                        return ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                            current_state.current_offset(),
-                            Some(current_state.input()),
-                            "repeat_sep separator did not return state",
-                        ))
-                    }
-                    ParseResult::Failure {
-                        error,
-                        committed_status,
-                    } => {
-                        return ParseResult::Failure {
-                            error,
-                            committed_status,
-                        };
-                    }
+                    Err(failure) => return failure.into_result(),
                 }
             }
         }
@@ -934,7 +1102,7 @@ where
         ParseResult::Success {
             value: values,
             length: total_length,
-            state: Some(current_state),
+            state: Some(cursor.state()),
         }
     })
 }
@@ -992,115 +1160,54 @@ where
     A: 'a,
     B: 'a,
 {
-    let element_parser = element.clone();
-    let separator_parser = separator.clone();
-
     Parser::new(move |input, state| {
+        let mut cursor = ParseCursor::new(input, state);
         let mut values = Vec::new();
         let mut total_length = 0usize;
-        let mut current_state = state;
 
-        match element_parser.run(input, current_state) {
-            ParseResult::Success {
-                value,
-                length,
-                state: Some(next_state),
-            } => {
-                total_length += length;
-                current_state = next_state;
+        match cursor.consume(&element) {
+            Ok((value, len)) => {
+                total_length += len;
                 values.push(value);
             }
-            ParseResult::Success { state: None, .. } => {
-                return ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                    current_state.current_offset(),
-                    Some(current_state.input()),
-                    "separated_list1 element parser did not advance state",
-                ))
-            }
-            ParseResult::Failure {
-                error,
-                committed_status,
-            } => {
-                return ParseResult::Failure {
-                    error,
-                    committed_status,
-                }
-            }
+            Err(failure) => return failure.into_result(),
         }
 
         loop {
-            match separator_parser.run(input, current_state) {
-                ParseResult::Success {
-                    length,
-                    state: Some(next_state),
-                    ..
-                } => {
-                    if length == 0 && next_state.current_offset() == current_state.current_offset()
-                    {
+            let before_sep = cursor.state();
+            match cursor.consume(&separator) {
+                Ok((_, len)) => {
+                    if len == 0 {
                         break;
                     }
-                    total_length += length;
-                    current_state = next_state;
+                    total_length += len;
                 }
-                ParseResult::Success { state: None, .. } => {
-                    return ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                        current_state.current_offset(),
-                        Some(current_state.input()),
-                        "separated_list1 separator did not advance state",
-                    ))
-                }
-                ParseResult::Failure {
-                    error,
-                    committed_status,
-                } => {
-                    if committed_status.is_committed() {
-                        return ParseResult::Failure {
-                            error,
-                            committed_status,
-                        };
+                Err(failure) => {
+                    if failure.is_committed() {
+                        return failure.into_result();
                     } else {
+                        cursor.set_state(before_sep);
                         break;
                     }
                 }
             }
 
-            match element_parser.run(input, current_state) {
-                ParseResult::Success {
-                    value,
-                    length,
-                    state: Some(next_state),
-                } => {
-                    if length == 0 && next_state.current_offset() == current_state.current_offset()
-                    {
+            match cursor.consume(&element) {
+                Ok((value, len)) => {
+                    if len == 0 {
                         break;
                     }
-                    total_length += length;
-                    current_state = next_state;
+                    total_length += len;
                     values.push(value);
                 }
-                ParseResult::Success { state: None, .. } => {
-                    return ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                        current_state.current_offset(),
-                        Some(current_state.input()),
-                        "separated_list1 element did not advance state",
-                    ))
-                }
-                ParseResult::Failure {
-                    error,
-                    committed_status,
-                } => {
-                    return ParseResult::Failure {
-                        error,
-                        committed_status,
-                    };
-                }
+                Err(failure) => return failure.into_result(),
             }
         }
 
         ParseResult::Success {
             value: values,
             length: total_length,
-            state: Some(current_state),
+            state: Some(cursor.state()),
         }
     })
 }
@@ -1114,119 +1221,64 @@ where
     A: 'a,
     B: 'a,
 {
-    let element_parser = element.clone();
-    let separator_parser = separator.clone();
+    Parser::new(move |input, state| {
+        let mut cursor = ParseCursor::new(input, state);
+        let mut values = Vec::new();
+        let mut total_length = 0usize;
 
-    Parser::new(move |input, state| match element_parser.run(input, state) {
+        match cursor.consume(&element) {
+            Ok((value, len)) => {
+                total_length += len;
+                values.push(value);
+            }
+            Err(failure) => {
+                if failure.is_committed() {
+                    return failure.into_result();
+                } else {
+                    return ParseResult::Success {
+                        value: Vec::new(),
+                        length: 0,
+                        state: Some(state),
+                    };
+                }
+            }
+        }
+
+        loop {
+            let before_sep = cursor.state();
+            match cursor.consume(&separator) {
+                Ok((_, sep_len)) => {
+                    if sep_len == 0 {
+                        break;
+                    }
+                    total_length += sep_len;
+                }
+                Err(failure) => {
+                    if failure.is_committed() {
+                        return failure.into_result();
+                    } else {
+                        cursor.set_state(before_sep);
+                        break;
+                    }
+                }
+            }
+
+            match cursor.consume(&element) {
+                Ok((value, len)) => {
+                    if len == 0 {
+                        break;
+                    }
+                    total_length += len;
+                    values.push(value);
+                }
+                Err(failure) => return failure.into_result(),
+            }
+        }
+
         ParseResult::Success {
-            value,
-            length,
-            state: Some(next_state),
-        } => {
-            let mut values = vec![value];
-            let mut total_length = length;
-            let mut current_state = next_state;
-
-            loop {
-                match separator_parser.run(input, current_state) {
-                    ParseResult::Success {
-                        length: sep_length,
-                        state: Some(after_sep),
-                        ..
-                    } => {
-                        if sep_length == 0
-                            && after_sep.current_offset() == current_state.current_offset()
-                        {
-                            break;
-                        }
-                        total_length += sep_length;
-                        current_state = after_sep;
-                    }
-                    ParseResult::Success { state: None, .. } => {
-                        return ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                            current_state.current_offset(),
-                            Some(current_state.input()),
-                            "separated_list0 separator did not return state",
-                        ))
-                    }
-                    ParseResult::Failure {
-                        error,
-                        committed_status,
-                    } => {
-                        if committed_status.is_committed() {
-                            return ParseResult::Failure {
-                                error,
-                                committed_status,
-                            };
-                        } else {
-                            break;
-                        }
-                    }
-                }
-
-                match element_parser.run(input, current_state) {
-                    ParseResult::Success {
-                        value,
-                        length: elem_length,
-                        state: Some(next_state),
-                    } => {
-                        if elem_length == 0
-                            && next_state.current_offset() == current_state.current_offset()
-                        {
-                            break;
-                        }
-                        total_length += elem_length;
-                        current_state = next_state;
-                        values.push(value);
-                    }
-                    ParseResult::Success { state: None, .. } => {
-                        return ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                            current_state.current_offset(),
-                            Some(current_state.input()),
-                            "separated_list0 element did not return state",
-                        ))
-                    }
-                    ParseResult::Failure {
-                        error,
-                        committed_status,
-                    } => {
-                        return ParseResult::Failure {
-                            error,
-                            committed_status,
-                        };
-                    }
-                }
-            }
-
-            ParseResult::Success {
-                value: values,
-                length: total_length,
-                state: Some(current_state),
-            }
-        }
-        ParseResult::Success { state: None, .. } => {
-            ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                state.current_offset(),
-                Some(state.input()),
-                "separated_list0 element parser did not return state",
-            ))
-        }
-        ParseResult::Failure {
-            error,
-            committed_status,
-        } => {
-            if committed_status.is_committed() {
-                ParseResult::Failure {
-                    error,
-                    committed_status,
-                }
-            } else {
-                ParseResult::Success {
-                    value: Vec::new(),
-                    length: 0,
-                    state: Some(state),
-                }
-            }
+            value: values,
+            length: total_length,
+            state: Some(cursor.state()),
         }
     })
 }

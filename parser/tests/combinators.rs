@@ -959,6 +959,41 @@ fn repeat_sep_requires_separators_between_items() {
 }
 
 #[test]
+fn repeat_detects_zero_length_inner_parser() {
+    let zero = Parser::new(|_, state| ParseResult::successful_with_state(state, (), 0));
+    match repeat(zero, 2).parse(b"input") {
+        ParseResult::Failure {
+            committed_status,
+            error,
+        } => {
+            assert!(committed_status.is_uncommitted());
+            assert!(error
+                .message
+                .contains("repeat element parser did not advance state"));
+        }
+        other => panic!("expected failure, got {:?}", other),
+    }
+}
+
+#[test]
+fn repeat_sep_detects_zero_length_separator() {
+    let element = byte(b'a');
+    let zero_sep = Parser::new(|_, state| ParseResult::successful_with_state(state, (), 0));
+    match repeat_sep(element, zero_sep, 2).parse(b"aa") {
+        ParseResult::Failure {
+            committed_status,
+            error,
+        } => {
+            assert!(committed_status.is_uncommitted());
+            assert!(error
+                .message
+                .contains("repeat_sep separator did not advance state"));
+        }
+        other => panic!("expected failure, got {:?}", other),
+    }
+}
+
+#[test]
 fn skip_many_variants_consume_without_collecting() {
     let parser = skip_many0(byte(b'a'));
     match parser.parse(b"aaab") {
