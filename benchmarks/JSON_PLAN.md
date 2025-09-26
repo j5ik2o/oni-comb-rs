@@ -37,33 +37,163 @@
 - 解析後に `peek_not` や `expect` でエラーメッセージを追加するケースの測定。
 - JSON 以外の DSL（例: HOCON, GraphQL）でも同様のベンチを展開。
 
-## 測定結果 (2025-09-26)
+## 測定結果 (2025-09-27 03:20 JST)
 
 ### 成功ケース `heavy.json`
 | 実装 | 時間 (平均) |
 | --- | --- |
-| `oni_comb` | 約 425 µs |
-| `nom` | 約 23.1 µs |
-| `pom` | 約 329 µs |
-| `serde_json` | 約 5.71 µs |
+| `oni_comb` | 約 131 µs |
+| `nom` | 約 21.7 µs |
+| `pom` | 約 328 µs |
+| `serde_json` | 約 5.72 µs |
 
 ### 失敗ケース `missing_comma.json`
 | 実装 | 時間 (平均) |
 | --- | --- |
-| `oni_comb` | 約 7.46 µs |
-| `nom` | 約 0.80 µs |
-| `pom` | 約 6.38 µs |
+| `oni_comb` | 約 2.61 µs |
+| `nom` | 約 0.735 µs |
+| `pom` | 約 6.37 µs |
+| `serde_json` | 約 0.106 µs |
+
+### 失敗ケース `unclosed_brace.json`
+| 実装 | 時間 (平均) |
+| --- | --- |
+| `oni_comb` | 約 6.02 µs |
+| `nom` | 約 1.31 µs |
+| `pom` | 約 14.7 µs |
+| `serde_json` | 約 0.104 µs |
+
+備考:
+- `pom` ベンチは 100 サンプル取得に 1.6〜1.7s 程度要し、Criterion から計測時間延長の警告が出る点は変わらず。
+- `nom` 実装は参照実装ベースで `serde_json::Value` に変換する構成。さらなる高速化余地あり。
+- `oni_comb` は `heavy.json` 成功ケースで `pom` 比 ~0.40x、`nom` 比 ~6.0x。`missing_comma` で前回よりわずかに遅延（+約2%）だがノイズ範囲内。
+
+## 再計測 (2025-09-27 03:35 JST, measurement-time = 2s)
+
+### 成功ケース `heavy.json`
+| 実装 | 時間 (平均) |
+| --- | --- |
+| `oni_comb` | 約 131 µs (中央値 131.0 µs) |
+| `nom` | 約 21.8 µs |
+| `pom` | 約 326 µs |
+| `serde_json` | 約 5.67 µs |
+
+### 失敗ケース `missing_comma.json`
+| 実装 | 時間 (平均) |
+| --- | --- |
+| `oni_comb` | 約 2.62 µs |
+| `nom` | 約 0.762 µs |
+| `pom` | 約 6.31 µs |
+| `serde_json` | 約 0.108 µs |
+
+### 失敗ケース `unclosed_brace.json`
+| 実装 | 時間 (平均) |
+| --- | --- |
+| `oni_comb` | 約 6.13 µs |
+| `nom` | 約 1.30 µs |
+| `pom` | 約 15.1 µs |
+| `serde_json` | 約 0.106 µs |
+
+備考:
+- 測定時間延長により推定誤差は縮小、`oni_comb` / `pom` は前回値とほぼ同等。`nom` 失敗ケースは +約3% の揺らぎが観測されたが、Criterion 判定では統計的回帰。
+- 依然として `pom` は 100 サンプル取得に 3 秒前後を要し、高ノイズ状態が継続。
+
+## 追加調査 (2025-09-27 03:50 JST, sampling-mode = flat)
+
+環境変数 `CRITERION_SAMPLING_MODE=flat`（併せて `CRITERION_SAMPLE_SIZE=200` を設定したが、現行 Criterion では 100 サンプル固定の模様）で再測定。
+
+### 成功ケース `heavy.json`
+| 実装 | 時間 (平均) |
+| --- | --- |
+| `oni_comb` | 約 131 µs |
+| `nom` | 約 22.0 µs |
+| `pom` | 約 325 µs |
+| `serde_json` | 約 5.62 µs |
+
+### 失敗ケース `missing_comma.json`
+| 実装 | 時間 (平均) |
+| --- | --- |
+| `oni_comb` | 約 2.61 µs |
+| `nom` | 約 0.740 µs |
+| `pom` | 約 6.27 µs |
 | `serde_json` | 約 0.107 µs |
 
 ### 失敗ケース `unclosed_brace.json`
 | 実装 | 時間 (平均) |
 | --- | --- |
-| `oni_comb` | 約 17.3 µs |
-| `nom` | 約 1.25 µs |
-| `pom` | 約 15.1 µs |
-| `serde_json` | 約 0.105 µs |
+| `oni_comb` | 約 6.05 µs |
+| `nom` | 約 1.21 µs |
+| `pom` | 約 14.7 µs |
+| `serde_json` | 約 0.104 µs |
 
 備考:
-- `pom` ベンチは 100 サンプル取得に 1.7s 程度かかったため、Criterion から計測時間延長の警告が出た。
-- `nom` 実装は参照実装のパーサーを元に `serde_json::Value` へ変換する形で再構築。今後の高速化余地あり。
-- `oni_comb` は現状で `heavy.json` 成功ケースが `pom` 比でおよそ 1.3x、`nom` 比で約 18x の遅延。最適化タスク候補。
+- flat sampling により `nom` 失敗ケースのブレは減少し、回帰警告は「改善」側へ転じた（約 -3〜-4%）。
+- sample-size 200 の CLI オプションは未対応。より厳密な解析が必要な場合はベンチ側コードで `Criterion::default().sample_size(200)` を指定する対応を検討。
+
+## 設定更新 (2025-09-27 04:10 JST)
+
+- `parser/benches/json.rs` の `criterion_group!` にて `Criterion::default().sample_size(200)` / `measurement_time(3s)` / `warm_up_time(1s)` をデフォルト設定に追加。これにより CLI 指定なしでも高密度サンプリングが行われる。
+- ベンチグループごとに `SamplingMode::Flat` を指定し、サンプル収集のブレを抑制。
+- 追加で `json_success_quick` / `json_failures_quick` グループを用意し、`sample_size=120`・`measurement_time=1.2s`・`warm_up_time=600ms` の軽量計測を選択できるようにした。
+- `measurement_time` を 3 秒へ延長することで、重いケースでも 200 サンプル取得時の警告が解消（CLI で `--measurement-time 2` を明示した場合のみ警告が再現）。
+
+### 高密度計測結果 (sample_size = 200, measurement_time = 3s, sampling_mode = flat)
+
+#### 成功ケース `heavy.json`
+| 実装 | 時間 (平均) |
+| --- | --- |
+| `oni_comb` | 約 130 µs |
+| `nom` | 約 22.1 µs |
+| `pom` | 約 326 µs |
+| `serde_json` | 約 5.77 µs |
+
+#### 失敗ケース `missing_comma.json`
+| 実装 | 時間 (平均) |
+| --- | --- |
+| `oni_comb` | 約 2.62 µs |
+| `nom` | 約 0.74 µs |
+| `pom` | 約 6.37 µs |
+| `serde_json` | 約 0.107 µs |
+
+#### 失敗ケース `unclosed_brace.json`
+| 実装 | 時間 (平均) |
+| --- | --- |
+| `oni_comb` | 約 6.08 µs |
+| `nom` | 約 1.22 µs |
+| `pom` | 約 14.9 µs |
+| `serde_json` | 約 0.104 µs |
+
+備考:
+- サンプル増に伴い `nom` / `serde_json` に統計的差分が出る場合があるが、多くは ±2% 程度で外れ値の影響と考えられる。
+- CLI 側で `--measurement-time 2` を指定すると再び警告が表示されるため、必要に応じて `--measurement-time 3` 以上を利用。
+
+### クイック計測結果 (sample_size = 120, measurement_time = 1.2s, sampling_mode = flat)
+
+#### 成功ケース `heavy.json`
+| 実装 | 時間 (平均) |
+| --- | --- |
+| `oni_comb` | 約 130 µs |
+| `nom` | 約 21.7 µs |
+| `pom` | 約 326 µs |
+| `serde_json` | 約 5.80 µs |
+
+#### 失敗ケース `missing_comma.json`
+| 実装 | 時間 (平均) |
+| --- | --- |
+| `oni_comb` | 約 2.63 µs |
+| `nom` | 約 0.73 µs |
+| `pom` | 約 6.31 µs |
+| `serde_json` | 約 0.107 µs |
+
+#### 失敗ケース `unclosed_brace.json`
+| 実装 | 時間 (平均) |
+| --- | --- |
+| `oni_comb` | 約 6.08 µs |
+| `nom` | 約 1.20 µs |
+| `pom` | 約 14.7 µs |
+| `serde_json` | 約 0.104 µs |
+
+備考:
+- クイック計測では高密度版より外れ値率がわずかに高いが、`SamplingMode::Flat` とウォームアップ 600ms の組み合わせで極端な値は抑制。
+- クイック実行でより短時間に傾向を把握し、詳細確認が必要な際はフル版を併用するフローを推奨。
+- クイック計測 (`json_success_quick` / `json_failures_quick`) は 約 1.2 秒・120 サンプルで実行でき、CI や高速確認向け。コマンド例: `cargo bench --bench json json_success_quick`。

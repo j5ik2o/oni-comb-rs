@@ -1,4 +1,6 @@
-use oni_comb_parser::core::{ParseError, ParseResult, Parser};
+#![allow(dead_code)]
+
+use oni_comb_parser::core::{ParseCursor, ParseError, ParseResult, Parser};
 use oni_comb_parser::prelude::*;
 use serde_json::{Map, Number, Value};
 use std::char::{decode_utf16, REPLACEMENT_CHARACTER};
@@ -10,24 +12,34 @@ fn ws<'a>() -> Parser<'a, u8, ()> {
 
 fn lexeme<'a, A>(parser: Parser<'a, u8, A>) -> Parser<'a, u8, A>
 where
-    A: Clone + 'a,
+    A: 'a,
 {
-    let with_leading = skip_left(ws(), parser);
-    skip_right(with_leading, ws())
-}
+    Parser::new(move |input, state| {
+        let mut cursor = ParseCursor::new(input, state);
+        let mut total_length = 0usize;
+        let whitespace = ws();
 
-fn decode_units(units: Vec<u16>) -> String {
-    decode_utf16(units.into_iter())
-        .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER))
-        .collect()
-}
+        if let Ok((_, len)) = cursor.consume(&whitespace) {
+            total_length += len;
+        }
 
-fn parse_hex_unit<'a>() -> Parser<'a, u8, u16> {
-    take(4).map(|digits| {
-        str::from_utf8(digits)
-            .ok()
-            .and_then(|s| u16::from_str_radix(s, 16).ok())
-            .unwrap_or(0xFFFD)
+        let value = match cursor.consume(&parser) {
+            Ok((value, len)) => {
+                total_length += len;
+                value
+            }
+            Err(failure) => return failure.into_result(),
+        };
+
+        if let Ok((_, len)) = cursor.consume(&whitespace) {
+            total_length += len;
+        }
+
+        ParseResult::Success {
+            value,
+            length: total_length,
+            state: Some(cursor.state()),
+        }
     })
 }
 
@@ -42,134 +54,251 @@ fn json_bool<'a>() -> Parser<'a, u8, Value> {
     ])
 }
 
-fn digits1_vec<'a>() -> Parser<'a, u8, Vec<u8>> {
-    take_while1(|b| matches!(b, b'0'..=b'9')).map(|digits| digits.to_vec())
-}
-
 fn json_number<'a>() -> Parser<'a, u8, Value> {
-    let sign = byte(b'-')
-        .map(|b| vec![b])
-        .optional()
-        .map(|opt| opt.unwrap_or_default());
-
-    let integer = digits1_vec().filter(|digits| digits.len() == 1 || digits.first() != Some(&b'0'));
-
-    let fractional = byte(b'.')
-        .flat_map(|dot| {
-            digits1_vec().map(move |digits| {
-                let mut result = Vec::with_capacity(1 + digits.len());
-                result.push(dot);
-                result.extend_from_slice(&digits);
-                result
-            })
-        })
-        .optional()
-        .map(|opt| opt.unwrap_or_default());
-
-    let exponent_tail = one_of(b"+-".to_vec()).optional().flat_map(|sign_opt| {
-        digits1_vec().map(move |digits| {
-            let mut result = Vec::new();
-            if let Some(sign) = sign_opt {
-                result.push(sign);
-            }
-            result.extend_from_slice(&digits);
-            result
-        })
-    });
-
-    let exponent = one_of(b"eE".to_vec())
-        .flat_map(move |marker| {
-            exponent_tail.clone().map(move |mut tail| {
-                let mut result = Vec::with_capacity(1 + tail.len());
-                result.push(marker);
-                result.append(&mut tail);
-                result
-            })
-        })
-        .optional()
-        .map(|opt| opt.unwrap_or_default());
-
-    sign.flat_map(move |sign_part| {
-        integer.clone().flat_map(move |int_part| {
-            let mut bytes = Vec::with_capacity(sign_part.len() + int_part.len());
-            bytes.extend_from_slice(&sign_part);
-            bytes.extend_from_slice(&int_part);
-            successful(bytes)
-        })
-    })
-    .flat_map({
-        let fractional = fractional.clone();
-        move |base_bytes| {
-            fractional.clone().flat_map(move |frac_part| {
-                let mut bytes = base_bytes.clone();
-                bytes.extend_from_slice(&frac_part);
-                successful(bytes)
-            })
+    Parser::new(|_, state| {
+        let bytes = state.input();
+        if bytes.is_empty() {
+            return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(bytes),
+                "expected number",
+            ));
         }
-    })
-    .flat_map({
-        let exponent = exponent.clone();
-        move |base_bytes| {
-            exponent.clone().flat_map(move |exp_part| {
-                let mut bytes = base_bytes.clone();
-                bytes.extend_from_slice(&exp_part);
-                successful(bytes)
-            })
-        }
-    })
-    .flat_map(|number_bytes| {
-        let number_bytes = number_bytes.clone();
-        Parser::new(move |_, state| {
-            match str::from_utf8(&number_bytes)
-                .ok()
-                .and_then(|s| Number::from_str(s).ok())
-            {
-                Some(num) => ParseResult::successful_with_state(state, Value::Number(num), 0),
-                None => ParseResult::failed_with_uncommitted(ParseError::of_custom(
+
+        let mut idx = 0usize;
+
+        if bytes[idx] == b'-' {
+            idx += 1;
+            if idx == bytes.len() {
+                return ParseResult::failed_with_uncommitted(ParseError::of_custom(
                     state.current_offset(),
-                    Some(state.input()),
+                    Some(bytes),
                     "invalid number",
-                )),
+                ));
             }
-        })
+        }
+
+        if bytes[idx] == b'0' {
+            idx += 1;
+        } else if matches!(bytes[idx], b'1'..=b'9') {
+            idx += 1;
+            while idx < bytes.len() && matches!(bytes[idx], b'0'..=b'9') {
+                idx += 1;
+            }
+        } else {
+            return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(bytes),
+                "invalid number",
+            ));
+        }
+
+        if idx < bytes.len() && bytes[idx] == b'.' {
+            let frac_start = idx + 1;
+            idx += 1;
+            while idx < bytes.len() && matches!(bytes[idx], b'0'..=b'9') {
+                idx += 1;
+            }
+            if idx == frac_start {
+                return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                    state.current_offset(),
+                    Some(bytes),
+                    "invalid fraction",
+                ));
+            }
+        }
+
+        if idx < bytes.len() && (bytes[idx] == b'e' || bytes[idx] == b'E') {
+            idx += 1;
+            if idx < bytes.len() && (bytes[idx] == b'+' || bytes[idx] == b'-') {
+                idx += 1;
+            }
+            let exp_start = idx;
+            while idx < bytes.len() && matches!(bytes[idx], b'0'..=b'9') {
+                idx += 1;
+            }
+            if idx == exp_start {
+                return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                    state.current_offset(),
+                    Some(bytes),
+                    "invalid exponent",
+                ));
+            }
+        }
+
+        let slice = &bytes[..idx];
+        match str::from_utf8(slice)
+            .ok()
+            .and_then(|s| Number::from_str(s).ok())
+        {
+            Some(num) => {
+                let next_state = state.advance_by(idx);
+                ParseResult::successful_with_state(next_state, Value::Number(num), idx)
+            }
+            None => ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(bytes),
+                "invalid number",
+            )),
+        }
     })
 }
 
 fn json_string_literal<'a>() -> Parser<'a, u8, String> {
-    let regular_chunk = take_while1(|b| b >= 0x20 && b != b'"' && b != b'\\')
-        .map(|bytes| String::from_utf8_lossy(bytes).into_owned());
+    Parser::new(|_, state| {
+        let bytes = state.input();
+        if bytes.first() != Some(&b'"') {
+            return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(bytes),
+                "expected string",
+            ));
+        }
 
-    let simple_escape = Parser::or_list([
-        byte(b'"').map(|_| "\"".to_string()),
-        byte(b'\\').map(|_| "\\".to_string()),
-        byte(b'/').map(|_| "/".to_string()),
-        byte(b'b').map(|_| "\u{0008}".to_string()),
-        byte(b'f').map(|_| "\u{000C}".to_string()),
-        byte(b'n').map(|_| "\n".to_string()),
-        byte(b'r').map(|_| "\r".to_string()),
-        byte(b't').map(|_| "\t".to_string()),
-    ]);
+        let mut idx = 1usize;
+        let mut last = 1usize;
+        let mut result = String::new();
 
-    let unicode_escape = byte(b'u').flat_map(|_| {
-        parse_hex_unit().flat_map(|first| {
-            if (0xD800..=0xDBFF).contains(&first) {
-                skip_left(byte(b'\\'), byte(b'u')).flat_map(move |_| {
-                    parse_hex_unit().map(move |second| decode_units(vec![first, second]))
-                })
+        while idx < bytes.len() {
+            let byte = bytes[idx];
+            if byte == b'"' {
+                if idx > last {
+                    if let Ok(segment) = str::from_utf8(&bytes[last..idx]) {
+                        result.push_str(segment);
+                    } else {
+                        return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                            state.current_offset() + last,
+                            Some(&bytes[last..idx]),
+                            "invalid utf8 in string",
+                        ));
+                    }
+                }
+                let consumed = idx + 1;
+                let next_state = state.advance_by(consumed);
+                return ParseResult::successful_with_state(next_state, result, consumed);
+            } else if byte == b'\\' {
+                if idx > last {
+                    if let Ok(segment) = str::from_utf8(&bytes[last..idx]) {
+                        result.push_str(segment);
+                    } else {
+                        return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                            state.current_offset() + last,
+                            Some(&bytes[last..idx]),
+                            "invalid utf8 in string",
+                        ));
+                    }
+                }
+
+                idx += 1;
+                if idx >= bytes.len() {
+                    return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                        state.current_offset() + idx,
+                        Some(&bytes[idx..]),
+                        "unterminated escape",
+                    ));
+                }
+
+                let escaped = bytes[idx];
+                match escaped {
+                    b'"' => result.push('"'),
+                    b'\\' => result.push('\\'),
+                    b'/' => result.push('/'),
+                    b'b' => result.push('\u{0008}'),
+                    b'f' => result.push('\u{000C}'),
+                    b'n' => result.push('\n'),
+                    b'r' => result.push('\r'),
+                    b't' => result.push('\t'),
+                    b'u' => {
+                        if idx + 4 >= bytes.len() {
+                            return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                                state.current_offset() + idx,
+                                Some(&bytes[idx..]),
+                                "invalid unicode escape",
+                            ));
+                        }
+                        let hex = &bytes[idx + 1..idx + 5];
+                        let hex_str = match str::from_utf8(hex) {
+                            Ok(s) => s,
+                            Err(_) => {
+                                return ParseResult::failed_with_uncommitted(
+                                    ParseError::of_custom(
+                                        state.current_offset() + idx,
+                                        Some(&bytes[idx..idx + 5]),
+                                        "invalid unicode escape",
+                                    ),
+                                );
+                            }
+                        };
+                        match u16::from_str_radix(hex_str, 16) {
+                            Ok(first) if (0xD800..=0xDBFF).contains(&first) => {
+                                if idx + 6 >= bytes.len()
+                                    || bytes[idx + 5] != b'\\'
+                                    || bytes[idx + 6] != b'u'
+                                {
+                                    result.push('\u{FFFD}');
+                                    idx += 4;
+                                } else {
+                                    if idx + 11 >= bytes.len() {
+                                        return ParseResult::failed_with_uncommitted(
+                                            ParseError::of_custom(
+                                                state.current_offset() + idx,
+                                                Some(&bytes[idx..]),
+                                                "invalid surrogate pair",
+                                            ),
+                                        );
+                                    }
+                                    let low_hex = &bytes[idx + 7..idx + 11];
+                                    let second = match str::from_utf8(low_hex) {
+                                        Ok(s) => u16::from_str_radix(s, 16).unwrap_or(0xFFFD),
+                                        Err(_) => 0xFFFD,
+                                    };
+                                    let decoded = decode_utf16([first, second])
+                                        .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER));
+                                    for ch in decoded {
+                                        result.push(ch);
+                                    }
+                                    idx += 10;
+                                }
+                            }
+                            Ok(first) => {
+                                let ch =
+                                    char::from_u32(first as u32).unwrap_or(REPLACEMENT_CHARACTER);
+                                result.push(ch);
+                                idx += 4;
+                            }
+                            Err(_) => {
+                                result.push('\u{FFFD}');
+                                idx += 4;
+                            }
+                        }
+                    }
+                    _ => {
+                        return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                            state.current_offset() + idx,
+                            Some(&bytes[idx..idx + 1]),
+                            "invalid escape",
+                        ));
+                    }
+                }
+                idx += 1;
+                last = idx;
+            } else if byte < 0x20 {
+                return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                    state.current_offset() + idx,
+                    Some(&bytes[idx..idx + 1]),
+                    "control character in string",
+                ));
             } else {
-                successful(decode_units(vec![first]))
+                idx += 1;
             }
-        })
-    });
+        }
 
-    let escape_sequence = Parser::or_list([simple_escape, unicode_escape]);
-    let escape_chunk = byte(b'\\').flat_map(move |_| escape_sequence.clone());
-
-    let piece = Parser::or_list([regular_chunk.clone(), escape_chunk]);
-
-    let content = piece.many0().map(|segments| segments.concat());
-
-    surround(byte(b'"'), content, byte(b'"'))
+        ParseResult::failed_with_uncommitted(ParseError::of_custom(
+            state.current_offset(),
+            Some(bytes),
+            "unterminated string",
+        ))
+    })
 }
 
 fn json_string<'a>() -> Parser<'a, u8, Value> {

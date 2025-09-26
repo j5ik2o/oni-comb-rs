@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use pom::parser::*;
 use serde_json::{Map, Number, Value};
 use std::char::REPLACEMENT_CHARACTER;
