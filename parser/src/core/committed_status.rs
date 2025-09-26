@@ -13,6 +13,14 @@ impl CommittedStatus {
             _ => CommittedStatus::Uncommitted,
         }
     }
+
+    pub fn is_committed(self) -> bool {
+        matches!(self, CommittedStatus::Committed)
+    }
+
+    pub fn is_uncommitted(self) -> bool {
+        matches!(self, CommittedStatus::Uncommitted)
+    }
 }
 
 impl From<bool> for CommittedStatus {

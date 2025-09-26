@@ -1,5 +1,5 @@
-use super::{ParseError, ParseState};
 use crate::core::CommittedStatus;
+use crate::core::{parse_error::ParseError, ParseState};
 
 #[derive(Debug, Clone)]
 pub enum ParseResult<'a, I, A> {
@@ -125,9 +125,9 @@ impl<'a, I, A> ParseResult<'a, I, A> {
         }
     }
 
-    pub fn map_err<F>(self, mut f: F) -> Self
+    pub fn map_err<F>(self, f: F) -> Self
     where
-        F: FnMut(ParseError<'a, I>) -> ParseError<'a, I>,
+        F: FnOnce(ParseError<'a, I>) -> ParseError<'a, I>,
     {
         match self {
             ParseResult::Failure {
@@ -148,6 +148,17 @@ impl<'a, I, A> ParseResult<'a, I, A> {
                 value,
                 length: length + n,
                 state: state.map(|s| s.advance_by(n)),
+            },
+            failure => failure,
+        }
+    }
+
+    pub fn with_state(self, state: ParseState<'a, I>) -> Self {
+        match self {
+            ParseResult::Success { value, length, .. } => ParseResult::Success {
+                value,
+                length,
+                state: Some(state),
             },
             failure => failure,
         }

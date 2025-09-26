@@ -1,12 +1,16 @@
 #[derive(Debug, Clone, Copy)]
 pub struct ParseState<'a, I> {
-    input: &'a [I],
+    original: &'a [I],
     offset: usize,
 }
 
 impl<'a, I> ParseState<'a, I> {
     pub fn new(input: &'a [I], offset: usize) -> Self {
-        Self { input, offset }
+        assert!(offset <= input.len());
+        Self {
+            original: input,
+            offset,
+        }
     }
 
     pub fn current_offset(&self) -> usize {
@@ -14,13 +18,18 @@ impl<'a, I> ParseState<'a, I> {
     }
 
     pub fn advance_by(&self, count: usize) -> Self {
-        Self {
-            input: self.input,
-            offset: self.offset + count,
-        }
+        Self::new(self.original, self.offset + count)
     }
 
     pub fn input(&self) -> &'a [I] {
-        &self.input[self.offset..]
+        &self.original[self.offset..]
+    }
+
+    pub fn original(&self) -> &'a [I] {
+        self.original
+    }
+
+    pub fn len(&self) -> usize {
+        self.original.len() - self.offset
     }
 }
