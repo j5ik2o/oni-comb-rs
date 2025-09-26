@@ -34,12 +34,19 @@
 - `filter(parser, predicate)` : 成功値に対して述語を適用し、偽なら失敗。
 - `attempt(parser)` : 成功しても入力をコミット扱いしない（バックトラック可能）。
 - `exists(parser)` / `not(parser)` : 述語的な補助パーサー。
+- `optional(parser)` : 非コミット失敗を `Option` に変換。
+- `unwrap_or(parser, default)` / `unwrap_or_else(parser, f)` : 非コミット失敗時に既定値を返す。
 - `chain_left1`, `chain_right1` : 左結合・右結合の演算子チェーンを構築。
+- `chain_left0`, `chain_right0` : 零回許容の演算子チェーンを構築し `Option` を返す。
 - `many0`, `many1`, `repeat`, `repeat_sep` : 繰り返し系。
+- `skip_many0`, `skip_many1` : 結果を破棄しつつ入力を消費。
+- `many_till(parser, end)` / `skip_till(parser, end)` : 終端条件付きの繰り返し。
 - `skip_left`, `skip_right`, `surround` : 前後のパーサーを評価しつつ中央の値のみ返す。
 - `peek(parser)` : 入力を消費せずに成功値を覗く。
 - `cache(parser)` : 入力位置に対する結果をメモ化。
 - `log_map`, `name`, `expect` : ログやエラーメッセージ拡張。
+
+`choice(iter)` は `IntoIterator<Item = Parser>` を受け取り、内部で `Parser::or_list` を用いて順次論理和を評価します。
 
 これらは `ParsersImpl` 内で実装され、`prelude` から再公開されていました。
 
@@ -80,4 +87,3 @@
 - パフォーマンス改善のため、`ParseState` はすでに残り入力を直接参照する形へ調整済み。
 - `ParseResult` は今後、借用ベース (`ParseSuccess` など) へ段階的に移行予定。
 - 詳細なリファクタリング計画は `docs/refactor_plan.md`（旧ブランチ）に記録されていた内容を参照。
-

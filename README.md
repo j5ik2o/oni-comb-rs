@@ -8,8 +8,9 @@ Rust 製パーサーコンビネータ群を再構築するプロジェクトで
 - `Parser` に以下のコンビネータを実装。
   - `map`, `flat_map`, `filter`, `attempt`
   - 多重適用系: `many0`, `many1`
+  - 選択・制御系: `optional`, `unwrap_or`, `unwrap_or_else`, `skip_many*`, `many_till`, `skip_till`, `or_list`
 - `prelude` から以下の関数を再公開。
-  - `map`, `flat_map`, `filter`, `attempt`, `exists`, `not`, `skip_left`, `skip_right`, `surround`, `many0`, `many1`
+  - `map`, `flat_map`, `filter`, `attempt`, `exists`, `not`, `skip_left`, `skip_right`, `surround`, `many0`, `many1`, `optional`, `unwrap_or`, `unwrap_or_else`, `skip_many0`, `skip_many1`, `many_till`, `skip_till`
 - 追加プリミティブ: `byte`, `take_while1`, `separated_list1`, `separated_fold1`
 - `parser/tests/combinators.rs` に統合テストを追加し、基本挙動とコミット制御を検証。
 
