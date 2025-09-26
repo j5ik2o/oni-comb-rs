@@ -3,10 +3,11 @@ use std::cell::Cell;
 use oni_comb_parser::core::{CommittedStatus, ParseError, ParseResult, Parser};
 use oni_comb_parser::prelude::{
     attempt, byte, chain_left0, chain_left1, chain_right0, chain_right1, choice, elm, exists,
-    flat_map as flat_map_fn, many0, many1, many_till, map as map_fn, not, one_of, optional, or,
-    or_else, peek, repeat, repeat_sep, separated_fold1, separated_list0, separated_list1, seq,
-    skip_left, skip_many0, skip_many1, skip_right, skip_till, surround, take, take_until,
-    take_until1, take_while, take_while0, take_while1, take_while1_fold, unwrap_or, unwrap_or_else,
+    expect, flat_map as flat_map_fn, many0, many1, many_till, map as map_fn, map_err, not, one_of,
+    optional, or, or_else, peek, repeat, repeat_sep, separated_fold1, separated_list0,
+    separated_list1, seq, skip_left, skip_many0, skip_many1, skip_right, skip_till, surround, take,
+    take_until, take_until1, take_while, take_while0, take_while1, take_while1_fold, unwrap_or,
+    unwrap_or_else,
 };
 
 fn any_byte<'a>() -> Parser<'a, u8, u8> {
@@ -277,6 +278,96 @@ fn unwrap_or_else_invokes_lazy_default() {
 }
 
 #[test]
+fn map_err_changes_failure_message() {
+    let parser = map_err(byte(b'a'), |err| {
+        ParseError::of_custom(err.offset, err.remainder, "custom message")
+    });
+
+    match parser.parse(b"zzz") {
+        ParseResult::Failure {
+            committed_status,
+            error,
+        } => {
+            assert!(committed_status.is_uncommitted());
+            assert!(error.message.contains("custom message"));
+        }
+        _ => panic!("expected failure"),
+    }
+}
+
+#[test]
+fn ok_or_transforms_optional_to_result() {
+    let parser = optional(byte(b'a')).ok_or::<u8, _>("missing");
+    match parser.parse(b"abc") {
+        ParseResult::Success { value, length, .. } => {
+            assert_eq!(value, Ok(b'a'));
+            assert_eq!(length, 1);
+        }
+        _ => panic!("expected success"),
+    }
+
+    match parser.parse(b"zzz") {
+        ParseResult::Success { value, .. } => assert_eq!(value, Err("missing")),
+        _ => panic!("expected success"),
+    }
+}
+
+#[test]
+fn ok_or_else_builds_error_lazily() {
+    let counter = Cell::new(0);
+    let parser = optional(byte(b'a')).ok_or_else::<u8, _, _>(|| {
+        counter.set(counter.get() + 1);
+        "generated"
+    });
+
+    match parser.parse(b"zzz") {
+        ParseResult::Success { value, .. } => {
+            assert_eq!(value, Err("generated"));
+            assert_eq!(counter.get(), 1);
+        }
+        _ => panic!("expected success"),
+    }
+}
+
+#[test]
+fn expect_replaces_message_and_commits() {
+    let parser = expect(byte(b'a'), "expected 'a'");
+    match parser.parse(b"zzz") {
+        ParseResult::Failure {
+            committed_status,
+            error,
+        } => {
+            assert!(committed_status.is_committed());
+            assert!(error.message.contains("expected 'a'"));
+        }
+        _ => panic!("expected committed failure"),
+    }
+}
+
+#[test]
+fn parser_peek_method_preserves_input() {
+    match byte(b'a').peek().parse(b"abc") {
+        ParseResult::Success {
+            value,
+            length,
+            state,
+        } => {
+            assert_eq!(value, b'a');
+            assert_eq!(length, 0);
+            assert_eq!(state.expect("state").input(), b"abc");
+        }
+        _ => panic!("expected success"),
+    }
+
+    match byte(b'z').peek().parse(b"abc") {
+        ParseResult::Failure {
+            committed_status, ..
+        } => assert!(committed_status.is_uncommitted()),
+        _ => panic!("expected failure"),
+    }
+}
+
+#[test]
 fn or_combines_two_parsers() {
     let parser = or(byte(b'a'), byte(b'b'));
     match parser.parse(b"bcd") {
@@ -429,6 +520,18 @@ fn parser_or_list_combines_multiple_parsers() {
             assert_eq!(length, 1);
         }
         _ => panic!("expected success"),
+    }
+}
+
+#[test]
+fn parser_reduce_right_combines_with_right_associativity() {
+    let digit = take_while1(|b| b.is_ascii_digit()).map(|bytes: &[u8]| (bytes[0] - b'0') as i32);
+    let parser = digit.reduce_right(byte(b'^').map(|_| |l: i32, r: i32| l.pow(r as u32)));
+
+    let result = parser.parse(b"2^3^2");
+    match result {
+        ParseResult::Success { value, .. } => assert_eq!(value, 512),
+        failure => panic!("expected success: {:?}", failure),
     }
 }
 
@@ -664,6 +767,24 @@ fn parser_many_till_method_matches_until_end() {
             assert_eq!(state.expect("state").input(), b"?");
         }
         _ => panic!("expected success"),
+    }
+}
+
+#[test]
+fn parser_peek_not_succeeds_when_inner_fails() {
+    match byte(b'z').peek_not().parse(b"abc") {
+        ParseResult::Success { length, state, .. } => {
+            assert_eq!(length, 0);
+            assert_eq!(state.expect("state").current_offset(), 0);
+        }
+        _ => panic!("expected success"),
+    }
+
+    match byte(b'a').peek_not().parse(b"abc") {
+        ParseResult::Failure {
+            committed_status, ..
+        } => assert!(committed_status.is_uncommitted()),
+        _ => panic!("expected failure"),
     }
 }
 

@@ -107,6 +107,15 @@ where
     parser.map(f)
 }
 
+pub fn map_err<'a, I, A, F>(parser: Parser<'a, I, A>, f: F) -> Parser<'a, I, A>
+where
+    F: Fn(ParseError<'a, I>) -> ParseError<'a, I> + 'a,
+    I: 'a,
+    A: 'a,
+{
+    parser.map_err(f)
+}
+
 pub fn flat_map<'a, I, A, B, F>(parser: Parser<'a, I, A>, f: F) -> Parser<'a, I, B>
 where
     F: Fn(A) -> Parser<'a, I, B> + 'a,
@@ -159,6 +168,14 @@ where
     parser.optional()
 }
 
+pub fn expect<'a, I, A>(parser: Parser<'a, I, A>, message: impl Into<String>) -> Parser<'a, I, A>
+where
+    I: 'a,
+    A: 'a,
+{
+    parser.expect(message)
+}
+
 pub fn unwrap_or<'a, I, A>(parser: Parser<'a, I, A>, default: A) -> Parser<'a, I, A>
 where
     I: 'a,
@@ -183,6 +200,25 @@ where
     It: IntoIterator<Item = Parser<'a, I, A>>,
 {
     Parser::or_list(parsers)
+}
+
+pub fn ok_or<'a, I, A, E>(parser: Parser<'a, I, A>, err: E) -> Parser<'a, I, Result<A, E>>
+where
+    I: 'a,
+    A: 'a,
+    E: Clone + 'a,
+{
+    parser.ok_or(err)
+}
+
+pub fn ok_or_else<'a, I, A, E, F>(parser: Parser<'a, I, A>, f: F) -> Parser<'a, I, Result<A, E>>
+where
+    I: 'a,
+    A: 'a,
+    E: 'a,
+    F: Fn() -> E + 'a,
+{
+    parser.ok_or_else(f)
 }
 
 pub fn exists<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, bool>
@@ -233,20 +269,15 @@ where
     I: 'a,
     A: 'a,
 {
-    let probe = parser.clone();
-    Parser::new(move |input, state| {
-        let original_state = state;
-        match probe.run(input, state) {
-            ParseResult::Success { value, .. } => ParseResult::Success {
-                value,
-                length: 0,
-                state: Some(original_state),
-            },
-            ParseResult::Failure { error, .. } => {
-                ParseResult::failed(error, CommittedStatus::Uncommitted)
-            }
-        }
-    })
+    parser.peek()
+}
+
+pub fn peek_not<'a, I, A>(parser: Parser<'a, I, A>) -> Parser<'a, I, ()>
+where
+    I: 'a,
+    A: 'a,
+{
+    parser.peek_not()
 }
 
 pub fn skip_left<'a, I, A, B>(left: Parser<'a, I, A>, right: Parser<'a, I, B>) -> Parser<'a, I, B>
@@ -455,12 +486,7 @@ where
     A: Clone + 'a,
     OpFn: Fn(A, A) -> A + 'a,
 {
-    let element_parser = element.clone();
-    let operator_parser = operator.clone();
-
-    Parser::new(move |input, state| {
-        chain_right1_internal(input, &element_parser, &operator_parser, state)
-    })
+    element.reduce_right(operator)
 }
 
 pub fn chain_right0<'a, I, A, OpFn>(
@@ -955,107 +981,6 @@ where
         let next_state = state.advance_by(len);
         ParseResult::successful_with_state(next_state, acc, len)
     })
-}
-
-fn chain_right1_internal<'a, I, A, OpFn>(
-    input: &'a [I],
-    element: &Parser<'a, I, A>,
-    operator: &Parser<'a, I, OpFn>,
-    state: ParseState<'a, I>,
-) -> ParseResult<'a, I, A>
-where
-    I: 'a,
-    A: Clone + 'a,
-    OpFn: Fn(A, A) -> A + 'a,
-{
-    match element.run(input, state) {
-        ParseResult::Success {
-            value,
-            length,
-            state: Some(next_state),
-        } => {
-            let mut total_length = length;
-
-            match operator.run(input, next_state) {
-                ParseResult::Success {
-                    value: combine,
-                    length: op_length,
-                    state: Some(op_state),
-                } => {
-                    if op_length == 0 && op_state.current_offset() == next_state.current_offset() {
-                        return ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                            next_state.current_offset(),
-                            Some(next_state.input()),
-                            "chain_right1 operator did not advance state",
-                        ));
-                    }
-
-                    total_length += op_length;
-
-                    match chain_right1_internal(input, element, operator, op_state) {
-                        ParseResult::Success {
-                            value: rhs,
-                            length: rhs_length,
-                            state: Some(final_state),
-                        } => {
-                            total_length += rhs_length;
-                            ParseResult::Success {
-                                value: combine(value, rhs),
-                                length: total_length,
-                                state: Some(final_state),
-                            }
-                        }
-                        ParseResult::Success { state: None, .. } => {
-                            ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                                op_state.current_offset(),
-                                Some(op_state.input()),
-                                "chain_right1 recursive parser did not return state",
-                            ))
-                        }
-                        ParseResult::Failure {
-                            error,
-                            committed_status,
-                        } => ParseResult::Failure {
-                            error,
-                            committed_status: committed_status.or(CommittedStatus::Committed),
-                        },
-                    }
-                }
-                ParseResult::Success { state: None, .. } => {
-                    ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                        next_state.current_offset(),
-                        Some(next_state.input()),
-                        "chain_right1 operator did not return state",
-                    ))
-                }
-                ParseResult::Failure {
-                    error,
-                    committed_status,
-                } => {
-                    if committed_status.is_committed() {
-                        ParseResult::Failure {
-                            error,
-                            committed_status,
-                        }
-                    } else {
-                        ParseResult::Success {
-                            value,
-                            length: total_length,
-                            state: Some(next_state),
-                        }
-                    }
-                }
-            }
-        }
-        ParseResult::Success { state: None, .. } => {
-            ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                state.current_offset(),
-                Some(state.input()),
-                "chain_right1 element parser did not return state",
-            ))
-        }
-        failure => failure,
-    }
 }
 
 pub fn separated_list1<'a, I, A, B>(

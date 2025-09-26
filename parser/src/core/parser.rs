@@ -41,6 +41,26 @@ impl<'a, I, A> Parser<'a, I, A> {
         Parser::new(move |input, state| parser.run(input, state).map(|value| f(value)))
     }
 
+    /// Map the parsing error when this parser fails.
+    pub fn map_err<F>(self, f: F) -> Parser<'a, I, A>
+    where
+        F: Fn(ParseError<'a, I>) -> ParseError<'a, I> + 'a,
+        A: 'a,
+        I: 'a,
+    {
+        let parser = self.clone();
+        Parser::new(move |input, state| match parser.run(input, state) {
+            ParseResult::Failure {
+                error,
+                committed_status,
+            } => ParseResult::Failure {
+                error: f(error),
+                committed_status,
+            },
+            success => success,
+        })
+    }
+
     pub fn flat_map<B, F>(self, f: F) -> Parser<'a, I, B>
     where
         F: Fn(A) -> Parser<'a, I, B> + 'a,
@@ -74,6 +94,35 @@ impl<'a, I, A> Parser<'a, I, A> {
     {
         let parser = self.clone();
         Parser::new(move |input, state| parser.run(input, state).with_uncommitted())
+    }
+
+    /// Replace the failure message and mark it as committed.
+    pub fn expect(self, message: impl Into<String>) -> Parser<'a, I, A>
+    where
+        I: 'a,
+        A: 'a,
+    {
+        let parser = self.clone();
+        let message = Rc::new(message.into());
+        Parser::new(move |input, state| match parser.run(input, state) {
+            success @ ParseResult::Success { .. } => success,
+            ParseResult::Failure {
+                error,
+                committed_status,
+            } => {
+                if committed_status.is_committed() {
+                    ParseResult::Failure {
+                        error,
+                        committed_status,
+                    }
+                } else {
+                    ParseResult::failed(
+                        ParseError::of_custom(error.offset, error.remainder, (*message).clone()),
+                        CommittedStatus::Committed,
+                    )
+                }
+            }
+        })
     }
 
     /// Convert the parser into one that never commits on failure, yielding `None` instead.
@@ -186,7 +235,7 @@ impl<'a, I, A> Parser<'a, I, A> {
             let mut current_state = state;
 
             loop {
-                match end_parser.clone().run(input, current_state) {
+                match end_parser.run(input, current_state) {
                     ParseResult::Success {
                         value: end_value,
                         length: end_length,
@@ -219,7 +268,7 @@ impl<'a, I, A> Parser<'a, I, A> {
                     }
                 }
 
-                match element_parser.clone().run(input, current_state) {
+                match element_parser.run(input, current_state) {
                     ParseResult::Success {
                         value,
                         length,
@@ -256,6 +305,73 @@ impl<'a, I, A> Parser<'a, I, A> {
                     }
                 }
             }
+        })
+    }
+
+    /// Convert an optional output into a `Result` by mapping `None` to `Err`.
+    pub fn ok_or<B, E>(self, err: E) -> Parser<'a, I, Result<B, E>>
+    where
+        I: 'a,
+        A: Into<Option<B>> + 'a,
+        B: 'a,
+        E: Clone + 'a,
+    {
+        let parser = self.clone();
+        Parser::new(move |input, state| match parser.run(input, state) {
+            ParseResult::Success {
+                value,
+                length,
+                state,
+            } => {
+                let opt: Option<B> = value.into();
+                let result = opt.map(Ok).unwrap_or_else(|| Err(err.clone()));
+                ParseResult::Success {
+                    value: result,
+                    length,
+                    state,
+                }
+            }
+            ParseResult::Failure {
+                error,
+                committed_status,
+            } => ParseResult::Failure {
+                error,
+                committed_status,
+            },
+        })
+    }
+
+    /// Convert an optional output into a `Result` using a lazy error provider.
+    pub fn ok_or_else<B, E, F>(self, f: F) -> Parser<'a, I, Result<B, E>>
+    where
+        I: 'a,
+        A: Into<Option<B>> + 'a,
+        B: 'a,
+        E: 'a,
+        F: Fn() -> E + 'a,
+    {
+        let parser = self.clone();
+        Parser::new(move |input, state| match parser.run(input, state) {
+            ParseResult::Success {
+                value,
+                length,
+                state,
+            } => {
+                let opt: Option<B> = value.into();
+                let result = opt.map(Ok).unwrap_or_else(|| Err(f()));
+                ParseResult::Success {
+                    value: result,
+                    length,
+                    state,
+                }
+            }
+            ParseResult::Failure {
+                error,
+                committed_status,
+            } => ParseResult::Failure {
+                error,
+                committed_status,
+            },
         })
     }
 
@@ -392,6 +508,70 @@ impl<'a, I, A> Parser<'a, I, A> {
         })
     }
 
+    /// Look ahead without consuming any input.
+    pub fn peek(self) -> Parser<'a, I, A>
+    where
+        I: 'a,
+        A: 'a,
+    {
+        let parser = self.clone();
+        Parser::new(move |input, state| {
+            let original_state = state;
+            match parser.run(input, state) {
+                ParseResult::Success { value, .. } => ParseResult::Success {
+                    value,
+                    length: 0,
+                    state: Some(original_state),
+                },
+                ParseResult::Failure { error, .. } => {
+                    ParseResult::failed(error, CommittedStatus::Uncommitted)
+                }
+            }
+        })
+    }
+
+    /// Succeeds only if the parser fails without committing; does not consume input.
+    pub fn peek_not(self) -> Parser<'a, I, ()>
+    where
+        I: 'a,
+        A: 'a,
+    {
+        let parser = self.clone();
+        Parser::new(move |input, state| {
+            let original_state = state;
+            match parser.run(input, state) {
+                ParseResult::Failure {
+                    committed_status, ..
+                } => {
+                    if committed_status.is_committed() {
+                        ParseResult::failed(
+                            ParseError::of_custom(
+                                original_state.current_offset(),
+                                Some(original_state.input()),
+                                "peek_not: inner parser committed",
+                            ),
+                            CommittedStatus::Committed,
+                        )
+                    } else {
+                        ParseResult::Success {
+                            value: (),
+                            length: 0,
+                            state: Some(original_state),
+                        }
+                    }
+                }
+                ParseResult::Success { .. } => ParseResult::failed(
+                    ParseError::of_custom(
+                        original_state.current_offset(),
+                        Some(original_state.input()),
+                        "peek_not: unexpected success",
+                    ),
+                    CommittedStatus::Uncommitted,
+                ),
+            }
+        })
+    }
+
     pub fn or(self, other: Parser<'a, I, A>) -> Parser<'a, I, A>
     where
         I: 'a,
@@ -439,6 +619,20 @@ impl<'a, I, A> Parser<'a, I, A> {
                     f().run(input, state)
                 }
             }
+        })
+    }
+
+    /// Reduce a sequence of values using a right-associative operator parsed between elements.
+    pub fn reduce_right<OpFn>(self, operator: Parser<'a, I, OpFn>) -> Parser<'a, I, A>
+    where
+        I: 'a,
+        A: Clone + 'a,
+        OpFn: Fn(A, A) -> A + 'a,
+    {
+        let element_parser = self.clone();
+        let operator_parser = operator.clone();
+        Parser::new(move |input, state| {
+            reduce_right_internal(input, &element_parser, &operator_parser, state)
         })
     }
 
@@ -632,5 +826,106 @@ impl<'a, I, A> Parser<'a, I, A> {
                 },
             }
         })
+    }
+}
+
+fn reduce_right_internal<'a, I, A, OpFn>(
+    input: &'a [I],
+    element: &Parser<'a, I, A>,
+    operator: &Parser<'a, I, OpFn>,
+    state: ParseState<'a, I>,
+) -> ParseResult<'a, I, A>
+where
+    I: 'a,
+    A: Clone + 'a,
+    OpFn: Fn(A, A) -> A + 'a,
+{
+    match element.run(input, state) {
+        ParseResult::Success {
+            value,
+            length,
+            state: Some(next_state),
+        } => {
+            let mut total_length = length;
+
+            match operator.run(input, next_state) {
+                ParseResult::Success {
+                    value: combine,
+                    length: op_length,
+                    state: Some(op_state),
+                } => {
+                    if op_length == 0 && op_state.current_offset() == next_state.current_offset() {
+                        return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                            next_state.current_offset(),
+                            Some(next_state.input()),
+                            "reduce_right: operator did not advance state",
+                        ));
+                    }
+
+                    total_length += op_length;
+
+                    match reduce_right_internal(input, element, operator, op_state) {
+                        ParseResult::Success {
+                            value: rhs,
+                            length: rhs_length,
+                            state: Some(final_state),
+                        } => {
+                            total_length += rhs_length;
+                            ParseResult::Success {
+                                value: combine(value, rhs),
+                                length: total_length,
+                                state: Some(final_state),
+                            }
+                        }
+                        ParseResult::Success { state: None, .. } => {
+                            ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                                op_state.current_offset(),
+                                Some(op_state.input()),
+                                "reduce_right: recursive parser did not return state",
+                            ))
+                        }
+                        ParseResult::Failure {
+                            error,
+                            committed_status,
+                        } => ParseResult::Failure {
+                            error,
+                            committed_status: committed_status.or(CommittedStatus::Committed),
+                        },
+                    }
+                }
+                ParseResult::Success { state: None, .. } => {
+                    ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                        next_state.current_offset(),
+                        Some(next_state.input()),
+                        "reduce_right: operator did not return state",
+                    ))
+                }
+                ParseResult::Failure {
+                    error,
+                    committed_status,
+                } => {
+                    if committed_status.is_committed() {
+                        ParseResult::Failure {
+                            error,
+                            committed_status,
+                        }
+                    } else {
+                        ParseResult::Success {
+                            value,
+                            length: total_length,
+                            state: Some(next_state),
+                        }
+                    }
+                }
+            }
+        }
+        ParseResult::Success { state: None, .. } => {
+            ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(state.input()),
+                "reduce_right: element parser did not return state",
+            ))
+        }
+        failure => failure,
     }
 }
