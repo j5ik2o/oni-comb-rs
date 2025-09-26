@@ -274,6 +274,50 @@ where
     })
 }
 
+pub fn take_while1_fold<'a, F, Init, Fold, R>(
+    predicate: F,
+    init: Init,
+    fold: Fold,
+) -> Parser<'a, u8, R>
+where
+    F: Fn(u8) -> bool + 'a,
+    Init: Fn(u8) -> R + 'a,
+    Fold: Fn(R, u8) -> R + 'a,
+    R: 'a,
+{
+    Parser::new(move |_: &'a [u8], state: ParseState<'a, u8>| {
+        let slice = state.input();
+        if slice.is_empty() {
+            return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(slice),
+                "take_while1_fold: empty input",
+            ));
+        }
+
+        let mut len = 0usize;
+        while len < slice.len() && predicate(slice[len]) {
+            len += 1;
+        }
+
+        if len == 0 {
+            return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(slice),
+                "take_while1_fold: predicate rejected at start",
+            ));
+        }
+
+        let mut acc = init(slice[0]);
+        for &byte in &slice[1..len] {
+            acc = fold(acc, byte);
+        }
+
+        let next_state = state.advance_by(len);
+        ParseResult::successful_with_state(next_state, acc, len)
+    })
+}
+
 pub fn separated_list1<'a, I, A, B>(
     element: Parser<'a, I, A>,
     separator: Parser<'a, I, B>,

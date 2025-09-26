@@ -2,6 +2,7 @@ use oni_comb_parser::core::{CommittedStatus, ParseError, ParseResult, Parser};
 use oni_comb_parser::prelude::{
     attempt, byte, exists, flat_map as flat_map_fn, many0, many1, map as map_fn, not,
     separated_fold1, separated_list1, skip_left, skip_right, surround, take_while1,
+    take_while1_fold,
 };
 
 fn any_byte<'a>() -> Parser<'a, u8, u8> {
@@ -242,12 +243,39 @@ fn take_while1_reads_digits() {
 }
 
 #[test]
+fn take_while1_fold_accumulates() {
+    let parser = take_while1_fold(
+        |b| b.is_ascii_digit(),
+        |byte| (byte - b'0') as usize,
+        |acc, byte| acc + (byte - b'0') as usize,
+    );
+
+    match parser.parse(b"1234rest") {
+        ParseResult::Success {
+            value,
+            length,
+            state,
+        } => {
+            assert_eq!(value, 1 + 2 + 3 + 4);
+            assert_eq!(length, 4);
+            assert_eq!(state.expect("state").input(), b"rest");
+        }
+        _ => panic!("expected success"),
+    }
+
+    match parser.parse(b"_123") {
+        ParseResult::Failure { .. } => {}
+        _ => panic!("expected failure"),
+    }
+}
+
+#[test]
 fn separated_list1_parses_csv() {
-    let number = take_while1(|b| b.is_ascii_digit()).map(|digits| {
-        digits
-            .iter()
-            .fold(0usize, |acc, d| acc * 10 + (d - b'0') as usize)
-    });
+    let number = take_while1_fold(
+        |b| b.is_ascii_digit(),
+        |byte| (byte - b'0') as usize,
+        |acc, byte| acc * 10 + (byte - b'0') as usize,
+    );
     let parser = separated_list1(number.clone(), byte(b','));
     match parser.parse(b"10,20,30") {
         ParseResult::Success {
