@@ -10,6 +10,7 @@ Rust 製パーサーコンビネータ群を再構築するプロジェクトで
   - 多重適用系: `many0`, `many1`
 - `prelude` から以下の関数を再公開。
   - `map`, `flat_map`, `filter`, `attempt`, `exists`, `not`, `skip_left`, `skip_right`, `surround`, `many0`, `many1`
+- 追加プリミティブ: `byte`, `take_while1`, `separated_list1`, `separated_fold1`
 - `parser/tests/combinators.rs` に統合テストを追加し、基本挙動とコミット制御を検証。
 
 ## 使い方

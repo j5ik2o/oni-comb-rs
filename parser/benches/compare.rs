@@ -1,5 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use oni_comb_parser::core::{ParseError, ParseResult, ParseState, Parser};
+use oni_comb_parser::prelude::take_while1;
 use pom::parser::*;
 
 fn generate_input(len: usize) -> Vec<u8> {
@@ -29,31 +30,8 @@ fn generate_csv_input(count: usize) -> Vec<u8> {
     data
 }
 
-fn oni_comb_digit<'a>() -> Parser<'a, u8, u8> {
-    Parser::new(|_: &'a [u8], state: ParseState<'a, u8>| {
-        let remaining = state.input();
-        match remaining.first() {
-            Some(&value) if value.is_ascii_digit() => {
-                let next_state = state.advance_by(1);
-                ParseResult::successful_with_state(next_state, value, 1)
-            }
-            Some(_) => ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                state.current_offset(),
-                Some(remaining),
-                "expected digit",
-            )),
-            None => ParseResult::failed_with_uncommitted(ParseError::of_custom(
-                state.current_offset(),
-                None,
-                "unexpected end of input",
-            )),
-        }
-    })
-}
-
 fn oni_comb_sum_digits(input: &[u8]) -> usize {
-    let parser = oni_comb_digit()
-        .many1()
+    let parser = take_while1(|b| b.is_ascii_digit())
         .map(|digits| digits.iter().map(|d| (d - b'0') as usize).sum::<usize>());
 
     match parser.parse(input) {

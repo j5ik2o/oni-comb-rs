@@ -12,7 +12,8 @@
   - `prelude` モジュール: `unit`, `successful`, `failed`, `begin`, `end` などの基本 API
 - ✅ `ParseResult` / `ParseState` は将来の借用ベース化に対応しやすい形でプレースホルダー実装済み。
 - ✅ `ParseResult`/`Parser` の基本API (`flat_map`/`many*`/`filter` 等) とプレリュードの主要コンビネータを復元。
-- ✅ `criterion` ベースのベンチマーク環境を用意し、`nom` / `pom` と比較できる CPU バウンド計測 (連続数字の総和) を実装。
+- ✅ `take_while1` / `byte` / `separated_list1` / `separated_fold1` を導入し、高頻度ケース向けのホットパス最適化の足場を整備。
+- ✅ `criterion` ベースのベンチマーク環境を用意し、`nom` / `pom` と比較できる CPU バウンド計測 (連続数字の総和・CSV整数列) を実装。
 
 ## TODO（今後の実装ステップ）
 1. **ParseResult API の仕上げ**
@@ -31,7 +32,7 @@
    - ユニットテスト／ドキュメントテストで API をカバー
    - 旧クレートの代表的なサンプル（JSON パーサーなど）を新アーキテクチャで実装しなおす
 6. **ベンチマーク整備**（継続）
-   - ✅ `criterion` 環境と `nom` / `pom` との比較ベンチ (連続数字) を追加
+   - ✅ `criterion` 環境と `nom` / `pom` との比較ベンチ (連続数字/CSV 数列) を追加
    - □ 入力パターンを拡充し、実際の DSL/構造体向けケースでの CPU バウンド性能を測定
    - □ HTML レポートなどの成果物収集フローを整備
 

@@ -1,36 +1,8 @@
 use oni_comb_parser::core::{CommittedStatus, ParseError, ParseResult, Parser};
 use oni_comb_parser::prelude::{
-    attempt, exists, flat_map as flat_map_fn, many0, many1, map as map_fn, not, skip_left,
-    skip_right, surround,
+    attempt, byte, exists, flat_map as flat_map_fn, many0, many1, map as map_fn, not,
+    separated_fold1, separated_list1, skip_left, skip_right, surround, take_while1,
 };
-
-fn byte<'a>(expected: u8) -> Parser<'a, u8, u8> {
-    Parser::new(move |_, state| {
-        let remaining = state.input();
-        match remaining.first() {
-            Some(&value) if value == expected => {
-                let next_state = state.advance_by(1);
-                ParseResult::successful_with_state(next_state, value, 1)
-            }
-            Some(&found) => ParseResult::failed(
-                ParseError::of_custom(
-                    state.current_offset(),
-                    Some(remaining),
-                    format!("expected {expected:?} but found {found:?}"),
-                ),
-                CommittedStatus::Uncommitted,
-            ),
-            None => ParseResult::failed(
-                ParseError::of_custom(
-                    state.current_offset(),
-                    None,
-                    format!("expected {expected:?} but reached end of input"),
-                ),
-                CommittedStatus::Uncommitted,
-            ),
-        }
-    })
-}
 
 fn any_byte<'a>() -> Parser<'a, u8, u8> {
     Parser::new(move |_, state| {
@@ -244,5 +216,68 @@ fn restates_many1_failure_when_inner_committed() {
             assert!(committed_status.is_committed());
         }
         _ => panic!("expected failure"),
+    }
+}
+
+#[test]
+fn take_while1_reads_digits() {
+    let parser = take_while1(|b| b.is_ascii_digit());
+    match parser.parse(b"123abc") {
+        ParseResult::Success {
+            value,
+            length,
+            state,
+        } => {
+            assert_eq!(value, b"123");
+            assert_eq!(length, 3);
+            assert_eq!(state.expect("state").input(), b"abc");
+        }
+        _ => panic!("expected success"),
+    }
+
+    match parser.parse(b"abc") {
+        ParseResult::Failure { .. } => {}
+        _ => panic!("expected failure"),
+    }
+}
+
+#[test]
+fn separated_list1_parses_csv() {
+    let number = take_while1(|b| b.is_ascii_digit()).map(|digits| {
+        digits
+            .iter()
+            .fold(0usize, |acc, d| acc * 10 + (d - b'0') as usize)
+    });
+    let parser = separated_list1(number.clone(), byte(b','));
+    match parser.parse(b"10,20,30") {
+        ParseResult::Success {
+            value,
+            length,
+            state,
+        } => {
+            assert_eq!(value, vec![10, 20, 30]);
+            assert_eq!(length, 8);
+            assert_eq!(state.expect("state").input(), b"");
+        }
+        _ => panic!("expected success"),
+    }
+
+    match parser.parse(b"10,") {
+        ParseResult::Failure { .. } => {}
+        _ => panic!("expected failure"),
+    }
+
+    let fold_parser = separated_fold1(number, byte(b','), |first| first, |acc, next| acc + next);
+    match fold_parser.parse(b"1,2,3,4") {
+        ParseResult::Success {
+            value,
+            length,
+            state,
+        } => {
+            assert_eq!(value, 10);
+            assert_eq!(length, 7);
+            assert_eq!(state.expect("state").input(), b"");
+        }
+        _ => panic!("expected success"),
     }
 }

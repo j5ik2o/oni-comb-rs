@@ -19,3 +19,11 @@
 - oni-comb/nom/pomで比較計測を実施 (warm-up 1s, measure 2s)。
 - sum_digitsベンチと合わせて `cargo bench --bench compare -- --warm-up-time 1 --measurement-time 2` を確認。
 
+## 2025-09-26 22:31 JST
+- take_while1/byte/separated_list1/separated_fold1 を追加し、ホットパス最適化の土台を実装。
+- sum_digits ベンチで約350nsまで短縮し、nomとの差は約10## 2025-09-26 22:31 JST
+- take_while1/byte/separated_list1/separated_fold1 を追加し、ホットパス最適化の土台を実装。
+- sum_digits ベンチで約350nsまで短縮し、nomとの差は約10%まで接近。
+- CSVベンチは専用Parser復活＋fold系APIで維持し、nom比1.4〜2倍程度の優位を再確認。
+- `cargo bench --bench compare -- --warm-up-time 1 --measurement-time 2` と `cargo test` を再実行。
+

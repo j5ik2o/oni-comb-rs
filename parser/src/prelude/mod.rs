@@ -1,4 +1,4 @@
-use crate::core::{CommittedStatus, ParseError, ParseResult, Parser};
+use crate::core::{CommittedStatus, ParseError, ParseResult, ParseState, Parser};
 use std::fmt::{Debug, Display};
 
 pub type ParseResultType<'a, I, A> = ParseResult<'a, I, A>;
@@ -226,4 +226,298 @@ where
     A: 'a,
 {
     parser.many1()
+}
+
+pub fn byte<'a>(value: u8) -> Parser<'a, u8, u8> {
+    Parser::new(move |_: &'a [u8], state: ParseState<'a, u8>| {
+        let slice = state.input();
+        match slice.first() {
+            Some(&found) if found == value => {
+                let next_state = state.advance_by(1);
+                ParseResult::successful_with_state(next_state, found, 1)
+            }
+            Some(&found) => ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(slice),
+                format!("expected byte {} but found {}", value, found),
+            )),
+            None => ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                None,
+                format!("expected byte {} but reached end of input", value),
+            )),
+        }
+    })
+}
+
+pub fn take_while1<'a, F>(predicate: F) -> Parser<'a, u8, &'a [u8]>
+where
+    F: Fn(u8) -> bool + 'a,
+{
+    Parser::new(move |_: &'a [u8], state: ParseState<'a, u8>| {
+        let slice = state.input();
+        let mut len = 0usize;
+        while len < slice.len() && predicate(slice[len]) {
+            len += 1;
+        }
+
+        if len == 0 {
+            return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                state.current_offset(),
+                Some(slice),
+                "take_while1: predicate rejected at start",
+            ));
+        }
+
+        let next_state = state.advance_by(len);
+        ParseResult::successful_with_state(next_state, &slice[..len], len)
+    })
+}
+
+pub fn separated_list1<'a, I, A, B>(
+    element: Parser<'a, I, A>,
+    separator: Parser<'a, I, B>,
+) -> Parser<'a, I, Vec<A>>
+where
+    I: 'a,
+    A: 'a,
+    B: 'a,
+{
+    let element_parser = element.clone();
+    let separator_parser = separator.clone();
+
+    Parser::new(move |input, state| {
+        let mut values = Vec::new();
+        let mut total_length = 0usize;
+        let mut current_state = state;
+
+        match element_parser.run(input, current_state) {
+            ParseResult::Success {
+                value,
+                length,
+                state: Some(next_state),
+            } => {
+                total_length += length;
+                current_state = next_state;
+                values.push(value);
+            }
+            ParseResult::Success { state: None, .. } => {
+                return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                    current_state.current_offset(),
+                    Some(current_state.input()),
+                    "separated_list1 element parser did not advance state",
+                ))
+            }
+            ParseResult::Failure {
+                error,
+                committed_status,
+            } => {
+                return ParseResult::Failure {
+                    error,
+                    committed_status,
+                }
+            }
+        }
+
+        loop {
+            match separator_parser.run(input, current_state) {
+                ParseResult::Success {
+                    length,
+                    state: Some(next_state),
+                    ..
+                } => {
+                    if length == 0 && next_state.current_offset() == current_state.current_offset()
+                    {
+                        break;
+                    }
+                    total_length += length;
+                    current_state = next_state;
+                }
+                ParseResult::Success { state: None, .. } => {
+                    return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                        current_state.current_offset(),
+                        Some(current_state.input()),
+                        "separated_list1 separator did not advance state",
+                    ))
+                }
+                ParseResult::Failure {
+                    error,
+                    committed_status,
+                } => {
+                    if committed_status.is_committed() {
+                        return ParseResult::Failure {
+                            error,
+                            committed_status,
+                        };
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            match element_parser.run(input, current_state) {
+                ParseResult::Success {
+                    value,
+                    length,
+                    state: Some(next_state),
+                } => {
+                    if length == 0 && next_state.current_offset() == current_state.current_offset()
+                    {
+                        break;
+                    }
+                    total_length += length;
+                    current_state = next_state;
+                    values.push(value);
+                }
+                ParseResult::Success { state: None, .. } => {
+                    return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                        current_state.current_offset(),
+                        Some(current_state.input()),
+                        "separated_list1 element did not advance state",
+                    ))
+                }
+                ParseResult::Failure {
+                    error,
+                    committed_status,
+                } => {
+                    return ParseResult::Failure {
+                        error,
+                        committed_status,
+                    };
+                }
+            }
+        }
+
+        ParseResult::Success {
+            value: values,
+            length: total_length,
+            state: Some(current_state),
+        }
+    })
+}
+
+pub fn separated_fold1<'a, I, A, B, R, Init, Fold>(
+    element: Parser<'a, I, A>,
+    separator: Parser<'a, I, B>,
+    init: Init,
+    fold: Fold,
+) -> Parser<'a, I, R>
+where
+    I: 'a,
+    A: 'a,
+    B: 'a,
+    R: 'a,
+    Init: Fn(A) -> R + 'a,
+    Fold: Fn(R, A) -> R + 'a,
+{
+    let element_parser = element.clone();
+    let separator_parser = separator.clone();
+
+    Parser::new(move |input, state| {
+        let mut total_length = 0usize;
+        let mut current_state = state;
+
+        let mut acc = match element_parser.run(input, current_state) {
+            ParseResult::Success {
+                value,
+                length,
+                state: Some(next_state),
+            } => {
+                total_length += length;
+                current_state = next_state;
+                init(value)
+            }
+            ParseResult::Success { state: None, .. } => {
+                return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                    current_state.current_offset(),
+                    Some(current_state.input()),
+                    "separated_fold1 element parser did not advance state",
+                ))
+            }
+            ParseResult::Failure {
+                error,
+                committed_status,
+            } => {
+                return ParseResult::Failure {
+                    error,
+                    committed_status,
+                }
+            }
+        };
+
+        loop {
+            match separator_parser.run(input, current_state) {
+                ParseResult::Success {
+                    length,
+                    state: Some(next_state),
+                    ..
+                } => {
+                    if length == 0 && next_state.current_offset() == current_state.current_offset()
+                    {
+                        break;
+                    }
+                    total_length += length;
+                    current_state = next_state;
+                }
+                ParseResult::Success { state: None, .. } => {
+                    return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                        current_state.current_offset(),
+                        Some(current_state.input()),
+                        "separated_fold1 separator did not advance state",
+                    ))
+                }
+                ParseResult::Failure {
+                    error,
+                    committed_status,
+                } => {
+                    if committed_status.is_committed() {
+                        return ParseResult::Failure {
+                            error,
+                            committed_status,
+                        };
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            match element_parser.run(input, current_state) {
+                ParseResult::Success {
+                    value,
+                    length,
+                    state: Some(next_state),
+                } => {
+                    if length == 0 && next_state.current_offset() == current_state.current_offset()
+                    {
+                        break;
+                    }
+                    total_length += length;
+                    current_state = next_state;
+                    acc = fold(acc, value);
+                }
+                ParseResult::Success { state: None, .. } => {
+                    return ParseResult::failed_with_uncommitted(ParseError::of_custom(
+                        current_state.current_offset(),
+                        Some(current_state.input()),
+                        "separated_fold1 element did not advance state",
+                    ))
+                }
+                ParseResult::Failure {
+                    error,
+                    committed_status,
+                } => {
+                    return ParseResult::Failure {
+                        error,
+                        committed_status,
+                    };
+                }
+            }
+        }
+
+        ParseResult::Success {
+            value: acc,
+            length: total_length,
+            state: Some(current_state),
+        }
+    })
 }
