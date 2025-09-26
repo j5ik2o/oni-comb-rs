@@ -75,8 +75,34 @@
 - ベンチ入力データ（`heavy.json`・失敗ケース）を追加し、`README.md` / `API_SPEC.md` に JSON ベンチ案内を追記。
 - `cargo fmt` / `cargo test` を実行し、新規コードの整合性を確認。
 
-## 2025-09-27 01:34 JST
-- `nom` 版 JSON パーサーを既存サンプルベースで再構築し、`serde_json::Value` 変換を追加。ユニットテスト (`parser/tests/json_nom.rs`) で `heavy`/`simple`/`number` ケースを確認。
-- `pom` 実装を文字ベースの combinator で書き直し、`cargo test -p oni-comb-parser --test json_nom` を通過。
-- `cargo bench --bench json -- --warm-up-time 1 --measurement-time 1` を実行し性能測定を取得。結果を `benchmarks/JSON_PLAN.md` に追記。
-- 現状のベンチでは `oni_comb` が `heavy.json` 成功ケースで ~425µs、`nom` が ~23µs、`pom` が ~329µs、`serde_json` が ~5.7µs。失敗入力の計測も実施済み。
+## 2025-09-27 02:15 JST
+- `nom` 版 JSON パーサーを参照実装ベースで整備し、`serde_json::Value` へ段階的に変換。`parser/tests/json_nom.rs` の `heavy`/`simple`/`number` テストを通過。
+- `pom` 実装も combinator 指向に刷新し、同テスト群で成功。
+- `cargo bench --bench json -- --warm-up-time 1 --measurement-time 1` を再実行し、`oni_comb` の `heavy.json` 成功ケースが ~129µs、失敗入力 (`missing_comma`/`unclosed_brace`) も ~2.6µs / ~6.0µs と `pom` を大きく上回る性能を確認。
+- ベンチ結果の最新値を `benchmarks/JSON_PLAN.md` に反映し、警告削減のためベンチファイルへ `#![allow(dead_code)]` 等の調整を実施。
+
+## 2025-09-27 03:06 JST
+- `repeat` / `repeat_sep` を `ParseCursor` ベースに再実装し、ループ内の `Parser::run` 呼び出しと `Rc` クローンを削減。
+- `parser/src/core/parse_cursor.rs` にドキュメントコメントを追加し、API の意図と利用方法を明文化。
+- `parser/tests/combinators.rs` に零進行検出テスト (`repeat_detects_zero_length_inner_parser` / `repeat_sep_detects_zero_length_separator`) を追加し、境界ケースの退行を防止。
+- `cargo fmt` / `cargo test -p oni-comb-parser --test combinators` を実行し、整形と 48 件のテスト成功を確認。
+
+## 2025-09-27 03:22 JST
+- `cargo bench --bench json -- --warm-up-time 1 --measurement-time 1` を実行し、`oni_comb` / `nom` / `pom` / `serde_json` の最新性能を取得。
+- `benchmarks/JSON_PLAN.md` の測定結果を 2025-09-27 時点の値（`oni_comb` 成功ケース ~131 µs など）へ更新。
+- `missing_comma` 失敗ケースで `oni_comb` が +約2% の遅延を示すものの、ノイズ範囲内と判断。
+
+## 2025-09-27 03:36 JST
+- ノイズ評価として `cargo bench --bench json -- --warm-up-time 1 --measurement-time 2` を実施し、統計的安定度を確認。
+- 再計測結果を `benchmarks/JSON_PLAN.md` に追記（成功ケース中央値 131 µs、失敗ケースでも大きな変動なし）。
+- `nom` の失敗ケースで +~3% の回帰警告が出たが、拡張測定により `oni_comb` の値は安定と確認。
+
+## 2025-09-27 03:52 JST
+- `CRITERION_SAMPLING_MODE=flat`（サンプルサイズ 200 指定は現状反映されず）で追加ベンチを実行し、`nom` 失敗ケースのブレが改善することを確認。
+- `benchmarks/JSON_PLAN.md` に flat sampling の結果（`nom` missing_comma 約 0.74 µs など）と観察メモを追記。
+- sample-size を増やすにはコード側で `Criterion::default().sample_size(200)` を設定する必要がある点を記録。
+
+## 2025-09-27 04:12 JST
+- `parser/benches/json.rs` をリファクタリングし、共同ヘルパー `GroupParams` / `configure_group` でベンチ構成を一元化。
+- フル計測 (`json_success` / `json_failures`) は `sample_size=200`・`measurement_time=4s/3s`・`warm_up_time=1s`・`SamplingMode::Flat` に設定、クイック計測 (`json_success_quick` / `json_failures_quick`) は `sample_size=120`・`measurement_time=1.2s`・`warm_up_time=600ms`・`SamplingMode::Flat`。
+- `cargo bench --bench json`, `cargo bench --bench json json_success_quick`, `cargo bench --bench json json_failures_quick` を実行し、用途別プリセットの挙動と外れ値率を確認。`benchmarks/JSON_PLAN.md` に結果と利用方法を追記。
