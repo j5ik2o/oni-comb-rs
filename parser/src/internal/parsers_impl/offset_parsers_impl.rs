@@ -1,4 +1,4 @@
-use crate::core::{ParseResult, Parser};
+use crate::core::{ParseResult, Parser, ParserRunner};
 use crate::extension::parsers::OffsetParsers;
 use crate::internal::ParsersImpl;
 
@@ -7,8 +7,7 @@ impl OffsetParsers for ParsersImpl {
   fn last_offset<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>
   where
     A: 'a, {
-    let method = parser.method.clone();
-    Parser::new(move |parse_state| match method(parse_state) {
+    Parser::new(move |parse_state| match parser.run(parse_state) {
       ParseResult::Success { length, .. } => {
         let ps = parse_state.advance_by(length);
         ParseResult::successful(ps.last_offset().unwrap_or(0), length)
@@ -24,8 +23,7 @@ impl OffsetParsers for ParsersImpl {
   fn next_offset<'a, I, A>(parser: Self::P<'a, I, A>) -> Self::P<'a, I, usize>
   where
     A: 'a, {
-    let method = parser.method.clone();
-    Parser::new(move |parse_state| match method(parse_state) {
+    Parser::new(move |parse_state| match parser.run(parse_state) {
       ParseResult::Success { length, .. } => {
         let ps = parse_state.advance_by(length);
         ParseResult::successful(ps.current_offset(), length)

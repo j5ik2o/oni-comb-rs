@@ -1,4 +1,4 @@
-use crate::core::{ParseError, ParseResult, Parser};
+use crate::core::{ParseError, ParseResult, Parser, ParserRunner};
 use crate::extension::parsers::ConversionParsers;
 use crate::internal::ParsersImpl;
 use std::fmt::Debug;
@@ -11,8 +11,7 @@ impl ConversionParsers for ParsersImpl {
     E: Debug,
     A: 'a,
     B: 'a, {
-    let method = parser.method.clone();
-    Parser::new(move |parse_state| match method(parse_state) {
+    Parser::new(move |parse_state| match parser.run(parse_state) {
       ParseResult::Success { value: a, length } => match f(a) {
         Ok(value) => ParseResult::successful(value, length),
         Err(err) => {
@@ -34,8 +33,7 @@ impl ConversionParsers for ParsersImpl {
     F: Fn(A) -> Option<B> + 'a,
     A: Debug + 'a,
     B: Debug + 'a, {
-    let method = parser.method.clone();
-    Parser::new(move |parse_state| match method(parse_state) {
+    Parser::new(move |parse_state| match parser.run(parse_state) {
       ParseResult::Success { value: a, length } => match f(a) {
         Some(value) => ParseResult::successful(value, length),
         None => {

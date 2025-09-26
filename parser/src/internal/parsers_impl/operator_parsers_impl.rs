@@ -55,12 +55,10 @@ impl OperatorParsers for ParsersImpl {
   where
     A: 'a,
     B: 'a, {
-    let method1 = parser1.method.clone();
-    let method2 = parser2.method.clone();
-    Parser::new(move |parse_state| match method1(parse_state) {
+    Parser::new(move |parse_state| match parser1.run(parse_state) {
       ParseResult::Success { value: a, length: n1 } => {
         let ps = parse_state.advance_by(n1);
-        match method2(&ps) {
+        match parser2.run(&ps) {
           ParseResult::Success { value: b, length: n2 } => ParseResult::successful((a, b), n1 + n2),
           ParseResult::Failure {
             error,
@@ -119,15 +117,13 @@ impl OperatorParsers for ParsersImpl {
     BOP: Fn(A, A) -> A + 'a,
     A: Clone + Debug + 'a, {
     let default_value = x.clone();
-    let method = p.method.clone();
-    let op_method = op.method.clone();
     Self::or(
       Parser::new(move |parse_state| {
         let mut ps = parse_state.advance_by(0);
-        match op_method(&ps) {
+        match op.run(&ps) {
           ParseResult::Success { value: f, length: n1 } => {
             ps = ps.advance_by(n1);
-            (match method(&ps) {
+            (match p.run(&ps) {
               ParseResult::Success { value: y, length: n2 } => {
                 ps = ps.advance_by(n2);
                 Self::rest_left1(p.clone(), op.clone(), f(default_value.clone(), y))

@@ -92,8 +92,7 @@ impl Parsers for ParsersImpl {
     F: Fn(A) -> Self::P<'a, I, B> + 'a,
     A: 'a,
     B: 'a, {
-    let method = parser.method.clone();
-    Parser::new(move |state| match method(state) {
+    Parser::new(move |state| match parser.run(state) {
       ParseResult::Success { value, length } => f(value)
         .run(&state.advance_by(length))
         .add_commit(length != 0)

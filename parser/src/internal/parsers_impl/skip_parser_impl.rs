@@ -1,4 +1,4 @@
-use crate::core::{ParseError, ParseResult, Parser};
+use crate::core::{ParseError, ParseResult, Parser, ParserRunner};
 use crate::extension::parser::SkipParser;
 use crate::extension::parsers::SkipParsers;
 use crate::internal::ParsersImpl;
@@ -22,12 +22,10 @@ impl SkipParsers for ParsersImpl {
   where
     A: Clone + Debug + 'a,
     B: Clone + Debug + 'a, {
-    let method1 = pa.method.clone();
-    let method2 = pb.method.clone();
-    Parser::new(move |parse_state| match (method1)(parse_state) {
+    Parser::new(move |parse_state| match pa.run(parse_state) {
       ParseResult::Success { length: n1, .. } => {
         let ps = parse_state.advance_by(n1);
-        match (method2)(&ps) {
+        match pb.run(&ps) {
           ParseResult::Success { value: b, length: n2 } => ParseResult::successful(b, n1 + n2),
           ParseResult::Failure {
             error,
@@ -47,13 +45,10 @@ impl SkipParsers for ParsersImpl {
   where
     A: Clone + Debug + 'a,
     B: Clone + Debug + 'a, {
-    let method1 = pa.method.clone();
-    let method2 = pb.method.clone();
-
-    Parser::new(move |parse_state| match (method1)(parse_state) {
+    Parser::new(move |parse_state| match pa.run(parse_state) {
       ParseResult::Success { value: a, length: n1 } => {
         let ps = parse_state.advance_by(n1);
-        match (method2)(&ps) {
+        match pb.run(&ps) {
           ParseResult::Success { length: n2, .. } => ParseResult::successful(a, n1 + n2),
           ParseResult::Failure {
             error,
