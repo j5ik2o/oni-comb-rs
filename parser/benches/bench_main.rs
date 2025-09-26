@@ -11,6 +11,7 @@
 #![allow(dead_code)]
 
 use criterion::*;
+use std::time::Duration;
 
 use crate::nom_json::nom_parse_json;
 use crate::oni_comb_json::{oni_comb_parse_json, oni_comb_parse_json_bytes};
@@ -25,12 +26,20 @@ fn get_simple_test_data() -> Vec<(&'static str, &'static str)> {
   vec![("bool", r#"true"#), ("string", r#""hello world""#)]
 }
 
+fn get_cpu_bound_test_data() -> Vec<(&'static str, &'static str, usize)> {
+  vec![
+    ("large_array", include_str!("data/large_array.json"), 5),
+    ("mixed_payload", include_str!("data/mixed_payload.json"), 5),
+    ("deep_nested", include_str!("data/deep_nested.json"), 20),
+  ]
+}
+
 fn criterion_benchmark(criterion: &mut Criterion) {
-  let mut group = criterion.benchmark_group("json");
+  let mut group = criterion.benchmark_group("json_small");
 
   // ベンチマークの実行時間を短縮するための設定
   group.sample_size(30);
-  group.measurement_time(std::time::Duration::from_secs(1));
+  group.measurement_time(Duration::from_secs(1));
 
   // 各テストデータに対してベンチマークを実行
   for (name, data) in get_simple_test_data() {
@@ -52,6 +61,48 @@ fn criterion_benchmark(criterion: &mut Criterion) {
   }
 
   group.finish();
+
+  // CPU バウンド向けの計測グループ
+  let mut heavy_group = criterion.benchmark_group("json_large");
+  heavy_group.sample_size(20);
+  heavy_group.warm_up_time(Duration::from_secs(2));
+  heavy_group.measurement_time(Duration::from_secs(5));
+
+  for (name, data, repeat) in get_cpu_bound_test_data() {
+    heavy_group.bench_with_input(BenchmarkId::new("oni-comb-rs (char)", name), data, |b, input| {
+      b.iter(|| {
+        for _ in 0..repeat {
+          oni_comb_parse_json(input);
+        }
+      })
+    });
+
+    heavy_group.bench_with_input(BenchmarkId::new("oni-comb-rs (byte)", name), data, |b, input| {
+      b.iter(|| {
+        for _ in 0..repeat {
+          oni_comb_parse_json_bytes(input);
+        }
+      })
+    });
+
+    heavy_group.bench_with_input(BenchmarkId::new("nom", name), data, |b, input| {
+      b.iter(|| {
+        for _ in 0..repeat {
+          nom_parse_json(input);
+        }
+      })
+    });
+
+    heavy_group.bench_with_input(BenchmarkId::new("pom", name), data, |b, input| {
+      b.iter(|| {
+        for _ in 0..repeat {
+          pom_parse_json(input);
+        }
+      })
+    });
+  }
+
+  heavy_group.finish();
 }
 
 criterion_group! {
