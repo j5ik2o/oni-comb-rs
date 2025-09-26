@@ -1,0 +1,69 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Alice",
+      "roles": ["admin", "editor"],
+      "profile": {
+        "email": "alice@example.com",
+        "preferences": {
+          "notifications": true,
+          "themes": ["dark", "high-contrast"],
+          "languages": ["en", "ja", "de"],
+          "dashboard": {
+            "widgets": [
+              {"id": "w1", "type": "chart", "config": {"title": "Sales", "refresh": 30}},
+              {"id": "w2", "type": "table", "config": {"title": "Top Customers", "refresh": 120}},
+              {"id": "w3", "type": "text", "config": {"title": "Announcements", "refresh": 300}}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "name": "Bob",
+      "roles": ["viewer"],
+      "profile": {
+        "email": "bob@example.com",
+        "preferences": {
+          "notifications": false,
+          "themes": ["light"],
+          "languages": ["en"],
+          "dashboard": {
+            "widgets": [
+              {"id": "w4", "type": "chart", "config": {"title": "Support Tickets", "refresh": 60}},
+              {"id": "w5", "type": "table", "config": {"title": "Open Issues", "refresh": 180}}
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "settings": {
+    "features": {
+      "beta": true,
+      "experiments": [
+        {"name": "new-dashboard", "cohort": "A"},
+        {"name": "ai-suggestions", "cohort": "B"}
+      ]
+    },
+    "limits": {
+      "max_users": 1000,
+      "max_projects": 250,
+      "storage_gb": 512.5
+    }
+  },
+  "logs": [
+    {
+      "timestamp": "2025-09-26T15:04:05Z",
+      "event": "login",
+      "details": {"user": "Alice", "ip": "192.0.2.15"}
+    },
+    {
+      "timestamp": "2025-09-26T15:10:17Z",
+      "event": "update",
+      "details": {"user": "Bob", "resource": "project", "id": "proj-42"}
+    }
+  ]
+}
