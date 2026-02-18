@@ -1,0 +1,1 @@
+../references/okite-ai/scripts/generate-agents-md.sh
