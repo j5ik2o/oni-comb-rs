@@ -1,0 +1,290 @@
+name: legacy-elimination
+description: 後方互換性のために残された不要コードを検出・削除するピース
+max_movements: 30
+initial_movement: analyze
+
+personas:
+  legacy-analyst: ../personas/legacy-analyst.md
+  legacy-removal-reviewer: ../personas/legacy-removal-reviewer.md
+
+policies:
+  legacy-removal: ../policies/legacy-removal.md
+
+instructions:
+  analyze-legacy: ../instructions/analyze-legacy.md
+  implement-removal: ../instructions/implement-removal.md
+  review-removal: ../instructions/review-removal.md
+
+report_formats:
+  legacy-analysis: ../output-contracts/legacy-analysis.md
+  legacy-removal-review: ../output-contracts/legacy-removal-review.md
+
+loop_monitors:
+  - cycle:
+      - ai_review
+      - ai_fix
+    threshold: 3
+    judge:
+      persona: supervisor
+      instruction_template: |
+        ai_review と ai_fix のループが {cycle_count} 回繰り返されました。
+
+        各サイクルのレポートを確認し、このループが健全（進捗がある）か、
+        非生産的（同じ問題を繰り返している）かを判断してください。
+
+        **参照するレポート:**
+        - AIレビュー結果: {report:04-ai-review.md}
+
+        **判断基準:**
+        - 各サイクルで新しい問題が発見・修正されているか
+        - 同じ指摘が繰り返されていないか
+        - 修正が実際に反映されているか
+      rules:
+        - condition: 健全（進捗あり）
+          next: ai_review
+        - condition: 非生産的（改善なし）
+          next: reviewers
+
+movements:
+  - name: analyze
+    edit: false
+    persona: legacy-analyst
+    policy: legacy-removal
+    knowledge: architecture
+    allowed_tools:
+      - Read
+      - Glob
+      - Grep
+      - Bash
+      - WebSearch
+      - WebFetch
+    rules:
+      - condition: レガシーコードが検出され、削除計画が策定された
+        next: plan
+      - condition: レガシーコードが見つからない
+        next: COMPLETE
+      - condition: 分析に必要な情報が不足
+        next: ABORT
+        appendix: |
+          確認事項:
+          - {質問1}
+          - {質問2}
+    instruction: analyze-legacy
+    output_contracts:
+      report:
+        - name: 00-legacy-analysis.md
+          format: legacy-analysis
+
+  - name: plan
+    edit: false
+    persona: planner
+    knowledge: architecture
+    allowed_tools:
+      - Read
+      - Glob
+      - Grep
+      - Bash
+    rules:
+      - condition: 削除計画が明確で実装可能
+        next: implement
+      - condition: 計画に不明点があり実装できない
+        next: ABORT
+    instruction: plan
+    output_contracts:
+      report:
+        - name: 01-plan.md
+          format: plan
+
+  - name: implement
+    edit: true
+    persona: coder
+    policy:
+      - coding
+      - legacy-removal
+      - testing
+    session: refresh
+    knowledge: architecture
+    allowed_tools:
+      - Read
+      - Glob
+      - Grep
+      - Edit
+      - Write
+      - Bash
+    required_permission_mode: edit
+    rules:
+      - condition: 削除実装完了
+        next: ai_review
+      - condition: 実装未着手（レポートのみ）
+        next: ai_review
+      - condition: 判断できない、情報不足
+        next: ai_review
+      - condition: ユーザー入力が必要
+        next: implement
+        requires_user_input: true
+        interactive_only: true
+    instruction: implement-removal
+    output_contracts:
+      report:
+        - name: coder-scope.md
+          format: coder-scope
+        - name: coder-decisions.md
+          format: coder-decisions
+
+  - name: ai_review
+    edit: false
+    persona: ai-antipattern-reviewer
+    policy:
+      - review
+      - ai-antipattern
+    allowed_tools:
+      - Read
+      - Glob
+      - Grep
+    rules:
+      - condition: AI特有の問題なし
+        next: reviewers
+      - condition: AI特有の問題あり
+        next: ai_fix
+    instruction: ai-review
+    output_contracts:
+      report:
+        - name: 04-ai-review.md
+          format: ai-review
+
+  - name: ai_fix
+    edit: true
+    persona: coder
+    policy:
+      - coding
+      - legacy-removal
+      - testing
+    session: refresh
+    knowledge: architecture
+    allowed_tools:
+      - Read
+      - Glob
+      - Grep
+      - Edit
+      - Write
+      - Bash
+    required_permission_mode: edit
+    pass_previous_response: false
+    rules:
+      - condition: AI問題の修正完了
+        next: ai_review
+      - condition: 修正不要（指摘対象ファイル/仕様の確認済み）
+        next: ai_no_fix
+      - condition: 判断できない、情報不足
+        next: ai_no_fix
+    instruction: ai-fix
+
+  - name: ai_no_fix
+    edit: false
+    persona: architecture-reviewer
+    policy: review
+    allowed_tools:
+      - Read
+      - Glob
+      - Grep
+    rules:
+      - condition: ai_reviewの指摘が妥当（修正すべき）
+        next: ai_fix
+      - condition: ai_fixの判断が妥当（修正不要）
+        next: reviewers
+    instruction: arbitrate
+
+  - name: reviewers
+    parallel:
+      - name: removal-review
+        edit: false
+        persona: legacy-removal-reviewer
+        policy:
+          - review
+          - legacy-removal
+        knowledge: architecture
+        allowed_tools:
+          - Read
+          - Glob
+          - Grep
+          - Bash
+        rules:
+          - condition: approved
+          - condition: needs_fix
+        instruction: review-removal
+        output_contracts:
+          report:
+            - name: 05-removal-review.md
+              format: legacy-removal-review
+      - name: qa-review
+        edit: false
+        persona: qa-reviewer
+        policy:
+          - review
+          - qa
+        allowed_tools:
+          - Read
+          - Glob
+          - Grep
+          - Bash
+        rules:
+          - condition: approved
+          - condition: needs_fix
+        instruction: review-qa
+        output_contracts:
+          report:
+            - name: 06-qa-review.md
+              format: qa-review
+    rules:
+      - condition: all("approved")
+        next: supervise
+      - condition: any("needs_fix")
+        next: fix
+
+  - name: fix
+    edit: true
+    persona: coder
+    policy:
+      - coding
+      - legacy-removal
+      - testing
+    knowledge: architecture
+    allowed_tools:
+      - Read
+      - Glob
+      - Grep
+      - Edit
+      - Write
+      - Bash
+    required_permission_mode: edit
+    pass_previous_response: false
+    rules:
+      - condition: 修正完了
+        next: reviewers
+      - condition: 判断できない、情報不足
+        next: plan
+    instruction: fix
+
+  - name: supervise
+    edit: false
+    persona: supervisor
+    policy: review
+    allowed_tools:
+      - Read
+      - Glob
+      - Grep
+      - Bash
+    pass_previous_response: false
+    rules:
+      - condition: すべて問題なし
+        next: COMPLETE
+      - condition: 要求未達成、テスト失敗、ビルドエラー
+        next: plan
+    instruction: supervise
+    output_contracts:
+      report:
+        - name: supervisor-validation.md
+          format: supervisor-validation
+        - name: summary.md
+          format: summary
+          use_judge: false
