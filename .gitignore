@@ -9,3 +9,15 @@ Cargo.lock
 /benchmark_results
 
 **/.claude/settings.local.json
+
+/.claude/settings.local.json
+/.codex/models_cache.json
+/.codex/sessions/
+/.codex/tmp/
+/.codex/log/
+/.codex/*.json
+/.codex/*.jsonl
+/.codex/shell_snapshots/*.sh
+
+/.copilot/.copilot/logs/
+/.copilot/configstore/update-notifier-@github/
