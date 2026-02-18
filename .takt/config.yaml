@@ -1,2 +1,4 @@
 piece: default
 permissionMode: default
+provider: claude
+model: GLM-5
