@@ -1,0 +1,28 @@
+{
+  "private": true,
+  "scripts": {
+    "pekko-porting": "./scripts/run-takt.sh --pipeline --skip-git -w pekko-porting -t",
+    "takt": "./scripts/run-takt.sh",
+    "takt:personal": "./scripts/run-takt.sh personal",
+    "takt:corporate": "./scripts/run-takt.sh corporate",
+    "cc-sdd:full": "./scripts/run-takt.sh --pipeline --skip-git -w cc-sdd-full -t",
+    "cc-sdd:requirements": "./scripts/run-takt.sh --pipeline --skip-git -w cc-sdd-requirements -t",
+    "cc-sdd:validate-gap": "./scripts/run-takt.sh --pipeline --skip-git -w cc-sdd-validate-gap -t",
+    "cc-sdd:design": "./scripts/run-takt.sh --pipeline --skip-git -w cc-sdd-design -t",
+    "cc-sdd:validate-design": "./scripts/run-takt.sh --pipeline --skip-git -w cc-sdd-validate-design -t",
+    "cc-sdd:tasks": "./scripts/run-takt.sh --pipeline --skip-git -w cc-sdd-tasks -t",
+    "cc-sdd:impl": "./scripts/run-takt.sh --pipeline --skip-git -w cc-sdd-impl -t",
+    "cc-sdd:validate-impl": "./scripts/run-takt.sh --pipeline --skip-git -w cc-sdd-validate-impl -t",
+    "cc-sdd:steering": "./scripts/run-takt.sh --pipeline --skip-git -w cc-sdd-steering -t",
+    "cc-sdd:steering-custom": "./scripts/run-takt.sh --pipeline --skip-git -w cc-sdd-steering-custom -t",
+    "opsx:full": "./scripts/run-takt.sh --pipeline --skip-git -w opsx-full -t",
+    "opsx:propose": "./scripts/run-takt.sh --pipeline --skip-git -w opsx-propose -t",
+    "opsx:apply": "./scripts/run-takt.sh --pipeline --skip-git -w opsx-apply -t",
+    "opsx:apply-pekko": "./scripts/run-takt.sh --pipeline --skip-git -w opsx-apply-with-pekko -t",
+    "opsx:archive": "./scripts/run-takt.sh --pipeline --skip-git -w opsx-archive -t",
+    "opsx:explore": "./scripts/run-takt.sh --skip-git -w opsx-explore"
+  },
+  "devDependencies": {
+    "takt": "^0.32.1"
+  }
+}
