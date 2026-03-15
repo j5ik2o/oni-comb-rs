@@ -19,6 +19,3 @@ args = ["-lc", "export HOME=\"$PWD/.serena-home\"; mkdir -p \"$HOME\"; exec uvx 
 
 [tui]
 status_line = ["current-dir", "git-branch"]
-
-[projects."/Users/j5ik2o/Sources/j5ik2o.github.com/j5ik2o/oni-comb-rs"]
-trust_level = "trusted"
