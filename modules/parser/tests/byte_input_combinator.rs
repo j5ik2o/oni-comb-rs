@@ -42,24 +42,21 @@ fn byte_zip_right() {
 
 #[test]
 fn byte_or_first_success() {
-  let mut p = satisfy::<ByteInput, _>(|b: u8| b == b'a')
-    .or(satisfy::<ByteInput, _>(|b: u8| b == b'b'));
+  let mut p = satisfy::<ByteInput, _>(|b: u8| b == b'a').or(satisfy::<ByteInput, _>(|b: u8| b == b'b'));
   let mut input = ByteInput::new(b"a");
   assert_eq!(p.parse_next(&mut input).unwrap(), b'a');
 }
 
 #[test]
 fn byte_or_second_success() {
-  let mut p = satisfy::<ByteInput, _>(|b: u8| b == b'a')
-    .or(satisfy::<ByteInput, _>(|b: u8| b == b'b'));
+  let mut p = satisfy::<ByteInput, _>(|b: u8| b == b'a').or(satisfy::<ByteInput, _>(|b: u8| b == b'b'));
   let mut input = ByteInput::new(b"b");
   assert_eq!(p.parse_next(&mut input).unwrap(), b'b');
 }
 
 #[test]
 fn byte_or_both_fail() {
-  let mut p = satisfy::<ByteInput, _>(|b: u8| b == b'a')
-    .or(satisfy::<ByteInput, _>(|b: u8| b == b'b'));
+  let mut p = satisfy::<ByteInput, _>(|b: u8| b == b'a').or(satisfy::<ByteInput, _>(|b: u8| b == b'b'));
   let mut input = ByteInput::new(b"c");
   assert!(p.parse_next(&mut input).is_err());
 }
@@ -105,8 +102,7 @@ fn byte_take_while0_then_eof() {
 
 #[test]
 fn byte_take_while1_then_take() {
-  let mut p = take_while1::<ByteInput, _>(|b: u8| b.is_ascii_alphabetic())
-    .zip(take::<ByteInput>(1));
+  let mut p = take_while1::<ByteInput, _>(|b: u8| b.is_ascii_alphabetic()).zip(take::<ByteInput>(1));
   let mut input = ByteInput::new(b"abc!");
   let (letters, bang) = p.parse_next(&mut input).unwrap();
   assert_eq!(letters, b"abc");
@@ -128,8 +124,7 @@ fn byte_attempt_rewinds() {
 
 #[test]
 fn byte_sep_by0() {
-  let mut p = satisfy::<ByteInput, _>(|b: u8| b.is_ascii_digit())
-    .sep_by0(satisfy::<ByteInput, _>(|b: u8| b == b','));
+  let mut p = satisfy::<ByteInput, _>(|b: u8| b.is_ascii_digit()).sep_by0(satisfy::<ByteInput, _>(|b: u8| b == b','));
   let mut input = ByteInput::new(b"1,2,3!");
   let result = p.parse_next(&mut input).unwrap();
   assert_eq!(result, vec![b'1', b'2', b'3']);

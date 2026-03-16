@@ -26,9 +26,7 @@ where
         input.next_token();
         Ok(t)
       }
-      _ => Err(Fail::Backtrack(ParseError::expected_description(
-        pos, "satisfy",
-      ))),
+      _ => Err(Fail::Backtrack(ParseError::expected_description(pos, "satisfy"))),
     }
   }
 }

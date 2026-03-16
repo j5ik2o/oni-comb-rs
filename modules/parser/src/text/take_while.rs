@@ -17,10 +17,6 @@ pub fn take_while1<'a, F: FnMut(char) -> bool>(f: F) -> TakeWhile1<F, StrInput<'
   crate::primitive::take_while1::take_while1(f)
 }
 
-pub fn take_while_n_m<'a, F: FnMut(char) -> bool>(
-  min: usize,
-  max: usize,
-  f: F,
-) -> TakeWhileNM<F, StrInput<'a>> {
+pub fn take_while_n_m<'a, F: FnMut(char) -> bool>(min: usize, max: usize, f: F) -> TakeWhileNM<F, StrInput<'a>> {
   crate::primitive::take_while_n_m::take_while_n_m(min, max, f)
 }

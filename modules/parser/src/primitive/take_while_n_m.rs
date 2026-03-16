@@ -12,11 +12,7 @@ pub struct TakeWhileNM<F, I: Input> {
   _marker: PhantomData<fn(&mut I)>,
 }
 
-pub fn take_while_n_m<I: Input, F: FnMut(I::Token) -> bool>(
-  min: usize,
-  max: usize,
-  f: F,
-) -> TakeWhileNM<F, I> {
+pub fn take_while_n_m<I: Input, F: FnMut(I::Token) -> bool>(min: usize, max: usize, f: F) -> TakeWhileNM<F, I> {
   TakeWhileNM {
     min,
     max,

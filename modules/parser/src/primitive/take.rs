@@ -28,10 +28,7 @@ impl<I: Input> Parser<I> for Take<I> {
     for _ in 0..self.n {
       if input.next_token().is_none() {
         input.reset(cp);
-        return Err(Fail::Backtrack(ParseError::expected_description(
-          pos,
-          "enough input",
-        )));
+        return Err(Fail::Backtrack(ParseError::expected_description(pos, "enough input")));
       }
     }
     Ok(input.slice_since(cp))

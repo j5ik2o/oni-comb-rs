@@ -10,9 +10,7 @@ pub fn eof<'a>() -> crate::primitive::eof::Eof<StrInput<'a>> {
   crate::primitive::eof::eof()
 }
 
-pub fn satisfy<'a, F: FnMut(char) -> bool>(
-  f: F,
-) -> crate::primitive::satisfy::Satisfy<F, StrInput<'a>> {
+pub fn satisfy<'a, F: FnMut(char) -> bool>(f: F) -> crate::primitive::satisfy::Satisfy<F, StrInput<'a>> {
   crate::primitive::satisfy::satisfy(f)
 }
 
@@ -20,15 +18,11 @@ pub fn take<'a>(n: usize) -> crate::primitive::take::Take<StrInput<'a>> {
   crate::primitive::take::take(n)
 }
 
-pub fn take_while0<'a, F: FnMut(char) -> bool>(
-  f: F,
-) -> crate::primitive::take_while0::TakeWhile0<F, StrInput<'a>> {
+pub fn take_while0<'a, F: FnMut(char) -> bool>(f: F) -> crate::primitive::take_while0::TakeWhile0<F, StrInput<'a>> {
   crate::primitive::take_while0::take_while0(f)
 }
 
-pub fn take_while1<'a, F: FnMut(char) -> bool>(
-  f: F,
-) -> crate::primitive::take_while1::TakeWhile1<F, StrInput<'a>> {
+pub fn take_while1<'a, F: FnMut(char) -> bool>(f: F) -> crate::primitive::take_while1::TakeWhile1<F, StrInput<'a>> {
   crate::primitive::take_while1::take_while1(f)
 }
 

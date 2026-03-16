@@ -26,9 +26,9 @@ impl<'a> StrInput<'a> {
 }
 
 impl<'a> Input for StrInput<'a> {
-  type Token = char;
-  type Slice = &'a str;
   type Checkpoint = usize;
+  type Slice = &'a str;
+  type Token = char;
 
   #[inline]
   fn next_token(&mut self) -> Option<char> {

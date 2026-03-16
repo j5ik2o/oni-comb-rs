@@ -17,9 +17,9 @@ impl<'a> ByteInput<'a> {
 }
 
 impl<'a> Input for ByteInput<'a> {
-  type Token = u8;
-  type Slice = &'a [u8];
   type Checkpoint = usize;
+  type Slice = &'a [u8];
+  type Token = u8;
 
   #[inline]
   fn next_token(&mut self) -> Option<u8> {
