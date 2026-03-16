@@ -1,0 +1,49 @@
+name: publish
+
+on:
+  push:
+    tags:
+      - 'oni-comb-parser-v*.*.*'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Cargo Publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@nightly
+      - name: Configure Cargo Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: publish
+      - name: Verify Tag Matches Version
+        run: |
+          set -euo pipefail
+          CRATE_VERSION=$(cargo +nightly metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name=="oni-comb-parser") | .version')
+          TAG_NAME="${GITHUB_REF_NAME}"
+          if [[ "${TAG_NAME}" != "oni-comb-parser-v${CRATE_VERSION}" ]]; then
+            echo "Tag ${TAG_NAME} does not match Cargo.toml version ${CRATE_VERSION}." >&2
+            exit 1
+          fi
+      - name: Publish oni-comb-parser
+        env:
+          CARGO_TOKEN: ${{ secrets.CARGO_TOKEN }}
+        run: cargo +nightly publish -p oni-comb-parser --token "${CARGO_TOKEN}"
