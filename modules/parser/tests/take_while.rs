@@ -2,7 +2,7 @@ use oni_comb_parser::fail::Fail;
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
-use oni_comb_parser::prelude::{take_while0, take_while1};
+use oni_comb_parser::prelude::{take_while0, take_while1, take_while_n_m};
 use oni_comb_parser::str_input::StrInput;
 
 #[test]
@@ -198,4 +198,95 @@ fn take_while_integer_rejects_non_digit() {
 
   assert!(matches!(result, Err(Fail::Backtrack(_))));
   assert_eq!(input.offset(), 0);
+}
+
+// --- take_while_n_m tests ---
+
+#[test]
+fn take_while_n_m_consumes_within_range() {
+  let mut parser = take_while_n_m(2, 4, |c: char| c.is_ascii_digit());
+  let mut input = StrInput::new("123abc");
+
+  let result = parser.parse_next(&mut input);
+
+  assert_eq!(result, Ok("123"));
+  assert_eq!(input.offset(), 3);
+  assert_eq!(input.remaining(), "abc");
+}
+
+#[test]
+fn take_while_n_m_stops_at_max() {
+  let mut parser = take_while_n_m(2, 4, |c: char| c.is_ascii_digit());
+  let mut input = StrInput::new("123456");
+
+  let result = parser.parse_next(&mut input);
+
+  assert_eq!(result, Ok("1234"));
+  assert_eq!(input.offset(), 4);
+  assert_eq!(input.remaining(), "56");
+}
+
+#[test]
+fn take_while_n_m_exact_min() {
+  let mut parser = take_while_n_m(3, 5, |c: char| c.is_ascii_digit());
+  let mut input = StrInput::new("123abc");
+
+  let result = parser.parse_next(&mut input);
+
+  assert_eq!(result, Ok("123"));
+  assert_eq!(input.offset(), 3);
+}
+
+#[test]
+fn take_while_n_m_fails_below_min() {
+  let mut parser = take_while_n_m(3, 5, |c: char| c.is_ascii_digit());
+  let mut input = StrInput::new("12abc");
+
+  let result = parser.parse_next(&mut input);
+
+  assert!(matches!(result, Err(Fail::Backtrack(_))));
+  assert_eq!(input.offset(), 0);
+}
+
+#[test]
+fn take_while_n_m_fails_on_empty_input() {
+  let mut parser = take_while_n_m(1, 3, |c: char| c.is_ascii_digit());
+  let mut input = StrInput::new("");
+
+  let result = parser.parse_next(&mut input);
+
+  assert!(matches!(result, Err(Fail::Backtrack(_))));
+}
+
+#[test]
+fn take_while_n_m_zero_min_returns_empty() {
+  let mut parser = take_while_n_m(0, 3, |c: char| c.is_ascii_digit());
+  let mut input = StrInput::new("abc");
+
+  let result = parser.parse_next(&mut input);
+
+  assert_eq!(result, Ok(""));
+  assert_eq!(input.offset(), 0);
+}
+
+#[test]
+fn take_while_n_m_handles_multibyte() {
+  let mut parser = take_while_n_m(1, 2, |c: char| !c.is_ascii());
+  let mut input = StrInput::new("日本語abc");
+
+  let result = parser.parse_next(&mut input);
+
+  assert_eq!(result, Ok("日本"));
+  assert_eq!(input.remaining(), "語abc");
+}
+
+#[test]
+fn take_while_n_m_exact_match() {
+  let mut parser = take_while_n_m(3, 3, |c: char| c.is_ascii_digit());
+  let mut input = StrInput::new("123456");
+
+  let result = parser.parse_next(&mut input);
+
+  assert_eq!(result, Ok("123"));
+  assert_eq!(input.offset(), 3);
 }

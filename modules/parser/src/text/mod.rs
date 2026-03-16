@@ -11,4 +11,5 @@ pub mod tag;
 pub mod take_while;
 mod take_while0;
 mod take_while1;
+mod take_while_n_m;
 pub mod whitespace;
