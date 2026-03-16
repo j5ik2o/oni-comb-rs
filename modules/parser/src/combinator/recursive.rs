@@ -3,24 +3,24 @@ use alloc::rc::Rc;
 use core::cell::UnsafeCell;
 
 use crate::fail::PResult;
+use crate::input::Input;
 use crate::parser::Parser;
-use crate::str_input::StrInput;
 
-type DynParser<'a, O, E> = dyn Parser<StrInput<'a>, Output = O, Error = E> + 'a;
+type DynParser<'a, I, O, E> = dyn Parser<I, Output = O, Error = E> + 'a;
 
-struct RecursiveInner<'a, O, E> {
-  inner: UnsafeCell<Option<Box<DynParser<'a, O, E>>>>,
+struct RecursiveInner<'a, I: Input, O, E> {
+  inner: UnsafeCell<Option<Box<DynParser<'a, I, O, E>>>>,
 }
 
 /// 再帰パーサー。`recursive()` で構築する。
 ///
 /// 再帰の結び目だけ `Box<dyn Parser>` + `Rc` で型消去し、
 /// 非再帰部分は具象型を維持する。
-pub struct Recursive<'a, O, E> {
-  shared: Rc<RecursiveInner<'a, O, E>>,
+pub struct Recursive<'a, I: Input, O, E> {
+  shared: Rc<RecursiveInner<'a, I, O, E>>,
 }
 
-impl<'a, O, E> Clone for Recursive<'a, O, E> {
+impl<'a, I: Input, O, E> Clone for Recursive<'a, I, O, E> {
   fn clone(&self) -> Self {
     Recursive {
       shared: Rc::clone(&self.shared),
@@ -28,12 +28,12 @@ impl<'a, O, E> Clone for Recursive<'a, O, E> {
   }
 }
 
-impl<'a, O, E> Parser<StrInput<'a>> for Recursive<'a, O, E> {
+impl<'a, I: Input, O, E> Parser<I> for Recursive<'a, I, O, E> {
   type Error = E;
   type Output = O;
 
   #[inline]
-  fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<O, E> {
+  fn parse_next(&mut self, input: &mut I) -> PResult<O, E> {
     // SAFETY: Recursive は Rc を使うため !Send + !Sync（単一スレッド）。
     // 再帰呼び出しは同一コールスタック上で順次実行され、
     // 外側の parse_next は内側の完了まで中断しているため、
@@ -59,10 +59,11 @@ impl<'a, O, E> Parser<StrInput<'a>> for Recursive<'a, O, E> {
 ///     term.chainl1(add_op())
 /// });
 /// ```
-pub fn recursive<'a, O, E, F, P>(f: F) -> Recursive<'a, O, E>
+pub fn recursive<'a, I, O, E, F, P>(f: F) -> Recursive<'a, I, O, E>
 where
-  F: FnOnce(Recursive<'a, O, E>) -> P,
-  P: Parser<StrInput<'a>, Output = O, Error = E> + 'a, {
+  I: Input,
+  F: FnOnce(Recursive<'a, I, O, E>) -> P,
+  P: Parser<I, Output = O, Error = E> + 'a, {
   let rec = Recursive {
     shared: Rc::new(RecursiveInner {
       inner: UnsafeCell::new(None),
