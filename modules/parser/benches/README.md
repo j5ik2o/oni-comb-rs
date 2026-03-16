@@ -164,7 +164,9 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 ※ chumsky ランキングは AMD Ryzen 7 3700x での計測。oni-comb は同一マシンでの winnow/nom 比率から推定したため参考値。
 
-### ヒープアロケーション計測
+### ヒープアロケーション計測（dhat-rs）
+
+#### Token ワークロード
 
 ```
 dhat: Total:     0 bytes in 0 blocks
@@ -173,6 +175,27 @@ dhat: At t-end:  0 bytes in 0 blocks
 ```
 
 identifier / integer / flat_map 同一型 いずれも **0 blocks**。
+パーサーコンビネータインフラ（`fn_parser`、`tag`、`char`、`whitespace0`、`take_while1`、`satisfy`、`zip`、`map`、`or` 等）は **完全にゼロアロケーション**。
+
+#### JSON フルパース（107KB sample.json）
+
+```
+dhat: Total:     335,647 bytes in 743 blocks
+dhat: At t-gmax: 218,047 bytes in 470 blocks
+dhat: At t-end:  0 bytes in 0 blocks
+```
+
+アロケーション元の内訳:
+
+| ソース | bytes | 説明 |
+|--------|-------|------|
+| `Vec` grow（配列・オブジェクト要素収集） | 312,512 | JSON の配列 `[]` / オブジェクト `{}` の `Vec::push` による grow |
+| `quoted_string_cow` slow path | 23,135 | エスケープ付き文字列のみ `Cow::Owned(String)` を構築 |
+
+**パーサーコンビネータインフラ自体のアロケーションはゼロ。** 全てのアロケーションは AST 構築に起因:
+- `Vec<Json>` / `Vec<(Cow, Json)>` — 配列・オブジェクトの要素収集（不可避）
+- `Cow::Owned` — エスケープ付き文字列のみ（エスケープなし文字列は `Cow::Borrowed(&str)` でゼロコピー）
+- `fn_parser`、`tag`、`char`、`whitespace0`、`take_while1`、`quoted_string_cow`（fast path）、`peek_byte` — 全てゼロアロケーション
 
 ## 最適化サイクルの記録
 
