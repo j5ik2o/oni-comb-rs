@@ -34,7 +34,7 @@ Input (trait)          -- 入力ストリーム抽象。Checkpoint による巻�
   └─ StrInput          -- &str 向け実装。Checkpoint = usize (byte offset)
 
 Parser (trait)         -- parse_next(&mut self, &mut I) -> PResult<O, E>
-  └─ ParserExt (trait) -- map/zip/or/attempt/cut/optional/many0/flat_map/and_then のメソッドチェーン
+  └─ ParserExt (trait) -- map/zip/zip_left/zip_right/or/attempt/cut/optional/many0/many1/sep_by0/sep_by1/chainl1/chainr1/flat_map/and_then のメソッドチェーン
 
 Fail (enum)            -- Backtrack(E) | Cut(E) | Incomplete | ZeroProgress
 PResult<T, E>          -- Result<T, Fail<E>>
@@ -49,7 +49,7 @@ PResult<T, E>          -- Result<T, Fail<E>>
 | `parser.rs` | `Parser<I>` トレイト（`Output`, `Error`, `parse_next`） |
 | `parser_ext.rs` | `ParserExt<I>` — 全 `Parser` に自動実装されるコンビネータメソッド |
 | `fail.rs` | `Fail<E>` enum と `PResult` 型エイリアス |
-| `combinator/` | 各コンビネータの具象型（`Map`, `Zip`, `Or`, `Attempt`, `Cut`, `Optional`, `Many`, `FlatMap`） |
+| `combinator/` | 各コンビネータの具象型（`Map`, `Zip`, `ZipLeft`, `ZipRight`, `Or`, `Attempt`, `Cut`, `Optional`, `Many`, `Many1`, `SepBy0`, `SepBy1`, `ChainL1`, `ChainR1`, `FlatMap`） |
 | `text/` | テキスト専用パーサー（`Char`, `Tag`, `Eof`） |
 
 ### 設計上の重要な判断
@@ -96,7 +96,7 @@ flat_map 再帰ではなく専用ループで実装する。
 |---|------|----------|-------------|---------|
 | 1 | Core | `Input`, `Span`, `Fail`, `PResult`, `Parser`, `ParserExt`, `StrInput` | regex, cache, bytes, recursive helper | `or/attempt/cut` の単体テストが通る |
 | 2 | Primitive | `eof`, `char`, `tag`, `satisfy`, `take_while0/1`, `peek` | unicode category, regex, bytes | identifier/integer parser が組める |
-| 3 | Combinators | `map`, `zip`, `preceded`, `terminated`, `between`, `optional`, `many0/1`, `sep_by0/1`, `chainl1`, `chainr1`, `flat_map`/`and_then` | — | expression parser と CSV/JSON subset の骨格が書ける（`flat_map`/`and_then`/`many0` 実装済み、残りは未着手） |
+| 3 | Combinators | `map`, `zip`, `zip_left`, `zip_right`, `between`, `optional`, `many0/1`, `sep_by0/1`, `chainl1`, `chainr1`, `flat_map`/`and_then` | — | expression parser と CSV/JSON subset の骨格が書ける |
 | 4 | Text module | whitespace, ascii token, identifier, integer, quoted string | bytes 共通化 | JSON subset と URI tokenizer が動く |
 | 5 | Recursive | boxed `recursive()` helper, precedence parser | left recursion, packrat | 四則演算+括弧の parser が動く |
 | 6 | Error reporting | span, expected-set, context stack, cut-aware merge | カラー診断, IDE 連携 | JSON subset の失敗位置と期待トークンが出る |

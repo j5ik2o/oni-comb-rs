@@ -87,6 +87,7 @@ satisfy(|c: char| c == 'c' || c == 't')
 | `take_while0(f)` | 述語を満たす文字を0個以上消費 | `&str` |
 | `take_while1(f)` | 述語を満たす文字を1個以上消費 | `&str` |
 | `eof()` | 入力の終端にマッチ | `()` |
+| `between(l, p, r)` | `l`, `p`, `r` を順に実行し `p` の値を返す | `P::Output` |
 
 ### コンビネータ（`ParserExt` メソッドチェーン）
 
@@ -94,12 +95,19 @@ satisfy(|c: char| c == 'c' || c == 't')
 |----------|---------|------|
 | `.map(f)` | Functor | 成功値を変換 |
 | `.zip(p)` | Applicative | 2つのパーサーを順次適用し、ペアを返す |
+| `.zip_left(p)` | Applicative | 両方実行し、左の値だけを返す（= terminated） |
+| `.zip_right(p)` | Applicative | 両方実行し、右の値だけを返す（= preceded） |
 | `.or(p)` | Alternative | 左が Backtrack なら右を試行 |
 | `.flat_map(f)` | Monad | 1つ目の結果に基づいて次のパーサーを動的に選択 |
 | `.attempt()` | — | Cut を Backtrack に降格（巻き戻し可能にする） |
 | `.cut()` | — | Backtrack を Cut に昇格（or での分岐を禁止する） |
 | `.optional()` | — | Backtrack を `None` に変換 |
 | `.many0()` | — | 0回以上の繰り返し |
+| `.many1()` | — | 1回以上の繰り返し |
+| `.sep_by0(sep)` | — | 区切り付き 0回以上の繰り返し |
+| `.sep_by1(sep)` | — | 区切り付き 1回以上の繰り返し |
+| `.chainl1(op)` | — | 左結合の二項演算子チェーン |
+| `.chainr1(op)` | — | 右結合の二項演算子チェーン |
 
 ## ベンチマーク
 
@@ -206,7 +214,7 @@ cargo test -p oni-comb-parser -- test_name
 |----|------|------|------|
 | 1 | Core | **完了** | Input, Fail, PResult, Parser, ParserExt, StrInput |
 | 2 | Primitive | **完了** | eof, char, tag, satisfy, take_while0/1, peek |
-| 3 | Combinators | **進行中** | map, zip, or, attempt, cut, optional, many0, flat_map/and_then 実装済み。sep_by, between, chainl1/r1 は未着手 |
+| 3 | Combinators | **完了** | map, zip, zip_left, zip_right, between, or, attempt, cut, optional, many0/1, sep_by0/1, chainl1/r1, flat_map/and_then |
 | 4 | Text module | 未着手 | whitespace, ascii token, identifier, integer, quoted string |
 | 5 | Recursive | 未着手 | boxed `recursive()` helper, precedence parser |
 | 6 | Error reporting | 未着手 | span, expected-set, context stack |
