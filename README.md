@@ -217,6 +217,18 @@ ParseError 導入 + `#[inline]` で旧 8.3ns → 6.1ns（累計 ~26% 改善）�
 | `(1 + 2) * 3` | 440 ns |
 | `(((1 + 2) * 3) - 4) / 5` | 931 ns |
 
+### JSON フルベンチ（107KB — chumsky ベンチ互換）
+
+同一マシンでの計測:
+
+| # | ライブラリ | 時間 | スループット |
+|---|-----------|------|-------------|
+| 1 | winnow | 155 µs | 656 MB/s |
+| 2 | nom | 277 µs | 369 MB/s |
+| 3 | oni-comb | 640 µs | 159 MB/s |
+
+Token レベルでは winnow と同等だが、107KB JSON では `recursive()` のオーバーヘッドと `quoted_string()` の String 構築が影響。
+
 ### 特性まとめ
 
 - **winnow と同等〜90% のスループット** — identifier "x" で winnow を上回る場面も（`#[inline]` 導入後）

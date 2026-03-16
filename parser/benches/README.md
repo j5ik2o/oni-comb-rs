@@ -129,6 +129,37 @@ cargo bench -p oni-comb-parser --bench alloc_count
 - 括弧のネストごとに ~200ns 追加（再帰 1 段の `Box<dyn Parser>` コスト）。
 - 8項の加算チェーンで 776ns。`chainl1` のループは効率的。
 
+### JSON フルベンチ（107KB sample.json — chumsky ベンチ互換）
+
+[chumsky ベンチマーク](https://github.com/zesterer/chumsky/tree/main/benches)と同じ 107KB の JSON ファイルでの同一マシン計測。
+
+| # | ライブラリ | 時間 | スループット | 備考 |
+|---|-----------|------|-------------|------|
+| 1 | **winnow** | 155 µs | 656 MB/s | `&[u8]` ゼロコピー、`dispatch!` 使用 |
+| 2 | **nom** | 277 µs | 369 MB/s | `&[u8]` ゼロコピー、関数再帰 |
+| 3 | **oni-comb** | 640 µs | 159 MB/s | `&str` ベース、`recursive()` + `quoted_string()` で String 構築 |
+
+**oni-comb は winnow の 24%、nom の 58% のスループット**（JSON フルベンチ）。token レベルでは winnow と同等だが、107KB の JSON では差が開く。主因:
+- `recursive()` の `Rc<UnsafeCell<Box<dyn Parser>>>` 間接呼び出しが全ノードで発生
+- `quoted_string()` が毎回 `String` を構築（winnow/nom は `&[u8]` スライスを返すだけ）
+- `or` による 7 分岐の順次試行（winnow は `dispatch!` で先頭バイト分岐）
+
+**参考: chumsky README のランキング（AMD Ryzen 7 3700x）との対照**
+
+| # | ライブラリ | スループット | oni-comb の位置 |
+|---|-----------|-------------|---------------|
+| 1 | chumsky (check-only) | 797 MB/s | |
+| 2 | winnow | 627 MB/s | |
+| 3 | chumsky | 533 MB/s | |
+| 4 | sn (hand-written) | 472 MB/s | |
+| 5 | serde_json | 235 MB/s | |
+| 6 | nom | 213 MB/s | |
+| → | **oni-comb** | **~159 MB/s** | **nom と serde_json の間** |
+| 7 | pest | 57 MB/s | |
+| 8 | pom | 8 MB/s | |
+
+※ ハードウェアが異なるため直接比較は参考値。同一マシンでの winnow/nom 比率から推定。
+
 ### ヒープアロケーション計測
 
 ```

@@ -22,3 +22,7 @@ harness = false
 [[bench]]
 name = "alloc_count"
 harness = false
+
+[[bench]]
+name = "json_full"
+harness = false
