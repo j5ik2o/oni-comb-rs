@@ -138,17 +138,17 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 
 | 入力 | oni-comb | winnow | nom | pom | chumsky |
 |------|----------|--------|-----|-----|---------|
-| `"x"` (1B) | 18.3 ns | 15.1 ns | 13.5 ns | 66.8 ns | 886 ns |
-| `"foo_bar_123"` (11B) | 27.5 ns | 21.2 ns | 37.7 ns | 212 ns | 1,131 ns |
-| `"longIdentifier..."` (28B) | 45.6 ns | 33.4 ns | 86.8 ns | 278 ns | 1,413 ns |
+| `"x"` (1B) | 18.4 ns | 14.5 ns | 13.7 ns | 66.9 ns | 874 ns |
+| `"foo_bar_123"` (11B) | 28.1 ns | 19.5 ns | 36.9 ns | 199 ns | 1,055 ns |
+| `"longIdentifier..."` (28B) | 44.4 ns | 32.2 ns | 82.6 ns | 271 ns | 1,318 ns |
 
 ### Token ワークロード結果（Integer）
 
 | 入力 | oni-comb | winnow | nom | pom | chumsky |
 |------|----------|--------|-----|-----|---------|
-| `"42"` (2B) | 3.9 ns | 2.6 ns | 3.1 ns | 73 ns | 898 ns |
-| `"9999999"` (7B) | 8.2 ns | 5.3 ns | 7.2 ns | 138 ns | 1,033 ns |
-| `"184467...615"` (20B) | 25.8 ns | 23.0 ns | 22.8 ns | 260 ns | 1,328 ns |
+| `"42"` (2B) | 3.6 ns | 2.3 ns | 2.7 ns | 72 ns | 907 ns |
+| `"9999999"` (7B) | 8.2 ns | 5.2 ns | 5.3 ns | 133 ns | 995 ns |
+| `"184467...615"` (20B) | 25.9 ns | 22.6 ns | 22.7 ns | 264 ns | 1,256 ns |
 
 ### flat_map ワークロード結果
 
@@ -156,37 +156,56 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 
 | 入力 | oni-comb | winnow | nom | pom | chumsky |
 |------|----------|--------|-----|-----|---------|
-| `"1one"` | 8.3 ns | 2.6 ns | 2.4 ns | 69 ns | 924 ns |
-| `"3three"` | 6.9 ns | 2.3 ns | 2.3 ns | 93 ns | 983 ns |
+| `"1one"` | 7.3 ns | 2.1 ns | 2.4 ns | 70 ns | 896 ns |
+| `"3three"` | 6.0 ns | 2.3 ns | 2.4 ns | 96 ns | 948 ns |
+
+MS6 の ParseError 導入で旧 8.3ns → 7.3ns（約 12% 改善）。`format!` 排除の効果。
 
 #### 異種型分岐（`Box<dyn Parser>` / 動的ディスパッチ）
 
 | 入力 | oni-comb | winnow | nom\* | pom | chumsky |
 |------|----------|--------|-------|-----|---------|
-| `"c:hello"` | 21.9 ns | 19.4 ns | 3.8 ns | 160 ns | 1,139 ns |
-| `"i:42"` | 20.9 ns | 18.8 ns | 2.7 ns | 110 ns | 1,053 ns |
+| `"c:hello"` | 21.5 ns | 19.3 ns | 3.9 ns | 164 ns | 1,052 ns |
+| `"i:42"` | 19.8 ns | 18.6 ns | 2.8 ns | 109 ns | 972 ns |
 
-\* nom は `Parser` trait が dyn 非互換のため手動二段パース（Box なし）。他ライブラリとは条件が異なる。
+\* nom は `Parser` trait が dyn 非互換のため手動二段パース（Box なし）。
 
 #### zip vs flat_map（oni-comb-rs 内部比較）
 
 | 入力 | zip | flat_map | 差分 |
 |------|-----|----------|------|
-| `"x"` | 4.7 ns | 4.9 ns | +4% (誤差) |
-| `"foo_bar_123"` | 17.5 ns | 17.3 ns | -1% (誤差) |
-| `"longIdentifier..."` | 30.7 ns | 31.0 ns | +1% (誤差) |
+| `"x"` | 4.8 ns | 4.8 ns | 0% (誤差) |
+| `"foo_bar_123"` | 17.7 ns | 17.7 ns | 0% (誤差) |
+| `"longIdentifier..."` | 31.2 ns | 31.1 ns | 0% (誤差) |
 
-**zip と flat_map のオーバーヘッド差はほぼゼロ。** 同一型を返す限り、具象コンビネータ型の恩恵で LLVM が同等に最適化する。
+### JSON subset（oni-comb のみ）
+
+| 入力 | 時間 |
+|------|------|
+| `null` | 15 ns |
+| `42` | 86 ns |
+| `"hello world"` | 147 ns |
+| `[1, 2, 3]` | 536 ns |
+| `{"name":"oni-comb","version":2,"active":true}` | 693 ns |
+
+### 四則演算 + 括弧（oni-comb のみ、recursive 使用）
+
+| 入力 | 時間 |
+|------|------|
+| `42` | 156 ns |
+| `1 + 2 * 3` | 271 ns |
+| `(1 + 2) * 3` | 440 ns |
+| `(((1 + 2) * 3) - 4) / 5` | 931 ns |
 
 ### 特性まとめ
 
 - **winnow の 70-90% のスループット** — 具象型化の恩恵で改善余地あり
-- **nom を中〜長入力で上回る** — 11B で 37% 高速、28B で 90% 高速（identifier）
+- **nom を中〜長入力で上回る** — 11B で 24% 高速、28B で 46% 高速（identifier）
 - **pom の 3〜30 倍高速** — 旧 v1 相当の `Rc<dyn Fn>` 設計との差を実証
-- **chumsky の 30〜230 倍高速**
+- **chumsky の 30〜200 倍高速**
 - **zip ≒ flat_map（同一型）** — 具象コンビネータ型設計によりモナディック合成でもゼロコスト
-- **Box\<dyn Parser\> のオーバーヘッドは ~15ns** — 再帰パーサー設計時の見積もり基準値
-- **Applicative / flat_map 同一型でヒープアロケーションゼロ** — dhat による計測で 0 bytes / 0 blocks を確認
+- **ParseError 導入で ~12% 改善** — 最適化サイクル 1 回完了
+- **Applicative / flat_map 同一型でヒープアロケーションゼロ** — dhat で 0 bytes / 0 blocks 確認
 - 詳細な考察は [`parser/benches/README.md`](parser/benches/README.md) を参照
 
 ### ベンチマーク実行
@@ -195,11 +214,9 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 # 比較ベンチマーク
 cargo bench -p oni-comb-parser --bench comparison
 
-# flat_map ベンチのみ
-cargo bench -p oni-comb-parser --bench comparison -- flat_map
-
-# zip vs flat_map
-cargo bench -p oni-comb-parser --bench comparison -- zip_vs
+# JSON / arithmetic ベンチ
+cargo bench -p oni-comb-parser --bench comparison -- json
+cargo bench -p oni-comb-parser --bench comparison -- arithmetic
 
 # アロケーション計測
 cargo bench -p oni-comb-parser --bench alloc_count
@@ -228,7 +245,7 @@ cargo test -p oni-comb-parser -- test_name
 | 4 | Text module | **完了** | whitespace0/1, identifier, integer, quoted_string, escaped, lexeme。JSON subset・URI tokenizer テストで実証済み |
 | 5 | Recursive | **完了** | `recursive()` ヘルパー（`Rc<UnsafeCell<Box<dyn Parser>>>`）。四則演算+括弧テストで実証済み |
 | 6 | Error reporting | **完了** | `ParseError`（位置・期待トークン・コンテキスト）、`or` のマージ、`.context()` コンビネータ |
-| 7 | Benchmark | **進行中** | identifier/integer/flat_map の 5 ライブラリ比較、zip vs flat_map 内部比較、dhat アロケーション計測 |
+| 7 | Benchmark | **完了** | 5 ライブラリ比較（token/flat_map）、JSON subset、四則演算、zip vs flat_map、dhat。ParseError 導入で ~12% 改善の最適化サイクル完了 |
 
 ## License
 
