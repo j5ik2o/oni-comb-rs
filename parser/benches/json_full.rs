@@ -1,10 +1,12 @@
 //! chumsky ベンチマーク互換の JSON パースベンチ。
 //! 107KB の sample.json を使い、他ライブラリとのランキング比較を行う。
 
-use std::string::String;
+use std::borrow::Cow;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use oni_comb_parser::error::ParseError;
+use oni_comb_parser::fail::{Fail, PResult};
+use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
@@ -13,70 +15,101 @@ use oni_comb_parser::prelude::*;
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
-enum Json {
+enum Json<'a> {
     Null,
     Bool(bool),
     Num(f64),
-    Str(String),
-    Array(Vec<Json>),
-    Object(Vec<(String, Json)>),
+    Str(Cow<'a, str>),
+    Array(Vec<Json<'a>>),
+    Object(Vec<(Cow<'a, str>, Json<'a>)>),
 }
 
-fn ws() -> oni_comb_parser::text::take_while::TakeWhile0<fn(char) -> bool> {
-    whitespace0()
+/// fn 再帰 + 先頭バイト分岐で JSON 値をパースする。
+/// `recursive()` の `Box<dyn Parser>` + vtable を回避し、
+/// `or()` チェーンの線形スキャンも排除する。
+fn json_value<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
+    whitespace0().parse_next(input)?;
+
+    match input.peek_byte() {
+        Some(b'n') => tag("null").map(|_| Json::Null).parse_next(input),
+        Some(b't') => tag("true").map(|_| Json::Bool(true)).parse_next(input),
+        Some(b'f') => tag("false").map(|_| Json::Bool(false)).parse_next(input),
+        Some(b'"') => quoted_string_cow().map(Json::Str).parse_next(input),
+        Some(b'[') => json_array(input),
+        Some(b'{') => json_object(input),
+        Some(c) if c == b'-' || c.is_ascii_digit() => {
+            take_while1(|c: char| {
+                c.is_ascii_digit() || c == '-' || c == '.' || c == 'e' || c == 'E' || c == '+'
+            })
+            .map(|s: &str| Json::Num(s.parse::<f64>().unwrap()))
+            .parse_next(input)
+        }
+        _ => Err(Fail::Backtrack(ParseError::expected_description(
+            input.offset(),
+            "JSON value",
+        ))),
+    }
 }
 
-fn json_parser() -> impl Parser<StrInput<'static>, Output = Json, Error = ParseError> {
-    recursive(|value| {
-        let number = satisfy(|c: char| c == '-' || c.is_ascii_digit())
-            .zip(take_while0(|c: char| {
-                c.is_ascii_digit() || c == '.' || c == 'e' || c == 'E' || c == '+' || c == '-'
-            }))
-            .map(|(first, rest): (char, &str)| {
-                let mut s = String::with_capacity(1 + rest.len());
-                s.push(first);
-                s.push_str(rest);
-                Json::Num(s.parse::<f64>().unwrap())
-            });
+fn json_array<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
+    char('[').parse_next(input)?;
+    let mut items = Vec::new();
+    whitespace0().parse_next(input)?;
+    if input.peek_byte() == Some(b']') {
+        char(']').parse_next(input)?;
+        return Ok(Json::Array(items));
+    }
+    items.push(json_value(input)?);
+    loop {
+        whitespace0().parse_next(input)?;
+        match input.peek_byte() {
+            Some(b',') => {
+                char(',').parse_next(input)?;
+                items.push(json_value(input)?);
+            }
+            _ => break,
+        }
+    }
+    whitespace0().parse_next(input)?;
+    char(']').parse_next(input)?;
+    Ok(Json::Array(items))
+}
 
-        let array = ws()
-            .zip_right(char('['))
-            .zip_right(
-                ws()
-                    .zip_right(value.clone())
-                    .zip_left(ws())
-                    .sep_by0(ws().zip_right(char(',')).zip_left(ws())),
-            )
-            .zip_left(ws().zip_right(char(']')))
-            .map(Json::Array);
+fn json_object<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
+    char('{').parse_next(input)?;
+    let mut pairs = Vec::new();
+    whitespace0().parse_next(input)?;
+    if input.peek_byte() == Some(b'}') {
+        char('}').parse_next(input)?;
+        return Ok(Json::Object(pairs));
+    }
+    pairs.push(json_member(input)?);
+    loop {
+        whitespace0().parse_next(input)?;
+        match input.peek_byte() {
+            Some(b',') => {
+                char(',').parse_next(input)?;
+                pairs.push(json_member(input)?);
+            }
+            _ => break,
+        }
+    }
+    whitespace0().parse_next(input)?;
+    char('}').parse_next(input)?;
+    Ok(Json::Object(pairs))
+}
 
-        let pair = ws()
-            .zip_right(quoted_string())
-            .zip_left(ws())
-            .zip_left(char(':'))
-            .zip(ws().zip_right(value).zip_left(ws()));
-        let object = ws()
-            .zip_right(char('{'))
-            .zip_right(pair.sep_by0(ws().zip_right(char(',')).zip_left(ws())))
-            .zip_left(ws().zip_right(char('}')))
-            .map(Json::Object);
+fn json_member<'a>(input: &mut StrInput<'a>) -> PResult<(Cow<'a, str>, Json<'a>), ParseError> {
+    whitespace0().parse_next(input)?;
+    let key = quoted_string_cow().parse_next(input)?;
+    whitespace0().parse_next(input)?;
+    char(':').parse_next(input)?;
+    let val = json_value(input)?;
+    Ok((key, val))
+}
 
-        let null = tag("null").map(|_| Json::Null);
-        let bool_true = tag("true").map(|_| Json::Bool(true));
-        let bool_false = tag("false").map(|_| Json::Bool(false));
-        let str_val = quoted_string().map(Json::Str);
-
-        ws()
-            .zip_right(
-                null.or(bool_true)
-                    .or(bool_false)
-                    .or(number)
-                    .or(str_val)
-                    .or(array)
-                    .or(object),
-            )
-            .zip_left(ws())
-    })
+fn json_parser<'a>() -> impl Parser<StrInput<'a>, Output = Json<'a>, Error = ParseError> {
+    fn_parser(json_value)
 }
 
 // ── winnow JSON パーサー ─────────────────────

@@ -9,11 +9,13 @@ pub use crate::text::identifier::identifier;
 pub use crate::text::integer::integer;
 pub use crate::text::lexeme::lexeme;
 pub use crate::text::quoted_string::quoted_string;
+pub use crate::text::quoted_string_cow::quoted_string_cow;
 pub use crate::text::satisfy::satisfy;
 pub use crate::text::tag::tag;
 pub use crate::text::take_while::{take_while0, take_while1};
 pub use crate::text::whitespace::{whitespace0, whitespace1};
 
+pub use crate::combinator::fn_parser::fn_parser;
 pub use crate::combinator::recursive::recursive;
 
 /// left, parser, right を順に実行し、parser の値だけを返す。

@@ -1,5 +1,6 @@
 pub mod attempt;
 pub mod chainl1;
+pub mod fn_parser;
 pub mod chainr1;
 pub mod context;
 pub mod cut;

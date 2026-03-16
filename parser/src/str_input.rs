@@ -17,6 +17,12 @@ impl<'a> StrInput<'a> {
     pub(crate) fn as_str(&self) -> &'a str {
         &self.src[self.offset..]
     }
+
+    /// 次のバイトを消費せずに覗く。EOF なら `None`。
+    #[inline]
+    pub fn peek_byte(&self) -> Option<u8> {
+        self.src.as_bytes().get(self.offset).copied()
+    }
 }
 
 impl<'a> Input for StrInput<'a> {

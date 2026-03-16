@@ -5,6 +5,7 @@ pub mod identifier;
 pub mod integer;
 pub mod lexeme;
 pub mod quoted_string;
+pub mod quoted_string_cow;
 pub mod satisfy;
 pub mod tag;
 pub mod take_while;
