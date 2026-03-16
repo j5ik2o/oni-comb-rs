@@ -1,4 +1,6 @@
-use alloc::boxed::Box;
+use alloc::format;
+use alloc::string::String;
+use core::fmt;
 
 use regex_automata::meta::Regex;
 use regex_automata::{Anchored, Input as ReInput};
@@ -9,9 +11,33 @@ use crate::input::Input;
 use crate::parser::Parser;
 use crate::str_input::StrInput;
 
+/// Error returned when a regex pattern fails to compile.
+#[derive(Debug)]
+pub struct RegexBuildError {
+  pattern: String,
+  message: String,
+}
+
+impl RegexBuildError {
+  pub fn pattern(&self) -> &str {
+    &self.pattern
+  }
+
+  pub fn message(&self) -> &str {
+    &self.message
+  }
+}
+
+impl fmt::Display for RegexBuildError {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    write!(f, "invalid regex pattern '{}': {}", self.pattern, self.message)
+  }
+}
+
 /// A parser that matches a regular expression at the current input position.
 ///
 /// Created via [`regex()`]. Returns `&'a str` (zero-copy) on success.
+#[derive(Debug)]
 pub struct RegexParser {
   re: Regex,
 }
@@ -23,7 +49,7 @@ pub struct RegexParser {
 ///
 /// # Errors
 ///
-/// Returns `Err` if the regex pattern is invalid.
+/// Returns `Err(RegexBuildError)` if the regex pattern is invalid.
 ///
 /// # Examples
 ///
@@ -35,8 +61,11 @@ pub struct RegexParser {
 /// assert_eq!(p.parse_next(&mut input).unwrap(), "123");
 /// assert_eq!(input.remaining(), "abc");
 /// ```
-pub fn regex(pattern: &str) -> Result<RegexParser, Box<regex_automata::meta::BuildError>> {
-  let re = Regex::new(pattern).map_err(Box::new)?;
+pub fn regex(pattern: &str) -> Result<RegexParser, RegexBuildError> {
+  let re = Regex::new(pattern).map_err(|e| RegexBuildError {
+    pattern: String::from(pattern),
+    message: format!("{}", e),
+  })?;
   Ok(RegexParser { re })
 }
 
@@ -118,6 +147,8 @@ mod tests {
 
   #[test]
   fn regex_invalid_pattern() {
-    assert!(regex(r"[invalid").is_err());
+    let err = regex(r"[invalid").unwrap_err();
+    assert_eq!(err.pattern(), "[invalid");
+    assert!(!err.message().is_empty());
   }
 }

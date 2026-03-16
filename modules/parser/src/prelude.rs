@@ -49,7 +49,7 @@ pub use crate::combinator::fn_parser::fn_parser;
 pub use crate::combinator::recursive::recursive;
 
 #[cfg(feature = "regex")]
-pub use crate::text::regex::regex;
+pub use crate::text::regex::{regex, RegexBuildError};
 
 /// left, parser, right を順に実行し、parser の値だけを返す。
 pub fn between<I, L, P, R>(
