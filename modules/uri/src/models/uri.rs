@@ -78,8 +78,20 @@ impl<'a> Uri<'a> {
     if !self.is_urn() {
       return None;
     }
-    let path_str = self.path.to_string();
-    path_str.split_once(':').map(|(_, nss)| nss.to_string())
+    // Must be Path::Rootless, consistent with urn_nid()
+    let segs = self.path_rootless_segments()?;
+    let first = segs.first()?;
+    let (_, nss_start) = first.split_once(':')?;
+    if segs.len() == 1 {
+      Some(nss_start.to_string())
+    } else {
+      let mut result = nss_start.to_string();
+      for seg in &segs[1..] {
+        result.push('/');
+        result.push_str(seg);
+      }
+      Some(result)
+    }
   }
 
   fn path_rootless_segments(&self) -> Option<&[&'a str]> {
