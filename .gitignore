@@ -1,6 +1,8 @@
 .idea/
 Cargo.lock
 target/
+dhat-heap.json
+.opencode/
 
 /.cargo-home*/
 
