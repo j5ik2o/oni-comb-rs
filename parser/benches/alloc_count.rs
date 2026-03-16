@@ -1,25 +1,21 @@
 #[global_allocator]
 static ALLOC: dhat::Alloc = dhat::Alloc;
 
-use oni_comb_parser::parser::Parser;
-use oni_comb_parser::parser_ext::ParserExt;
-use oni_comb_parser::str_input::StrInput;
-use oni_comb_parser::text::satisfy::Satisfy;
-use oni_comb_parser::text::take_while::{TakeWhile0, TakeWhile1};
+use oni_comb_parser::prelude::*;
 
 /// コンビネータ合成のみを測定するため、String 構築を行わない identifier パーサー。
-/// Satisfy + TakeWhile0 の .then() で (char, &str) を返す。
+/// satisfy + take_while0 の .then() で (char, &str) を返す。
 fn parse_identifier_no_alloc(s: &str) -> Option<(char, &str)> {
-    let head = Satisfy(|c: char| c.is_ascii_alphabetic() || c == '_');
-    let tail = TakeWhile0(|c: char| c.is_ascii_alphanumeric() || c == '_');
+    let head = satisfy(|c: char| c.is_ascii_alphabetic() || c == '_');
+    let tail = take_while0(|c: char| c.is_ascii_alphanumeric() || c == '_');
     let mut parser = head.then(tail);
     let mut input = StrInput::new(s);
     parser.parse_next(&mut input).ok()
 }
 
-/// TakeWhile1 は &str を返すのでアロケーション不要。
+/// take_while1 は &str を返すのでアロケーション不要。
 fn parse_integer_no_alloc(s: &str) -> Option<&str> {
-    let mut parser = TakeWhile1(|c: char| c.is_ascii_digit());
+    let mut parser = take_while1(|c: char| c.is_ascii_digit());
     let mut input = StrInput::new(s);
     parser.parse_next(&mut input).ok()
 }

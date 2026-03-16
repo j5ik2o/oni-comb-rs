@@ -2,12 +2,12 @@ use oni_comb_parser::fail::Fail;
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
+use oni_comb_parser::prelude::{take_while0, take_while1};
 use oni_comb_parser::str_input::StrInput;
-use oni_comb_parser::text::take_while::{TakeWhile0, TakeWhile1};
 
 #[test]
 fn take_while0_consumes_matching_characters() {
-    let mut parser = TakeWhile0(|c: char| c.is_ascii_digit());
+    let mut parser = take_while0(|c: char| c.is_ascii_digit());
     let mut input = StrInput::new("123abc");
 
     let result = parser.parse_next(&mut input);
@@ -19,7 +19,7 @@ fn take_while0_consumes_matching_characters() {
 
 #[test]
 fn take_while0_returns_empty_str_on_no_match() {
-    let mut parser = TakeWhile0(|c: char| c.is_ascii_digit());
+    let mut parser = take_while0(|c: char| c.is_ascii_digit());
     let mut input = StrInput::new("abc");
 
     let result = parser.parse_next(&mut input);
@@ -30,7 +30,7 @@ fn take_while0_returns_empty_str_on_no_match() {
 
 #[test]
 fn take_while0_returns_empty_str_on_empty_input() {
-    let mut parser = TakeWhile0(|c: char| c.is_ascii_digit());
+    let mut parser = take_while0(|c: char| c.is_ascii_digit());
     let mut input = StrInput::new("");
 
     let result = parser.parse_next(&mut input);
@@ -41,7 +41,7 @@ fn take_while0_returns_empty_str_on_empty_input() {
 
 #[test]
 fn take_while0_consumes_entire_input_when_all_match() {
-    let mut parser = TakeWhile0(|c: char| c.is_ascii_alphabetic());
+    let mut parser = take_while0(|c: char| c.is_ascii_alphabetic());
     let mut input = StrInput::new("abcdef");
 
     let result = parser.parse_next(&mut input);
@@ -52,7 +52,7 @@ fn take_while0_consumes_entire_input_when_all_match() {
 
 #[test]
 fn take_while0_handles_multibyte_characters() {
-    let mut parser = TakeWhile0(|c: char| !c.is_ascii());
+    let mut parser = take_while0(|c: char| !c.is_ascii());
     let mut input = StrInput::new("日本語abc");
 
     let result = parser.parse_next(&mut input);
@@ -64,7 +64,7 @@ fn take_while0_handles_multibyte_characters() {
 
 #[test]
 fn take_while1_consumes_matching_characters() {
-    let mut parser = TakeWhile1(|c: char| c.is_ascii_digit());
+    let mut parser = take_while1(|c: char| c.is_ascii_digit());
     let mut input = StrInput::new("9999abc");
 
     let result = parser.parse_next(&mut input);
@@ -76,7 +76,7 @@ fn take_while1_consumes_matching_characters() {
 
 #[test]
 fn take_while1_fails_on_no_match() {
-    let mut parser = TakeWhile1(|c: char| c.is_ascii_digit());
+    let mut parser = take_while1(|c: char| c.is_ascii_digit());
     let mut input = StrInput::new("abc");
 
     let result = parser.parse_next(&mut input);
@@ -87,7 +87,7 @@ fn take_while1_fails_on_no_match() {
 
 #[test]
 fn take_while1_fails_on_empty_input() {
-    let mut parser = TakeWhile1(|c: char| c.is_ascii_digit());
+    let mut parser = take_while1(|c: char| c.is_ascii_digit());
     let mut input = StrInput::new("");
 
     let result = parser.parse_next(&mut input);
@@ -98,7 +98,7 @@ fn take_while1_fails_on_empty_input() {
 
 #[test]
 fn take_while1_consumes_entire_input_when_all_match() {
-    let mut parser = TakeWhile1(|c: char| c.is_ascii_digit());
+    let mut parser = take_while1(|c: char| c.is_ascii_digit());
     let mut input = StrInput::new("9999999");
 
     let result = parser.parse_next(&mut input);
@@ -109,7 +109,7 @@ fn take_while1_consumes_entire_input_when_all_match() {
 
 #[test]
 fn take_while1_succeeds_with_single_match() {
-    let mut parser = TakeWhile1(|c: char| c.is_ascii_digit());
+    let mut parser = take_while1(|c: char| c.is_ascii_digit());
     let mut input = StrInput::new("5abc");
 
     let result = parser.parse_next(&mut input);
@@ -120,7 +120,7 @@ fn take_while1_succeeds_with_single_match() {
 
 #[test]
 fn take_while1_handles_multibyte_characters() {
-    let mut parser = TakeWhile1(|c: char| !c.is_ascii());
+    let mut parser = take_while1(|c: char| !c.is_ascii());
     let mut input = StrInput::new("日本語abc");
 
     let result = parser.parse_next(&mut input);
@@ -132,8 +132,8 @@ fn take_while1_handles_multibyte_characters() {
 
 #[test]
 fn take_while1_works_with_or_for_identifier() {
-    let head = TakeWhile1(|c: char| c.is_ascii_alphabetic() || c == '_');
-    let tail = TakeWhile0(|c: char| c.is_ascii_alphanumeric() || c == '_');
+    let head = take_while1(|c: char| c.is_ascii_alphabetic() || c == '_');
+    let tail = take_while0(|c: char| c.is_ascii_alphanumeric() || c == '_');
 
     let mut parser = head.then(tail);
     let mut input = StrInput::new("foo_bar_123 rest");
@@ -149,7 +149,7 @@ fn take_while1_works_with_or_for_identifier() {
 #[test]
 fn take_while1_with_map_parses_integer() {
     let mut parser =
-        TakeWhile1(|c: char| c.is_ascii_digit()).map(|s: &str| s.parse::<u64>().unwrap());
+        take_while1(|c: char| c.is_ascii_digit()).map(|s: &str| s.parse::<u64>().unwrap());
     let mut input = StrInput::new("9999999 rest");
 
     let result = parser.parse_next(&mut input);
@@ -160,7 +160,7 @@ fn take_while1_with_map_parses_integer() {
 
 #[test]
 fn take_while0_works_with_optional() {
-    let mut parser = TakeWhile0(|c: char| c.is_ascii_digit()).optional();
+    let mut parser = take_while0(|c: char| c.is_ascii_digit()).optional();
     let mut input = StrInput::new("abc");
 
     let result = parser.parse_next(&mut input);
@@ -170,7 +170,7 @@ fn take_while0_works_with_optional() {
 
 #[test]
 fn take_while1_works_with_optional() {
-    let mut parser = TakeWhile1(|c: char| c.is_ascii_digit()).optional();
+    let mut parser = take_while1(|c: char| c.is_ascii_digit()).optional();
     let mut input = StrInput::new("abc");
 
     let result = parser.parse_next(&mut input);
@@ -181,7 +181,7 @@ fn take_while1_works_with_optional() {
 
 #[test]
 fn take_while_identifier_rejects_digit_start() {
-    let mut parser = TakeWhile1(|c: char| c.is_ascii_alphabetic() || c == '_');
+    let mut parser = take_while1(|c: char| c.is_ascii_alphabetic() || c == '_');
     let mut input = StrInput::new("123abc");
 
     let result = parser.parse_next(&mut input);
@@ -192,7 +192,7 @@ fn take_while_identifier_rejects_digit_start() {
 
 #[test]
 fn take_while_integer_rejects_non_digit() {
-    let mut parser = TakeWhile1(|c: char| c.is_ascii_digit());
+    let mut parser = take_while1(|c: char| c.is_ascii_digit());
     let mut input = StrInput::new("abc123");
 
     let result = parser.parse_next(&mut input);

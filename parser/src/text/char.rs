@@ -3,7 +3,11 @@ use crate::input::Input;
 use crate::parser::Parser;
 use crate::str_input::StrInput;
 
-pub struct Char(pub char);
+pub struct Char(char);
+
+pub fn char(c: char) -> Char {
+    Char(c)
+}
 
 impl Parser<StrInput<'_>> for Char {
     type Output = char;

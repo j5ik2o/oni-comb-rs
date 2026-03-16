@@ -1,14 +1,13 @@
 use oni_comb_parser::fail::Fail;
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
+use oni_comb_parser::parser_ext::ParserExt;
+use oni_comb_parser::prelude::{char, eof, tag};
 use oni_comb_parser::str_input::StrInput;
-use oni_comb_parser::text::char::Char;
-use oni_comb_parser::text::eof::Eof;
-use oni_comb_parser::text::tag::Tag;
 
 #[test]
 fn char_matches_expected_character() {
-    let mut parser = Char('a');
+    let mut parser = char('a');
     let mut input = StrInput::new("abc");
 
     let result = parser.parse_next(&mut input);
@@ -20,7 +19,7 @@ fn char_matches_expected_character() {
 
 #[test]
 fn char_fails_on_mismatch() {
-    let mut parser = Char('a');
+    let mut parser = char('a');
     let mut input = StrInput::new("bcd");
 
     let result = parser.parse_next(&mut input);
@@ -31,7 +30,7 @@ fn char_fails_on_mismatch() {
 
 #[test]
 fn char_fails_on_empty_input() {
-    let mut parser = Char('a');
+    let mut parser = char('a');
     let mut input = StrInput::new("");
 
     let result = parser.parse_next(&mut input);
@@ -42,7 +41,7 @@ fn char_fails_on_empty_input() {
 
 #[test]
 fn char_handles_multibyte_character() {
-    let mut parser = Char('日');
+    let mut parser = char('日');
     let mut input = StrInput::new("日本語");
 
     let result = parser.parse_next(&mut input);
@@ -53,7 +52,7 @@ fn char_handles_multibyte_character() {
 
 #[test]
 fn char_does_not_consume_on_multibyte_mismatch() {
-    let mut parser = Char('本');
+    let mut parser = char('本');
     let mut input = StrInput::new("日本語");
 
     let result = parser.parse_next(&mut input);
@@ -64,7 +63,7 @@ fn char_does_not_consume_on_multibyte_mismatch() {
 
 #[test]
 fn tag_matches_expected_string() {
-    let mut parser = Tag("hello");
+    let mut parser = tag("hello");
     let mut input = StrInput::new("hello world");
 
     let result = parser.parse_next(&mut input);
@@ -76,7 +75,7 @@ fn tag_matches_expected_string() {
 
 #[test]
 fn tag_fails_on_mismatch() {
-    let mut parser = Tag("hello");
+    let mut parser = tag("hello");
     let mut input = StrInput::new("world");
 
     let result = parser.parse_next(&mut input);
@@ -87,7 +86,7 @@ fn tag_fails_on_mismatch() {
 
 #[test]
 fn tag_fails_on_partial_match() {
-    let mut parser = Tag("hello");
+    let mut parser = tag("hello");
     let mut input = StrInput::new("hel");
 
     let result = parser.parse_next(&mut input);
@@ -98,8 +97,7 @@ fn tag_fails_on_partial_match() {
 
 #[test]
 fn tag_empty_string_triggers_many0_zero_progress() {
-    use oni_comb_parser::parser_ext::ParserExt;
-    let mut parser = Tag("").many0();
+    let mut parser = tag("").many0();
     let mut input = StrInput::new("anything");
 
     let result = parser.parse_next(&mut input);
@@ -109,7 +107,7 @@ fn tag_empty_string_triggers_many0_zero_progress() {
 
 #[test]
 fn eof_succeeds_at_end_of_input() {
-    let mut parser = Eof;
+    let mut parser = eof();
     let mut input = StrInput::new("");
 
     let result = parser.parse_next(&mut input);
@@ -119,7 +117,7 @@ fn eof_succeeds_at_end_of_input() {
 
 #[test]
 fn eof_fails_when_input_remains() {
-    let mut parser = Eof;
+    let mut parser = eof();
     let mut input = StrInput::new("remaining");
 
     let result = parser.parse_next(&mut input);

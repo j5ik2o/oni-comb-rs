@@ -3,7 +3,11 @@ use crate::input::Input;
 use crate::parser::Parser;
 use crate::str_input::StrInput;
 
-pub struct Tag(pub &'static str);
+pub struct Tag(&'static str);
+
+pub fn tag(s: &'static str) -> Tag {
+    Tag(s)
+}
 
 impl Parser<StrInput<'_>> for Tag {
     type Output = &'static str;

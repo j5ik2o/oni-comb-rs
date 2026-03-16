@@ -2,7 +2,11 @@ use crate::fail::{Fail, PResult};
 use crate::parser::Parser;
 use crate::str_input::StrInput;
 
-pub struct Satisfy<F>(pub F);
+pub struct Satisfy<F>(F);
+
+pub fn satisfy<F: FnMut(char) -> bool>(f: F) -> Satisfy<F> {
+    Satisfy(f)
+}
 
 impl<'a, F> Parser<StrInput<'a>> for Satisfy<F>
 where

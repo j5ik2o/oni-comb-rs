@@ -2,9 +2,8 @@ use oni_comb_parser::fail::{Fail, PResult};
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
+use oni_comb_parser::prelude::{char, tag};
 use oni_comb_parser::str_input::StrInput;
-use oni_comb_parser::text::char::Char;
-use oni_comb_parser::text::tag::Tag;
 
 struct ZeroProgressParser;
 
@@ -19,7 +18,7 @@ impl Parser<StrInput<'_>> for ZeroProgressParser {
 
 #[test]
 fn or_returns_left_on_left_success() {
-    let mut parser = Char('a').or(Char('b'));
+    let mut parser = char('a').or(char('b'));
     let mut input = StrInput::new("abc");
 
     let result = parser.parse_next(&mut input);
@@ -30,7 +29,7 @@ fn or_returns_left_on_left_success() {
 
 #[test]
 fn or_returns_right_when_left_backtracks() {
-    let mut parser = Char('a').or(Char('b'));
+    let mut parser = char('a').or(char('b'));
     let mut input = StrInput::new("bcd");
 
     let result = parser.parse_next(&mut input);
@@ -41,7 +40,7 @@ fn or_returns_right_when_left_backtracks() {
 
 #[test]
 fn or_fails_when_both_sides_backtrack() {
-    let mut parser = Char('a').or(Char('b'));
+    let mut parser = char('a').or(char('b'));
     let mut input = StrInput::new("xyz");
 
     let result = parser.parse_next(&mut input);
@@ -52,8 +51,8 @@ fn or_fails_when_both_sides_backtrack() {
 
 #[test]
 fn or_propagates_cut_from_left_without_trying_right() {
-    let left = Char('a').then(Char('b').cut());
-    let right = Char('a').then(Char('c'));
+    let left = char('a').then(char('b').cut());
+    let right = char('a').then(char('c'));
     let mut parser = left.or(right);
     let mut input = StrInput::new("ac");
 
@@ -64,7 +63,7 @@ fn or_propagates_cut_from_left_without_trying_right() {
 
 #[test]
 fn or_rewinds_input_on_left_backtrack() {
-    let mut parser = Tag("abc").or(Tag("abd"));
+    let mut parser = tag("abc").or(tag("abd"));
     let mut input = StrInput::new("abd");
 
     let result = parser.parse_next(&mut input);
@@ -75,7 +74,7 @@ fn or_rewinds_input_on_left_backtrack() {
 
 #[test]
 fn attempt_passes_through_success() {
-    let mut parser = Char('a').attempt();
+    let mut parser = char('a').attempt();
     let mut input = StrInput::new("abc");
 
     let result = parser.parse_next(&mut input);
@@ -86,7 +85,7 @@ fn attempt_passes_through_success() {
 
 #[test]
 fn attempt_downgrades_cut_to_backtrack() {
-    let inner = Char('a').then(Char('b').cut());
+    let inner = char('a').then(char('b').cut());
     let mut parser = inner.attempt();
     let mut input = StrInput::new("ac");
 
@@ -98,7 +97,7 @@ fn attempt_downgrades_cut_to_backtrack() {
 
 #[test]
 fn attempt_passes_through_backtrack() {
-    let mut parser = Char('a').attempt();
+    let mut parser = char('a').attempt();
     let mut input = StrInput::new("xyz");
 
     let result = parser.parse_next(&mut input);
@@ -109,8 +108,8 @@ fn attempt_passes_through_backtrack() {
 
 #[test]
 fn attempt_enables_backtracking_in_or() {
-    let left = Char('a').then(Char('b').cut()).attempt();
-    let right = Char('a').then(Char('c'));
+    let left = char('a').then(char('b').cut()).attempt();
+    let right = char('a').then(char('c'));
     let mut parser = left.or(right);
     let mut input = StrInput::new("ac");
 
@@ -124,7 +123,7 @@ fn attempt_enables_backtracking_in_or() {
 
 #[test]
 fn cut_passes_through_success() {
-    let mut parser = Char('a').cut();
+    let mut parser = char('a').cut();
     let mut input = StrInput::new("abc");
 
     let result = parser.parse_next(&mut input);
@@ -134,7 +133,7 @@ fn cut_passes_through_success() {
 
 #[test]
 fn cut_upgrades_backtrack_to_cut() {
-    let mut parser = Char('a').cut();
+    let mut parser = char('a').cut();
     let mut input = StrInput::new("xyz");
 
     let result = parser.parse_next(&mut input);
@@ -144,8 +143,8 @@ fn cut_upgrades_backtrack_to_cut() {
 
 #[test]
 fn cut_after_tag_prevents_or_fallthrough() {
-    let left = Tag(":").then(Tag("value").cut());
-    let right = Tag(":").then(Tag("other"));
+    let left = tag(":").then(tag("value").cut());
+    let right = tag(":").then(tag("other"));
     let mut parser = left.or(right);
     let mut input = StrInput::new(":other");
 
@@ -156,7 +155,7 @@ fn cut_after_tag_prevents_or_fallthrough() {
 
 #[test]
 fn or_propagates_zero_progress_from_left() {
-    let mut parser = ZeroProgressParser.or(Char('b'));
+    let mut parser = ZeroProgressParser.or(char('b'));
     let mut input = StrInput::new("abc");
 
     let result = parser.parse_next(&mut input);

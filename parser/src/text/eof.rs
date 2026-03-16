@@ -5,6 +5,10 @@ use crate::str_input::StrInput;
 
 pub struct Eof;
 
+pub fn eof() -> Eof {
+    Eof
+}
+
 impl Parser<StrInput<'_>> for Eof {
     type Output = ();
     type Error = String;

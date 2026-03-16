@@ -2,13 +2,12 @@ use oni_comb_parser::fail::Fail;
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
+use oni_comb_parser::prelude::{char, tag};
 use oni_comb_parser::str_input::StrInput;
-use oni_comb_parser::text::char::Char;
-use oni_comb_parser::text::tag::Tag;
 
 #[test]
 fn map_transforms_success_value() {
-    let mut parser = Char('a').map(|c: char| c.to_ascii_uppercase());
+    let mut parser = char('a').map(|c: char| c.to_ascii_uppercase());
     let mut input = StrInput::new("abc");
 
     let result = parser.parse_next(&mut input);
@@ -19,7 +18,7 @@ fn map_transforms_success_value() {
 
 #[test]
 fn map_preserves_failure() {
-    let mut parser = Char('a').map(|c: char| c.to_ascii_uppercase());
+    let mut parser = char('a').map(|c: char| c.to_ascii_uppercase());
     let mut input = StrInput::new("xyz");
 
     let result = parser.parse_next(&mut input);
@@ -30,7 +29,7 @@ fn map_preserves_failure() {
 
 #[test]
 fn map_preserves_cut_failure() {
-    let mut parser = Char('x').cut().map(|c: char| c.to_ascii_uppercase());
+    let mut parser = char('x').cut().map(|c: char| c.to_ascii_uppercase());
     let mut input = StrInput::new("abc");
 
     let result = parser.parse_next(&mut input);
@@ -40,7 +39,7 @@ fn map_preserves_cut_failure() {
 
 #[test]
 fn map_chains_multiple_transforms() {
-    let mut parser = Char('a')
+    let mut parser = char('a')
         .map(|c: char| c.to_ascii_uppercase())
         .map(|c: char| c.to_string());
     let mut input = StrInput::new("abc");
@@ -52,7 +51,7 @@ fn map_chains_multiple_transforms() {
 
 #[test]
 fn then_sequences_two_parsers() {
-    let mut parser = Char('a').then(Char('b'));
+    let mut parser = char('a').then(char('b'));
     let mut input = StrInput::new("abc");
 
     let result = parser.parse_next(&mut input);
@@ -64,7 +63,7 @@ fn then_sequences_two_parsers() {
 
 #[test]
 fn then_fails_if_first_fails() {
-    let mut parser = Char('a').then(Char('b'));
+    let mut parser = char('a').then(char('b'));
     let mut input = StrInput::new("xyz");
 
     let result = parser.parse_next(&mut input);
@@ -75,7 +74,7 @@ fn then_fails_if_first_fails() {
 
 #[test]
 fn then_fails_if_second_fails() {
-    let mut parser = Char('a').then(Char('b'));
+    let mut parser = char('a').then(char('b'));
     let mut input = StrInput::new("acd");
 
     let result = parser.parse_next(&mut input);
@@ -85,7 +84,7 @@ fn then_fails_if_second_fails() {
 
 #[test]
 fn then_chains_three_parsers() {
-    let mut parser = Char('a').then(Char('b')).then(Char('c'));
+    let mut parser = char('a').then(char('b')).then(char('c'));
     let mut input = StrInput::new("abcdef");
 
     let result = parser.parse_next(&mut input);
@@ -96,7 +95,7 @@ fn then_chains_three_parsers() {
 
 #[test]
 fn then_with_tags_sequences_string_slices() {
-    let mut parser = Tag("hello").then(Tag(" ")).then(Tag("world"));
+    let mut parser = tag("hello").then(tag(" ")).then(tag("world"));
     let mut input = StrInput::new("hello world!");
 
     let result = parser.parse_next(&mut input);
@@ -107,7 +106,7 @@ fn then_with_tags_sequences_string_slices() {
 
 #[test]
 fn then_propagates_cut_from_second() {
-    let mut parser = Char('a').then(Char('b').cut());
+    let mut parser = char('a').then(char('b').cut());
     let mut input = StrInput::new("ac");
 
     let result = parser.parse_next(&mut input);
@@ -117,8 +116,8 @@ fn then_propagates_cut_from_second() {
 
 #[test]
 fn map_over_then_result() {
-    let mut parser = Char('a')
-        .then(Char('b'))
+    let mut parser = char('a')
+        .then(char('b'))
         .map(|(a, b): (char, char)| format!("{}{}", a, b));
     let mut input = StrInput::new("ab");
 

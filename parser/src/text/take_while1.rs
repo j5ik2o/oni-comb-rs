@@ -2,7 +2,11 @@ use crate::fail::{Fail, PResult};
 use crate::parser::Parser;
 use crate::str_input::StrInput;
 
-pub struct TakeWhile1<F>(pub F);
+pub struct TakeWhile1<F>(F);
+
+pub fn take_while1<F: FnMut(char) -> bool>(f: F) -> TakeWhile1<F> {
+    TakeWhile1(f)
+}
 
 impl<'a, F> Parser<StrInput<'a>> for TakeWhile1<F>
 where
