@@ -1,7 +1,13 @@
 pub mod char;
 pub mod eof;
+pub mod escaped;
+pub mod identifier;
+pub mod integer;
+pub mod lexeme;
+pub mod quoted_string;
 pub mod satisfy;
 pub mod tag;
 pub mod take_while;
 mod take_while0;
 mod take_while1;
+pub mod whitespace;
