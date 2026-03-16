@@ -7,6 +7,7 @@ use crate::combinator::flat_map::FlatMap;
 use crate::combinator::many::Many;
 use crate::combinator::many1::Many1;
 use crate::combinator::map::Map;
+use crate::combinator::map_res::MapRes;
 use crate::combinator::optional::Optional;
 use crate::combinator::or::Or;
 use crate::combinator::sep_by::{SepBy0, SepBy1};
@@ -120,6 +121,16 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
       operand: self,
       operator: op,
     }
+  }
+
+  /// パーサーの結果を失敗しうる関数で変換する。
+  /// 関数が `Err` を返した場合、`Backtrack` エラーになる。
+  /// 入力は巻き戻さない（巻き戻したい場合は `.attempt()` と組み合わせる）。
+  fn map_res<F, O2, E2>(self, f: F, label: &'static str) -> MapRes<Self, F>
+  where
+    Self: Parser<I, Error = crate::error::ParseError>,
+    F: FnMut(Self::Output) -> Result<O2, E2>, {
+    MapRes { parser: self, f, label }
   }
 
   fn flat_map<F, P2>(self, f: F) -> FlatMap<Self, F>
