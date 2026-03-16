@@ -3,6 +3,13 @@ name: bump-version
 on:
   workflow_dispatch:
     inputs:
+      crate:
+        description: 'Crate to bump'
+        required: true
+        type: choice
+        options:
+          - oni-comb-parser
+          - oni-comb-crond
       dry_run:
         description: 'Set true to preview the next version without creating commits, tags, or releases'
         required: false
@@ -18,7 +25,7 @@ concurrency:
 
 jobs:
   bump:
-    name: Conventional Release
+    name: Conventional Release (${{ inputs.crate }})
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -34,6 +41,19 @@ jobs:
         run: |
           git config user.name "oni-comb-release-bot"
           git config user.email "release-bot@oni-comb.dev"
+      - name: Set crate-specific variables
+        id: vars
+        run: |
+          case "${{ inputs.crate }}" in
+            oni-comb-parser)
+              echo "tag_prefix=oni-comb-parser-v" >> "$GITHUB_OUTPUT"
+              echo "version_file=modules/parser/Cargo.toml" >> "$GITHUB_OUTPUT"
+              ;;
+            oni-comb-crond)
+              echo "tag_prefix=oni-comb-crond-v" >> "$GITHUB_OUTPUT"
+              echo "version_file=modules/crond/Cargo.toml" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
       - name: Generate Changelog and Bump Version
         id: changelog
         uses: TriPSs/conventional-changelog-action@v6
@@ -43,10 +63,10 @@ jobs:
           git-user-name: 'oni-comb-release-bot'
           git-user-email: 'release-bot@oni-comb.dev'
           preset: 'conventionalcommits'
-          tag-prefix: 'oni-comb-parser-v'
+          tag-prefix: ${{ steps.vars.outputs.tag_prefix }}
           output-file: 'CHANGELOG.md'
           release-count: '0'
-          version-file: 'modules/parser/Cargo.toml'
+          version-file: ${{ steps.vars.outputs.version_file }}
           version-path: 'package.version'
           skip-on-empty: 'true'
           skip-commit: ${{ inputs.dry_run }}
