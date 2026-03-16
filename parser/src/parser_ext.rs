@@ -1,10 +1,11 @@
 use crate::combinator::attempt::Attempt;
 use crate::combinator::cut::Cut;
+use crate::combinator::flat_map::FlatMap;
 use crate::combinator::many::Many;
 use crate::combinator::map::Map;
 use crate::combinator::optional::Optional;
 use crate::combinator::or::Or;
-use crate::combinator::then::Then;
+use crate::combinator::zip::Zip;
 use crate::input::Input;
 use crate::parser::Parser;
 
@@ -16,11 +17,11 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
         Map { parser: self, f }
     }
 
-    fn then<P2>(self, rhs: P2) -> Then<Self, P2>
+    fn zip<P2>(self, rhs: P2) -> Zip<Self, P2>
     where
         P2: Parser<I, Error = Self::Error>,
     {
-        Then {
+        Zip {
             first: self,
             second: rhs,
         }
@@ -50,6 +51,22 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
 
     fn many0(self) -> Many<Self> {
         Many { parser: self }
+    }
+
+    fn flat_map<F, P2>(self, f: F) -> FlatMap<Self, F>
+    where
+        P2: Parser<I, Error = Self::Error>,
+        F: FnMut(Self::Output) -> P2,
+    {
+        FlatMap { parser: self, f }
+    }
+
+    fn and_then<F, P2>(self, f: F) -> FlatMap<Self, F>
+    where
+        P2: Parser<I, Error = Self::Error>,
+        F: FnMut(Self::Output) -> P2,
+    {
+        FlatMap { parser: self, f }
     }
 }
 
