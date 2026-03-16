@@ -14,6 +14,8 @@ pub use crate::text::tag::tag;
 pub use crate::text::take_while::{take_while0, take_while1};
 pub use crate::text::whitespace::{whitespace0, whitespace1};
 
+pub use crate::combinator::recursive::recursive;
+
 /// left, parser, right を順に実行し、parser の値だけを返す。
 pub fn between<I, L, P, R>(
     left: L,

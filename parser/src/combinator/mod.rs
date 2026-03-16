@@ -8,6 +8,7 @@ pub mod many1;
 pub mod map;
 pub mod optional;
 pub mod or;
+pub mod recursive;
 pub mod sep_by;
 pub mod zip;
 pub mod zip_left;
