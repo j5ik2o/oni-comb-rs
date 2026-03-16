@@ -4,6 +4,31 @@ Rust 製パーサーモナドライブラリ（v2 リブート版）。
 
 旧 v1 の `Rc<dyn Fn>` ベース設計を捨て、**trait + 具象コンビネータ型**（`Map`, `Zip`, `Or`, `FlatMap` 等）で構成。Functor / Applicative / Alternative / Monad の全階層を提供しつつ、動的ディスパッチ・ヒープ確保を最小化する設計です。
 
+## Quickstart
+
+```rust
+use oni_comb_parser::prelude::*;
+
+// 'a' または 'b' にマッチ
+let mut parser = char('a').or(char('b'));
+let mut input = StrInput::new("b");
+assert_eq!(parser.parse_next(&mut input).unwrap(), 'b');
+
+// identifier: 先頭が英字/_, 以降は英数字/_
+let mut ident = satisfy(|c: char| c.is_ascii_alphabetic() || c == '_')
+    .zip(take_while0(|c: char| c.is_ascii_alphanumeric() || c == '_'));
+let mut input = StrInput::new("foo_bar_123");
+let (head, tail) = ident.parse_next(&mut input).unwrap();
+assert_eq!(head, 'f');
+assert_eq!(tail, "oo_bar_123");
+
+// integer
+let mut int_parser = take_while1(|c: char| c.is_ascii_digit())
+    .map(|s: &str| s.parse::<u64>().unwrap());
+let mut input = StrInput::new("42");
+assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
+```
+
 ## 設計の特徴
 
 - **Parsec スタイルの再帰下降パーサー** — デフォルト LL(1) で `attempt` により LL(\*) に拡張可能。`cut` でコミットしエラー報告を改善。`flat_map` で文脈依存の分岐にも対応
@@ -50,31 +75,6 @@ let parser = satisfy(|c: char| c == 'c' || c == 't')
             _ => Box::new(take_while1(|c: char| c.is_ascii_digit())),
         }
     });
-```
-
-## Quickstart
-
-```rust
-use oni_comb_parser::prelude::*;
-
-// 'a' または 'b' にマッチ
-let mut parser = char('a').or(char('b'));
-let mut input = StrInput::new("b");
-assert_eq!(parser.parse_next(&mut input).unwrap(), 'b');
-
-// identifier: 先頭が英字/_, 以降は英数字/_
-let mut ident = satisfy(|c: char| c.is_ascii_alphabetic() || c == '_')
-    .zip(take_while0(|c: char| c.is_ascii_alphanumeric() || c == '_'));
-let mut input = StrInput::new("foo_bar_123");
-let (head, tail) = ident.parse_next(&mut input).unwrap();
-assert_eq!(head, 'f');
-assert_eq!(tail, "oo_bar_123");
-
-// integer
-let mut int_parser = take_while1(|c: char| c.is_ascii_digit())
-    .map(|s: &str| s.parse::<u64>().unwrap());
-let mut input = StrInput::new("42");
-assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 ```
 
 ## 利用可能なパーサー
