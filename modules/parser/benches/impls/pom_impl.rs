@@ -39,12 +39,13 @@ fn pom_tag<'a>(expected: &'static str) -> pom::parser::Parser<'a, char, String> 
 pub fn parse_flat_map_same_type(s: &str) -> Option<String> {
     let input: Vec<char> = s.chars().collect();
     let digit = is_a(|c: char| c.is_ascii_digit());
-    let parser = digit >> (|c: char| match c {
-        '1' => pom_tag("one"),
-        '2' => pom_tag("two"),
-        '3' => pom_tag("three"),
-        _ => pom_tag(""),
-    });
+    let parser = digit
+        >> (|c: char| match c {
+            '1' => pom_tag("one"),
+            '2' => pom_tag("two"),
+            '3' => pom_tag("three"),
+            _ => pom_tag(""),
+        });
     parser.parse(&input).ok()
 }
 
@@ -53,13 +54,14 @@ pub fn parse_flat_map_same_type(s: &str) -> Option<String> {
 pub fn parse_flat_map_boxed(s: &str) -> Option<(char, String)> {
     let input: Vec<char> = s.chars().collect();
     let head = is_a(|c: char| c == 'c' || c == 'i');
-    let parser = head >> (|t: char| {
-        let colon = sym(':');
-        let value = match t {
-            'c' => is_a(|c: char| c.is_ascii_alphabetic()).repeat(1..),
-            _ => is_a(|c: char| c.is_ascii_digit()).repeat(1..),
-        };
-        (colon + value).map(|(c, v)| (c, v.into_iter().collect::<String>()))
-    });
+    let parser = head
+        >> (|t: char| {
+            let colon = sym(':');
+            let value = match t {
+                'c' => is_a(|c: char| c.is_ascii_alphabetic()).repeat(1..),
+                _ => is_a(|c: char| c.is_ascii_digit()).repeat(1..),
+            };
+            (colon + value).map(|(c, v)| (c, v.into_iter().collect::<String>()))
+        });
     parser.parse(&input).ok()
 }

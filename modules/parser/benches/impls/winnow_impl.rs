@@ -11,8 +11,7 @@ pub fn parse_identifier(s: &str) -> Option<String> {
         one_of(|c: char| c.is_ascii_alphabetic() || c == '_').parse_next(&mut input);
     head.ok().map(|h| {
         let tail: Result<&str, WErr> =
-            take_while(0.., |c: char| c.is_ascii_alphanumeric() || c == '_')
-                .parse_next(&mut input);
+            take_while(0.., |c: char| c.is_ascii_alphanumeric() || c == '_').parse_next(&mut input);
         let tail = tail.expect("take_while(0..) never fails");
         let mut result = String::with_capacity(1 + tail.len());
         result.push(h);
@@ -48,10 +47,7 @@ pub fn parse_flat_map_boxed(s: &str) -> Option<(&str, &str)> {
         .flat_map(
             |t: char| -> Box<dyn winnow::Parser<&str, (&str, &str), ContextError>> {
                 match t {
-                    'c' => Box::new((
-                        ":",
-                        take_while(1.., |c: char| c.is_ascii_alphabetic()),
-                    )),
+                    'c' => Box::new((":", take_while(1.., |c: char| c.is_ascii_alphabetic()))),
                     _ => Box::new((":", take_while(1.., |c: char| c.is_ascii_digit()))),
                 }
             },

@@ -8,13 +8,11 @@ use oni_comb_parser::prelude::*;
 fn calc_parser() -> impl Parser<StrInput<'static>, Output = i64, Error = ParseError> {
     recursive(|expr| {
         let ws_int = whitespace0().zip_right(integer()).zip_left(whitespace0());
-        let atom = ws_int.or(
-            whitespace0()
-                .zip_right(char('('))
-                .zip_right(expr)
-                .zip_left(char(')'))
-                .zip_left(whitespace0()),
-        );
+        let atom = ws_int.or(whitespace0()
+            .zip_right(char('('))
+            .zip_right(expr)
+            .zip_left(char(')'))
+            .zip_left(whitespace0()));
 
         let mul_op = whitespace0()
             .zip_right(

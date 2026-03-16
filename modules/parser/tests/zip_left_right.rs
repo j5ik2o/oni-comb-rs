@@ -20,7 +20,10 @@ fn zip_left_fails_if_first_fails() {
     let mut parser = char('a').zip_left(char('b'));
     let mut input = StrInput::new("xyz");
 
-    assert!(matches!(parser.parse_next(&mut input), Err(Fail::Backtrack(_))));
+    assert!(matches!(
+        parser.parse_next(&mut input),
+        Err(Fail::Backtrack(_))
+    ));
     assert_eq!(input.offset(), 0);
 }
 
@@ -56,7 +59,10 @@ fn zip_right_fails_if_first_fails() {
     let mut parser = char('a').zip_right(char('b'));
     let mut input = StrInput::new("xyz");
 
-    assert!(matches!(parser.parse_next(&mut input), Err(Fail::Backtrack(_))));
+    assert!(matches!(
+        parser.parse_next(&mut input),
+        Err(Fail::Backtrack(_))
+    ));
 }
 
 #[test]

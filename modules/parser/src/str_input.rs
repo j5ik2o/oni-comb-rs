@@ -27,7 +27,10 @@ impl<'a> StrInput<'a> {
 
 impl<'a> Input for StrInput<'a> {
     type Checkpoint = usize;
-    type Slice<'s> = &'s str where Self: 's;
+    type Slice<'s>
+        = &'s str
+    where
+        Self: 's;
 
     fn checkpoint(&self) -> Self::Checkpoint {
         self.offset

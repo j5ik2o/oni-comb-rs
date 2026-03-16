@@ -27,7 +27,10 @@ fn many1_fails_on_zero_elements() {
     let mut parser = char('a').many1();
     let mut input = StrInput::new("bbb");
 
-    assert!(matches!(parser.parse_next(&mut input), Err(Fail::Backtrack(_))));
+    assert!(matches!(
+        parser.parse_next(&mut input),
+        Err(Fail::Backtrack(_))
+    ));
     assert_eq!(input.offset(), 0);
 }
 

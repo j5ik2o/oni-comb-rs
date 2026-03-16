@@ -29,8 +29,7 @@ enum JsonValue {
 }
 
 /// プリミティブ値パーサー (null | bool | int | string)
-fn json_primitive(
-) -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
+fn json_primitive() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
     let null = tag("null").map(|_| JsonValue::Null);
     let bool_true = tag("true").map(|_| JsonValue::Bool(true));
     let bool_false = tag("false").map(|_| JsonValue::Bool(false));
@@ -41,8 +40,7 @@ fn json_primitive(
 }
 
 /// 配列パーサー (値はプリミティブのみ)
-fn json_array(
-) -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
+fn json_array() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
     ws(char('['))
         .zip_right(ws(json_primitive()).sep_by0(ws(char(','))))
         .zip_left(ws(char(']')))
@@ -50,8 +48,7 @@ fn json_array(
 }
 
 /// オブジェクトパーサー (値はプリミティブのみ)
-fn json_object(
-) -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
+fn json_object() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
     let pair = ws(quoted_string())
         .zip_left(ws(char(':')))
         .zip(ws(json_primitive()));
@@ -63,11 +60,8 @@ fn json_object(
 }
 
 /// トップレベルの JSON 値パーサー (1 段ネスト)
-fn json_value(
-) -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
-    json_primitive()
-        .or(json_array())
-        .or(json_object())
+fn json_value() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
+    json_primitive().or(json_array()).or(json_object())
 }
 
 // ── テスト ────────────────────────────────────
@@ -75,7 +69,10 @@ fn json_value(
 #[test]
 fn parse_null() {
     let mut input = StrInput::new("null");
-    assert_eq!(json_value().parse_next(&mut input).unwrap(), JsonValue::Null);
+    assert_eq!(
+        json_value().parse_next(&mut input).unwrap(),
+        JsonValue::Null
+    );
 }
 
 #[test]

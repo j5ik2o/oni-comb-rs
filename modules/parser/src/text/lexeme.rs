@@ -14,9 +14,7 @@ fn is_ws(c: char) -> bool {
 /// let lbrace = lexeme(char('{'));
 /// let number = lexeme(integer());
 /// ```
-pub fn lexeme<'a, P>(
-    parser: P,
-) -> ZipLeft<P, TakeWhile0<fn(char) -> bool>>
+pub fn lexeme<'a, P>(parser: P) -> ZipLeft<P, TakeWhile0<fn(char) -> bool>>
 where
     P: Parser<StrInput<'a>, Error = crate::error::ParseError>,
 {

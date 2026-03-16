@@ -9,12 +9,11 @@ use oni_comb_parser::prelude::*;
 #[test]
 fn flat_map_succeeds_when_both_succeed() {
     // Parse a digit, then dynamically choose a tag based on the digit
-    let mut parser = satisfy(|c: char| c.is_ascii_digit())
-        .flat_map(|c| match c {
-            '1' => tag("one"),
-            '2' => tag("two"),
-            _ => tag("other"),
-        });
+    let mut parser = satisfy(|c: char| c.is_ascii_digit()).flat_map(|c| match c {
+        '1' => tag("one"),
+        '2' => tag("two"),
+        _ => tag("other"),
+    });
     let mut input = StrInput::new("1one");
     assert_eq!(parser.parse_next(&mut input).unwrap(), "one");
     assert_eq!(input.offset(), 4);
@@ -65,12 +64,11 @@ fn flat_map_propagates_cut_from_second() {
 // 4.5: flat_map with same-type branches (no Box needed)
 #[test]
 fn flat_map_same_type_branches_no_box() {
-    let mut parser = satisfy(|c: char| c.is_ascii_digit())
-        .flat_map(|c| match c {
-            '1' => tag("one"),
-            '2' => tag("two"),
-            _ => tag("?"),
-        });
+    let mut parser = satisfy(|c: char| c.is_ascii_digit()).flat_map(|c| match c {
+        '1' => tag("one"),
+        '2' => tag("two"),
+        _ => tag("?"),
+    });
 
     let mut input = StrInput::new("2two");
     assert_eq!(parser.parse_next(&mut input).unwrap(), "two");
@@ -80,13 +78,16 @@ fn flat_map_same_type_branches_no_box() {
 // 4.6: flat_map with Box<dyn Parser> for heterogeneous branches
 #[test]
 fn flat_map_box_dyn_heterogeneous_branches() {
-    let mut parser = satisfy(|c: char| c == 'c' || c == 't')
-        .flat_map(|c| -> Box<dyn Parser<oni_comb_parser::str_input::StrInput<'_>, Output = &str, Error = ParseError>> {
+    let mut parser = satisfy(|c: char| c == 'c' || c == 't').flat_map(
+        |c| -> Box<
+            dyn Parser<oni_comb_parser::str_input::StrInput<'_>, Output = &str, Error = ParseError>,
+        > {
             match c {
                 'c' => Box::new(tag("har")),
                 _ => Box::new(take_while1(|c: char| c.is_ascii_digit())),
             }
-        });
+        },
+    );
 
     let mut input1 = StrInput::new("char");
     assert_eq!(parser.parse_next(&mut input1).unwrap(), "har");

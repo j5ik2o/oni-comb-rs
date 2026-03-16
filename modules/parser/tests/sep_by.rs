@@ -56,7 +56,10 @@ fn sep_by0_with_tag() {
     let mut parser = tag("ab").sep_by0(tag(", "));
     let mut input = StrInput::new("ab, ab, ab!");
 
-    assert_eq!(parser.parse_next(&mut input).unwrap(), vec!["ab", "ab", "ab"]);
+    assert_eq!(
+        parser.parse_next(&mut input).unwrap(),
+        vec!["ab", "ab", "ab"]
+    );
     assert_eq!(input.offset(), 10);
 }
 
@@ -75,7 +78,10 @@ fn sep_by1_fails_on_empty() {
     let mut parser = char('a').sep_by1(char(','));
     let mut input = StrInput::new("");
 
-    assert!(matches!(parser.parse_next(&mut input), Err(Fail::Backtrack(_))));
+    assert!(matches!(
+        parser.parse_next(&mut input),
+        Err(Fail::Backtrack(_))
+    ));
 }
 
 #[test]

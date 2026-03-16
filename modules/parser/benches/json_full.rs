@@ -37,13 +37,11 @@ fn json_value<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
         Some(b'"') => quoted_string_cow().map(Json::Str).parse_next(input),
         Some(b'[') => json_array(input),
         Some(b'{') => json_object(input),
-        Some(c) if c == b'-' || c.is_ascii_digit() => {
-            take_while1(|c: char| {
-                c.is_ascii_digit() || c == '-' || c == '.' || c == 'e' || c == 'E' || c == '+'
-            })
-            .map(|s: &str| Json::Num(s.parse::<f64>().unwrap()))
-            .parse_next(input)
-        }
+        Some(c) if c == b'-' || c.is_ascii_digit() => take_while1(|c: char| {
+            c.is_ascii_digit() || c == '-' || c == '.' || c == 'e' || c == 'E' || c == '+'
+        })
+        .map(|s: &str| Json::Num(s.parse::<f64>().unwrap()))
+        .parse_next(input),
         _ => Err(Fail::Backtrack(ParseError::expected_description(
             input.offset(),
             "JSON value",

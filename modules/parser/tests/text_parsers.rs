@@ -45,7 +45,10 @@ fn whitespace1_fails_on_no_whitespace() {
     let mut parser = whitespace1();
     let mut input = StrInput::new("abc");
 
-    assert!(matches!(parser.parse_next(&mut input), Err(Fail::Backtrack(_))));
+    assert!(matches!(
+        parser.parse_next(&mut input),
+        Err(Fail::Backtrack(_))
+    ));
 }
 
 // ── identifier ────────────────────────────────
@@ -89,7 +92,10 @@ fn identifier_fails_on_digit_start() {
     let mut parser = identifier();
     let mut input = StrInput::new("123abc");
 
-    assert!(matches!(parser.parse_next(&mut input), Err(Fail::Backtrack(_))));
+    assert!(matches!(
+        parser.parse_next(&mut input),
+        Err(Fail::Backtrack(_))
+    ));
     assert_eq!(input.offset(), 0);
 }
 
@@ -98,7 +104,10 @@ fn identifier_fails_on_empty() {
     let mut parser = identifier();
     let mut input = StrInput::new("");
 
-    assert!(matches!(parser.parse_next(&mut input), Err(Fail::Backtrack(_))));
+    assert!(matches!(
+        parser.parse_next(&mut input),
+        Err(Fail::Backtrack(_))
+    ));
 }
 
 // ── integer ───────────────────────────────────
@@ -142,7 +151,10 @@ fn integer_fails_on_non_digit() {
     let mut parser = integer();
     let mut input = StrInput::new("abc");
 
-    assert!(matches!(parser.parse_next(&mut input), Err(Fail::Backtrack(_))));
+    assert!(matches!(
+        parser.parse_next(&mut input),
+        Err(Fail::Backtrack(_))
+    ));
 }
 
 #[test]
@@ -150,6 +162,9 @@ fn integer_fails_on_lone_minus() {
     let mut parser = integer();
     let mut input = StrInput::new("-abc");
 
-    assert!(matches!(parser.parse_next(&mut input), Err(Fail::Backtrack(_))));
+    assert!(matches!(
+        parser.parse_next(&mut input),
+        Err(Fail::Backtrack(_))
+    ));
     assert_eq!(input.offset(), 0);
 }

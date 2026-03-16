@@ -18,23 +18,22 @@ struct Uri<'a> {
     query: Option<&'a str>,
 }
 
-fn uri_parser<'a>() -> impl Parser<
-    oni_comb_parser::str_input::StrInput<'a>,
-    Output = Uri<'a>,
-    Error = ParseError,
-> {
+fn uri_parser<'a>(
+) -> impl Parser<oni_comb_parser::str_input::StrInput<'a>, Output = Uri<'a>, Error = ParseError> {
     let scheme = take_while1(|c: char| c.is_ascii_alphanumeric());
     let authority_sep = tag("://");
     let host = take_while1(|c: char| c.is_ascii_alphanumeric() || c == '.' || c == '-');
     let port = char(':').zip_right(integer()).optional();
-    let path = char('/').zip_right(take_while0(|c: char| {
-        c.is_ascii_alphanumeric() || c == '/' || c == '-' || c == '_' || c == '.'
-    }))
-    .optional();
-    let query = char('?').zip_right(take_while0(|c: char| {
-        c.is_ascii_alphanumeric() || c == '&' || c == '=' || c == '-' || c == '_' || c == '.'
-    }))
-    .optional();
+    let path = char('/')
+        .zip_right(take_while0(|c: char| {
+            c.is_ascii_alphanumeric() || c == '/' || c == '-' || c == '_' || c == '.'
+        }))
+        .optional();
+    let query = char('?')
+        .zip_right(take_while0(|c: char| {
+            c.is_ascii_alphanumeric() || c == '&' || c == '=' || c == '-' || c == '_' || c == '.'
+        }))
+        .optional();
 
     scheme
         .zip_left(authority_sep)

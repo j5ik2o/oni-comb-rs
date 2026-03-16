@@ -21,12 +21,8 @@ where
     fn parse_next(&mut self, input: &mut I) -> PResult<Self::Output, Self::Error> {
         match self.parser.parse_next(input) {
             Ok(v) => Ok(v),
-            Err(Fail::Backtrack(e)) => {
-                Err(Fail::Backtrack(e.add_context(self.label)))
-            }
-            Err(Fail::Cut(e)) => {
-                Err(Fail::Cut(e.add_context(self.label)))
-            }
+            Err(Fail::Backtrack(e)) => Err(Fail::Backtrack(e.add_context(self.label))),
+            Err(Fail::Cut(e)) => Err(Fail::Cut(e.add_context(self.label))),
             Err(e) => Err(e),
         }
     }

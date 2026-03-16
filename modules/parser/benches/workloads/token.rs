@@ -2,7 +2,13 @@ use criterion::{black_box, BenchmarkId, Criterion, Throughput};
 
 use crate::impls;
 
-const IDENTIFIERS: &[&str] = &["x", "foo", "foo_bar_123", "_private", "longIdentifierNameForTesting"];
+const IDENTIFIERS: &[&str] = &[
+    "x",
+    "foo",
+    "foo_bar_123",
+    "_private",
+    "longIdentifierNameForTesting",
+];
 const INTEGERS: &[&str] = &["0", "42", "9999999", "18446744073709551615"];
 const FLAT_MAP_SAME_TYPE: &[&str] = &["1one", "2two", "3three"];
 const FLAT_MAP_BOXED: &[&str] = &["c:hello", "i:42"];

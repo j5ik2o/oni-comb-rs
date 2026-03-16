@@ -85,12 +85,10 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
                                         hex.push(c);
                                     }
                                     _ => {
-                                        return Err(Fail::Cut(
-                                            ParseError::expected_description(
-                                                pos + consumed,
-                                                "4 hex digits after \\u",
-                                            ),
-                                        ));
+                                        return Err(Fail::Cut(ParseError::expected_description(
+                                            pos + consumed,
+                                            "4 hex digits after \\u",
+                                        )));
                                     }
                                 }
                             }
@@ -98,12 +96,10 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
                             match char::from_u32(code_point) {
                                 Some(c) => result.push(c),
                                 None => {
-                                    return Err(Fail::Cut(
-                                        ParseError::expected_description(
-                                            pos + consumed - 4,
-                                            "valid unicode code point",
-                                        ),
-                                    ));
+                                    return Err(Fail::Cut(ParseError::expected_description(
+                                        pos + consumed - 4,
+                                        "valid unicode code point",
+                                    )));
                                 }
                             }
                         }
@@ -126,10 +122,7 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
                     result.push(c);
                 }
                 None => {
-                    return Err(Fail::Cut(ParseError::expected_char(
-                        pos + consumed,
-                        '"',
-                    )));
+                    return Err(Fail::Cut(ParseError::expected_char(pos + consumed, '"')));
                 }
             }
         }

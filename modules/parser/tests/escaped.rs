@@ -5,7 +5,8 @@ use oni_comb_parser::parser::Parser;
 use oni_comb_parser::prelude::*;
 
 fn single_quote_string(
-) -> impl Parser<oni_comb_parser::str_input::StrInput<'static>, Output = String, Error = ParseError> {
+) -> impl Parser<oni_comb_parser::str_input::StrInput<'static>, Output = String, Error = ParseError>
+{
     escaped('\'', '\'', '\\', |c| match c {
         '\'' => Some('\''),
         '\\' => Some('\\'),

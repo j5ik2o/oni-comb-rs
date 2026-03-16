@@ -42,11 +42,9 @@ pub fn parse_flat_map_same_type(s: &str) -> Option<&str> {
 pub fn parse_flat_map_boxed(s: &str) -> Option<(&str, &str)> {
     use nom::bytes::{tag as nom_tag, take_while1 as nom_take_while1};
 
-    let (rest, t) = nom_satisfy::<_, &str, nom::error::Error<&str>>(|c: char| {
-        c == 'c' || c == 'i'
-    })
-    .parse_complete(s)
-    .ok()?;
+    let (rest, t) = nom_satisfy::<_, &str, nom::error::Error<&str>>(|c: char| c == 'c' || c == 'i')
+        .parse_complete(s)
+        .ok()?;
 
     let result = match t {
         'c' => pair(

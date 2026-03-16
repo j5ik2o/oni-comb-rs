@@ -42,9 +42,9 @@ impl<'a> Parser<StrInput<'a>> for Integer {
         }
 
         let s = &remaining[..consumed];
-        let value = s.parse::<i64>().map_err(|_| {
-            Fail::Backtrack(ParseError::expected_description(pos, "integer"))
-        })?;
+        let value = s
+            .parse::<i64>()
+            .map_err(|_| Fail::Backtrack(ParseError::expected_description(pos, "integer")))?;
         input.advance(consumed);
         Ok(value)
     }

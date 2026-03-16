@@ -75,8 +75,7 @@ fn satisfy_works_with_many0() {
 
 #[test]
 fn satisfy_works_with_or() {
-    let mut parser = satisfy(|c: char| c.is_ascii_lowercase())
-        .or(satisfy(|c: char| c == '_'));
+    let mut parser = satisfy(|c: char| c.is_ascii_lowercase()).or(satisfy(|c: char| c == '_'));
     let mut input = StrInput::new("_x");
 
     let result = parser.parse_next(&mut input);

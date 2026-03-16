@@ -44,9 +44,7 @@ pub fn parse_flat_map_boxed(s: &str) -> Option<(&str, &str)> {
             >,
         > {
             match t {
-                'c' => Box::new(
-                    tag(":").zip(take_while1(|c: char| c.is_ascii_alphabetic())),
-                ),
+                'c' => Box::new(tag(":").zip(take_while1(|c: char| c.is_ascii_alphabetic()))),
                 _ => Box::new(tag(":").zip(take_while1(|c: char| c.is_ascii_digit()))),
             }
         },

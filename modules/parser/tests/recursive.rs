@@ -9,9 +9,7 @@ use oni_comb_parser::prelude::*;
 #[test]
 fn recursive_simple_parentheses() {
     // value = "x" | "(" value ")"
-    let value = recursive(|value| {
-        tag("x").or(between(tag("("), value, tag(")")))
-    });
+    let value = recursive(|value| tag("x").or(between(tag("("), value, tag(")"))));
 
     let mut input = StrInput::new("x");
     assert_eq!(value.clone().parse_next(&mut input).unwrap(), "x");
@@ -28,9 +26,7 @@ fn recursive_simple_parentheses() {
 
 #[test]
 fn recursive_fail_propagation() {
-    let value = recursive(|value| {
-        tag("x").or(between(tag("("), value, tag(")")))
-    });
+    let value = recursive(|value| tag("x").or(between(tag("("), value, tag(")"))));
 
     let mut input = StrInput::new("y");
     assert!(matches!(
@@ -42,9 +38,7 @@ fn recursive_fail_propagation() {
 
 #[test]
 fn recursive_unclosed_paren() {
-    let value = recursive(|value| {
-        tag("x").or(tag("(").zip_right(value).zip_left(tag(")").cut()))
-    });
+    let value = recursive(|value| tag("x").or(tag("(").zip_right(value).zip_left(tag(")").cut())));
 
     let mut input = StrInput::new("(x");
     // "(" 消費 → "x" 成功 → ")" が見つからず Cut
@@ -82,18 +76,11 @@ fn recursive_nested_list() {
     // ただし integer は簡易的に1桁
     let value = recursive(|value| {
         let int = satisfy(|c: char| c.is_ascii_digit()).map(|c: char| c.to_string());
-        let list = between(
-            char('['),
-            value.sep_by0(char(',')),
-            char(']'),
-        )
-        .map(|items: Vec<String>| format!("[{}]", items.join(",")));
+        let list = between(char('['), value.sep_by0(char(',')), char(']'))
+            .map(|items: Vec<String>| format!("[{}]", items.join(",")));
         int.or(list)
     });
 
     let mut input = StrInput::new("[1,[2,3],4]");
-    assert_eq!(
-        value.clone().parse_next(&mut input).unwrap(),
-        "[1,[2,3],4]"
-    );
+    assert_eq!(value.clone().parse_next(&mut input).unwrap(), "[1,[2,3],4]");
 }

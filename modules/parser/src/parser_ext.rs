@@ -103,10 +103,7 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
     where
         S: Parser<I, Error = Self::Error>,
     {
-        SepBy0 {
-            parser: self,
-            sep,
-        }
+        SepBy0 { parser: self, sep }
     }
 
     /// 区切り付き 1 個以上の繰り返し。
@@ -114,10 +111,7 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
     where
         S: Parser<I, Error = Self::Error>,
     {
-        SepBy1 {
-            parser: self,
-            sep,
-        }
+        SepBy1 { parser: self, sep }
     }
 
     /// 左結合の二項演算子チェーン。operand (op operand)* を左から畳む。

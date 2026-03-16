@@ -76,10 +76,7 @@ fn escape_backspace_formfeed() {
     let mut parser = quoted_string();
     let mut input = StrInput::new(r#""a\b\fb""#);
 
-    assert_eq!(
-        parser.parse_next(&mut input).unwrap(),
-        "a\u{0008}\u{000C}b"
-    );
+    assert_eq!(parser.parse_next(&mut input).unwrap(), "a\u{0008}\u{000C}b");
 }
 
 #[test]
