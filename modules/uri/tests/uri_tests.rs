@@ -144,6 +144,21 @@ fn ipv4_like_reg_name() {
 }
 
 #[test]
+fn empty_port_after_colon() {
+  let uri = Uri::parse("http://host:/path").unwrap();
+  assert_eq!(uri.port(), None);
+  assert_eq!(uri.path().to_string(), "/path");
+}
+
+#[test]
+fn empty_port_no_path() {
+  // Empty port is valid per RFC 3986; normalizes to no port in Display
+  let uri = Uri::parse("http://host:").unwrap();
+  assert_eq!(uri.port(), None);
+  assert_eq!(uri.to_string(), "http://host");
+}
+
+#[test]
 fn reject_invalid() {
   assert!(Uri::parse("://missing-scheme").is_err());
 }

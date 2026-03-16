@@ -45,18 +45,25 @@ fn user_info<'a>() -> impl Parser<StrInput<'a>, Output = UserInfo<'a>, Error = P
   })
 }
 
-// port = *DIGIT
-fn port<'a>() -> impl Parser<StrInput<'a>, Output = u16, Error = ParseError> {
+// port = *DIGIT (RFC 3986: zero or more digits after ':')
+// Returns Some(u16) if digits present, None if empty port (e.g., "host:")
+fn port<'a>() -> impl Parser<StrInput<'a>, Output = Option<u16>, Error = ParseError> {
   fn_parser(|input: &mut StrInput<'a>| {
     let pos = input.offset();
     let cp = input.checkpoint();
     tag(":").parse_next(input)?;
-    let mut digits = take_while1(|c: char| c.is_ascii_digit());
+    let mut digits = take_while0(|c: char| c.is_ascii_digit());
     let s = digits.parse_next(input)?;
-    s.parse::<u16>().map_err(|_| {
-      input.reset(cp);
-      Fail::Backtrack(ParseError::expected_description(pos, "port"))
-    })
+    if s.is_empty() {
+      return Ok(None); // empty port is valid per RFC 3986
+    }
+    match s.parse::<u16>() {
+      Ok(n) => Ok(Some(n)),
+      Err(_) => {
+        input.reset(cp);
+        Err(Fail::Backtrack(ParseError::expected_description(pos, "port")))
+      }
+    }
   })
 }
 
@@ -65,7 +72,7 @@ pub fn authority<'a>() -> impl Parser<StrInput<'a>, Output = Authority<'a>, Erro
   fn_parser(|input: &mut StrInput<'a>| {
     let ui = user_info().attempt().parse_next(input).ok();
     let h = host().parse_next(input)?;
-    let p = port().attempt().parse_next(input).ok();
+    let p = port().attempt().parse_next(input).ok().flatten();
     Ok(Authority::new(ui, h, p))
   })
 }
