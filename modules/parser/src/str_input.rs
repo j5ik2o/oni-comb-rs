@@ -26,11 +26,26 @@ impl<'a> StrInput<'a> {
 }
 
 impl<'a> Input for StrInput<'a> {
+  type Token = char;
+  type Slice = &'a str;
   type Checkpoint = usize;
-  type Slice<'s>
-    = &'s str
-  where
-    Self: 's;
+
+  #[inline]
+  fn next_token(&mut self) -> Option<char> {
+    let c = self.as_str().chars().next()?;
+    self.offset += c.len_utf8();
+    Some(c)
+  }
+
+  #[inline]
+  fn peek_token(&self) -> Option<char> {
+    self.as_str().chars().next()
+  }
+
+  #[inline]
+  fn slice_since(&self, cp: usize) -> &'a str {
+    &self.src[cp..self.offset]
+  }
 
   fn checkpoint(&self) -> Self::Checkpoint {
     self.offset
@@ -44,7 +59,7 @@ impl<'a> Input for StrInput<'a> {
     self.offset
   }
 
-  fn remaining(&self) -> &str {
+  fn remaining(&self) -> &'a str {
     &self.src[self.offset..]
   }
 

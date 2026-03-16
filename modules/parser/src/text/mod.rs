@@ -1,16 +1,31 @@
 pub mod char;
-pub mod eof;
 pub mod escaped;
 pub mod identifier;
 pub mod integer;
 pub mod lexeme;
 pub mod quoted_string;
 pub mod quoted_string_cow;
-pub mod satisfy;
 pub mod tag;
-mod take;
 pub mod take_while;
-mod take_while0;
-mod take_while1;
-mod take_while_n_m;
 pub mod whitespace;
+
+// primitive/ から re-export（後方互換性）
+pub mod eof {
+  pub use crate::primitive::eof::{eof, Eof};
+
+  use crate::str_input::StrInput;
+
+  pub fn str_eof<'a>() -> Eof<StrInput<'a>> {
+    eof()
+  }
+}
+
+pub mod satisfy {
+  pub use crate::primitive::satisfy::{satisfy, Satisfy};
+
+  use crate::str_input::StrInput;
+
+  pub fn str_satisfy<'a, F: FnMut(char) -> bool>(f: F) -> Satisfy<F, StrInput<'a>> {
+    satisfy(f)
+  }
+}
