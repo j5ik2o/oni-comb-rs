@@ -20,10 +20,6 @@ impl<'a> Path<'a> {
   pub fn is_empty(&self) -> bool {
     matches!(self, Path::Empty)
   }
-
-  pub fn as_str_repr(&self) -> String {
-    self.to_string()
-  }
 }
 
 impl fmt::Display for Path<'_> {

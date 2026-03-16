@@ -159,6 +159,13 @@ fn empty_port_no_path() {
 }
 
 #[test]
+fn ipv4_leading_zeros_rejected() {
+  // Leading zeros not allowed per RFC 3986 dec-octet; falls back to reg-name
+  let uri = Uri::parse("http://01.02.03.04/").unwrap();
+  assert_eq!(uri.host(), Some(&Host::RegName("01.02.03.04")));
+}
+
+#[test]
 fn reject_invalid() {
   assert!(Uri::parse("://missing-scheme").is_err());
 }
