@@ -10,14 +10,6 @@ impl<'a> ByteInput<'a> {
     Self { src, offset: 0 }
   }
 
-  pub(crate) fn advance(&mut self, n: usize) {
-    self.offset += n;
-  }
-
-  pub(crate) fn as_bytes(&self) -> &'a [u8] {
-    &self.src[self.offset..]
-  }
-
   #[inline]
   pub fn peek_byte(&self) -> Option<u8> {
     self.src.get(self.offset).copied()

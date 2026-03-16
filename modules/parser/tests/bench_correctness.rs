@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 #[path = "../benches/impls/mod.rs"]
 mod impls;
 
