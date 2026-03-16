@@ -30,8 +30,9 @@ Cargo workspace 構成。現在のメンバーは `parser` クレートのみ。
 ### コア型の階層
 
 ```
-Input (trait)          -- 入力ストリーム抽象。Checkpoint による巻き戻しを提供
-  └─ StrInput          -- &str 向け実装。Checkpoint = usize (byte offset)
+Input (trait)          -- 入力ストリーム抽象。Token/Slice/Checkpoint を提供
+  ├─ StrInput          -- &str 向け実装。Token=char, Slice=&'a str, Checkpoint=usize
+  └─ ByteInput         -- &[u8] 向け実装。Token=u8, Slice=&'a [u8], Checkpoint=usize
 
 Parser (trait)         -- parse_next(&mut self, &mut I) -> PResult<O, E>
   └─ ParserExt (trait) -- map/zip/zip_left/zip_right/or/attempt/cut/optional/many0/many1/sep_by0/sep_by1/chainl1/chainr1/flat_map/and_then のメソッドチェーン
@@ -44,20 +45,23 @@ PResult<T, E>          -- Result<T, Fail<E>>
 
 | モジュール | 役割 |
 |-----------|------|
-| `input.rs` | `Input` トレイト（`Checkpoint`, `Slice`, `reset`, `is_eof`） |
+| `input.rs` | `Input` トレイト（`Token`, `Slice`, `Checkpoint`, `next_token`, `peek_token`, `slice_since`, `reset`, `is_eof`） |
 | `str_input.rs` | `StrInput<'a>` — `&str` 向け `Input` 実装 |
+| `byte_input.rs` | `ByteInput<'a>` — `&[u8]` 向け `Input` 実装 |
 | `parser.rs` | `Parser<I>` トレイト（`Output`, `Error`, `parse_next`） |
 | `parser_ext.rs` | `ParserExt<I>` — 全 `Parser` に自動実装されるコンビネータメソッド |
 | `fail.rs` | `Fail<E>` enum と `PResult` 型エイリアス |
 | `combinator/` | 各コンビネータの具象型（`Map`, `Zip`, `ZipLeft`, `ZipRight`, `Or`, `Attempt`, `Cut`, `Optional`, `Many`, `Many1`, `SepBy0`, `SepBy1`, `ChainL1`, `ChainR1`, `FlatMap`） |
-| `text/` | テキスト専用パーサー（`Char`, `Tag`, `Satisfy`, `TakeWhile0/1`, `Eof`, `Whitespace0/1`, `Identifier`, `Integer`, `QuotedString`） |
+| `primitive/` | ジェネリックパーサー（`Take`, `Satisfy`, `TakeWhile0/1`, `TakeWhileNM`, `Eof`）— `I: Input` で `StrInput`/`ByteInput` 両対応 |
+| `text/` | テキスト専用パーサー（`Char`, `Tag`, `Whitespace0/1`, `Identifier`, `Integer`, `QuotedString`）— `StrInput` 固定 |
 
 ### 設計上の重要な判断
 
 - **Fail::Backtrack vs Fail::Cut**: `or` は Backtrack のみリカバリし、Cut はそのまま伝播。`attempt` は Cut を Backtrack に降格、`cut` は Backtrack を Cut に昇格
 - **flat_map は実装済みだが Applicative 優先を推奨**: ベンチマークで zip ≒ flat_map（同一型）を確認済み。ただし異種型分岐では `Box<dyn Parser>` が必要で ~15ns のオーバーヘッドが発生するため、Applicative (`zip`, `or`) を優先し flat_map は文脈依存の分岐に限定する方針
 - **再帰は boxed recursion**: 再帰の結び目だけ `Box<dyn Parser>` に落とし、非再帰部分は具象型を維持
-- **入力型は当面 `&str` 限定**: `no_std`/streaming/bytes は後回し
+- **入力型は `&str` と `&[u8]` をサポート**: `StrInput`（Token=char, Slice=&str）と `ByteInput`（Token=u8, Slice=&[u8]）。primitive/ のパーサーは両方で動作。text/ は StrInput 専用
+- **primitive パーサーは PhantomData で Input 型を保持**: 型推論のため `Satisfy<F, I>`, `TakeWhile0<F, I>` 等は `PhantomData<fn(&mut I)>` を持つ。prelude は StrInput 固定のラッパー関数をエクスポート
 - **`many`/`sep_by`/`chainl1` は専用ループコンビネータ**: flat_map 再帰ではなくループで実装
 
 ## コンビネータ意味論
@@ -116,7 +120,8 @@ flat_map 再帰ではなく専用ループで実装する。
 | winnow | 159.3 µs | 159.8 µs | 161.8 µs | 162.3 µs | 2.46 µs | 672 MB/s |
 | nom | 283.2 µs | 282.7 µs | 286.6 µs | 287.9 µs | 2.26 µs | 378 MB/s |
 
-- **知見**: winnow の 1.45 倍のスループット（mean 基準）。token レベルでは winnow と同等〜90%。nom を中〜長入力で上回る。flat_map 同一型は zip とゼロコスト同等。詳細は `modules/parser/benches/README.md` を参照
+- **知見**: winnow の 1.45 倍のスループット（mean 基準）。flat_map 同一型は zip とゼロコスト同等。詳細は `modules/parser/benches/README.md` を参照
+- **Generic Input リファクタリングの影響**: `primitive/` のジェネリックパーサー（`satisfy`, `take_while0/1`）は `peek_token`+`next_token` の per-token オーバーヘッドにより、長い入力で 40-150% の退行あり（例: identifier 28B で 44→85 ns）。`text/` の専用パーサー（`identifier`, `integer` 等）は `as_str().chars()` 直接使用のため影響なし。JSON/arithmetic マクロベンチも変化なし
 - **アロケーション**: パーサーコンビネータインフラはゼロアロケーション。JSON フルパースのアロケーション（743 blocks / 336KB）は全て AST 構築（`Vec` grow + エスケープ文字列 `Cow::Owned`）に起因
 
 ## 設計メモ: `no_std` core-only 層

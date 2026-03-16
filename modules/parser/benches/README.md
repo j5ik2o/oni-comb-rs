@@ -240,6 +240,46 @@ Allocation source breakdown:
 1. **`recursive()` is still heavy**: A single integer in the arithmetic benchmark takes ~156ns (`fn_parser` would be ~3ns). The vtable cost remains for cases where `recursive()` is needed (when `fn` recursion isn't structurally feasible).
 2. **`whitespace0` call frequency**: The JSON parser calls `whitespace0()` multiple times before and after values, with room for consolidation.
 
+### Generic Input Refactoring Effect (Input trait generification)
+
+Introduced `Token`/`Slice` associated types to `Input` trait and moved `satisfy`, `take_while0/1`, `take`, `take_while_n_m`, `eof` to generic `primitive/` module. Also added `ByteInput<'a>` for `&[u8]` parsing.
+
+**Impact on token-level parsers using generic primitives (`satisfy` + `take_while0`):**
+
+| Input | Before | After | Change | Cause |
+|-------|--------|-------|--------|-------|
+| identifier `"x"` (1B) | 18.4 ns | 17.0 ns | -8% | Within margin |
+| identifier `"foo"` (3B) | 19.6 ns | 22.6 ns | +15% | Per-token overhead |
+| identifier `"foo_bar_123"` (11B) | 28.1 ns | 39.9 ns | +42% | Per-token overhead |
+| identifier `"_private"` (8B) | 26.2 ns | 35.7 ns | +36% | Per-token overhead |
+| identifier `"longIdent..."` (28B) | 44.4 ns | 84.5 ns | +90% | Per-token overhead |
+| integer `"42"` (2B) | 3.6 ns | 8.9 ns | +147% | Per-token overhead |
+| integer `"9999999"` (7B) | 8.2 ns | 20.5 ns | +150% | Per-token overhead |
+
+**Root cause**: The old `text/` implementations iterated `remaining.chars()` once and called `advance(consumed)` at the end. The generic `primitive/` implementations call `peek_token()` + `next_token()` per token, each of which recomputes `&self.src[self.offset..]` and calls `.chars().next()`. This is the cost of genericity — the `Input` trait cannot expose a batch character iterator.
+
+**Unaffected workloads** (use `as_str().chars()` directly or `fn_parser`):
+
+| Workload | Before | After | Change |
+|----------|--------|-------|--------|
+| JSON `null` | 15.0 ns | 8.3 ns | -45% (noise/cache) |
+| JSON `object_large` | 1,492 ns | 1,495 ns | ≈0% |
+| arithmetic `single` | 156 ns | 160 ns | ≈0% |
+| arithmetic `complex` | 639 ns | 688 ns | ≈0% |
+| flat_map same-type `"1one"` | 7.3 ns | 7.4 ns | ≈0% |
+
+**Mitigation**: Text-specific parsers (`identifier`, `integer`, `tag`, `whitespace`, `quoted_string`) remain in `text/` with direct `as_str().chars()` access, preserving their performance. Only code using the generic `primitive::satisfy`/`primitive::take_while0` from the prelude is affected.
+
+**zip ≒ flat_map still holds** (post-generification):
+
+| Input | zip | flat_map | Diff |
+|-------|-----|----------|------|
+| "x" | 4.0 ns | 4.0 ns | 0% |
+| "foo" | 8.5 ns | 8.7 ns | ≈0% |
+| "foo_bar_123" | 26.5 ns | 26.7 ns | ≈0% |
+| "_private" | 20.1 ns | 20.2 ns | ≈0% |
+| "longIdent..." | 66.3 ns | 66.1 ns | ≈0% |
+
 ## Overall Assessment
 
 - **Outperforms winnow in throughput** — 1.43x faster on 107KB JSON (`fn_parser` + `peek_byte` dispatch + zero-copy strings)

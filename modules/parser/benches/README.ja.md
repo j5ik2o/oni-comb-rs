@@ -238,6 +238,46 @@ dhat: At t-end:  0 bytes in 0 blocks
 1. **`recursive()` は依然として重い**: 四則演算ベンチの単一整数で ~156ns（`fn_parser` なら ~3ns）。`recursive()` が必要なケース（文法構造上 `fn` で書けない場合）では vtable コストが残る。
 2. **whitespace0 の呼び出し回数**: JSON パーサーで値の前後に `whitespace0()` を複数回呼んでおり、統合の余地がある。
 
+### Generic Input リファクタリングの影響（Input トレイトジェネリック化）
+
+`Input` トレイトに `Token`/`Slice` associated type を追加し、`satisfy`, `take_while0/1`, `take`, `take_while_n_m`, `eof` をジェネリックな `primitive/` モジュールに移動。`ByteInput<'a>`（`&[u8]` パース用）も新規追加。
+
+**ジェネリック primitive を使うトークンレベルパーサーへの影響（`satisfy` + `take_while0`）:**
+
+| 入力 | Before | After | 変化 | 原因 |
+|------|--------|-------|------|------|
+| identifier `"x"` (1B) | 18.4 ns | 17.0 ns | -8% | 誤差範囲 |
+| identifier `"foo"` (3B) | 19.6 ns | 22.6 ns | +15% | トークン毎オーバーヘッド |
+| identifier `"foo_bar_123"` (11B) | 28.1 ns | 39.9 ns | +42% | トークン毎オーバーヘッド |
+| identifier `"_private"` (8B) | 26.2 ns | 35.7 ns | +36% | トークン毎オーバーヘッド |
+| identifier `"longIdent..."` (28B) | 44.4 ns | 84.5 ns | +90% | トークン毎オーバーヘッド |
+| integer `"42"` (2B) | 3.6 ns | 8.9 ns | +147% | トークン毎オーバーヘッド |
+| integer `"9999999"` (7B) | 8.2 ns | 20.5 ns | +150% | トークン毎オーバーヘッド |
+
+**原因**: 旧 `text/` 実装は `remaining.chars()` で1回イテレーションし最後に `advance(consumed)` を呼んでいた。ジェネリック `primitive/` 実装はトークン毎に `peek_token()` + `next_token()` を呼び、各呼び出しで `&self.src[self.offset..]` の再計算と `.chars().next()` が発生する。これはジェネリシティのコストであり、`Input` トレイトではバッチ文字イテレーターを公開できない。
+
+**影響なしのワークロード**（`as_str().chars()` 直接使用または `fn_parser`）:
+
+| ワークロード | Before | After | 変化 |
+|-------------|--------|-------|------|
+| JSON `null` | 15.0 ns | 8.3 ns | -45%（ノイズ/キャッシュ） |
+| JSON `object_large` | 1,492 ns | 1,495 ns | ≈0% |
+| arithmetic `single` | 156 ns | 160 ns | ≈0% |
+| arithmetic `complex` | 639 ns | 688 ns | ≈0% |
+| flat_map 同一型 `"1one"` | 7.3 ns | 7.4 ns | ≈0% |
+
+**緩和策**: テキスト専用パーサー（`identifier`, `integer`, `tag`, `whitespace`, `quoted_string`）は `text/` に残し `as_str().chars()` を直接使用するため性能維持。prelude からジェネリックな `primitive::satisfy`/`primitive::take_while0` を使うコードのみ影響あり。
+
+**zip ≒ flat_map は引き続き成立**（ジェネリック化後）:
+
+| 入力 | zip | flat_map | 差分 |
+|------|-----|----------|------|
+| "x" | 4.0 ns | 4.0 ns | 0% |
+| "foo" | 8.5 ns | 8.7 ns | ≈0% |
+| "foo_bar_123" | 26.5 ns | 26.7 ns | ≈0% |
+| "_private" | 20.1 ns | 20.2 ns | ≈0% |
+| "longIdent..." | 66.3 ns | 66.1 ns | ≈0% |
+
 ## 総合評価
 
 - **winnow を上回るスループット** — 107KB JSON で winnow の 1.43 倍（`fn_parser` + `peek_byte` 分岐 + ゼロコピー文字列）
