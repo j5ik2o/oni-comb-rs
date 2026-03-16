@@ -5,7 +5,12 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Rebooted parser combinator library"
 
+[features]
+default = []
+regex = ["dep:regex-automata"]
+
 [dependencies]
+regex-automata = { version = "0.4", default-features = false, features = ["alloc", "meta", "syntax"], optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }

@@ -10,19 +10,9 @@ use crate::cron_expr::CronExpr;
 // --- 数値パーサー ---
 
 fn uint8_parser<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'_>| {
-    let pos = input.offset();
-    let cp = input.checkpoint();
-    let mut p = take_while1(|c: char| c.is_ascii_digit());
-    let s = p.parse_next(input)?;
-    match s.parse::<u8>() {
-      Ok(n) => Ok(n),
-      Err(_) => {
-        input.reset(cp);
-        Err(Fail::Backtrack(ParseError::expected_description(pos, "integer 0-255")))
-      }
-    }
-  })
+  take_while1(|c: char| c.is_ascii_digit())
+    .map_res(|s: &str| s.parse::<u8>(), "integer 0-255")
+    .attempt()
 }
 
 // --- バリデーション付き数値パーサー ---

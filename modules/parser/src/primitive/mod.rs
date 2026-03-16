@@ -1,6 +1,10 @@
 pub mod eof;
+pub mod none_of;
+pub mod one_of;
 pub mod satisfy;
 pub mod take;
+pub mod take_till0;
+pub mod take_till1;
 pub mod take_while0;
 pub mod take_while1;
 pub mod take_while_n_m;

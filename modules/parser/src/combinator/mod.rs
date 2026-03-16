@@ -8,6 +8,7 @@ pub mod fn_parser;
 pub mod many;
 pub mod many1;
 pub mod map;
+pub mod map_res;
 pub mod optional;
 pub mod or;
 pub mod recursive;
