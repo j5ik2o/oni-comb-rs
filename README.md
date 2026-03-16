@@ -34,22 +34,22 @@ Rust では `flat_map` のクロージャが異なる型のパーサーを返す
 
 ```rust
 // Applicative: 構造がコンパイル時に確定 → インライン化可能
-char('a').zip(char('b'))   // Zip<Char, Char> — 具象型
+let parser = char('a').zip(char('b'));   // Zip<Char, Char> — 具象型
 
 // Monad (同一型): Box 不要、ゼロコスト
-satisfy(|c: char| c.is_ascii_digit()).flat_map(|n| match n {
+let parser = satisfy(|c: char| c.is_ascii_digit()).flat_map(|n| match n {
     '1' => tag("one"),
     _ => tag("other"),
-})
+});
 
 // Monad (異種型): Box<dyn Parser> で型消去
-satisfy(|c: char| c == 'c' || c == 't')
+let parser = satisfy(|c: char| c == 'c' || c == 't')
     .flat_map(|c| -> Box<dyn Parser<StrInput<'_>, Output = &str, Error = String>> {
         match c {
             'c' => Box::new(tag("har")),
             _ => Box::new(take_while1(|c: char| c.is_ascii_digit())),
         }
-    })
+    });
 ```
 
 ## Quickstart
