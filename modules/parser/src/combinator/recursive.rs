@@ -6,8 +6,10 @@ use crate::fail::PResult;
 use crate::parser::Parser;
 use crate::str_input::StrInput;
 
+type DynParser<'a, O, E> = dyn Parser<StrInput<'a>, Output = O, Error = E> + 'a;
+
 struct RecursiveInner<'a, O, E> {
-  inner: UnsafeCell<Option<Box<dyn Parser<StrInput<'a>, Output = O, Error = E> + 'a>>>,
+  inner: UnsafeCell<Option<Box<DynParser<'a, O, E>>>>,
 }
 
 /// 再帰パーサー。`recursive()` で構築する。
