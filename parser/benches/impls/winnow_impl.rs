@@ -26,3 +26,36 @@ pub fn parse_integer(s: &str) -> Option<u64> {
     let digits: Result<&str, WErr> = digit1.parse_next(&mut input);
     digits.ok().and_then(|d| d.parse::<u64>().ok())
 }
+
+/// flat_map 同一型分岐: digit → tag
+pub fn parse_flat_map_same_type(s: &str) -> Option<&str> {
+    let mut input = s;
+    let result: Result<&str, WErr> = one_of(|c: char| c.is_ascii_digit())
+        .flat_map(|c: char| match c {
+            '1' => "one",
+            '2' => "two",
+            '3' => "three",
+            _ => "",
+        })
+        .parse_next(&mut input);
+    result.ok()
+}
+
+/// flat_map 異種型分岐: 先頭文字に応じて異なる型のパーサーを選択
+pub fn parse_flat_map_boxed(s: &str) -> Option<(&str, &str)> {
+    let mut input = s;
+    let result: Result<(&str, &str), WErr> = one_of(|c: char| c == 'c' || c == 'i')
+        .flat_map(
+            |t: char| -> Box<dyn winnow::Parser<&str, (&str, &str), ContextError>> {
+                match t {
+                    'c' => Box::new((
+                        ":",
+                        take_while(1.., |c: char| c.is_ascii_alphabetic()),
+                    )),
+                    _ => Box::new((":", take_while(1.., |c: char| c.is_ascii_digit()))),
+                }
+            },
+        )
+        .parse_next(&mut input);
+    result.ok()
+}

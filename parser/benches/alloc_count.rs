@@ -20,16 +20,32 @@ fn parse_integer_no_alloc(s: &str) -> Option<&str> {
     parser.parse_next(&mut input).ok()
 }
 
+/// flat_map 同一型: satisfy + tag のチェーン。Box 不要なのでアロケーション 0 のはず。
+fn parse_flat_map_same_type_no_alloc(s: &str) -> Option<&str> {
+    let mut parser = satisfy(|c: char| c.is_ascii_digit()).flat_map(|c| match c {
+        '1' => tag("one"),
+        '2' => tag("two"),
+        '3' => tag("three"),
+        _ => tag(""),
+    });
+    let mut input = StrInput::new(s);
+    parser.parse_next(&mut input).ok()
+}
+
 fn main() {
     let _profiler = dhat::Profiler::new_heap();
 
     let id_inputs = ["x", "foo", "foo_bar_123", "_private"];
     let int_inputs = ["0", "42", "9999999"];
+    let flat_map_inputs = ["1one", "2two", "3three"];
 
     for input in id_inputs {
         let _ = parse_identifier_no_alloc(input);
     }
     for input in int_inputs {
         let _ = parse_integer_no_alloc(input);
+    }
+    for input in flat_map_inputs {
+        let _ = parse_flat_map_same_type_no_alloc(input);
     }
 }
