@@ -133,13 +133,15 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 [chumsky ベンチマーク](https://github.com/zesterer/chumsky/tree/main/benches)と同じ 107KB の JSON ファイルでの同一マシン計測。
 
-| # | ライブラリ | 時間 | スループット | 備考 |
-|---|-----------|------|-------------|------|
-| 1 | **oni-comb** | **109 µs** | **937 MB/s** | `fn_parser` 再帰 + `peek_byte` 分岐 + `quoted_string_cow` ゼロコピー |
-| 2 | **winnow** | 156 µs | 656 MB/s | `&[u8]` ゼロコピー、`dispatch!` 使用 |
-| 3 | **nom** | 272 µs | 376 MB/s | `&[u8]` ゼロコピー、関数再帰 |
+100 サンプルでの統計:
 
-**oni-comb は winnow の 1.43 倍、nom の 2.49 倍のスループット。** 最適化の内訳:
+| ライブラリ | Mean | Median | p90 | p95 | StdDev | Throughput (mean) |
+|-----------|------|--------|-----|-----|--------|-------------------|
+| **oni-comb** | **109.6 µs** | **109.4 µs** | **112.7 µs** | **113.8 µs** | **2.10 µs** | **977 MB/s** |
+| winnow | 159.3 µs | 159.8 µs | 161.8 µs | 162.3 µs | 2.46 µs | 672 MB/s |
+| nom | 283.2 µs | 282.7 µs | 286.6 µs | 287.9 µs | 2.26 µs | 378 MB/s |
+
+**oni-comb は winnow の 1.45 倍、nom の 2.59 倍のスループット（mean 基準）。** 3 ライブラリとも StdDev ~2µs で計測は安定。最適化の内訳:
 - `fn_parser` による関数再帰（`recursive()` の `Box<dyn Parser>` vtable を排除）
 - `peek_byte` による先頭バイト分岐（`or` チェーンの線形スキャンを排除）
 - `quoted_string_cow` によるゼロコピー文字列（エスケープなし文字列は `&str` スライス）
