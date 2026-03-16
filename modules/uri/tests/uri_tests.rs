@@ -80,7 +80,7 @@ fn parse_urn() {
   let uri = Uri::parse("urn:isbn:0451450523").unwrap();
   assert!(uri.is_urn());
   assert_eq!(uri.urn_nid(), Some("isbn"));
-  assert_eq!(uri.urn_nss(), Some("0451450523"));
+  assert_eq!(uri.urn_nss(), Some("0451450523".to_string()));
 }
 
 #[test]
@@ -95,7 +95,7 @@ fn non_urn_returns_none() {
   let uri = Uri::parse("http://example.com").unwrap();
   assert!(!uri.is_urn());
   assert_eq!(uri.urn_nid(), None);
-  assert_eq!(uri.urn_nss(), None);
+  assert_eq!(uri.urn_nss(), None::<String>);
 }
 
 #[test]
@@ -133,7 +133,14 @@ fn urn_nss_with_slashes() {
   let uri = Uri::parse("urn:example:a/b/c").unwrap();
   assert!(uri.is_urn());
   assert_eq!(uri.urn_nid(), Some("example"));
-  assert_eq!(uri.urn_nss(), Some("a/b/c"));
+  assert_eq!(uri.urn_nss(), Some("a/b/c".to_string()));
+}
+
+#[test]
+fn ipv4_like_reg_name() {
+  // "192.168.1.1foo" is a valid reg-name, not IPv4
+  let uri = Uri::parse("http://192.168.1.1foo/").unwrap();
+  assert_eq!(uri.host(), Some(&Host::RegName("192.168.1.1foo")));
 }
 
 #[test]

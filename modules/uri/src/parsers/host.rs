@@ -73,9 +73,13 @@ pub fn host<'a>() -> impl Parser<StrInput<'a>, Output = Host<'a>, Error = ParseE
     if let Ok(h) = ip_literal().attempt().parse_next(input) {
       return Ok(h);
     }
-    // IPv4
+    // IPv4 — only commit if followed by a delimiter (not more host chars)
+    let cp_ipv4 = input.checkpoint();
     if let Ok(addr) = ipv4_address().attempt().parse_next(input) {
-      return Ok(Host::Ipv4(addr));
+      match input.peek_token() {
+        None | Some(':') | Some('/') | Some('?') | Some('#') => return Ok(Host::Ipv4(addr)),
+        _ => input.reset(cp_ipv4), // not a pure IPv4, fall through to reg-name
+      }
     }
     // reg-name (can be empty)
     let name = reg_name().parse_next(input)?;
