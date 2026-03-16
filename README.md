@@ -131,19 +131,56 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 | `"9999999"` (7B) | 8.2 ns | 5.3 ns | 7.2 ns | 138 ns | 1,033 ns |
 | `"184467...615"` (20B) | 25.8 ns | 23.0 ns | 22.8 ns | 260 ns | 1,328 ns |
 
+### flat_map ワークロード結果
+
+#### 同一型分岐（digit → tag、Box 不要）
+
+| 入力 | oni-comb | winnow | nom | pom | chumsky |
+|------|----------|--------|-----|-----|---------|
+| `"1one"` | 8.3 ns | 2.6 ns | 2.4 ns | 69 ns | 924 ns |
+| `"3three"` | 6.9 ns | 2.3 ns | 2.3 ns | 93 ns | 983 ns |
+
+#### 異種型分岐（`Box<dyn Parser>` / 動的ディスパッチ）
+
+| 入力 | oni-comb | winnow | nom\* | pom | chumsky |
+|------|----------|--------|-------|-----|---------|
+| `"c:hello"` | 21.9 ns | 19.4 ns | 3.8 ns | 160 ns | 1,139 ns |
+| `"i:42"` | 20.9 ns | 18.8 ns | 2.7 ns | 110 ns | 1,053 ns |
+
+\* nom は `Parser` trait が dyn 非互換のため手動二段パース（Box なし）。他ライブラリとは条件が異なる。
+
+#### zip vs flat_map（oni-comb-rs 内部比較）
+
+| 入力 | zip | flat_map | 差分 |
+|------|-----|----------|------|
+| `"x"` | 4.7 ns | 4.9 ns | +4% (誤差) |
+| `"foo_bar_123"` | 17.5 ns | 17.3 ns | -1% (誤差) |
+| `"longIdentifier..."` | 30.7 ns | 31.0 ns | +1% (誤差) |
+
+**zip と flat_map のオーバーヘッド差はほぼゼロ。** 同一型を返す限り、concrete combinator 型の恩恵で LLVM が同等に最適化する。
+
 ### 特性まとめ
 
 - **winnow の 70-90% のスループット** — concrete type 化の恩恵で改善余地あり
 - **nom を中〜長入力で上回る** — 11B で 37% 高速、28B で 90% 高速（identifier）
 - **pom の 3〜30 倍高速** — 旧 v1 相当の `Rc<dyn Fn>` 設計との差を実証
 - **chumsky の 30〜230 倍高速**
-- **Applicative コンビネータでヒープアロケーションゼロ** — dhat による計測で 0 bytes / 0 blocks を確認
+- **zip ≒ flat_map（同一型）** — concrete combinator 型設計によりモナディック合成でもゼロコスト
+- **Box\<dyn Parser\> のオーバーヘッドは ~15ns** — 再帰パーサー設計時の見積もり基準値
+- **Applicative / flat_map 同一型でヒープアロケーションゼロ** — dhat による計測で 0 bytes / 0 blocks を確認
+- 詳細な考察は [`parser/benches/README.md`](parser/benches/README.md) を参照
 
 ### ベンチマーク実行
 
 ```bash
 # 比較ベンチマーク
 cargo bench -p oni-comb-parser --bench comparison
+
+# flat_map ベンチのみ
+cargo bench -p oni-comb-parser --bench comparison -- flat_map
+
+# zip vs flat_map
+cargo bench -p oni-comb-parser --bench comparison -- zip_vs
 
 # アロケーション計測
 cargo bench -p oni-comb-parser --bench alloc_count
@@ -167,12 +204,12 @@ cargo test -p oni-comb-parser -- test_name
 | MS | 名前 | 状態 | 内容 |
 |----|------|------|------|
 | 1 | Core | **完了** | Input, Fail, PResult, Parser, ParserExt, StrInput |
-| 2 | Primitive | **進行中** | eof, char, tag, satisfy, take_while, peek |
-| 3 | Combinators | 未着手 | many0/1, sep_by, between, chainl1/r1 |
+| 2 | Primitive | **完了** | eof, char, tag, satisfy, take_while0/1, peek |
+| 3 | Combinators | **進行中** | map, zip, or, attempt, cut, optional, many0, flat_map/and_then 実装済み。sep_by, between, chainl1/r1 は未着手 |
 | 4 | Text module | 未着手 | whitespace, ascii token, identifier, integer, quoted string |
 | 5 | Recursive | 未着手 | boxed `recursive()` helper, precedence parser |
 | 6 | Error reporting | 未着手 | span, expected-set, context stack |
-| 7 | Benchmark | **進行中** | Criterion 比較, dhat アロケーション計測 |
+| 7 | Benchmark | **進行中** | identifier/integer/flat_map の 5 ライブラリ比較、zip vs flat_map 内部比較、dhat アロケーション計測 |
 
 ## License
 
