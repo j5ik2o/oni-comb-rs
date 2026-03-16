@@ -41,11 +41,13 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 
 | 操作 | 型クラス | Rust での型 | コスト |
 |------|---------|------------|--------|
-| `map(f)` | Functor | `Map<P, F>` | ゼロ |
-| `then(p)` | Applicative | `Zip<P1, P2>` | ゼロ |
-| `or(p)` | Alternative | `Or<P1, P2>` | ゼロ |
-| `flat_map(f)` 同一型分岐 | Monad | `FlatMap<P, F>` | ゼロ |
-| `flat_map(f)` 異種型分岐 | Monad | `FlatMap<P, F>` + `Box<dyn Parser>` | Box 1回 |
+| `p.map(f)` | Functor | `Map<P, F>` | ゼロ |
+| `p1.zip(p2)` | Applicative | `Zip<P1, P2>` | ゼロ |
+| `p1.zip_left(p2)` | Applicative | `ZipLeft<P1, P2>` | ゼロ |
+| `p1.zip_right(p2)` | Applicative | `ZipRight<P1, P2>` | ゼロ |
+| `p1.or(p2)` | Alternative | `Or<P1, P2>` | ゼロ |
+| `p.flat_map(f)` 同一型分岐 | Monad | `FlatMap<P, F>` | ゼロ |
+| `p.flat_map(f)` 異種型分岐 | Monad | `FlatMap<P, F>` + `Box<dyn Parser>` | Box 1回 |
 
 全パーサーで `.flat_map()` が使えますが、**性能を最大化するには Applicative コンビネータ（`zip`, `map`, `or`）を優先**し、`flat_map` は文脈依存の分岐が必要な場面で使います。これは Haskell の Parsec でも同様の推奨事項です。
 
