@@ -1,8 +1,14 @@
 pub mod attempt;
+pub mod chainl1;
+pub mod chainr1;
 pub mod cut;
 pub mod flat_map;
 pub mod many;
+pub mod many1;
 pub mod map;
 pub mod optional;
 pub mod or;
+pub mod sep_by;
 pub mod zip;
+pub mod zip_left;
+pub mod zip_right;
