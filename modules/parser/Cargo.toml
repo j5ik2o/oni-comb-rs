@@ -13,7 +13,7 @@ regex = ["dep:regex-automata"]
 regex-automata = { version = "0.4", default-features = false, features = ["alloc", "meta", "syntax"], optional = true }
 
 [dev-dependencies]
-criterion = { version = "0.5", features = ["html_reports"] }
+criterion = { version = "0.8", features = ["html_reports"] }
 dhat = "0.3"
 nom = "8"
 winnow = "0.6"
