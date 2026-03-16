@@ -15,10 +15,7 @@ fn uint8_parser<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseErr
 
 // --- バリデーション付き数値パーサー ---
 
-fn ranged_uint8<'a>(
-  min: u8,
-  max: u8,
-) -> impl Parser<StrInput<'a>, Output = u8, Error = ParseError> {
+fn ranged_uint8<'a>(min: u8, max: u8) -> impl Parser<StrInput<'a>, Output = u8, Error = ParseError> {
   fn_parser(move |input: &mut StrInput<'_>| {
     let pos = input.offset();
     let cp = input.checkpoint();
@@ -28,10 +25,7 @@ fn ranged_uint8<'a>(
       Ok(n) if n >= min && n <= max => Ok(n),
       _ => {
         input.reset(cp);
-        Err(Fail::Backtrack(ParseError::expected_description(
-          pos,
-          "value in range",
-        )))
+        Err(Fail::Backtrack(ParseError::expected_description(pos, "value in range")))
       }
     }
   })
@@ -57,19 +51,14 @@ fn asterisk<'a>() -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseE
 }
 
 fn any_step<'a>() -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
-  tag("*/")
-    .zip_right(uint8_parser())
-    .map(CronExpr::AnyStep)
+  tag("*/").zip_right(uint8_parser()).map(CronExpr::AnyStep)
 }
 
 fn step_suffix<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseError> {
   tag("/").zip_right(uint8_parser())
 }
 
-fn range_expr<'a>(
-  min: u8,
-  max: u8,
-) -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
+fn range_expr<'a>(min: u8, max: u8) -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
   fn_parser(move |input: &mut StrInput<'_>| {
     let mut val = ranged_uint8(min, max);
     let from = val.parse_next(input)?;
@@ -78,18 +67,11 @@ fn range_expr<'a>(
     let to = val.parse_next(input)?;
     let mut step = step_suffix().optional();
     let s = step.parse_next(input)?;
-    Ok(CronExpr::Range {
-      from,
-      to,
-      step: s,
-    })
+    Ok(CronExpr::Range { from, to, step: s })
   })
 }
 
-fn value_expr<'a>(
-  min: u8,
-  max: u8,
-) -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
+fn value_expr<'a>(min: u8, max: u8) -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
   ranged_uint8(min, max).map(CronExpr::Value)
 }
 
@@ -99,10 +81,7 @@ fn last_value<'a>() -> impl Parser<StrInput<'a>, Output = CronExpr, Error = Pars
 
 // --- フィールド式 ---
 
-fn field_expr<'a>(
-  min: u8,
-  max: u8,
-) -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
+fn field_expr<'a>(min: u8, max: u8) -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
   fn_parser(move |input: &mut StrInput<'_>| {
     // リストは内部でカンマ区切りのアイテムを解析
     // 各アイテムは range | any_step | asterisk | value
@@ -188,9 +167,7 @@ fn dow_field_expr<'a>() -> impl Parser<StrInput<'a>, Output = CronExpr, Error = 
 fn cron_expr<'a>() -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
   fn_parser(|input: &mut StrInput<'_>| {
     let sp = |input: &mut StrInput<'_>| -> PResult<(), ParseError> {
-      take_while1(|c: char| c == ' ')
-        .map(|_| ())
-        .parse_next(input)
+      take_while1(|c: char| c == ' ').map(|_| ()).parse_next(input)
     };
 
     let mins = field_expr(0, 59).parse_next(input)?;
@@ -221,9 +198,7 @@ impl CronParser {
   pub fn parse(input: &str) -> Result<CronExpr, String> {
     let mut parser = cron_expr().zip_left(eof());
     let mut str_input = StrInput::new(input);
-    parser
-      .parse_next(&mut str_input)
-      .map_err(|e| format!("{:?}", e))
+    parser.parse_next(&mut str_input).map_err(|e| format!("{:?}", e))
   }
 }
 
@@ -323,10 +298,7 @@ mod tests {
     let r = CronParser::parse("0,15,30,45 * * * *").unwrap();
     match r {
       Cron { mins, .. } => {
-        assert_eq!(
-          *mins,
-          List(vec![Value(0), Value(15), Value(30), Value(45)])
-        );
+        assert_eq!(*mins, List(vec![Value(0), Value(15), Value(30), Value(45)]));
       }
       _ => panic!("expected Cron"),
     }

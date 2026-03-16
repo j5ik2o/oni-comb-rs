@@ -8,11 +8,7 @@ struct CronEnvironment {
 }
 
 pub fn get_days_from_month(year: i32, month: u32) -> u8 {
-  let (y, m) = if month == 12 {
-    (year + 1, 1)
-  } else {
-    (year, month + 1)
-  };
+  let (y, m) = if month == 12 { (year + 1, 1) } else { (year, month + 1) };
   chrono::NaiveDate::from_ymd_opt(y, m, 1)
     .unwrap()
     .signed_duration_since(chrono::NaiveDate::from_ymd_opt(year, month, 1).unwrap())
@@ -83,10 +79,7 @@ impl CronEvaluator {
       now: month as u8,
       max: 12,
     };
-    let dow_env = CronEnvironment {
-      now: weekday,
-      max: 7,
-    };
+    let dow_env = CronEnvironment { now: weekday, max: 7 };
 
     visit(&min_env, mins)
       && visit(&hour_env, hours)
@@ -102,9 +95,7 @@ mod tests {
   use chrono::TimeZone;
 
   fn utc(y: i32, m: u32, d: u32, h: u32, min: u32) -> chrono::DateTime<chrono::Utc> {
-    chrono::Utc
-      .with_ymd_and_hms(y, m, d, h, min, 0)
-      .unwrap()
+    chrono::Utc.with_ymd_and_hms(y, m, d, h, min, 0).unwrap()
   }
 
   #[test]
