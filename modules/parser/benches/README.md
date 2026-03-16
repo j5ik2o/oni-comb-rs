@@ -46,30 +46,30 @@ All figures are Criterion **mean estimates** (100 samples, 95% confidence interv
 
 | Input | oni-comb | winnow | nom | pom | chumsky |
 |-------|----------|--------|-----|-----|---------|
-| `"x"` (1B) | 18.4 ns | 14.5 ns | 13.7 ns | 66.9 ns | 874 ns |
-| `"foo"` (3B) | 19.6 ns | 15.2 ns | 18.7 ns | 83.5 ns | 916 ns |
-| `"foo_bar_123"` (11B) | 28.1 ns | 19.5 ns | 36.9 ns | 199 ns | 1,055 ns |
-| `"_private"` (8B) | 26.2 ns | 19.2 ns | 27.7 ns | 141 ns | 997 ns |
-| `"longIdent..."` (28B) | 44.4 ns | 32.2 ns | 82.6 ns | 271 ns | 1,318 ns |
+| `"x"` (1B) | 17.0 ns | 15.8 ns | 14.1 ns | 69.5 ns | 918 ns |
+| `"foo"` (3B) | 22.6 ns | 16.8 ns | 17.2 ns | 86.7 ns | 937 ns |
+| `"foo_bar_123"` (11B) | 39.9 ns | 21.9 ns | 37.7 ns | 206 ns | 1,096 ns |
+| `"_private"` (8B) | 35.7 ns | 21.4 ns | 30.3 ns | 148 ns | 1,029 ns |
+| `"longIdent..."` (28B) | 84.5 ns | 35.1 ns | 85.7 ns | 275 ns | 1,383 ns |
 
 ### Token Workload — Integer (mean)
 
 | Input | oni-comb | winnow | nom | pom | chumsky |
 |-------|----------|--------|-----|-----|---------|
-| `"0"` | 3.1 ns | 1.6 ns | 2.1 ns | 68.6 ns | 884 ns |
-| `"42"` | 3.6 ns | 2.3 ns | 2.7 ns | 72.1 ns | 907 ns |
-| `"9999999"` | 8.2 ns | 5.2 ns | 5.3 ns | 133 ns | 995 ns |
-| `"184467...615"` (20B) | 25.9 ns | 22.6 ns | 22.7 ns | 264 ns | 1,256 ns |
+| `"0"` | 4.5 ns | 2.4 ns | 1.9 ns | 74.5 ns | 925 ns |
+| `"42"` | 8.9 ns | 3.9 ns | 3.8 ns | 78.7 ns | 961 ns |
+| `"9999999"` | 20.5 ns | 5.7 ns | 5.9 ns | 138 ns | 1,006 ns |
+| `"184467...615"` (20B) | 63.5 ns | 24.2 ns | 23.8 ns | 260 ns | 1,287 ns |
 
 ### flat_map Same-Type Branch (digit → tag) (mean)
 
 | Library | "1one" | "2two" | "3three" |
 |---------|--------|--------|----------|
-| winnow | 2.1 ns | 2.1 ns | 2.3 ns |
-| nom | 2.4 ns | 2.4 ns | 2.4 ns |
-| **oni-comb** | **7.3 ns** | **7.3 ns** | **6.0 ns** |
-| pom | 70 ns | 71 ns | 96 ns |
-| chumsky | 896 ns | 898 ns | 948 ns |
+| winnow | 2.8 ns | 2.8 ns | 2.7 ns |
+| nom | 2.4 ns | 2.5 ns | 2.5 ns |
+| **oni-comb** | **7.4 ns** | **7.3 ns** | **6.1 ns** |
+| pom | 72 ns | 74 ns | 98 ns |
+| chumsky | 932 ns | 926 ns | 968 ns |
 
 **Effect of MS6 ParseError introduction:**
 - Old (format!-based): 8.3 / 7.8 / 6.9 ns
@@ -80,21 +80,21 @@ All figures are Criterion **mean estimates** (100 samples, 95% confidence interv
 
 | Library | "c:hello" | "i:42" |
 |---------|-----------|--------|
-| nom | 3.9 ns | 2.8 ns |
-| winnow | 19.3 ns | 18.6 ns |
-| **oni-comb** | **21.5 ns** | **19.8 ns** |
-| pom | 164 ns | 109 ns |
-| chumsky | 1,052 ns | 972 ns |
+| nom | 3.9 ns | 2.7 ns |
+| winnow | 20.1 ns | 18.4 ns |
+| **oni-comb** | **31.6 ns** | **24.3 ns** |
+| pom | 166 ns | 114 ns |
+| chumsky | 1,066 ns | 997 ns |
 
 ### zip vs flat_map (oni-comb-rs internal comparison) (mean)
 
 | Input | zip | flat_map | Diff |
 |-------|-----|----------|------|
-| "x" | 4.8 ns | 4.8 ns | 0% (within margin) |
-| "foo" | 10.5 ns | 10.3 ns | -2% (within margin) |
-| "foo_bar_123" | 17.7 ns | 17.7 ns | 0% (within margin) |
-| "_private" | 14.8 ns | 14.8 ns | 0% (within margin) |
-| "longIdent..." | 31.2 ns | 31.1 ns | 0% (within margin) |
+| "x" | 4.0 ns | 4.0 ns | 0% (within margin) |
+| "foo" | 8.5 ns | 8.7 ns | ≈0% (within margin) |
+| "foo_bar_123" | 26.5 ns | 26.7 ns | ≈0% (within margin) |
+| "_private" | 20.1 ns | 20.2 ns | ≈0% (within margin) |
+| "longIdent..." | 66.3 ns | 66.1 ns | ≈0% (within margin) |
 
 **zip ≒ flat_map (same type) continues to hold.** This validates the concrete combinator type design.
 
@@ -102,13 +102,13 @@ All figures are Criterion **mean estimates** (100 samples, 95% confidence interv
 
 | Input | Time | byte/ns |
 |-------|------|---------|
-| `null` (4B) | 15.0 ns | 0.27 |
-| `42` (2B) | 86.0 ns | 0.02 |
+| `null` (4B) | 8.3 ns | 0.48 |
+| `42` (2B) | 85.9 ns | 0.02 |
 | `"hello world"` (13B) | 147 ns | 0.09 |
-| `[1, 2, 3]` (9B) | 536 ns | 0.02 |
-| `[1, "two", true, null]` (22B) | 542 ns | 0.04 |
-| `{"name":"oni-comb",...}` (50B) | 693 ns | 0.07 |
-| `{"a":1,...,"h":8}` (65B) | 1,492 ns | 0.04 |
+| `[1, 2, 3]` (9B) | 539 ns | 0.02 |
+| `[1, "two", true, null]` (22B) | 547 ns | 0.04 |
+| `{"name":"oni-comb",...}` (50B) | 690 ns | 0.07 |
+| `{"a":1,...,"h":8}` (65B) | 1,495 ns | 0.04 |
 
 **Observations:**
 - `null` completes in 15ns with a single tag match. Integer has overhead from `whitespace0` → `integer()` → `whitespace0` three-stage pipeline.
@@ -119,13 +119,13 @@ All figures are Criterion **mean estimates** (100 samples, 95% confidence interv
 
 | Input | Time |
 |-------|------|
-| `42` | 156 ns |
-| `1 + 2` | 247 ns |
-| `1 + 2 * 3` | 271 ns |
-| `(1 + 2) * 3` | 440 ns |
-| `1 + 2 * (3 - 4) + 5` | 639 ns |
-| `(((1 + 2) * 3) - 4) / 5` | 931 ns |
-| `1 + 2 + ... + 8` | 776 ns |
+| `42` | 160 ns |
+| `1 + 2` | 254 ns |
+| `1 + 2 * 3` | 285 ns |
+| `(1 + 2) * 3` | 471 ns |
+| `1 + 2 * (3 - 4) + 5` | 688 ns |
+| `(((1 + 2) * 3) - 4) / 5` | 995 ns |
+| `1 + 2 + ... + 8` | 813 ns |
 
 **Observations:**
 - 156ns for a single integer is quite heavy. This is due to `recursive()`'s indirect calls via `Rc<UnsafeCell<Box<dyn Parser>>>` + `whitespace0` overhead.
