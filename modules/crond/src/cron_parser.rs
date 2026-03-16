@@ -19,10 +19,7 @@ fn uint8_parser<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseErr
       Ok(n) => Ok(n),
       Err(_) => {
         input.reset(cp);
-        Err(Fail::Backtrack(ParseError::expected_description(
-          pos,
-          "integer 0-255",
-        )))
+        Err(Fail::Backtrack(ParseError::expected_description(pos, "integer 0-255")))
       }
     }
   })

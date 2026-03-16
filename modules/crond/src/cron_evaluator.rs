@@ -194,8 +194,8 @@ mod tests {
       months: Box::new(CronExpr::AnyValue),
       dow: Box::new(CronExpr::AnyValue),
     };
-    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 0)));  // day=1
-    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 6, 0, 0)));  // day=6
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 0))); // day=1
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 6, 0, 0))); // day=6
     assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 11, 0, 0))); // day=11
     assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 16, 0, 0))); // day=16
     assert!(!CronEvaluator::eval(&expr, &utc(2024, 1, 5, 0, 0))); // day=5 (not offset from 1)
@@ -212,12 +212,12 @@ mod tests {
       months: Box::new(CronExpr::AnyStep(3)),
       dow: Box::new(CronExpr::AnyValue),
     };
-    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 0)));   // month=1
-    assert!(CronEvaluator::eval(&expr, &utc(2024, 4, 1, 0, 0)));   // month=4
-    assert!(CronEvaluator::eval(&expr, &utc(2024, 7, 1, 0, 0)));   // month=7
-    assert!(CronEvaluator::eval(&expr, &utc(2024, 10, 1, 0, 0)));  // month=10
-    assert!(!CronEvaluator::eval(&expr, &utc(2024, 3, 1, 0, 0)));  // month=3
-    assert!(!CronEvaluator::eval(&expr, &utc(2024, 6, 1, 0, 0)));  // month=6
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 0))); // month=1
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 4, 1, 0, 0))); // month=4
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 7, 1, 0, 0))); // month=7
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 10, 1, 0, 0))); // month=10
+    assert!(!CronEvaluator::eval(&expr, &utc(2024, 3, 1, 0, 0))); // month=3
+    assert!(!CronEvaluator::eval(&expr, &utc(2024, 6, 1, 0, 0))); // month=6
   }
 
   #[test]
