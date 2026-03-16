@@ -1,22 +1,9 @@
+use crate::error::ParseError;
 use crate::fail::{Fail, PResult};
+use crate::input::Input;
 use crate::parser::Parser;
 use crate::str_input::StrInput;
 
-/// 汎用エスケープ文字列パーサー。
-///
-/// - `open` / `close`: 囲みの開始・終了文字
-/// - `escape`: エスケープ文字（通常 `\`）
-/// - `escape_handler`: エスケープ文字の次の 1 文字を受け取り、変換後の文字を返す。
-///   `None` を返すと不正なエスケープとして `Fail::Cut` になる。
-///
-/// ```ignore
-/// // シングルクォート文字列、\' と \\ のみ対応
-/// let sq = escaped('\'', '\'', '\\', |c| match c {
-///     '\'' => Some('\''),
-///     '\\' => Some('\\'),
-///     _ => None,
-/// });
-/// ```
 pub struct Escaped<F> {
     open: char,
     close: char,
@@ -41,9 +28,10 @@ where
     F: FnMut(char) -> Option<char>,
 {
     type Output = String;
-    type Error = String;
+    type Error = ParseError;
 
-    fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<String, String> {
+    fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<String, ParseError> {
+        let pos = input.offset();
         let remaining = input.as_str();
         let mut chars = remaining.chars();
 
@@ -51,10 +39,7 @@ where
         match chars.next() {
             Some(c) if c == self.open => {}
             _ => {
-                return Err(Fail::Backtrack(format!(
-                    "escaped: expected '{}'",
-                    self.open
-                )));
+                return Err(Fail::Backtrack(ParseError::expected_char(pos, self.open)));
             }
         }
 
@@ -76,17 +61,17 @@ where
                             match (self.handler)(next) {
                                 Some(replacement) => result.push(replacement),
                                 None => {
-                                    return Err(Fail::Cut(format!(
-                                        "escaped: invalid escape sequence '{}{}' ",
-                                        self.escape, next
+                                    return Err(Fail::Cut(ParseError::expected_description(
+                                        pos + consumed - next.len_utf8(),
+                                        "valid escape sequence",
                                     )));
                                 }
                             }
                         }
                         None => {
-                            return Err(Fail::Cut(format!(
-                                "escaped: unexpected EOF after '{}'",
-                                self.escape
+                            return Err(Fail::Cut(ParseError::expected_description(
+                                pos + consumed,
+                                "escape character",
                             )));
                         }
                     }
@@ -96,9 +81,9 @@ where
                     result.push(c);
                 }
                 None => {
-                    return Err(Fail::Cut(format!(
-                        "escaped: unterminated, expected '{}'",
-                        self.close
+                    return Err(Fail::Cut(ParseError::expected_char(
+                        pos + consumed,
+                        self.close,
                     )));
                 }
             }

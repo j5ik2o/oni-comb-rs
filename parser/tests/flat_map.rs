@@ -1,3 +1,4 @@
+use oni_comb_parser::error::ParseError;
 use oni_comb_parser::fail::Fail;
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
@@ -80,7 +81,7 @@ fn flat_map_same_type_branches_no_box() {
 #[test]
 fn flat_map_box_dyn_heterogeneous_branches() {
     let mut parser = satisfy(|c: char| c == 'c' || c == 't')
-        .flat_map(|c| -> Box<dyn Parser<oni_comb_parser::str_input::StrInput<'_>, Output = &str, Error = String>> {
+        .flat_map(|c| -> Box<dyn Parser<oni_comb_parser::str_input::StrInput<'_>, Output = &str, Error = ParseError>> {
             match c {
                 'c' => Box::new(tag("har")),
                 _ => Box::new(take_while1(|c: char| c.is_ascii_digit())),

@@ -3,15 +3,16 @@
 //! 再帰パーサー (MS5) がないため、値はプリミティブ(null/bool/int/string)のみ。
 //! 配列・オブジェクトの値にネストした配列・オブジェクトは含まない。
 
+use oni_comb_parser::error::ParseError;
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
 
 /// 空白をスキップするトークンラッパー
-fn ws<P>(p: P) -> impl Parser<StrInput<'static>, Output = P::Output, Error = String>
+fn ws<P>(p: P) -> impl Parser<StrInput<'static>, Output = P::Output, Error = ParseError>
 where
-    P: Parser<StrInput<'static>, Error = String>,
+    P: Parser<StrInput<'static>, Error = ParseError>,
 {
     whitespace0().zip_right(p).zip_left(whitespace0())
 }
@@ -29,7 +30,7 @@ enum JsonValue {
 
 /// プリミティブ値パーサー (null | bool | int | string)
 fn json_primitive(
-) -> impl Parser<StrInput<'static>, Output = JsonValue, Error = String> {
+) -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
     let null = tag("null").map(|_| JsonValue::Null);
     let bool_true = tag("true").map(|_| JsonValue::Bool(true));
     let bool_false = tag("false").map(|_| JsonValue::Bool(false));
@@ -41,7 +42,7 @@ fn json_primitive(
 
 /// 配列パーサー (値はプリミティブのみ)
 fn json_array(
-) -> impl Parser<StrInput<'static>, Output = JsonValue, Error = String> {
+) -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
     ws(char('['))
         .zip_right(ws(json_primitive()).sep_by0(ws(char(','))))
         .zip_left(ws(char(']')))
@@ -50,7 +51,7 @@ fn json_array(
 
 /// オブジェクトパーサー (値はプリミティブのみ)
 fn json_object(
-) -> impl Parser<StrInput<'static>, Output = JsonValue, Error = String> {
+) -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
     let pair = ws(quoted_string())
         .zip_left(ws(char(':')))
         .zip(ws(json_primitive()));
@@ -63,7 +64,7 @@ fn json_object(
 
 /// トップレベルの JSON 値パーサー (1 段ネスト)
 fn json_value(
-) -> impl Parser<StrInput<'static>, Output = JsonValue, Error = String> {
+) -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
     json_primitive()
         .or(json_array())
         .or(json_object())

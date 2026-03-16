@@ -1,3 +1,4 @@
+use oni_comb_parser::error::ParseError;
 use oni_comb_parser::prelude::*;
 
 pub fn parse_identifier(s: &str) -> Option<String> {
@@ -39,7 +40,7 @@ pub fn parse_flat_map_boxed(s: &str) -> Option<(&str, &str)> {
             dyn Parser<
                 oni_comb_parser::str_input::StrInput<'_>,
                 Output = (&str, &str),
-                Error = String,
+                Error = ParseError,
             >,
         > {
             match t {

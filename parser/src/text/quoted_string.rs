@@ -1,4 +1,6 @@
+use crate::error::ParseError;
 use crate::fail::{Fail, PResult};
+use crate::input::Input;
 use crate::parser::Parser;
 use crate::str_input::StrInput;
 
@@ -10,9 +12,10 @@ pub fn quoted_string() -> QuotedString {
 
 impl<'a> Parser<StrInput<'a>> for QuotedString {
     type Output = String;
-    type Error = String;
+    type Error = ParseError;
 
-    fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<String, String> {
+    fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<String, ParseError> {
+        let pos = input.offset();
         let remaining = input.as_str();
         let mut chars = remaining.chars();
 
@@ -20,9 +23,7 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
         match chars.next() {
             Some('"') => {}
             _ => {
-                return Err(Fail::Backtrack(
-                    "quoted_string: expected '\"'".to_string(),
-                ));
+                return Err(Fail::Backtrack(ParseError::expected_char(pos, '"')));
             }
         }
 
@@ -82,8 +83,10 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
                                     }
                                     _ => {
                                         return Err(Fail::Cut(
-                                            "quoted_string: expected 4 hex digits after \\u"
-                                                .to_string(),
+                                            ParseError::expected_description(
+                                                pos + consumed,
+                                                "4 hex digits after \\u",
+                                            ),
                                         ));
                                     }
                                 }
@@ -92,23 +95,26 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
                             match char::from_u32(code_point) {
                                 Some(c) => result.push(c),
                                 None => {
-                                    return Err(Fail::Cut(format!(
-                                        "quoted_string: invalid unicode code point: U+{}",
-                                        hex
-                                    )));
+                                    return Err(Fail::Cut(
+                                        ParseError::expected_description(
+                                            pos + consumed - 4,
+                                            "valid unicode code point",
+                                        ),
+                                    ));
                                 }
                             }
                         }
-                        Some(c) => {
-                            return Err(Fail::Cut(format!(
-                                "quoted_string: invalid escape sequence '\\{}'",
-                                c
+                        Some(_) => {
+                            return Err(Fail::Cut(ParseError::expected_description(
+                                pos + consumed,
+                                "valid escape sequence",
                             )));
                         }
                         None => {
-                            return Err(Fail::Cut(
-                                "quoted_string: unexpected EOF after '\\'".to_string(),
-                            ));
+                            return Err(Fail::Cut(ParseError::expected_description(
+                                pos + consumed,
+                                "escape character after '\\'",
+                            )));
                         }
                     }
                 }
@@ -117,9 +123,10 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
                     result.push(c);
                 }
                 None => {
-                    return Err(Fail::Cut(
-                        "quoted_string: unterminated string".to_string(),
-                    ));
+                    return Err(Fail::Cut(ParseError::expected_char(
+                        pos + consumed,
+                        '"',
+                    )));
                 }
             }
         }

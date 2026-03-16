@@ -1,4 +1,5 @@
 pub mod combinator;
+pub mod error;
 pub mod fail;
 pub mod input;
 pub mod parser;

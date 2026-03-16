@@ -1,6 +1,7 @@
 pub mod attempt;
 pub mod chainl1;
 pub mod chainr1;
+pub mod context;
 pub mod cut;
 pub mod flat_map;
 pub mod many;

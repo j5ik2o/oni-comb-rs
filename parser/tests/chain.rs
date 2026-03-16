@@ -1,10 +1,11 @@
+use oni_comb_parser::error::ParseError;
 use oni_comb_parser::fail::Fail;
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
 
-fn integer_parser() -> impl Parser<oni_comb_parser::str_input::StrInput<'static>, Output = i64, Error = String>
+fn integer_parser() -> impl Parser<oni_comb_parser::str_input::StrInput<'static>, Output = i64, Error = ParseError>
 {
     take_while1(|c: char| c.is_ascii_digit()).map(|s: &str| s.parse::<i64>().unwrap())
 }

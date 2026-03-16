@@ -4,6 +4,7 @@
 //! term = atom (('*' | '/') atom)*
 //! atom = integer | '(' expr ')'
 
+use oni_comb_parser::error::ParseError;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
@@ -11,7 +12,7 @@ use oni_comb_parser::prelude::*;
 fn calc_parser() -> impl Parser<
     oni_comb_parser::str_input::StrInput<'static>,
     Output = i64,
-    Error = String,
+    Error = ParseError,
 > {
     recursive(|expr| {
         let ws_int = whitespace0().zip_right(integer()).zip_left(whitespace0());

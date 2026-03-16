@@ -1,3 +1,4 @@
+use oni_comb_parser::error::ParseError;
 use oni_comb_parser::fail::{Fail, PResult};
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
@@ -9,7 +10,7 @@ struct ZeroProgressParser;
 
 impl Parser<StrInput<'_>> for ZeroProgressParser {
     type Output = char;
-    type Error = String;
+    type Error = ParseError;
 
     fn parse_next(&mut self, _input: &mut StrInput<'_>) -> PResult<Self::Output, Self::Error> {
         Err(Fail::ZeroProgress)

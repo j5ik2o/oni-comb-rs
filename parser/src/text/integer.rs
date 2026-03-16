@@ -1,4 +1,6 @@
+use crate::error::ParseError;
 use crate::fail::{Fail, PResult};
+use crate::input::Input;
 use crate::parser::Parser;
 use crate::str_input::StrInput;
 
@@ -10,15 +12,15 @@ pub fn integer() -> Integer {
 
 impl<'a> Parser<StrInput<'a>> for Integer {
     type Output = i64;
-    type Error = String;
+    type Error = ParseError;
 
-    fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<i64, String> {
+    fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<i64, ParseError> {
+        let pos = input.offset();
         let remaining = input.as_str();
         let mut consumed = 0;
 
         // optional leading '-'
-        let mut chars = remaining.chars();
-        if let Some('-') = chars.next() {
+        if remaining.starts_with('-') {
             consumed += 1;
         }
 
@@ -33,14 +35,14 @@ impl<'a> Parser<StrInput<'a>> for Integer {
         }
 
         if consumed == digit_start {
-            return Err(Fail::Backtrack(
-                "integer: expected digit".to_string(),
-            ));
+            return Err(Fail::Backtrack(ParseError::expected_description(
+                pos, "integer",
+            )));
         }
 
         let s = &remaining[..consumed];
-        let value = s.parse::<i64>().map_err(|e| {
-            Fail::Backtrack(format!("integer: {}", e))
+        let value = s.parse::<i64>().map_err(|_| {
+            Fail::Backtrack(ParseError::expected_description(pos, "integer"))
         })?;
         input.advance(consumed);
         Ok(value)

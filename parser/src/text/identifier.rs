@@ -1,4 +1,6 @@
+use crate::error::ParseError;
 use crate::fail::{Fail, PResult};
+use crate::input::Input;
 use crate::parser::Parser;
 use crate::str_input::StrInput;
 
@@ -10,24 +12,20 @@ pub fn identifier() -> Identifier {
 
 impl<'a> Parser<StrInput<'a>> for Identifier {
     type Output = &'a str;
-    type Error = String;
+    type Error = ParseError;
 
-    fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<&'a str, String> {
+    fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<&'a str, ParseError> {
+        let pos = input.offset();
         let remaining = input.as_str();
         let mut chars = remaining.chars();
 
         match chars.next() {
             Some(c) if c.is_ascii_alphabetic() || c == '_' => {}
-            Some(c) => {
-                return Err(Fail::Backtrack(format!(
-                    "identifier: expected alphabetic or '_', found '{}'",
-                    c
+            _ => {
+                return Err(Fail::Backtrack(ParseError::expected_description(
+                    pos,
+                    "identifier",
                 )));
-            }
-            None => {
-                return Err(Fail::Backtrack(
-                    "identifier: unexpected EOF".to_string(),
-                ));
             }
         }
 

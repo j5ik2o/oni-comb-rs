@@ -1,6 +1,7 @@
 use crate::combinator::attempt::Attempt;
 use crate::combinator::chainl1::ChainL1;
 use crate::combinator::chainr1::ChainR1;
+use crate::combinator::context::Context;
 use crate::combinator::cut::Cut;
 use crate::combinator::flat_map::FlatMap;
 use crate::combinator::many::Many;
@@ -57,6 +58,7 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
 
     fn or<P2>(self, rhs: P2) -> Or<Self, P2>
     where
+        Self::Error: crate::error::MergeError,
         P2: Parser<I, Output = Self::Output, Error = Self::Error>,
     {
         Or {
@@ -83,6 +85,17 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
 
     fn many1(self) -> Many1<Self> {
         Many1 { parser: self }
+    }
+
+    /// エラーにコンテキストラベルを付与する。
+    fn context(self, label: &'static str) -> Context<Self>
+    where
+        Self::Error: crate::error::ContextError,
+    {
+        Context {
+            parser: self,
+            label,
+        }
     }
 
     /// 区切り付き 0 個以上の繰り返し。

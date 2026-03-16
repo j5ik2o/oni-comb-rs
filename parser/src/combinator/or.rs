@@ -1,3 +1,4 @@
+use crate::error::MergeError;
 use crate::fail::{Fail, PResult};
 use crate::input::Input;
 use crate::parser::Parser;
@@ -11,6 +12,7 @@ impl<I, P1, P2> Parser<I> for Or<P1, P2>
 where
     I: Input,
     P1: Parser<I>,
+    P1::Error: MergeError,
     P2: Parser<I, Output = P1::Output, Error = P1::Error>,
 {
     type Output = P1::Output;
@@ -20,9 +22,15 @@ where
         let cp = input.checkpoint();
         match self.left.parse_next(input) {
             Ok(v) => Ok(v),
-            Err(Fail::Backtrack(_)) => {
+            Err(Fail::Backtrack(left_err)) => {
                 input.reset(cp);
-                self.right.parse_next(input)
+                match self.right.parse_next(input) {
+                    ok @ Ok(_) => ok,
+                    Err(Fail::Backtrack(right_err)) => {
+                        Err(Fail::Backtrack(left_err.merge(right_err)))
+                    }
+                    err => err,
+                }
             }
             Err(Fail::Cut(e)) => Err(Fail::Cut(e)),
             Err(Fail::Incomplete) => Err(Fail::Incomplete),

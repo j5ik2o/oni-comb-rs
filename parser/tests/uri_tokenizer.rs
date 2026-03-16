@@ -3,6 +3,7 @@
 //! RFC 3986 の簡易サブセット:
 //! scheme "://" host [":" port] ["/" path] ["?" query]
 
+use oni_comb_parser::error::ParseError;
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
@@ -20,7 +21,7 @@ struct Uri<'a> {
 fn uri_parser<'a>() -> impl Parser<
     oni_comb_parser::str_input::StrInput<'a>,
     Output = Uri<'a>,
-    Error = String,
+    Error = ParseError,
 > {
     let scheme = take_while1(|c: char| c.is_ascii_alphanumeric());
     let authority_sep = tag("://");

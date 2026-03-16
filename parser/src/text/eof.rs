@@ -1,3 +1,4 @@
+use crate::error::ParseError;
 use crate::fail::{Fail, PResult};
 use crate::input::Input;
 use crate::parser::Parser;
@@ -11,16 +12,13 @@ pub fn eof() -> Eof {
 
 impl Parser<StrInput<'_>> for Eof {
     type Output = ();
-    type Error = String;
+    type Error = ParseError;
 
-    fn parse_next(&mut self, input: &mut StrInput<'_>) -> PResult<Self::Output, Self::Error> {
+    fn parse_next(&mut self, input: &mut StrInput<'_>) -> PResult<(), ParseError> {
         if input.is_eof() {
             Ok(())
         } else {
-            Err(Fail::Backtrack(format!(
-                "expected EOF, found \"{}\"",
-                input.remaining()
-            )))
+            Err(Fail::Backtrack(ParseError::expected_eof(input.offset())))
         }
     }
 }
