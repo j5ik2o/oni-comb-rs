@@ -62,12 +62,26 @@ fn asterisk<'a>() -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseE
   tag("*").map(|_| CronExpr::AnyValue)
 }
 
+fn nonzero_uint8<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseError> {
+  fn_parser(|input: &mut StrInput<'_>| {
+    let pos = input.offset();
+    let cp = input.checkpoint();
+    let mut p = uint8_parser();
+    let n = p.parse_next(input)?;
+    if n == 0 {
+      input.reset(cp);
+      return Err(Fail::Backtrack(ParseError::expected_description(pos, "non-zero step")));
+    }
+    Ok(n)
+  })
+}
+
 fn any_step<'a>() -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
-  tag("*/").zip_right(uint8_parser()).map(CronExpr::AnyStep)
+  tag("*/").zip_right(nonzero_uint8()).map(CronExpr::AnyStep)
 }
 
 fn step_suffix<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseError> {
-  tag("/").zip_right(uint8_parser())
+  tag("/").zip_right(nonzero_uint8())
 }
 
 fn range_expr<'a>(min: u8, max: u8) -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
@@ -419,5 +433,15 @@ mod tests {
   #[test]
   fn reject_overflow_value() {
     assert!(CronParser::parse("999 * * * *").is_err());
+  }
+
+  #[test]
+  fn reject_zero_step_any() {
+    assert!(CronParser::parse("*/0 * * * *").is_err());
+  }
+
+  #[test]
+  fn reject_zero_step_range() {
+    assert!(CronParser::parse("0-59/0 * * * *").is_err());
   }
 }

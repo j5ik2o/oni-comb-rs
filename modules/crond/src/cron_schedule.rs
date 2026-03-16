@@ -42,8 +42,8 @@ impl<Tz: TimeZone> Iterator for UpcomingIterator<Tz> {
   type Item = DateTime<Tz>;
 
   fn next(&mut self) -> Option<Self::Item> {
-    // 最大で2年分（約105万分）探索。見つからなければ None
-    for _ in 0..1_051_200 {
+    // 最大で8年分（約420万分）探索。閏年スケジュール（0 0 29 2 *）にも対応。
+    for _ in 0..4_204_800 {
       if CronEvaluator::eval(&self.expr, &self.current) {
         let result = self.current.clone();
         self.current = self.current.clone() + Duration::minutes(1);
@@ -116,5 +116,14 @@ mod tests {
     assert_eq!(times[0], utc(2024, 1, 15, 9, 0)); // :00, not :45
     assert_eq!(times[1], utc(2024, 1, 15, 9, 5));
     assert_eq!(times[2], utc(2024, 1, 15, 9, 10));
+  }
+
+  #[test]
+  fn schedule_upcoming_leap_year_feb29() {
+    // 0 0 29 2 * — midnight on Feb 29, every 4 years
+    let s = CronSchedule::new("0 0 29 2 *").unwrap();
+    let times: Vec<_> = s.upcoming(utc(2025, 3, 1, 0, 0)).take(2).collect();
+    assert_eq!(times[0], utc(2028, 2, 29, 0, 0));
+    assert_eq!(times[1], utc(2032, 2, 29, 0, 0));
   }
 }
