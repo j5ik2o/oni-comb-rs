@@ -108,4 +108,12 @@ flat_map 再帰ではなく専用ループで実装する。
 - **workload**: identifier/integer、flat_map 同一型/異種型、zip vs flat_map、JSON subset、四則演算+括弧、107KB JSON フル
 - **観測項目**: throughput（Criterion）、allocation count（`dhat-rs`）
 - **最適化サイクル**: ParseError 導入（~12%）+ `#[inline]`（~17%）+ ゼロコピー＋fn再帰（~77%）で累計 ~83% 改善
-- **知見**: 107KB JSON で winnow の 1.43 倍（109µs vs 156µs）。`fn_parser` + `peek_byte` 分岐 + `quoted_string_cow` ゼロコピーにより達成。token レベルでは winnow と同等〜90%。nom を中〜長入力で上回る。flat_map 同一型は zip とゼロコスト同等。詳細は `parser/benches/README.md` を参照
+- **107KB JSON フルベンチ（100 サンプル）**:
+
+| ライブラリ | Mean | Median | p90 | p95 | StdDev | Throughput (mean) |
+|-----------|------|--------|-----|-----|--------|-------------------|
+| **oni-comb** | **109.6 µs** | **109.4 µs** | **112.7 µs** | **113.8 µs** | **2.10 µs** | **977 MB/s** |
+| winnow | 159.3 µs | 159.8 µs | 161.8 µs | 162.3 µs | 2.46 µs | 672 MB/s |
+| nom | 283.2 µs | 282.7 µs | 286.6 µs | 287.9 µs | 2.26 µs | 378 MB/s |
+
+- **知見**: winnow の 1.45 倍のスループット（mean 基準）。token レベルでは winnow と同等〜90%。nom を中〜長入力で上回る。flat_map 同一型は zip とゼロコスト同等。詳細は `parser/benches/README.md` を参照
