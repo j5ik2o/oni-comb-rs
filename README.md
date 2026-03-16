@@ -1,0 +1,145 @@
+# oni-comb-rs
+
+Rust 製パーサーコンビネータライブラリ（v2 リブート版）。
+
+旧 v1 の `Rc<dyn Fn>` ベース設計を捨て、**trait + concrete combinator 型**（`Map`, `Then`, `Or` 等）で構成。動的ディスパッチ・ヒープ確保を排し、Applicative/Alternative 主体で最適化しやすい設計を目指しています。
+
+## Quickstart
+
+```rust
+use oni_comb_parser::prelude::*;
+
+// 'a' または 'b' にマッチ
+let mut parser = char('a').or(char('b'));
+let mut input = StrInput::new("b");
+assert_eq!(parser.parse_next(&mut input).unwrap(), 'b');
+
+// identifier: 先頭が英字/_, 以降は英数字/_
+let mut ident = satisfy(|c: char| c.is_ascii_alphabetic() || c == '_')
+    .then(take_while0(|c: char| c.is_ascii_alphanumeric() || c == '_'));
+let mut input = StrInput::new("foo_bar_123");
+let (head, tail) = ident.parse_next(&mut input).unwrap();
+assert_eq!(head, 'f');
+assert_eq!(tail, "oo_bar_123");
+
+// integer
+let mut int_parser = take_while1(|c: char| c.is_ascii_digit())
+    .map(|s: &str| s.parse::<u64>().unwrap());
+let mut input = StrInput::new("42");
+assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
+```
+
+## 設計の特徴
+
+- **Zero-cost combinator composition** — コンビネータ合成は concrete 型でスタック上に構築され、パース実行中のヒープアロケーションはゼロ
+- **Backtrack / Cut によるエラー制御** — `or` は `Backtrack` のみリカバリし、`Cut` はそのまま伝播。`attempt` で Cut→Backtrack 降格、`cut` で Backtrack→Cut 昇格
+- **Applicative/Alternative 主体** — `flat_map`（モナディック合成）を意図的に制限し、構文形状を静的に保つ
+- **再帰は boxed recursion** — 再帰の結び目だけ `Box<dyn Parser>` に落とし、非再帰部分は concrete 型を維持
+
+## 利用可能なパーサー
+
+### テキストパーサー（`text` モジュール）
+
+| 関数 | 説明 | 戻り値 |
+|------|------|--------|
+| `char(c)` | 指定した1文字にマッチ | `char` |
+| `tag(s)` | 指定した文字列にマッチ | `&str` |
+| `satisfy(f)` | 述語を満たす1文字にマッチ | `char` |
+| `take_while0(f)` | 述語を満たす文字を0個以上消費 | `&str` |
+| `take_while1(f)` | 述語を満たす文字を1個以上消費 | `&str` |
+| `eof()` | 入力の終端にマッチ | `()` |
+
+### コンビネータ（`ParserExt` メソッドチェーン）
+
+| メソッド | 説明 |
+|----------|------|
+| `.map(f)` | 成功値を変換 |
+| `.then(p)` | 2つのパーサーを順次適用し、ペアを返す |
+| `.or(p)` | 左が Backtrack なら右を試行 |
+| `.attempt()` | Cut を Backtrack に降格（巻き戻し可能にする） |
+| `.cut()` | Backtrack を Cut に昇格（or での分岐を禁止する） |
+| `.optional()` | Backtrack を `None` に変換 |
+| `.many0()` | 0回以上の繰り返し |
+
+## ベンチマーク
+
+Criterion.rs による他ライブラリとの比較ベンチマークを同梱しています。
+
+### 比較対象
+
+| ライブラリ | 設計 |
+|-----------|------|
+| **winnow** | 最速クラス。`Parser` trait + `parse_next(&mut I)` で oni-comb-rs と最も設計が近い |
+| **nom** | デファクト標準。関数ポインタベース |
+| **chumsky** | エラーリカバリ特化。trait ベースのコンビネータ |
+| **pom** | 演算子オーバーロード中心。旧 v1 に近い設計 |
+
+### Token ワークロード結果（Identifier）
+
+入力が長くなるほど oni-comb-rs の `TakeWhile` のバイトスキャンが効き、nom を大きく引き離します。
+
+| 入力 | oni-comb | winnow | nom | pom | chumsky |
+|------|----------|--------|-----|-----|---------|
+| `"x"` (1B) | 18.3 ns | 15.1 ns | 13.5 ns | 66.8 ns | 886 ns |
+| `"foo_bar_123"` (11B) | 27.5 ns | 21.2 ns | 37.7 ns | 212 ns | 1,131 ns |
+| `"longIdentifier..."` (28B) | 45.6 ns | 33.4 ns | 86.8 ns | 278 ns | 1,413 ns |
+
+### Token ワークロード結果（Integer）
+
+| 入力 | oni-comb | winnow | nom | pom | chumsky |
+|------|----------|--------|-----|-----|---------|
+| `"42"` (2B) | 3.9 ns | 2.6 ns | 3.1 ns | 73 ns | 898 ns |
+| `"9999999"` (7B) | 8.2 ns | 5.3 ns | 7.2 ns | 138 ns | 1,033 ns |
+| `"184467...615"` (20B) | 25.8 ns | 23.0 ns | 22.8 ns | 260 ns | 1,328 ns |
+
+### 特性まとめ
+
+- **winnow の 70-90% のスループット** — concrete type 化の恩恵で改善余地あり
+- **nom を中〜長入力で上回る** — 11B で 37% 高速、28B で 90% 高速（identifier）
+- **pom の 3〜30 倍高速** — 旧 v1 相当の `Rc<dyn Fn>` 設計との差を実証
+- **chumsky の 30〜230 倍高速**
+- **コンビネータ合成でヒープアロケーションゼロ** — dhat による計測で 0 bytes / 0 blocks を確認
+
+### ベンチマーク実行
+
+```bash
+# 比較ベンチマーク
+cargo bench -p oni-comb-parser --bench comparison
+
+# アロケーション計測
+cargo bench -p oni-comb-parser --bench alloc_count
+```
+
+## ビルド・テスト
+
+```bash
+# ビルド
+cargo build
+
+# 全テスト実行
+cargo test -p oni-comb-parser
+
+# 特定テスト実行
+cargo test -p oni-comb-parser -- test_name
+```
+
+## ロードマップ
+
+| MS | 名前 | 状態 | 内容 |
+|----|------|------|------|
+| 1 | Core | **完了** | Input, Fail, PResult, Parser, ParserExt, StrInput |
+| 2 | Primitive | **進行中** | eof, char, tag, satisfy, take_while, peek |
+| 3 | Combinators | 未着手 | many0/1, sep_by, between, chainl1/r1 |
+| 4 | Text module | 未着手 | whitespace, ascii token, identifier, integer, quoted string |
+| 5 | Recursive | 未着手 | boxed `recursive()` helper, precedence parser |
+| 6 | Error reporting | 未着手 | span, expected-set, context stack |
+| 7 | Benchmark | **進行中** | Criterion 比較, dhat アロケーション計測 |
+
+## License
+
+Licensed under either of:
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT License ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
