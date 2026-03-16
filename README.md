@@ -6,6 +6,31 @@ A parser-monad combinator library for Rust (v2 reboot).
 
 The old v1 design based on `Rc<dyn Fn>` has been replaced with **trait + concrete combinator types** (`Map`, `Zip`, `Or`, `FlatMap`, etc.). It provides the full Functor / Applicative / Alternative / Monad hierarchy while minimizing dynamic dispatch and heap allocation.
 
+## Quickstart
+
+```rust
+use oni_comb_parser::prelude::*;
+
+// Match 'a' or 'b'
+let mut parser = char('a').or(char('b'));
+let mut input = StrInput::new("b");
+assert_eq!(parser.parse_next(&mut input).unwrap(), 'b');
+
+// Identifier: starts with letter/_, followed by alphanumeric/_
+let mut ident = satisfy(|c: char| c.is_ascii_alphabetic() || c == '_')
+    .zip(take_while0(|c: char| c.is_ascii_alphanumeric() || c == '_'));
+let mut input = StrInput::new("foo_bar_123");
+let (head, tail) = ident.parse_next(&mut input).unwrap();
+assert_eq!(head, 'f');
+assert_eq!(tail, "oo_bar_123");
+
+// Integer
+let mut int_parser = take_while1(|c: char| c.is_ascii_digit())
+    .map(|s: &str| s.parse::<u64>().unwrap());
+let mut input = StrInput::new("42");
+assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
+```
+
 ## Design Highlights
 
 - **Parsec-style recursive descent parser** — LL(1) by default, extensible to LL(\*) with `attempt`. `cut` commits to a branch for better error reporting. `flat_map` enables context-sensitive branching
@@ -52,31 +77,6 @@ let parser = satisfy(|c: char| c == 'c' || c == 't')
             _ => Box::new(take_while1(|c: char| c.is_ascii_digit())),
         }
     });
-```
-
-## Quickstart
-
-```rust
-use oni_comb_parser::prelude::*;
-
-// Match 'a' or 'b'
-let mut parser = char('a').or(char('b'));
-let mut input = StrInput::new("b");
-assert_eq!(parser.parse_next(&mut input).unwrap(), 'b');
-
-// Identifier: starts with letter/_, followed by alphanumeric/_
-let mut ident = satisfy(|c: char| c.is_ascii_alphabetic() || c == '_')
-    .zip(take_while0(|c: char| c.is_ascii_alphanumeric() || c == '_'));
-let mut input = StrInput::new("foo_bar_123");
-let (head, tail) = ident.parse_next(&mut input).unwrap();
-assert_eq!(head, 'f');
-assert_eq!(tail, "oo_bar_123");
-
-// Integer
-let mut int_parser = take_while1(|c: char| c.is_ascii_digit())
-    .map(|s: &str| s.parse::<u64>().unwrap());
-let mut input = StrInput::new("42");
-assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 ```
 
 ## Available Parsers
