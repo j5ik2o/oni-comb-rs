@@ -1,8 +1,15 @@
-use chrono::{DateTime, Duration, TimeZone};
+use chrono::{DateTime, Duration, TimeZone, Timelike};
 
 use crate::cron_evaluator::CronEvaluator;
 use crate::cron_expr::CronExpr;
 use crate::cron_parser::CronParser;
+
+/// Truncate a DateTime to minute precision (zero out seconds and nanoseconds).
+fn truncate_to_minute<Tz: TimeZone>(dt: &DateTime<Tz>) -> DateTime<Tz> {
+  dt.with_second(0)
+    .and_then(|d| d.with_nanosecond(0))
+    .unwrap_or_else(|| dt.clone())
+}
 
 pub struct CronSchedule {
   expr: CronExpr,
@@ -21,7 +28,7 @@ impl CronSchedule {
   pub fn upcoming<Tz: TimeZone>(&self, from: DateTime<Tz>) -> UpcomingIterator<Tz> {
     UpcomingIterator {
       expr: self.expr.clone(),
-      current: from,
+      current: truncate_to_minute(&from),
     }
   }
 }
@@ -98,5 +105,16 @@ mod tests {
     let times: Vec<_> = s.upcoming(utc(2024, 1, 15, 9, 0)).take(2).collect();
     assert_eq!(times[0], utc(2024, 1, 15, 9, 30));
     assert_eq!(times[1], utc(2024, 1, 15, 10, 30));
+  }
+
+  #[test]
+  fn schedule_upcoming_truncates_seconds() {
+    let s = CronSchedule::new("*/5 * * * *").unwrap();
+    // Start at 09:00:45 — should truncate to 09:00:00
+    let start = Utc.with_ymd_and_hms(2024, 1, 15, 9, 0, 45).unwrap();
+    let times: Vec<_> = s.upcoming(start).take(3).collect();
+    assert_eq!(times[0], utc(2024, 1, 15, 9, 0)); // :00, not :45
+    assert_eq!(times[1], utc(2024, 1, 15, 9, 5));
+    assert_eq!(times[2], utc(2024, 1, 15, 9, 10));
   }
 }

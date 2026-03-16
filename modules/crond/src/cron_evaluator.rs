@@ -29,12 +29,27 @@ fn visit(env: &CronEnvironment, expr: &CronExpr) -> bool {
       (env.now - env.min).is_multiple_of(*step)
     }
     CronExpr::Range { from, to, step } => {
-      if env.now < *from || env.now > *to {
+      // Determine if value is in range, supporting wrap-around (e.g., 22-2)
+      let in_range = if from <= to {
+        env.now >= *from && env.now <= *to
+      } else {
+        // Wrap-around: e.g., 22-2 means 22,23,0,1,2
+        env.now >= *from || env.now <= *to
+      };
+      if !in_range {
         return false;
       }
       match step {
         Some(0) => false,
-        Some(s) => (env.now - from).is_multiple_of(*s),
+        Some(s) => {
+          let offset = if env.now >= *from {
+            env.now - from
+          } else {
+            // Wrapped: distance = (max - from + 1) + (now - min)
+            (env.max - from + 1) + (env.now - env.min)
+          };
+          offset.is_multiple_of(*s)
+        }
         None => true,
       }
     }
@@ -168,6 +183,50 @@ mod tests {
     assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 15)));
     assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 30)));
     assert!(!CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 7)));
+  }
+
+  #[test]
+  fn eval_range_wraparound_hour() {
+    // 22-2 in hour field: matches 22, 23, 0, 1, 2
+    let expr = CronExpr::Cron {
+      mins: Box::new(CronExpr::AnyValue),
+      hours: Box::new(CronExpr::Range {
+        from: 22,
+        to: 2,
+        step: None,
+      }),
+      days: Box::new(CronExpr::AnyValue),
+      months: Box::new(CronExpr::AnyValue),
+      dow: Box::new(CronExpr::AnyValue),
+    };
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 22, 0)));
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 23, 0)));
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 0)));
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 1, 0)));
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 2, 0)));
+    assert!(!CronEvaluator::eval(&expr, &utc(2024, 1, 1, 3, 0)));
+    assert!(!CronEvaluator::eval(&expr, &utc(2024, 1, 1, 21, 0)));
+  }
+
+  #[test]
+  fn eval_range_wraparound_with_step() {
+    // 22-2/2 in hour field: matches 22, 0, 2
+    let expr = CronExpr::Cron {
+      mins: Box::new(CronExpr::AnyValue),
+      hours: Box::new(CronExpr::Range {
+        from: 22,
+        to: 2,
+        step: Some(2),
+      }),
+      days: Box::new(CronExpr::AnyValue),
+      months: Box::new(CronExpr::AnyValue),
+      dow: Box::new(CronExpr::AnyValue),
+    };
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 22, 0)));
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 0)));
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 2, 0)));
+    assert!(!CronEvaluator::eval(&expr, &utc(2024, 1, 1, 23, 0)));
+    assert!(!CronEvaluator::eval(&expr, &utc(2024, 1, 1, 1, 0)));
   }
 
   #[test]
