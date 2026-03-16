@@ -154,7 +154,9 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 
 **oni-comb-rs の立ち位置**: winnow/nom 並みのゼロコスト性能と、chumsky 並みのメソッドチェーン体験を両立。さらに Monad 階層（`flat_map`）と `chainl1`/`recursive()` を提供する唯一のライブラリ。
 
-### Token ワークロード結果（Identifier）
+※ 以下の数値はすべて Criterion 報告の **mean 推定値**（100 サンプル、95% 信頼区間中央）。
+
+### Token ワークロード結果（Identifier）（mean）
 
 入力が長くなるほど oni-comb-rs の `TakeWhile` のバイトスキャンが効き、nom を大きく引き離します。
 
@@ -164,7 +166,7 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 | `"foo_bar_123"` (11B) | 26.7 ns | 21.4 ns | 37.8 ns | 199 ns | 1,144 ns |
 | `"longIdentifier..."` (28B) | 44.1 ns | 33.6 ns | 82.2 ns | 269 ns | 1,447 ns |
 
-### Token ワークロード結果（Integer）
+### Token ワークロード結果（Integer）（mean）
 
 | 入力 | oni-comb | winnow | nom | pom | chumsky |
 |------|----------|--------|-----|-----|---------|
@@ -174,7 +176,7 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 
 ### flat_map ワークロード結果
 
-#### 同一型分岐（digit → tag、Box 不要）
+#### 同一型分岐（digit → tag、Box 不要）（mean）
 
 | 入力 | oni-comb | winnow | nom | pom | chumsky |
 |------|----------|--------|-----|-----|---------|
@@ -183,7 +185,7 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 
 ParseError 導入 + `#[inline]` で旧 8.3ns → 6.1ns（累計 ~26% 改善）。
 
-#### 異種型分岐（`Box<dyn Parser>` / 動的ディスパッチ）
+#### 異種型分岐（`Box<dyn Parser>` / 動的ディスパッチ）（mean）
 
 | 入力 | oni-comb | winnow | nom\* | pom | chumsky |
 |------|----------|--------|-------|-----|---------|
@@ -192,7 +194,7 @@ ParseError 導入 + `#[inline]` で旧 8.3ns → 6.1ns（累計 ~26% 改善）�
 
 \* nom は `Parser` trait が dyn 非互換のため手動二段パース（Box なし）。
 
-#### zip vs flat_map（oni-comb-rs 内部比較）
+#### zip vs flat_map（oni-comb-rs 内部比較）（mean）
 
 | 入力 | zip | flat_map | 差分 |
 |------|-----|----------|------|
@@ -200,7 +202,7 @@ ParseError 導入 + `#[inline]` で旧 8.3ns → 6.1ns（累計 ~26% 改善）�
 | `"foo_bar_123"` | 17.7 ns | 17.7 ns | 0% (誤差) |
 | `"longIdentifier..."` | 31.2 ns | 31.1 ns | 0% (誤差) |
 
-### JSON subset（oni-comb のみ）
+### JSON subset（oni-comb のみ）（mean）
 
 | 入力 | 時間 |
 |------|------|
@@ -210,7 +212,7 @@ ParseError 導入 + `#[inline]` で旧 8.3ns → 6.1ns（累計 ~26% 改善）�
 | `[1, 2, 3]` | 536 ns |
 | `{"name":"oni-comb","version":2,"active":true}` | 693 ns |
 
-### 四則演算 + 括弧（oni-comb のみ、recursive 使用）
+### 四則演算 + 括弧（oni-comb のみ、recursive 使用）（mean）
 
 | 入力 | 時間 |
 |------|------|

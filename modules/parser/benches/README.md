@@ -38,8 +38,9 @@ cargo bench -p oni-comb-parser --bench alloc_count
 ## 結果と考察
 
 以下は Apple M 系チップでの計測結果（ParseError 導入後）。
+全数値は Criterion 報告の **mean 推定値**（100 サンプル、95% 信頼区間中央）。
 
-### Token ワークロード — Identifier
+### Token ワークロード — Identifier（mean）
 
 | 入力 | oni-comb | winnow | nom | pom | chumsky |
 |------|----------|--------|-----|-----|---------|
@@ -49,7 +50,7 @@ cargo bench -p oni-comb-parser --bench alloc_count
 | `"_private"` (8B) | 26.2 ns | 19.2 ns | 27.7 ns | 141 ns | 997 ns |
 | `"longIdent..."` (28B) | 44.4 ns | 32.2 ns | 82.6 ns | 271 ns | 1,318 ns |
 
-### Token ワークロード — Integer
+### Token ワークロード — Integer（mean）
 
 | 入力 | oni-comb | winnow | nom | pom | chumsky |
 |------|----------|--------|-----|-----|---------|
@@ -58,7 +59,7 @@ cargo bench -p oni-comb-parser --bench alloc_count
 | `"9999999"` | 8.2 ns | 5.2 ns | 5.3 ns | 133 ns | 995 ns |
 | `"184467...615"` (20B) | 25.9 ns | 22.6 ns | 22.7 ns | 264 ns | 1,256 ns |
 
-### flat_map 同一型分岐（digit → tag）
+### flat_map 同一型分岐（digit → tag）（mean）
 
 | ライブラリ | "1one" | "2two" | "3three" |
 |-----------|--------|--------|----------|
@@ -73,7 +74,7 @@ cargo bench -p oni-comb-parser --bench alloc_count
 - 新（ParseError）: 7.3 / 7.3 / 6.0 ns
 - **約 12% 改善**。`format!` 排除によりエラーパスのコード生成が軽量化された。
 
-### flat_map 異種型分岐（Box\<dyn Parser\>）
+### flat_map 異種型分岐（Box\<dyn Parser\>）（mean）
 
 | ライブラリ | "c:hello" | "i:42" |
 |-----------|-----------|--------|
@@ -83,7 +84,7 @@ cargo bench -p oni-comb-parser --bench alloc_count
 | pom | 164 ns | 109 ns |
 | chumsky | 1,052 ns | 972 ns |
 
-### zip vs flat_map（oni-comb-rs 内部比較）
+### zip vs flat_map（oni-comb-rs 内部比較）（mean）
 
 | 入力 | zip | flat_map | 差分 |
 |------|-----|----------|------|
@@ -95,7 +96,7 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 **zip ≒ flat_map（同一型）は引き続き成立。** 具象コンビネータ型設計の成果。
 
-### JSON subset（oni-comb のみ）
+### JSON subset（oni-comb のみ）（mean）
 
 | 入力 | 時間 | byte/ns |
 |------|------|---------|
@@ -112,7 +113,7 @@ cargo bench -p oni-comb-parser --bench alloc_count
 - 配列・オブジェクトは要素数に比例。8要素オブジェクトで ~1.5μs。
 - `or` による5分岐（null/true/false/int/string）の試行コストが各要素に乗る。
 
-### 四則演算 + 括弧（oni-comb のみ、recursive 使用）
+### 四則演算 + 括弧（oni-comb のみ、recursive 使用）（mean）
 
 | 入力 | 時間 |
 |------|------|
@@ -175,7 +176,7 @@ identifier / integer / flat_map 同一型 いずれも **0 blocks**。
 
 ## 最適化サイクルの記録
 
-### MS6 ParseError 導入による効果
+### MS6 ParseError 導入による効果（mean）
 
 | ワークロード | 旧 (String/format!) | 新 (ParseError) | 改善 |
 |-------------|--------------------|--------------------|------|
@@ -185,7 +186,7 @@ identifier / integer / flat_map 同一型 いずれも **0 blocks**。
 
 **分析**: `format!` マクロによる `String` アロケーションコードが LLVM の最適化を妨げていた。`ParseError::expected_char(pos, c)` は構造体の構築のみで `format!` を使わないため、エラーパスのコード生成が軽量化され、成功パスのインライン化にも好影響を与えた。
 
-### #[inline] 追加による効果
+### #[inline] 追加による効果（mean）
 
 | ワークロード | 旧 | 新 | 改善 |
 |-------------|-----|-----|------|
@@ -198,7 +199,7 @@ identifier / integer / flat_map 同一型 いずれも **0 blocks**。
 
 **分析**: 全 `parse_next` 実装に `#[inline]` を追加。短い入力ほど効果が大きい（15-20% 改善）。identifier "x" で winnow と同等（14.9 vs 15.2 ns）に到達。クレート境界を越えたインライン化が促進され、LLVM が関数呼び出しのオーバーヘッドを排除できるようになった。
 
-### ゼロコピー + fn 再帰 + バイト分岐による効果
+### ゼロコピー + fn 再帰 + バイト分岐による効果（mean）
 
 | ステップ | oni-comb | スループット | 改善 |
 |---------|----------|-------------|------|
