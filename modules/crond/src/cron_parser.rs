@@ -10,7 +10,22 @@ use crate::cron_expr::CronExpr;
 // --- 数値パーサー ---
 
 fn uint8_parser<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseError> {
-  take_while1(|c: char| c.is_ascii_digit()).map(|s: &str| s.parse::<u8>().unwrap())
+  fn_parser(|input: &mut StrInput<'_>| {
+    let pos = input.offset();
+    let cp = input.checkpoint();
+    let mut p = take_while1(|c: char| c.is_ascii_digit());
+    let s = p.parse_next(input)?;
+    match s.parse::<u8>() {
+      Ok(n) => Ok(n),
+      Err(_) => {
+        input.reset(cp);
+        Err(Fail::Backtrack(ParseError::expected_description(
+          pos,
+          "integer 0-255",
+        )))
+      }
+    }
+  })
 }
 
 // --- バリデーション付き数値パーサー ---
@@ -396,5 +411,16 @@ mod tests {
   #[test]
   fn reject_invalid_characters() {
     assert!(CronParser::parse("abc * * * *").is_err());
+  }
+
+  #[test]
+  fn reject_overflow_step() {
+    // */300 should fail gracefully, not panic
+    assert!(CronParser::parse("*/300 * * * *").is_err());
+  }
+
+  #[test]
+  fn reject_overflow_value() {
+    assert!(CronParser::parse("999 * * * *").is_err());
   }
 }

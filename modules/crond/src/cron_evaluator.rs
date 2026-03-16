@@ -3,6 +3,7 @@ use chrono::{Datelike, TimeZone, Timelike};
 use crate::cron_expr::CronExpr;
 
 struct CronEnvironment {
+  min: u8,
   now: u8,
   max: u8,
 }
@@ -21,10 +22,11 @@ fn visit(env: &CronEnvironment, expr: &CronExpr) -> bool {
     CronExpr::Value(n) => env.now == *n,
     CronExpr::LastValue => env.now == env.max,
     CronExpr::AnyStep(step) => {
+      // */N is equivalent to min-max/N, so offset from the field minimum
       if *step == 0 {
         return false;
       }
-      env.now.is_multiple_of(*step)
+      (env.now - env.min).is_multiple_of(*step)
     }
     CronExpr::Range { from, to, step } => {
       if env.now < *from || env.now > *to {
@@ -64,22 +66,30 @@ impl CronEvaluator {
     let max_day = get_days_from_month(year, month);
 
     let min_env = CronEnvironment {
+      min: 0,
       now: minute as u8,
       max: 59,
     };
     let hour_env = CronEnvironment {
+      min: 0,
       now: hour as u8,
       max: 23,
     };
     let day_env = CronEnvironment {
+      min: 1,
       now: day as u8,
       max: max_day,
     };
     let month_env = CronEnvironment {
+      min: 1,
       now: month as u8,
       max: 12,
     };
-    let dow_env = CronEnvironment { now: weekday, max: 7 };
+    let dow_env = CronEnvironment {
+      min: 1,
+      now: weekday,
+      max: 7,
+    };
 
     visit(&min_env, mins)
       && visit(&hour_env, hours)
@@ -160,7 +170,8 @@ mod tests {
   }
 
   #[test]
-  fn eval_any_step() {
+  fn eval_any_step_0based() {
+    // */5 in minute field (0-based): matches 0, 5, 10, ...
     let expr = CronExpr::Cron {
       mins: Box::new(CronExpr::AnyStep(5)),
       hours: Box::new(CronExpr::AnyValue),
@@ -171,6 +182,42 @@ mod tests {
     assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 0)));
     assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 15)));
     assert!(!CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 7)));
+  }
+
+  #[test]
+  fn eval_any_step_1based_day() {
+    // */5 in day field (1-based): matches 1, 6, 11, 16, 21, 26, 31
+    let expr = CronExpr::Cron {
+      mins: Box::new(CronExpr::AnyValue),
+      hours: Box::new(CronExpr::AnyValue),
+      days: Box::new(CronExpr::AnyStep(5)),
+      months: Box::new(CronExpr::AnyValue),
+      dow: Box::new(CronExpr::AnyValue),
+    };
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 0)));  // day=1
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 6, 0, 0)));  // day=6
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 11, 0, 0))); // day=11
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 16, 0, 0))); // day=16
+    assert!(!CronEvaluator::eval(&expr, &utc(2024, 1, 5, 0, 0))); // day=5 (not offset from 1)
+    assert!(!CronEvaluator::eval(&expr, &utc(2024, 1, 10, 0, 0))); // day=10
+  }
+
+  #[test]
+  fn eval_any_step_1based_month() {
+    // */3 in month field (1-based): matches 1, 4, 7, 10
+    let expr = CronExpr::Cron {
+      mins: Box::new(CronExpr::AnyValue),
+      hours: Box::new(CronExpr::AnyValue),
+      days: Box::new(CronExpr::AnyValue),
+      months: Box::new(CronExpr::AnyStep(3)),
+      dow: Box::new(CronExpr::AnyValue),
+    };
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 0)));   // month=1
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 4, 1, 0, 0)));   // month=4
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 7, 1, 0, 0)));   // month=7
+    assert!(CronEvaluator::eval(&expr, &utc(2024, 10, 1, 0, 0)));  // month=10
+    assert!(!CronEvaluator::eval(&expr, &utc(2024, 3, 1, 0, 0)));  // month=3
+    assert!(!CronEvaluator::eval(&expr, &utc(2024, 6, 1, 0, 0)));  // month=6
   }
 
   #[test]
