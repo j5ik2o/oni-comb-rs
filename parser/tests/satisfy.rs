@@ -101,7 +101,7 @@ fn satisfy_chain_parses_identifier_start() {
     let letter_or_underscore = satisfy(|c: char| c.is_ascii_alphabetic() || c == '_');
     let alnum_or_underscore = satisfy(|c: char| c.is_ascii_alphanumeric() || c == '_');
 
-    let mut parser = letter_or_underscore.then(alnum_or_underscore.many0());
+    let mut parser = letter_or_underscore.zip(alnum_or_underscore.many0());
     let mut input = StrInput::new("foo_bar_123!");
 
     let result = parser.parse_next(&mut input);

@@ -50,8 +50,8 @@ fn map_chains_multiple_transforms() {
 }
 
 #[test]
-fn then_sequences_two_parsers() {
-    let mut parser = char('a').then(char('b'));
+fn zip_sequences_two_parsers() {
+    let mut parser = char('a').zip(char('b'));
     let mut input = StrInput::new("abc");
 
     let result = parser.parse_next(&mut input);
@@ -62,8 +62,8 @@ fn then_sequences_two_parsers() {
 }
 
 #[test]
-fn then_fails_if_first_fails() {
-    let mut parser = char('a').then(char('b'));
+fn zip_fails_if_first_fails() {
+    let mut parser = char('a').zip(char('b'));
     let mut input = StrInput::new("xyz");
 
     let result = parser.parse_next(&mut input);
@@ -73,8 +73,8 @@ fn then_fails_if_first_fails() {
 }
 
 #[test]
-fn then_fails_if_second_fails() {
-    let mut parser = char('a').then(char('b'));
+fn zip_fails_if_second_fails() {
+    let mut parser = char('a').zip(char('b'));
     let mut input = StrInput::new("acd");
 
     let result = parser.parse_next(&mut input);
@@ -83,8 +83,8 @@ fn then_fails_if_second_fails() {
 }
 
 #[test]
-fn then_chains_three_parsers() {
-    let mut parser = char('a').then(char('b')).then(char('c'));
+fn zip_chains_three_parsers() {
+    let mut parser = char('a').zip(char('b')).zip(char('c'));
     let mut input = StrInput::new("abcdef");
 
     let result = parser.parse_next(&mut input);
@@ -94,8 +94,8 @@ fn then_chains_three_parsers() {
 }
 
 #[test]
-fn then_with_tags_sequences_string_slices() {
-    let mut parser = tag("hello").then(tag(" ")).then(tag("world"));
+fn zip_with_tags_sequences_string_slices() {
+    let mut parser = tag("hello").zip(tag(" ")).zip(tag("world"));
     let mut input = StrInput::new("hello world!");
 
     let result = parser.parse_next(&mut input);
@@ -105,8 +105,8 @@ fn then_with_tags_sequences_string_slices() {
 }
 
 #[test]
-fn then_propagates_cut_from_second() {
-    let mut parser = char('a').then(char('b').cut());
+fn zip_propagates_cut_from_second() {
+    let mut parser = char('a').zip(char('b').cut());
     let mut input = StrInput::new("ac");
 
     let result = parser.parse_next(&mut input);
@@ -115,9 +115,9 @@ fn then_propagates_cut_from_second() {
 }
 
 #[test]
-fn map_over_then_result() {
+fn map_over_zip_result() {
     let mut parser = char('a')
-        .then(char('b'))
+        .zip(char('b'))
         .map(|(a, b): (char, char)| format!("{}{}", a, b));
     let mut input = StrInput::new("ab");
 

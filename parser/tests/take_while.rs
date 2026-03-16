@@ -135,7 +135,7 @@ fn take_while1_works_with_or_for_identifier() {
     let head = take_while1(|c: char| c.is_ascii_alphabetic() || c == '_');
     let tail = take_while0(|c: char| c.is_ascii_alphanumeric() || c == '_');
 
-    let mut parser = head.then(tail);
+    let mut parser = head.zip(tail);
     let mut input = StrInput::new("foo_bar_123 rest");
 
     let result = parser.parse_next(&mut input);

@@ -4,11 +4,11 @@ static ALLOC: dhat::Alloc = dhat::Alloc;
 use oni_comb_parser::prelude::*;
 
 /// コンビネータ合成のみを測定するため、String 構築を行わない identifier パーサー。
-/// satisfy + take_while0 の .then() で (char, &str) を返す。
+/// satisfy + take_while0 の .zip() で (char, &str) を返す。
 fn parse_identifier_no_alloc(s: &str) -> Option<(char, &str)> {
     let head = satisfy(|c: char| c.is_ascii_alphabetic() || c == '_');
     let tail = take_while0(|c: char| c.is_ascii_alphanumeric() || c == '_');
-    let mut parser = head.then(tail);
+    let mut parser = head.zip(tail);
     let mut input = StrInput::new(s);
     parser.parse_next(&mut input).ok()
 }

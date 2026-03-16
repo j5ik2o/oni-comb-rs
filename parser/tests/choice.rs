@@ -51,8 +51,8 @@ fn or_fails_when_both_sides_backtrack() {
 
 #[test]
 fn or_propagates_cut_from_left_without_trying_right() {
-    let left = char('a').then(char('b').cut());
-    let right = char('a').then(char('c'));
+    let left = char('a').zip(char('b').cut());
+    let right = char('a').zip(char('c'));
     let mut parser = left.or(right);
     let mut input = StrInput::new("ac");
 
@@ -85,7 +85,7 @@ fn attempt_passes_through_success() {
 
 #[test]
 fn attempt_downgrades_cut_to_backtrack() {
-    let inner = char('a').then(char('b').cut());
+    let inner = char('a').zip(char('b').cut());
     let mut parser = inner.attempt();
     let mut input = StrInput::new("ac");
 
@@ -108,8 +108,8 @@ fn attempt_passes_through_backtrack() {
 
 #[test]
 fn attempt_enables_backtracking_in_or() {
-    let left = char('a').then(char('b').cut()).attempt();
-    let right = char('a').then(char('c'));
+    let left = char('a').zip(char('b').cut()).attempt();
+    let right = char('a').zip(char('c'));
     let mut parser = left.or(right);
     let mut input = StrInput::new("ac");
 
@@ -143,8 +143,8 @@ fn cut_upgrades_backtrack_to_cut() {
 
 #[test]
 fn cut_after_tag_prevents_or_fallthrough() {
-    let left = tag(":").then(tag("value").cut());
-    let right = tag(":").then(tag("other"));
+    let left = tag(":").zip(tag("value").cut());
+    let right = tag(":").zip(tag("other"));
     let mut parser = left.or(right);
     let mut input = StrInput::new(":other");
 

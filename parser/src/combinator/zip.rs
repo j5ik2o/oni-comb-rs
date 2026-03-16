@@ -2,12 +2,12 @@ use crate::fail::PResult;
 use crate::input::Input;
 use crate::parser::Parser;
 
-pub struct Then<P1, P2> {
+pub struct Zip<P1, P2> {
     pub(crate) first: P1,
     pub(crate) second: P2,
 }
 
-impl<I, P1, P2> Parser<I> for Then<P1, P2>
+impl<I, P1, P2> Parser<I> for Zip<P1, P2>
 where
     I: Input,
     P1: Parser<I>,

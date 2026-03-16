@@ -1,8 +1,8 @@
 # oni-comb-rs
 
-Rust 製パーサーコンビネータライブラリ（v2 リブート版）。
+Rust 製パーサーモナドライブラリ（v2 リブート版）。
 
-旧 v1 の `Rc<dyn Fn>` ベース設計を捨て、**trait + concrete combinator 型**（`Map`, `Then`, `Or` 等）で構成。動的ディスパッチ・ヒープ確保を排し、Applicative/Alternative 主体で最適化しやすい設計を目指しています。
+旧 v1 の `Rc<dyn Fn>` ベース設計を捨て、**trait + concrete combinator 型**（`Map`, `Then`, `Or`, `FlatMap` 等）で構成。Functor / Applicative / Alternative / Monad の全階層を提供しつつ、動的ディスパッチ・ヒープ確保を最小化する設計です。
 
 ## Quickstart
 
@@ -16,7 +16,7 @@ assert_eq!(parser.parse_next(&mut input).unwrap(), 'b');
 
 // identifier: 先頭が英字/_, 以降は英数字/_
 let mut ident = satisfy(|c: char| c.is_ascii_alphabetic() || c == '_')
-    .then(take_while0(|c: char| c.is_ascii_alphanumeric() || c == '_'));
+    .zip(take_while0(|c: char| c.is_ascii_alphanumeric() || c == '_'));
 let mut input = StrInput::new("foo_bar_123");
 let (head, tail) = ident.parse_next(&mut input).unwrap();
 assert_eq!(head, 'f');
@@ -31,10 +31,48 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 
 ## 設計の特徴
 
-- **Zero-cost combinator composition** — コンビネータ合成は concrete 型でスタック上に構築され、パース実行中のヒープアロケーションはゼロ
+- **パーサーモナド** — Functor (`map`) / Applicative (`zip`) / Alternative (`or`) / Monad (`flat_map`) の全階層を提供
+- **Zero-cost combinator composition** — Applicative コンビネータは concrete 型でスタック上に構築され、ヒープアロケーションはゼロ。`flat_map` も同一型分岐ならゼロコスト
 - **Backtrack / Cut によるエラー制御** — `or` は `Backtrack` のみリカバリし、`Cut` はそのまま伝播。`attempt` で Cut→Backtrack 降格、`cut` で Backtrack→Cut 昇格
-- **Applicative/Alternative 主体** — `flat_map`（モナディック合成）を意図的に制限し、構文形状を静的に保つ
 - **再帰は boxed recursion** — 再帰の結び目だけ `Box<dyn Parser>` に落とし、非再帰部分は concrete 型を維持
+
+### 型クラス階層とコスト
+
+| 操作 | 型クラス | Rust での型 | コスト |
+|------|---------|------------|--------|
+| `map(f)` | Functor | `Map<P, F>` | ゼロ |
+| `then(p)` | Applicative | `Zip<P1, P2>` | ゼロ |
+| `or(p)` | Alternative | `Or<P1, P2>` | ゼロ |
+| `flat_map(f)` 同一型分岐 | Monad | `FlatMap<P, F>` | ゼロ |
+| `flat_map(f)` 異種型分岐 | Monad | `FlatMap<P, F>` + `Box<dyn Parser>` | Box 1回 |
+
+全パーサーで `.flat_map()` が使えますが、**性能を最大化するには Applicative コンビネータ（`zip`, `map`, `or`）を優先**し、`flat_map` は文脈依存の分岐が必要な場面で使います。これは Haskell の Parsec でも同様の推奨事項です。
+
+### なぜ Applicative 優先か
+
+Rust では `flat_map` のクロージャが異なる型のパーサーを返す場合、`Box<dyn Parser>` による型消去が必要になり、ヒープアロケーション＋動的ディスパッチが発生します。旧 v1 や pom は全コンビネータを `Rc<dyn Fn>` で構成しており、ベンチマークでは v2 の 3〜30 倍遅い結果になっています。
+
+一方、`zip`（Applicative）は `Zip<Char, Tag>` のような concrete 型としてスタック上に構築されるため、コンパイラがモノモーフィゼーション → インライン化 → LLVM 最適化まで一気通貫で行え、手書きの再帰下降パーサーに近い性能が出ます。
+
+```rust
+// Applicative: 構造がコンパイル時に確定 → インライン化可能
+char('a').zip(char('b'))   // Then<Char, Char> — concrete 型
+
+// Monad (同一型): Box 不要、ゼロコスト
+satisfy(|c: char| c.is_ascii_digit()).flat_map(|n| match n {
+    '1' => tag("one"),
+    _ => tag("other"),
+})
+
+// Monad (異種型): Box<dyn Parser> で型消去
+satisfy(|c: char| c == 'c' || c == 't')
+    .flat_map(|c| -> Box<dyn Parser<StrInput<'_>, Output = &str, Error = String>> {
+        match c {
+            'c' => Box::new(tag("har")),
+            _ => Box::new(take_while1(|c: char| c.is_ascii_digit())),
+        }
+    })
+```
 
 ## 利用可能なパーサー
 
@@ -51,15 +89,16 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 
 ### コンビネータ（`ParserExt` メソッドチェーン）
 
-| メソッド | 説明 |
-|----------|------|
-| `.map(f)` | 成功値を変換 |
-| `.then(p)` | 2つのパーサーを順次適用し、ペアを返す |
-| `.or(p)` | 左が Backtrack なら右を試行 |
-| `.attempt()` | Cut を Backtrack に降格（巻き戻し可能にする） |
-| `.cut()` | Backtrack を Cut に昇格（or での分岐を禁止する） |
-| `.optional()` | Backtrack を `None` に変換 |
-| `.many0()` | 0回以上の繰り返し |
+| メソッド | 型クラス | 説明 |
+|----------|---------|------|
+| `.map(f)` | Functor | 成功値を変換 |
+| `.zip(p)` | Applicative | 2つのパーサーを順次適用し、ペアを返す |
+| `.or(p)` | Alternative | 左が Backtrack なら右を試行 |
+| `.flat_map(f)` | Monad | 1つ目の結果に基づいて次のパーサーを動的に選択 |
+| `.attempt()` | — | Cut を Backtrack に降格（巻き戻し可能にする） |
+| `.cut()` | — | Backtrack を Cut に昇格（or での分岐を禁止する） |
+| `.optional()` | — | Backtrack を `None` に変換 |
+| `.many0()` | — | 0回以上の繰り返し |
 
 ## ベンチマーク
 
@@ -98,7 +137,7 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 - **nom を中〜長入力で上回る** — 11B で 37% 高速、28B で 90% 高速（identifier）
 - **pom の 3〜30 倍高速** — 旧 v1 相当の `Rc<dyn Fn>` 設計との差を実証
 - **chumsky の 30〜230 倍高速**
-- **コンビネータ合成でヒープアロケーションゼロ** — dhat による計測で 0 bytes / 0 blocks を確認
+- **Applicative コンビネータでヒープアロケーションゼロ** — dhat による計測で 0 bytes / 0 blocks を確認
 
 ### ベンチマーク実行
 

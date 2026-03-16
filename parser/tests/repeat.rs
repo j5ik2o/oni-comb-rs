@@ -29,7 +29,7 @@ fn optional_returns_none_on_backtrack() {
 
 #[test]
 fn optional_propagates_cut() {
-    let inner = char('a').then(char('b').cut());
+    let inner = char('a').zip(char('b').cut());
     let mut parser = inner.optional();
     let mut input = StrInput::new("ac");
 
@@ -95,7 +95,7 @@ fn many0_consumes_all_matching() {
 
 #[test]
 fn many0_propagates_cut() {
-    let item = char('a').then(char('b').cut());
+    let item = char('a').zip(char('b').cut());
     let mut parser = item.many0();
     let mut input = StrInput::new("abac");
 
@@ -129,7 +129,7 @@ fn many0_with_or_collects_alternatives() {
 
 #[test]
 fn optional_after_many0() {
-    let mut parser = char('a').many0().then(char('!').optional());
+    let mut parser = char('a').many0().zip(char('!').optional());
     let mut input = StrInput::new("aaa");
 
     let result = parser.parse_next(&mut input);
@@ -141,7 +141,7 @@ fn optional_after_many0() {
 
 #[test]
 fn optional_after_many0_with_trailing() {
-    let mut parser = char('a').many0().then(char('!').optional());
+    let mut parser = char('a').many0().zip(char('!').optional());
     let mut input = StrInput::new("aaa!");
 
     let result = parser.parse_next(&mut input);
