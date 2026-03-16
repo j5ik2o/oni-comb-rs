@@ -50,7 +50,7 @@ PResult<T, E>          -- Result<T, Fail<E>>
 | `parser_ext.rs` | `ParserExt<I>` — 全 `Parser` に自動実装されるコンビネータメソッド |
 | `fail.rs` | `Fail<E>` enum と `PResult` 型エイリアス |
 | `combinator/` | 各コンビネータの具象型（`Map`, `Zip`, `ZipLeft`, `ZipRight`, `Or`, `Attempt`, `Cut`, `Optional`, `Many`, `Many1`, `SepBy0`, `SepBy1`, `ChainL1`, `ChainR1`, `FlatMap`） |
-| `text/` | テキスト専用パーサー（`Char`, `Tag`, `Eof`） |
+| `text/` | テキスト専用パーサー（`Char`, `Tag`, `Satisfy`, `TakeWhile0/1`, `Eof`, `Whitespace0/1`, `Identifier`, `Integer`, `QuotedString`） |
 
 ### 設計上の重要な判断
 

@@ -87,6 +87,13 @@ satisfy(|c: char| c == 'c' || c == 't')
 | `take_while0(f)` | 述語を満たす文字を0個以上消費 | `&str` |
 | `take_while1(f)` | 述語を満たす文字を1個以上消費 | `&str` |
 | `eof()` | 入力の終端にマッチ | `()` |
+| `whitespace0()` | ASCII 空白を 0 個以上消費 | `&str` |
+| `whitespace1()` | ASCII 空白を 1 個以上消費 | `&str` |
+| `identifier()` | ASCII 識別子（`[a-zA-Z_][a-zA-Z0-9_]*`） | `&str` |
+| `integer()` | 符号付き整数 | `i64` |
+| `quoted_string()` | ダブルクォート文字列（JSON 準拠エスケープ） | `String` |
+| `escaped(open, close, esc, handler)` | 汎用エスケープ文字列パーサー | `String` |
+| `lexeme(p)` | パーサー実行後に後続の空白を消費 | `P::Output` |
 | `between(l, p, r)` | `l`, `p`, `r` を順に実行し `p` の値を返す | `P::Output` |
 
 ### コンビネータ（`ParserExt` メソッドチェーン）
@@ -215,7 +222,7 @@ cargo test -p oni-comb-parser -- test_name
 | 1 | Core | **完了** | Input, Fail, PResult, Parser, ParserExt, StrInput |
 | 2 | Primitive | **完了** | eof, char, tag, satisfy, take_while0/1, peek |
 | 3 | Combinators | **完了** | map, zip, zip_left, zip_right, between, or, attempt, cut, optional, many0/1, sep_by0/1, chainl1/r1, flat_map/and_then |
-| 4 | Text module | 未着手 | whitespace, ascii token, identifier, integer, quoted string |
+| 4 | Text module | **完了** | whitespace0/1, identifier, integer, quoted_string, escaped, lexeme。JSON subset・URI tokenizer テストで実証済み |
 | 5 | Recursive | 未着手 | boxed `recursive()` helper, precedence parser |
 | 6 | Error reporting | 未着手 | span, expected-set, context stack |
 | 7 | Benchmark | **進行中** | identifier/integer/flat_map の 5 ライブラリ比較、zip vs flat_map 内部比較、dhat アロケーション計測 |
