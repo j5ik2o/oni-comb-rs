@@ -158,9 +158,9 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 
 | 入力 | oni-comb | winnow | nom | pom | chumsky |
 |------|----------|--------|-----|-----|---------|
-| `"x"` (1B) | 18.4 ns | 14.5 ns | 13.7 ns | 66.9 ns | 874 ns |
-| `"foo_bar_123"` (11B) | 28.1 ns | 19.5 ns | 36.9 ns | 199 ns | 1,055 ns |
-| `"longIdentifier..."` (28B) | 44.4 ns | 32.2 ns | 82.6 ns | 271 ns | 1,318 ns |
+| `"x"` (1B) | 14.9 ns | 15.2 ns | 13.2 ns | 66.4 ns | 894 ns |
+| `"foo_bar_123"` (11B) | 26.7 ns | 21.4 ns | 37.8 ns | 199 ns | 1,144 ns |
+| `"longIdentifier..."` (28B) | 44.1 ns | 33.6 ns | 82.2 ns | 269 ns | 1,447 ns |
 
 ### Token ワークロード結果（Integer）
 
@@ -176,10 +176,10 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 
 | 入力 | oni-comb | winnow | nom | pom | chumsky |
 |------|----------|--------|-----|-----|---------|
-| `"1one"` | 7.3 ns | 2.1 ns | 2.4 ns | 70 ns | 896 ns |
-| `"3three"` | 6.0 ns | 2.3 ns | 2.4 ns | 96 ns | 948 ns |
+| `"1one"` | 6.1 ns | 2.6 ns | 2.4 ns | 70 ns | 892 ns |
+| `"3three"` | 4.8 ns | 2.6 ns | 2.4 ns | 94 ns | 929 ns |
 
-MS6 の ParseError 導入で旧 8.3ns → 7.3ns（約 12% 改善）。`format!` 排除の効果。
+ParseError 導入 + `#[inline]` で旧 8.3ns → 6.1ns（累計 ~26% 改善）。
 
 #### 異種型分岐（`Box<dyn Parser>` / 動的ディスパッチ）
 
@@ -219,12 +219,12 @@ MS6 の ParseError 導入で旧 8.3ns → 7.3ns（約 12% 改善）。`format!` 
 
 ### 特性まとめ
 
-- **winnow の 70-90% のスループット** — 具象型化の恩恵で改善余地あり
-- **nom を中〜長入力で上回る** — 11B で 24% 高速、28B で 46% 高速（identifier）
+- **winnow と同等〜90% のスループット** — identifier "x" で winnow を上回る場面も（`#[inline]` 導入後）
+- **nom を中〜長入力で上回る** — 11B で 28% 高速、28B で 46% 高速（identifier）
 - **pom の 3〜30 倍高速** — 旧 v1 相当の `Rc<dyn Fn>` 設計との差を実証
 - **chumsky の 30〜200 倍高速**
 - **zip ≒ flat_map（同一型）** — 具象コンビネータ型設計によりモナディック合成でもゼロコスト
-- **ParseError 導入で ~12% 改善** — 最適化サイクル 1 回完了
+- **2回の最適化で累計 ~30% 改善** — ParseError 導入（~12%）+ `#[inline]`（~17%）
 - **Applicative / flat_map 同一型でヒープアロケーションゼロ** — dhat で 0 bytes / 0 blocks 確認
 - 詳細な考察は [`parser/benches/README.md`](parser/benches/README.md) を参照
 

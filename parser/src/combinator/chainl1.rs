@@ -17,6 +17,7 @@ where
     type Output = P::Output;
     type Error = P::Error;
 
+    #[inline]
     fn parse_next(&mut self, input: &mut I) -> PResult<Self::Output, Self::Error> {
         let mut acc = self.operand.parse_next(input)?;
         loop {

@@ -30,6 +30,7 @@ impl<'a, O, E> Parser<StrInput<'a>> for Recursive<'a, O, E> {
     type Output = O;
     type Error = E;
 
+    #[inline]
     fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<O, E> {
         // SAFETY: Recursive は Rc を使うため !Send + !Sync（単一スレッド）。
         // 再帰呼び出しは同一コールスタック上で順次実行され、

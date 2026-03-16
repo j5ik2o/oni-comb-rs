@@ -17,6 +17,7 @@ where
     type Output = Vec<P::Output>;
     type Error = P::Error;
 
+    #[inline]
     fn parse_next(&mut self, input: &mut I) -> PResult<Self::Output, Self::Error> {
         let first = self.parser.parse_next(input)?;
         let mut items = vec![first];

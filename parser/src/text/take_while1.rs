@@ -17,6 +17,7 @@ where
     type Output = &'a str;
     type Error = ParseError;
 
+    #[inline]
     fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<&'a str, ParseError> {
         let pos = input.offset();
         let remaining = input.as_str();

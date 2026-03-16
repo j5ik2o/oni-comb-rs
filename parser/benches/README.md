@@ -151,18 +151,30 @@ identifier / integer / flat_map 同一型 いずれも **0 blocks**。
 
 **分析**: `format!` マクロによる `String` アロケーションコードが LLVM の最適化を妨げていた。`ParseError::expected_char(pos, c)` は構造体の構築のみで `format!` を使わないため、エラーパスのコード生成が軽量化され、成功パスのインライン化にも好影響を与えた。
 
+### #[inline] 追加による効果
+
+| ワークロード | 旧 | 新 | 改善 |
+|-------------|-----|-----|------|
+| identifier "x" (1B) | 18.4 ns | 14.9 ns | -19% |
+| identifier "foo" (3B) | 19.6 ns | 17.8 ns | -9% |
+| identifier "_private" (8B) | 26.2 ns | 25.1 ns | -4% |
+| flat_map "1one" | 7.3 ns | 6.1 ns | -16% |
+| flat_map "2two" | 7.3 ns | 6.2 ns | -15% |
+| flat_map "3three" | 6.0 ns | 4.8 ns | -20% |
+
+**分析**: 全 `parse_next` 実装に `#[inline]` を追加。短い入力ほど効果が大きい（15-20% 改善）。identifier "x" で winnow と同等（14.9 vs 15.2 ns）に到達。クレート境界を越えたインライン化が促進され、LLVM が関数呼び出しのオーバーヘッドを排除できるようになった。
+
 ### 残存するボトルネック
 
-1. **winnow との差（token 系）**: oni-comb は winnow の 70-90% のスループット。`StrInput` の `offset()` 呼び出しや `ParseError` 構築のコストが要因。将来的に Error 型を `()` に差し替えるゼロコストモードの提供で改善可能。
-2. **recursive() のオーバーヘッド**: 単一整数パースで 156ns は `Rc<UnsafeCell<Box>>` の間接呼び出しコスト。非再帰パーサー（`integer()` 単体で ~3ns）に比べて 50 倍遅い。再帰が不要なケースでは `recursive()` を避けるべき。
-3. **JSON の `or` 分岐コスト**: 5分岐の試行が各要素に乗る。`dispatch!` マクロ（先頭文字で分岐）の導入で改善可能だが、現状のスコープ外。
+1. **recursive() のオーバーヘッド**: 単一整数パースで ~156ns は `Rc<UnsafeCell<Box>>` の間接呼び出しコスト。非再帰パーサー（`integer()` 単体で ~3ns）に比べて 50 倍遅い。再帰が不要なケースでは `recursive()` を避けるべき。
+2. **JSON の `or` 分岐コスト**: 5分岐の試行が各要素に乗る。`dispatch!` マクロ（先頭文字で分岐）の導入で改善可能だが、現状のスコープ外。
 
 ## 総合評価
 
-- **oni-comb は winnow の 70-90% のスループット** — 具象型設計の恩恵で高速だが、Input/Error 型にまだ改善余地あり
-- **nom を中〜長入力で上回る** — 11B identifier で 24% 高速、28B で 46% 高速
+- **winnow と同等〜90% のスループット** — identifier "x" で winnow を上回る場面も
+- **nom を中〜長入力で上回る** — 11B identifier で 28% 高速、28B で 46% 高速
 - **pom の 3〜30 倍高速** — 旧 v1 相当の `Rc<dyn Fn>` 設計との差を実証
 - **chumsky の 30〜200 倍高速** — 動的ディスパッチ前提の設計との差
 - **zip ≒ flat_map（同一型）** — 具象コンビネータ型設計の妥当性を確認
-- **ParseError 導入で ~12% 改善** — 最適化サイクル 1 回完了
+- **2回の最適化サイクルで累計 ~30% 改善** — ParseError 導入（~12%）+ #[inline]（~17%）
 - **Applicative コンビネータでヒープアロケーションゼロ**

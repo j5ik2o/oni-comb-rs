@@ -19,6 +19,7 @@ where
     type Output = Vec<P::Output>;
     type Error = P::Error;
 
+    #[inline]
     fn parse_next(&mut self, input: &mut I) -> PResult<Self::Output, Self::Error> {
         let mut items = Vec::new();
 
@@ -72,6 +73,7 @@ where
     type Output = Vec<P::Output>;
     type Error = P::Error;
 
+    #[inline]
     fn parse_next(&mut self, input: &mut I) -> PResult<Self::Output, Self::Error> {
         // 最初の要素は必須
         let first = self.parser.parse_next(input)?;

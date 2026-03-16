@@ -14,6 +14,7 @@ impl<I: Input, P: Parser<I> + ?Sized> Parser<I> for Box<P> {
     type Output = P::Output;
     type Error = P::Error;
 
+    #[inline]
     fn parse_next(&mut self, input: &mut I) -> PResult<Self::Output, Self::Error> {
         (**self).parse_next(input)
     }

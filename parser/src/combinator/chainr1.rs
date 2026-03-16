@@ -20,6 +20,7 @@ where
     type Output = P::Output;
     type Error = P::Error;
 
+    #[inline]
     fn parse_next(&mut self, input: &mut I) -> PResult<Self::Output, Self::Error> {
         let first = self.operand.parse_next(input)?;
         let mut operands = vec![first];

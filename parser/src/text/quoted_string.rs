@@ -16,6 +16,7 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
     type Output = String;
     type Error = ParseError;
 
+    #[inline]
     fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<String, ParseError> {
         let pos = input.offset();
         let remaining = input.as_str();

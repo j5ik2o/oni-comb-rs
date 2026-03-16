@@ -14,6 +14,7 @@ where
     type Output = P::Output;
     type Error = P::Error;
 
+    #[inline]
     fn parse_next(&mut self, input: &mut I) -> PResult<Self::Output, Self::Error> {
         let cp = input.checkpoint();
         match self.parser.parse_next(input) {

@@ -14,6 +14,7 @@ impl Parser<StrInput<'_>> for Tag {
     type Output = &'static str;
     type Error = ParseError;
 
+    #[inline]
     fn parse_next(&mut self, input: &mut StrInput<'_>) -> PResult<Self::Output, Self::Error> {
         let pos = input.offset();
         let remaining = input.remaining();

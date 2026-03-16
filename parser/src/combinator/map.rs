@@ -16,6 +16,7 @@ where
     type Output = O2;
     type Error = P::Error;
 
+    #[inline]
     fn parse_next(&mut self, input: &mut I) -> PResult<Self::Output, Self::Error> {
         match self.parser.parse_next(input) {
             Ok(v) => Ok((self.f)(v)),
