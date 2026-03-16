@@ -34,6 +34,14 @@ pub fn take_while_n_m<'a, F: FnMut(char) -> bool>(
   crate::primitive::take_while_n_m::take_while_n_m(min, max, f)
 }
 
+pub fn take_till0<'a, F: FnMut(char) -> bool>(f: F) -> crate::primitive::take_till0::TakeTill0<F, StrInput<'a>> {
+  crate::primitive::take_till0::take_till0(f)
+}
+
+pub fn take_till1<'a, F: FnMut(char) -> bool>(f: F) -> crate::primitive::take_till1::TakeTill1<F, StrInput<'a>> {
+  crate::primitive::take_till1::take_till1(f)
+}
+
 // text 専用パーサー
 pub use crate::text::char::char;
 pub use crate::text::escaped::escaped;
