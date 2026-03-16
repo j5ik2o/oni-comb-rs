@@ -94,10 +94,12 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 | `identifier()` | ASCII 識別子（`[a-zA-Z_][a-zA-Z0-9_]*`） | `&str` |
 | `integer()` | 符号付き整数 | `i64` |
 | `quoted_string()` | ダブルクォート文字列（JSON 準拠エスケープ） | `String` |
+| `quoted_string_cow()` | ゼロコピー版 quoted_string（エスケープなしなら借用） | `Cow<'a, str>` |
 | `escaped(open, close, esc, handler)` | 汎用エスケープ文字列パーサー | `String` |
 | `lexeme(p)` | パーサー実行後に後続の空白を消費 | `P::Output` |
 | `between(l, p, r)` | `l`, `p`, `r` を順に実行し `p` の値を返す | `P::Output` |
 | `recursive(f)` | 再帰パーサーを構築（クロージャ内で再帰参照を受け取る） | `P::Output` |
+| `fn_parser(f)` | 関数ポインタを `Parser` にラップ（vtable 不要の再帰に最適） | `O` |
 
 ### コンビネータ（`ParserExt` メソッドチェーン）
 
@@ -223,20 +225,20 @@ ParseError 導入 + `#[inline]` で旧 8.3ns → 6.1ns（累計 ~26% 改善）�
 
 | # | ライブラリ | 時間 | スループット |
 |---|-----------|------|-------------|
-| 1 | winnow | 155 µs | 656 MB/s |
-| 2 | nom | 277 µs | 369 MB/s |
-| 3 | oni-comb | 640 µs | 159 MB/s |
+| 1 | **oni-comb** | **109 µs** | **937 MB/s** |
+| 2 | winnow | 156 µs | 656 MB/s |
+| 3 | nom | 272 µs | 376 MB/s |
 
-Token レベルでは winnow と同等だが、107KB JSON では `recursive()` のオーバーヘッドと `quoted_string()` の String 構築が影響。
+`fn_parser` による関数再帰 + `peek_byte` 先頭バイト分岐 + `quoted_string_cow` ゼロコピーにより、winnow を 1.43x 上回る。
 
 ### 特性まとめ
 
-- **winnow と同等〜90% のスループット** — identifier "x" で winnow を上回る場面も（`#[inline]` 導入後）
+- **winnow を上回るスループット** — 107KB JSON で winnow の 1.43 倍（`fn_parser` + `peek_byte` 分岐 + ゼロコピー文字列）
 - **nom を中〜長入力で上回る** — 11B で 28% 高速、28B で 46% 高速（identifier）
 - **pom の 3〜30 倍高速** — 旧 v1 相当の `Rc<dyn Fn>` 設計との差を実証
 - **chumsky の 30〜200 倍高速**
 - **zip ≒ flat_map（同一型）** — 具象コンビネータ型設計によりモナディック合成でもゼロコスト
-- **2回の最適化で累計 ~30% 改善** — ParseError 導入（~12%）+ `#[inline]`（~17%）
+- **3 回の最適化で累計 ~83% 改善** — ParseError 導入（~12%）+ `#[inline]`（~17%）+ ゼロコピー＋fn再帰（~77%）
 - **Applicative / flat_map 同一型でヒープアロケーションゼロ** — dhat で 0 bytes / 0 blocks 確認
 - 詳細な考察は [`parser/benches/README.md`](parser/benches/README.md) を参照
 

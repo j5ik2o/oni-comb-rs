@@ -102,13 +102,13 @@ flat_map 再帰ではなく専用ループで実装する。
 | 6 | Error reporting | span, expected-set, context stack, cut-aware merge | カラー診断, IDE 連携 | JSON subset の失敗位置と期待トークンが出る |
 | 7 | Benchmark | criterion bench, allocation counter, regression threshold | micro-opt の先走り | v1 比較でボトルネック定量化、1回最適化サイクル完了 |
 
-## ベンチマーク計画
+## ベンチマーク結果
 
-- **比較対象**: `winnow`、`nom`、`chumsky`、`pom`、v2 マイルストーン間の回帰
-- **実装済み workload**: identifier/integer（token hot path）、flat_map 同一型分岐、flat_map 異種型分岐（Box\<dyn Parser\>）、zip vs flat_map 内部比較
-- **未実装 workload**: JSON subset（MS4 待ち）、expression parser（MS5 待ち）
+- **比較対象**: `winnow`、`nom`、`chumsky`、`pom`
+- **workload**: identifier/integer、flat_map 同一型/異種型、zip vs flat_map、JSON subset、四則演算+括弧、107KB JSON フル
 - **観測項目**: throughput（Criterion）、allocation count（`dhat-rs`）
-- **現状の知見**: oni-comb は winnow の 70-90% のスループット。nom を中〜長入力で上回る。flat_map 同一型は zip とゼロコスト同等。Box\<dyn Parser\> のオーバーヘッドは ~15ns。詳細は `parser/benches/README.md` を参照
+- **最適化サイクル**: ParseError 導入（~12%）+ `#[inline]`（~17%）+ ゼロコピー＋fn再帰（~77%）で累計 ~83% 改善
+- **知見**: 107KB JSON で winnow の 1.43 倍（109µs vs 156µs）。`fn_parser` + `peek_byte` 分岐 + `quoted_string_cow` ゼロコピーにより達成。token レベルでは winnow と同等〜90%。nom を中〜長入力で上回る。flat_map 同一型は zip とゼロコスト同等。詳細は `parser/benches/README.md` を参照
 
 # Rules
 

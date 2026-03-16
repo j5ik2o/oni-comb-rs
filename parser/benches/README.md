@@ -135,26 +135,27 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 | # | ライブラリ | 時間 | スループット | 備考 |
 |---|-----------|------|-------------|------|
-| 1 | **winnow** | 155 µs | 656 MB/s | `&[u8]` ゼロコピー、`dispatch!` 使用 |
-| 2 | **nom** | 277 µs | 369 MB/s | `&[u8]` ゼロコピー、関数再帰 |
-| 3 | **oni-comb** | 640 µs | 159 MB/s | `&str` ベース、`recursive()` + `quoted_string()` で String 構築 |
+| 1 | **oni-comb** | **109 µs** | **937 MB/s** | `fn_parser` 再帰 + `peek_byte` 分岐 + `quoted_string_cow` ゼロコピー |
+| 2 | **winnow** | 156 µs | 656 MB/s | `&[u8]` ゼロコピー、`dispatch!` 使用 |
+| 3 | **nom** | 272 µs | 376 MB/s | `&[u8]` ゼロコピー、関数再帰 |
 
-**oni-comb は winnow の 24%、nom の 58% のスループット**（JSON フルベンチ）。token レベルでは winnow と同等だが、107KB の JSON では差が開く。主因:
-- `recursive()` の `Rc<UnsafeCell<Box<dyn Parser>>>` 間接呼び出しが全ノードで発生
-- `quoted_string()` が毎回 `String` を構築（winnow/nom は `&[u8]` スライスを返すだけ）
-- `or` による 7 分岐の順次試行（winnow は `dispatch!` で先頭バイト分岐）
+**oni-comb は winnow の 1.43 倍、nom の 2.49 倍のスループット。** 最適化の内訳:
+- `fn_parser` による関数再帰（`recursive()` の `Box<dyn Parser>` vtable を排除）
+- `peek_byte` による先頭バイト分岐（`or` チェーンの線形スキャンを排除）
+- `quoted_string_cow` によるゼロコピー文字列（エスケープなし文字列は `&str` スライス）
+- `take_while1` による数値パースのゼロコピー化
 
 **参考: chumsky README のランキング（AMD Ryzen 7 3700x）との対照**
 
 | # | ライブラリ | スループット | oni-comb の位置 |
 |---|-----------|-------------|---------------|
 | 1 | chumsky (check-only) | 797 MB/s | |
+| → | **oni-comb** | **~937 MB/s** | **chumsky (check-only) を上回る** |
 | 2 | winnow | 627 MB/s | |
 | 3 | chumsky | 533 MB/s | |
 | 4 | sn (hand-written) | 472 MB/s | |
 | 5 | serde_json | 235 MB/s | |
 | 6 | nom | 213 MB/s | |
-| → | **oni-comb** | **~159 MB/s** | **nom と serde_json の間** |
 | 7 | pest | 57 MB/s | |
 | 8 | pom | 8 MB/s | |
 
@@ -195,17 +196,28 @@ identifier / integer / flat_map 同一型 いずれも **0 blocks**。
 
 **分析**: 全 `parse_next` 実装に `#[inline]` を追加。短い入力ほど効果が大きい（15-20% 改善）。identifier "x" で winnow と同等（14.9 vs 15.2 ns）に到達。クレート境界を越えたインライン化が促進され、LLVM が関数呼び出しのオーバーヘッドを排除できるようになった。
 
+### ゼロコピー + fn 再帰 + バイト分岐による効果
+
+| ステップ | oni-comb | スループット | 改善 |
+|---------|----------|-------------|------|
+| Before（recursive + or チェーン） | 640 µs | 159 MB/s | — |
+| + `quoted_string_cow` ゼロコピー | 486 µs | 210 MB/s | -24% |
+| + number ゼロコピー | 477 µs | 214 MB/s | -2% |
+| + `fn_parser` 再帰 + `peek_byte` 分岐 | **109 µs** | **937 MB/s** | **-77%** |
+
+**分析**: 最大の効果は `fn_parser` + `peek_byte` 分岐。`recursive()` の `Box<dyn Parser>` vtable 間接呼び出しが全 JSON ノードで数万回発生していたのに対し、`fn_parser` は通常の関数呼び出し（インライン化可能）。`peek_byte` による先頭バイト分岐で `or` チェーンの checkpoint/reset サイクルも排除。
+
 ### 残存するボトルネック
 
-1. **recursive() のオーバーヘッド**: 単一整数パースで ~156ns は `Rc<UnsafeCell<Box>>` の間接呼び出しコスト。非再帰パーサー（`integer()` 単体で ~3ns）に比べて 50 倍遅い。再帰が不要なケースでは `recursive()` を避けるべき。
-2. **JSON の `or` 分岐コスト**: 5分岐の試行が各要素に乗る。`dispatch!` マクロ（先頭文字で分岐）の導入で改善可能だが、現状のスコープ外。
+1. **`recursive()` は依然として重い**: 四則演算ベンチの単一整数で ~156ns（`fn_parser` なら ~3ns）。`recursive()` が必要なケース（文法構造上 `fn` で書けない場合）では vtable コストが残る。
+2. **whitespace0 の呼び出し回数**: JSON パーサーで値の前後に `whitespace0()` を複数回呼んでおり、統合の余地がある。
 
 ## 総合評価
 
-- **winnow と同等〜90% のスループット** — identifier "x" で winnow を上回る場面も
+- **winnow を上回るスループット** — 107KB JSON で winnow の 1.43 倍（`fn_parser` + `peek_byte` 分岐 + ゼロコピー文字列）
 - **nom を中〜長入力で上回る** — 11B identifier で 28% 高速、28B で 46% 高速
 - **pom の 3〜30 倍高速** — 旧 v1 相当の `Rc<dyn Fn>` 設計との差を実証
 - **chumsky の 30〜200 倍高速** — 動的ディスパッチ前提の設計との差
 - **zip ≒ flat_map（同一型）** — 具象コンビネータ型設計の妥当性を確認
-- **2回の最適化サイクルで累計 ~30% 改善** — ParseError 導入（~12%）+ #[inline]（~17%）
+- **3 回の最適化サイクルで累計 ~83% 改善** — ParseError 導入（~12%）+ #[inline]（~17%）+ ゼロコピー＋fn再帰（~77%）
 - **Applicative コンビネータでヒープアロケーションゼロ**
