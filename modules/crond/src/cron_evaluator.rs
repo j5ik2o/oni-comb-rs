@@ -33,8 +33,9 @@ fn visit(env: &CronEnvironment, expr: &CronExpr) -> bool {
         return false;
       }
       match step {
-        Some(s) if *s > 0 => (env.now - from).is_multiple_of(*s),
-        _ => true,
+        Some(0) => false,
+        Some(s) => (env.now - from).is_multiple_of(*s),
+        None => true,
       }
     }
     CronExpr::List(items) => items.iter().any(|item| visit(env, item)),
@@ -167,6 +168,24 @@ mod tests {
     assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 15)));
     assert!(CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 30)));
     assert!(!CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 7)));
+  }
+
+  #[test]
+  fn eval_range_with_step_zero() {
+    // step=0 should never match (nonsensical)
+    let expr = CronExpr::Cron {
+      mins: Box::new(CronExpr::Range {
+        from: 0,
+        to: 59,
+        step: Some(0),
+      }),
+      hours: Box::new(CronExpr::AnyValue),
+      days: Box::new(CronExpr::AnyValue),
+      months: Box::new(CronExpr::AnyValue),
+      dow: Box::new(CronExpr::AnyValue),
+    };
+    assert!(!CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 0)));
+    assert!(!CronEvaluator::eval(&expr, &utc(2024, 1, 1, 0, 30)));
   }
 
   #[test]
