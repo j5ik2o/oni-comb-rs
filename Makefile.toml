@@ -1,0 +1,130 @@
+[tasks.fmt]
+description = "Format source code"
+workspace = false
+install_script = ['''
+#!/usr/bin/env bash
+rustup which rustfmt --toolchain nightly
+if [ $? -ne 0 ]; then
+  rustup install nightly
+fi
+''']
+script = '''
+#!/usr/bin/env bash
+cargo +nightly fmt
+'''
+
+[tasks.sort-dependencies]
+workspace = false
+script_runner = "@rust"
+script = '''
+//! ```cargo
+//! [dependencies]
+//! toml_edit = "0.22.0"
+//! ```
+use std::fs;
+use std::path::Path;
+use toml_edit::{Document, Item, Table, InlineTable};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let cargo_toml_paths = [
+        "Cargo.toml",
+        "utils/Cargo.toml",
+        "message-derive/Cargo.toml",
+        "core/Cargo.toml",
+        "remote/Cargo.toml",
+        "cluster/Cargo.toml",
+    ];
+
+    for path in cargo_toml_paths.iter() {
+        let path = Path::new(path);
+        if path.exists() {
+            backup_cargo_toml(path)?;
+            sort_dependencies(path)?;
+        } else {
+            println!("Warning: {} not found", path.display());
+        }
+    }
+
+    Ok(())
+}
+
+// Create a backup of Cargo.toml -> Cargo.toml.bak
+fn backup_cargo_toml(file_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let backup_path = file_path.with_extension("toml.bak");
+    fs::copy(file_path, &backup_path)?;
+    println!("Backup created: {}", backup_path.display());
+    Ok(())
+}
+
+fn sort_table(table: &mut Table) {
+    let mut keys: Vec<_> = table.iter().map(|(k, _)| k.to_string()).collect();
+    keys.sort();
+
+    let sorted_table = keys.into_iter()
+        .filter_map(|k| table.get(&k).map(|v| (k, v.clone())))
+        .collect();
+
+    *table = sorted_table;
+}
+
+fn sort_inline_table(table: &mut InlineTable) {
+    let mut keys: Vec<_> = table.iter().map(|(k, _)| k.to_string()).collect();
+    keys.sort();
+
+    let sorted_table = keys.into_iter()
+        .filter_map(|k| table.get(&k).map(|v| (k, v.clone())))
+        .collect();
+
+    *table = sorted_table;
+}
+
+fn sort_dependencies(file_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let content = fs::read_to_string(file_path)?;
+    let mut doc = content.parse::<Document>()?;
+
+    // Sort workspace dependencies
+    if let Some(workspace) = doc.get_mut("workspace") {
+        if let Some(deps) = workspace.get_mut("dependencies") {
+            match deps {
+                Item::Table(table) => {
+                    sort_table(table);
+                    println!("Sorted workspace.dependencies in {}", file_path.display());
+                },
+                Item::Value(value) => {
+                    if let Some(inline_table) = value.as_inline_table_mut() {
+                        sort_inline_table(inline_table);
+                        println!("Sorted workspace.dependencies in {}", file_path.display());
+                    }
+                },
+                _ => {}
+            }
+        }
+    }
+
+    // Sort other dependency sections
+    let sections = ["dependencies", "dev-dependencies", "build-dependencies"];
+
+    for section in sections.iter() {
+        if let Some(deps) = doc.get_mut(section) {
+            match deps {
+                Item::Table(table) => {
+                    sort_table(table);
+                    println!("Sorted {} in {}", section, file_path.display());
+                },
+                Item::Value(value) => {
+                    if let Some(inline_table) = value.as_inline_table_mut() {
+                        sort_inline_table(inline_table);
+                        println!("Sorted {} in {}", section, file_path.display());
+                    }
+                },
+                _ => {}
+            }
+        }
+    }
+
+    fs::write(file_path, doc.to_string())?;
+    println!("Updated {} successfully", file_path.display());
+
+    Ok(())
+}
+'''
