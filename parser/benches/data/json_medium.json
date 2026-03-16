@@ -1,0 +1,478 @@
+{
+  "version": "2.0",
+  "generated": "2025-03-16T00:00:00Z",
+  "metadata": {
+    "purpose": "benchmark",
+    "encoding": "utf-8",
+    "compressed": false,
+    "checksum": null
+  },
+  "users": [
+    {
+      "id": 1000,
+      "username": "user_0000",
+      "email": "user0@example.com",
+      "active": false,
+      "score": 0.0,
+      "tags": [
+        "tag0"
+      ],
+      "profile": {
+        "firstName": "First0",
+        "lastName": "Last0",
+        "age": 20,
+        "bio": null,
+        "address": {
+          "street": "100 Main St",
+          "city": "Tokyo",
+          "postalCode": "100-2000",
+          "country": "JP"
+        }
+      },
+      "settings": {
+        "theme": "light",
+        "notifications": true,
+        "language": "ja"
+      }
+    },
+    {
+      "id": 1001,
+      "username": "user_0001",
+      "email": "user1@example.com",
+      "active": true,
+      "score": 3.14,
+      "tags": [
+        "tag0",
+        "tag1"
+      ],
+      "profile": {
+        "firstName": "First1",
+        "lastName": "Last1",
+        "age": 21,
+        "bio": "This is a bio for user 1.",
+        "address": {
+          "street": "101 Main St",
+          "city": "Osaka",
+          "postalCode": "101-2001",
+          "country": "JP"
+        }
+      },
+      "settings": {
+        "theme": "dark",
+        "notifications": false,
+        "language": "en"
+      }
+    },
+    {
+      "id": 1002,
+      "username": "user_0002",
+      "email": "user2@example.com",
+      "active": true,
+      "score": 6.28,
+      "tags": [
+        "tag0",
+        "tag1",
+        "tag2"
+      ],
+      "profile": {
+        "firstName": "First2",
+        "lastName": "Last2",
+        "age": 22,
+        "bio": "This is a bio for user 2.",
+        "address": {
+          "street": "102 Main St",
+          "city": "Nagoya",
+          "postalCode": "102-2002",
+          "country": "JP"
+        }
+      },
+      "settings": {
+        "theme": "auto",
+        "notifications": true,
+        "language": "zh"
+      }
+    },
+    {
+      "id": 1003,
+      "username": "user_0003",
+      "email": "user3@example.com",
+      "active": false,
+      "score": 9.42,
+      "tags": [
+        "tag0",
+        "tag1",
+        "tag2",
+        "tag3"
+      ],
+      "profile": {
+        "firstName": "First3",
+        "lastName": "Last3",
+        "age": 23,
+        "bio": "This is a bio for user 3.",
+        "address": {
+          "street": "103 Main St",
+          "city": "Sapporo",
+          "postalCode": "103-2003",
+          "country": "JP"
+        }
+      },
+      "settings": {
+        "theme": "light",
+        "notifications": false,
+        "language": "ko"
+      }
+    },
+    {
+      "id": 1004,
+      "username": "user_0004",
+      "email": "user4@example.com",
+      "active": true,
+      "score": 12.57,
+      "tags": [
+        "tag0",
+        "tag1",
+        "tag2",
+        "tag3",
+        "tag4"
+      ],
+      "profile": {
+        "firstName": "First4",
+        "lastName": "Last4",
+        "age": 24,
+        "bio": "This is a bio for user 4.",
+        "address": {
+          "street": "104 Main St",
+          "city": "Fukuoka",
+          "postalCode": "104-2004",
+          "country": "JP"
+        }
+      },
+      "settings": {
+        "theme": "dark",
+        "notifications": true,
+        "language": "ja"
+      }
+    },
+    {
+      "id": 1005,
+      "username": "user_0005",
+      "email": "user5@example.com",
+      "active": true,
+      "score": 15.71,
+      "tags": [
+        "tag0"
+      ],
+      "profile": {
+        "firstName": "First5",
+        "lastName": "Last5",
+        "age": 25,
+        "bio": "This is a bio for user 5.",
+        "address": {
+          "street": "105 Main St",
+          "city": "Tokyo",
+          "postalCode": "105-2005",
+          "country": "JP"
+        }
+      },
+      "settings": {
+        "theme": "auto",
+        "notifications": false,
+        "language": "en"
+      }
+    },
+    {
+      "id": 1006,
+      "username": "user_0006",
+      "email": "user6@example.com",
+      "active": false,
+      "score": 18.85,
+      "tags": [
+        "tag0",
+        "tag1"
+      ],
+      "profile": {
+        "firstName": "First6",
+        "lastName": "Last6",
+        "age": 26,
+        "bio": "This is a bio for user 6.",
+        "address": {
+          "street": "106 Main St",
+          "city": "Osaka",
+          "postalCode": "106-2006",
+          "country": "JP"
+        }
+      },
+      "settings": {
+        "theme": "light",
+        "notifications": true,
+        "language": "zh"
+      }
+    },
+    {
+      "id": 1007,
+      "username": "user_0007",
+      "email": "user7@example.com",
+      "active": true,
+      "score": 21.99,
+      "tags": [
+        "tag0",
+        "tag1",
+        "tag2"
+      ],
+      "profile": {
+        "firstName": "First7",
+        "lastName": "Last7",
+        "age": 27,
+        "bio": null,
+        "address": {
+          "street": "107 Main St",
+          "city": "Nagoya",
+          "postalCode": "107-2007",
+          "country": "JP"
+        }
+      },
+      "settings": {
+        "theme": "dark",
+        "notifications": false,
+        "language": "ko"
+      }
+    }
+  ],
+  "products": [
+    {
+      "productId": "PROD-000000",
+      "name": "Product 0",
+      "description": "High-quality product number 0 with great features.",
+      "price": 9.99,
+      "currency": "JPY",
+      "inStock": false,
+      "quantity": 0,
+      "categories": [
+        "Electronics",
+        "Gadgets"
+      ],
+      "ratings": {
+        "average": 3.0,
+        "count": 3
+      },
+      "metadata": {
+        "createdAt": "2024-01-01T10:30:00Z",
+        "version": 1
+      }
+    },
+    {
+      "productId": "PROD-000001",
+      "name": "Product 1",
+      "description": "High-quality product number 1 with great features.",
+      "price": 11.49,
+      "currency": "JPY",
+      "inStock": true,
+      "quantity": 10,
+      "categories": [
+        "Books",
+        "Fiction"
+      ],
+      "ratings": {
+        "average": 3.1,
+        "count": 10
+      },
+      "metadata": {
+        "createdAt": "2024-02-02T10:30:00Z",
+        "version": 2
+      }
+    },
+    {
+      "productId": "PROD-000002",
+      "name": "Product 2",
+      "description": "High-quality product number 2 with great features.",
+      "price": 12.99,
+      "currency": "JPY",
+      "inStock": true,
+      "quantity": 20,
+      "categories": [
+        "Home",
+        "Kitchen"
+      ],
+      "ratings": {
+        "average": 3.2,
+        "count": 17
+      },
+      "metadata": {
+        "createdAt": "2024-03-03T10:30:00Z",
+        "version": 3
+      }
+    },
+    {
+      "productId": "PROD-000003",
+      "name": "Product 3",
+      "description": "High-quality product number 3 with great features.",
+      "price": 14.49,
+      "currency": "JPY",
+      "inStock": true,
+      "quantity": 30,
+      "categories": [
+        "Sports",
+        "Outdoor"
+      ],
+      "ratings": {
+        "average": 3.3,
+        "count": 24
+      },
+      "metadata": {
+        "createdAt": "2024-04-04T10:30:00Z",
+        "version": 4
+      }
+    },
+    {
+      "productId": "PROD-000004",
+      "name": "Product 4",
+      "description": "High-quality product number 4 with great features.",
+      "price": 15.99,
+      "currency": "JPY",
+      "inStock": false,
+      "quantity": 0,
+      "categories": [
+        "Electronics",
+        "Gadgets"
+      ],
+      "ratings": {
+        "average": 3.4,
+        "count": 31
+      },
+      "metadata": {
+        "createdAt": "2024-05-05T10:30:00Z",
+        "version": 5
+      }
+    },
+    {
+      "productId": "PROD-000005",
+      "name": "Product 5",
+      "description": "High-quality product number 5 with great features.",
+      "price": 17.49,
+      "currency": "JPY",
+      "inStock": true,
+      "quantity": 50,
+      "categories": [
+        "Books",
+        "Fiction"
+      ],
+      "ratings": {
+        "average": 3.5,
+        "count": 38
+      },
+      "metadata": {
+        "createdAt": "2024-06-06T10:30:00Z",
+        "version": 1
+      }
+    }
+  ],
+  "events": [
+    {
+      "eventId": "EVT-00000000",
+      "type": "click",
+      "timestamp": "2025-03-01T00:00:00Z",
+      "payload": {
+        "source": "web",
+        "sessionId": "sess-000000000000",
+        "duration": 45,
+        "success": false
+      }
+    },
+    {
+      "eventId": "EVT-00000001",
+      "type": "view",
+      "timestamp": "2025-03-02T01:01:00Z",
+      "payload": {
+        "source": "mobile",
+        "sessionId": "sess-000000007a69",
+        "duration": 168,
+        "success": true
+      }
+    },
+    {
+      "eventId": "EVT-00000002",
+      "type": "purchase",
+      "timestamp": "2025-03-03T02:02:00Z",
+      "payload": {
+        "source": "api",
+        "sessionId": "sess-00000000f4d2",
+        "duration": 291,
+        "success": true
+      }
+    },
+    {
+      "eventId": "EVT-00000003",
+      "type": "signup",
+      "timestamp": "2025-03-04T03:03:00Z",
+      "payload": {
+        "source": "web",
+        "sessionId": "sess-000000016f3b",
+        "duration": 414,
+        "success": true
+      }
+    },
+    {
+      "eventId": "EVT-00000004",
+      "type": "logout",
+      "timestamp": "2025-03-05T04:04:00Z",
+      "payload": {
+        "source": "mobile",
+        "sessionId": "sess-00000001e9a4",
+        "duration": null,
+        "success": true
+      }
+    },
+    {
+      "eventId": "EVT-00000005",
+      "type": "click",
+      "timestamp": "2025-03-06T05:05:00Z",
+      "payload": {
+        "source": "api",
+        "sessionId": "sess-00000002640d",
+        "duration": 660,
+        "success": true
+      }
+    },
+    {
+      "eventId": "EVT-00000006",
+      "type": "view",
+      "timestamp": "2025-03-07T06:06:00Z",
+      "payload": {
+        "source": "web",
+        "sessionId": "sess-00000002de76",
+        "duration": 783,
+        "success": false
+      }
+    },
+    {
+      "eventId": "EVT-00000007",
+      "type": "purchase",
+      "timestamp": "2025-03-08T07:07:00Z",
+      "payload": {
+        "source": "mobile",
+        "sessionId": "sess-0000000358df",
+        "duration": 906,
+        "success": true
+      }
+    }
+  ],
+  "summary": {
+    "totalUsers": 8,
+    "totalProducts": 6,
+    "totalEvents": 8,
+    "averageScore": 23.56,
+    "topCategories": [
+      "Electronics",
+      "Books",
+      "Home"
+    ],
+    "flags": [
+      true,
+      false,
+      true,
+      true,
+      false,
+      null
+    ]
+  }
+}

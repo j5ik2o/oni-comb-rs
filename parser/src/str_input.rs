@@ -13,6 +13,10 @@ impl<'a> StrInput<'a> {
     pub(crate) fn advance(&mut self, n: usize) {
         self.offset += n;
     }
+
+    pub(crate) fn as_str(&self) -> &'a str {
+        &self.src[self.offset..]
+    }
 }
 
 impl<'a> Input for StrInput<'a> {
