@@ -16,7 +16,7 @@ regex-automata = { version = "0.4", default-features = false, features = ["alloc
 criterion = { version = "0.8", features = ["html_reports"] }
 dhat = "0.3"
 nom = "8"
-winnow = "0.6"
+winnow = "0.7"
 chumsky = "0.9"
 pom = "3"
 
