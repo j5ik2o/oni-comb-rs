@@ -2,7 +2,7 @@
 
 ## プロジェクト概要
 
-oni-comb-rs は Rust 製パーサーコンビネータライブラリの v2 リブート版。旧 v1 の `Rc<dyn Fn>` ベース設計を捨て、trait + concrete combinator 型（`Map`, `Then`, `Or` 等）で構成する。動的ディスパッチ・ヒープ確保を排し、Applicative/Alternative 主体で最適化しやすい設計を目指している。
+oni-comb-rs は Rust 製パーサーコンビネータライブラリの v2 リブート版。旧 v1 の `Rc<dyn Fn>` ベース設計を捨て、trait + 具象コンビネータ型（`Map`, `Zip`, `Or` 等）で構成する。動的ディスパッチ・ヒープ確保を排し、Applicative/Alternative 主体で最適化しやすい設計を目指している。
 
 ## ビルド・テスト
 
@@ -49,14 +49,14 @@ PResult<T, E>          -- Result<T, Fail<E>>
 | `parser.rs` | `Parser<I>` トレイト（`Output`, `Error`, `parse_next`） |
 | `parser_ext.rs` | `ParserExt<I>` — 全 `Parser` に自動実装されるコンビネータメソッド |
 | `fail.rs` | `Fail<E>` enum と `PResult` 型エイリアス |
-| `combinator/` | 各コンビネータの concrete 型（`Map`, `Zip`, `Or`, `Attempt`, `Cut`, `Optional`, `Many`, `FlatMap`） |
+| `combinator/` | 各コンビネータの具象型（`Map`, `Zip`, `Or`, `Attempt`, `Cut`, `Optional`, `Many`, `FlatMap`） |
 | `text/` | テキスト専用パーサー（`Char`, `Tag`, `Eof`） |
 
 ### 設計上の重要な判断
 
 - **Fail::Backtrack vs Fail::Cut**: `or` は Backtrack のみリカバリし、Cut はそのまま伝播。`attempt` は Cut を Backtrack に降格、`cut` は Backtrack を Cut に昇格
 - **flat_map は実装済みだが Applicative 優先を推奨**: ベンチマークで zip ≒ flat_map（同一型）を確認済み。ただし異種型分岐では `Box<dyn Parser>` が必要で ~15ns のオーバーヘッドが発生するため、Applicative (`zip`, `or`) を優先し flat_map は文脈依存の分岐に限定する方針
-- **再帰は boxed recursion**: 再帰の結び目だけ `Box<dyn Parser>` に落とし、非再帰部分は concrete 型を維持
+- **再帰は boxed recursion**: 再帰の結び目だけ `Box<dyn Parser>` に落とし、非再帰部分は具象型を維持
 - **入力型は当面 `&str` 限定**: `no_std`/streaming/bytes は後回し
 - **`many`/`sep_by`/`chainl1` は専用ループコンビネータ**: flat_map 再帰ではなくループで実装
 

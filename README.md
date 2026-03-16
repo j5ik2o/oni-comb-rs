@@ -2,7 +2,7 @@
 
 Rust 製パーサーモナドライブラリ（v2 リブート版）。
 
-旧 v1 の `Rc<dyn Fn>` ベース設計を捨て、**trait + concrete combinator 型**（`Map`, `Then`, `Or`, `FlatMap` 等）で構成。Functor / Applicative / Alternative / Monad の全階層を提供しつつ、動的ディスパッチ・ヒープ確保を最小化する設計です。
+旧 v1 の `Rc<dyn Fn>` ベース設計を捨て、**trait + 具象コンビネータ型**（`Map`, `Zip`, `Or`, `FlatMap` 等）で構成。Functor / Applicative / Alternative / Monad の全階層を提供しつつ、動的ディスパッチ・ヒープ確保を最小化する設計です。
 
 ## Quickstart
 
@@ -31,10 +31,11 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 
 ## 設計の特徴
 
+- **Parsec スタイルの再帰下降パーサー** — デフォルト LL(1) で `attempt` により LL(\*) に拡張可能。`cut` でコミットしエラー報告を改善。`flat_map` で文脈依存の分岐にも対応
 - **パーサーモナド** — Functor (`map`) / Applicative (`zip`) / Alternative (`or`) / Monad (`flat_map`) の全階層を提供
-- **Zero-cost combinator composition** — Applicative コンビネータは concrete 型でスタック上に構築され、ヒープアロケーションはゼロ。`flat_map` も同一型分岐ならゼロコスト
+- **ゼロコストなコンビネータ合成** — Applicative コンビネータは具象型でスタック上に構築され、ヒープアロケーションはゼロ。`flat_map` も同一型分岐ならゼロコスト
 - **Backtrack / Cut によるエラー制御** — `or` は `Backtrack` のみリカバリし、`Cut` はそのまま伝播。`attempt` で Cut→Backtrack 降格、`cut` で Backtrack→Cut 昇格
-- **再帰は boxed recursion** — 再帰の結び目だけ `Box<dyn Parser>` に落とし、非再帰部分は concrete 型を維持
+- **再帰は boxed recursion** — 再帰の結び目だけ `Box<dyn Parser>` に落とし、非再帰部分は具象型を維持
 
 ### 型クラス階層とコスト
 
@@ -52,11 +53,11 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 
 Rust では `flat_map` のクロージャが異なる型のパーサーを返す場合、`Box<dyn Parser>` による型消去が必要になり、ヒープアロケーション＋動的ディスパッチが発生します。旧 v1 や pom は全コンビネータを `Rc<dyn Fn>` で構成しており、ベンチマークでは v2 の 3〜30 倍遅い結果になっています。
 
-一方、`zip`（Applicative）は `Zip<Char, Tag>` のような concrete 型としてスタック上に構築されるため、コンパイラがモノモーフィゼーション → インライン化 → LLVM 最適化まで一気通貫で行え、手書きの再帰下降パーサーに近い性能が出ます。
+一方、`zip`（Applicative）は `Zip<Char, Tag>` のような具象型としてスタック上に構築されるため、コンパイラがモノモーフィゼーション → インライン化 → LLVM 最適化まで一気通貫で行え、手書きの再帰下降パーサーに近い性能が出ます。
 
 ```rust
 // Applicative: 構造がコンパイル時に確定 → インライン化可能
-char('a').zip(char('b'))   // Then<Char, Char> — concrete 型
+char('a').zip(char('b'))   // Zip<Char, Char> — 具象型
 
 // Monad (同一型): Box 不要、ゼロコスト
 satisfy(|c: char| c.is_ascii_digit()).flat_map(|n| match n {
@@ -157,15 +158,15 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 | `"foo_bar_123"` | 17.5 ns | 17.3 ns | -1% (誤差) |
 | `"longIdentifier..."` | 30.7 ns | 31.0 ns | +1% (誤差) |
 
-**zip と flat_map のオーバーヘッド差はほぼゼロ。** 同一型を返す限り、concrete combinator 型の恩恵で LLVM が同等に最適化する。
+**zip と flat_map のオーバーヘッド差はほぼゼロ。** 同一型を返す限り、具象コンビネータ型の恩恵で LLVM が同等に最適化する。
 
 ### 特性まとめ
 
-- **winnow の 70-90% のスループット** — concrete type 化の恩恵で改善余地あり
+- **winnow の 70-90% のスループット** — 具象型化の恩恵で改善余地あり
 - **nom を中〜長入力で上回る** — 11B で 37% 高速、28B で 90% 高速（identifier）
 - **pom の 3〜30 倍高速** — 旧 v1 相当の `Rc<dyn Fn>` 設計との差を実証
 - **chumsky の 30〜230 倍高速**
-- **zip ≒ flat_map（同一型）** — concrete combinator 型設計によりモナディック合成でもゼロコスト
+- **zip ≒ flat_map（同一型）** — 具象コンビネータ型設計によりモナディック合成でもゼロコスト
 - **Box\<dyn Parser\> のオーバーヘッドは ~15ns** — 再帰パーサー設計時の見積もり基準値
 - **Applicative / flat_map 同一型でヒープアロケーションゼロ** — dhat による計測で 0 bytes / 0 blocks を確認
 - 詳細な考察は [`parser/benches/README.md`](parser/benches/README.md) を参照

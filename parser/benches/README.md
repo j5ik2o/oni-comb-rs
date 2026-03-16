@@ -87,8 +87,8 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 **所見:**
 
-- **zip と flat_map のオーバーヘッド差はほぼゼロ**（統計的有意差なし）。同一型の場合、`FlatMap<Satisfy<F>, G>` が concrete 型であるため LLVM が zip と同等にインライン化・最適化する。
-- **これは concrete combinator 型設計の成果。** 旧 v1 の `Rc<dyn Fn>` ベースではこの結果は得られない。
+- **zip と flat_map のオーバーヘッド差はほぼゼロ**（統計的有意差なし）。同一型の場合、`FlatMap<Satisfy<F>, G>` が具象型であるため LLVM が zip と同等にインライン化・最適化する。
+- **これは具象コンビネータ型設計の成果。** 旧 v1 の `Rc<dyn Fn>` ベースではこの結果は得られない。
 - **flat_map を「コストの高い escape hatch」として制限する必要は薄い。** 同一型を返す限り zip と同等性能。
 
 ### ヒープアロケーション計測
