@@ -7,28 +7,26 @@ use crate::str_input::StrInput;
 pub struct Satisfy<F>(F);
 
 pub fn satisfy<F: FnMut(char) -> bool>(f: F) -> Satisfy<F> {
-    Satisfy(f)
+  Satisfy(f)
 }
 
 impl<'a, F> Parser<StrInput<'a>> for Satisfy<F>
 where
-    F: FnMut(char) -> bool,
+  F: FnMut(char) -> bool,
 {
-    type Output = char;
-    type Error = ParseError;
+  type Error = ParseError;
+  type Output = char;
 
-    #[inline]
-    fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<char, ParseError> {
-        let pos = input.offset();
-        let remaining = input.as_str();
-        match remaining.chars().next() {
-            Some(c) if (self.0)(c) => {
-                input.advance(c.len_utf8());
-                Ok(c)
-            }
-            _ => Err(Fail::Backtrack(ParseError::expected_description(
-                pos, "satisfy",
-            ))),
-        }
+  #[inline]
+  fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<char, ParseError> {
+    let pos = input.offset();
+    let remaining = input.as_str();
+    match remaining.chars().next() {
+      Some(c) if (self.0)(c) => {
+        input.advance(c.len_utf8());
+        Ok(c)
+      }
+      _ => Err(Fail::Backtrack(ParseError::expected_description(pos, "satisfy"))),
     }
+  }
 }

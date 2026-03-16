@@ -7,19 +7,19 @@ use crate::str_input::StrInput;
 pub struct Eof;
 
 pub fn eof() -> Eof {
-    Eof
+  Eof
 }
 
 impl Parser<StrInput<'_>> for Eof {
-    type Output = ();
-    type Error = ParseError;
+  type Error = ParseError;
+  type Output = ();
 
-    #[inline]
-    fn parse_next(&mut self, input: &mut StrInput<'_>) -> PResult<(), ParseError> {
-        if input.is_eof() {
-            Ok(())
-        } else {
-            Err(Fail::Backtrack(ParseError::expected_eof(input.offset())))
-        }
+  #[inline]
+  fn parse_next(&mut self, input: &mut StrInput<'_>) -> PResult<(), ParseError> {
+    if input.is_eof() {
+      Ok(())
+    } else {
+      Err(Fail::Backtrack(ParseError::expected_eof(input.offset())))
     }
+  }
 }

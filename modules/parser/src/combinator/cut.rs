@@ -3,23 +3,23 @@ use crate::input::Input;
 use crate::parser::Parser;
 
 pub struct Cut<P> {
-    pub(crate) parser: P,
+  pub(crate) parser: P,
 }
 
 impl<I, P> Parser<I> for Cut<P>
 where
-    I: Input,
-    P: Parser<I>,
+  I: Input,
+  P: Parser<I>,
 {
-    type Output = P::Output;
-    type Error = P::Error;
+  type Error = P::Error;
+  type Output = P::Output;
 
-    #[inline]
-    fn parse_next(&mut self, input: &mut I) -> PResult<Self::Output, Self::Error> {
-        match self.parser.parse_next(input) {
-            Ok(v) => Ok(v),
-            Err(Fail::Backtrack(e)) => Err(Fail::Cut(e)),
-            Err(other) => Err(other),
-        }
+  #[inline]
+  fn parse_next(&mut self, input: &mut I) -> PResult<Self::Output, Self::Error> {
+    match self.parser.parse_next(input) {
+      Ok(v) => Ok(v),
+      Err(Fail::Backtrack(e)) => Err(Fail::Cut(e)),
+      Err(other) => Err(other),
     }
+  }
 }

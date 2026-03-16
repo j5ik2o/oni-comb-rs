@@ -15,27 +15,26 @@ use crate::parser::Parser;
 /// let parser = fn_parser(my_value);
 /// ```
 pub struct FnParser<F> {
-    f: F,
+  f: F,
 }
 
 pub fn fn_parser<I, O, E, F>(f: F) -> FnParser<F>
 where
-    I: Input,
-    F: FnMut(&mut I) -> PResult<O, E>,
-{
-    FnParser { f }
+  I: Input,
+  F: FnMut(&mut I) -> PResult<O, E>, {
+  FnParser { f }
 }
 
 impl<I, O, E, F> Parser<I> for FnParser<F>
 where
-    I: Input,
-    F: FnMut(&mut I) -> PResult<O, E>,
+  I: Input,
+  F: FnMut(&mut I) -> PResult<O, E>,
 {
-    type Output = O;
-    type Error = E;
+  type Error = E;
+  type Output = O;
 
-    #[inline]
-    fn parse_next(&mut self, input: &mut I) -> PResult<O, E> {
-        (self.f)(input)
-    }
+  #[inline]
+  fn parse_next(&mut self, input: &mut I) -> PResult<O, E> {
+    (self.f)(input)
+  }
 }

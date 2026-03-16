@@ -20,15 +20,14 @@ pub use crate::combinator::recursive::recursive;
 
 /// left, parser, right を順に実行し、parser の値だけを返す。
 pub fn between<I, L, P, R>(
-    left: L,
-    parser: P,
-    right: R,
+  left: L,
+  parser: P,
+  right: R,
 ) -> crate::combinator::zip_right::ZipRight<L, crate::combinator::zip_left::ZipLeft<P, R>>
 where
-    I: crate::input::Input,
-    L: crate::parser::Parser<I>,
-    P: crate::parser::Parser<I, Error = L::Error>,
-    R: crate::parser::Parser<I, Error = L::Error>,
-{
-    left.zip_right(parser.zip_left(right))
+  I: crate::input::Input,
+  L: crate::parser::Parser<I>,
+  P: crate::parser::Parser<I, Error = L::Error>,
+  R: crate::parser::Parser<I, Error = L::Error>, {
+  left.zip_right(parser.zip_left(right))
 }
