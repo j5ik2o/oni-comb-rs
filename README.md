@@ -227,7 +227,7 @@ cargo test -p oni-comb-parser -- test_name
 | 3 | Combinators | **完了** | map, zip, zip_left, zip_right, between, or, attempt, cut, optional, many0/1, sep_by0/1, chainl1/r1, flat_map/and_then |
 | 4 | Text module | **完了** | whitespace0/1, identifier, integer, quoted_string, escaped, lexeme。JSON subset・URI tokenizer テストで実証済み |
 | 5 | Recursive | **完了** | `recursive()` ヘルパー（`Rc<UnsafeCell<Box<dyn Parser>>>`）。四則演算+括弧テストで実証済み |
-| 6 | Error reporting | 未着手 | span, expected-set, context stack |
+| 6 | Error reporting | **完了** | `ParseError`（位置・期待トークン・コンテキスト）、`or` のマージ、`.context()` コンビネータ |
 | 7 | Benchmark | **進行中** | identifier/integer/flat_map の 5 ライブラリ比較、zip vs flat_map 内部比較、dhat アロケーション計測 |
 
 ## License
