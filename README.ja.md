@@ -258,6 +258,14 @@ cargo bench -p oni-comb-parser --bench comparison -- arithmetic
 cargo bench -p oni-comb-parser --bench alloc_count
 ```
 
+## クレート一覧
+
+| クレート | 説明 |
+|---------|------|
+| [oni-comb-parser](modules/parser/) | コアパーサーコンビネータライブラリ |
+| [oni-comb-crond](modules/crond/) | cron 式パーサー＆スケジューラー |
+| [oni-comb-uri](modules/uri/) | RFC 3986 URI パーサー（ゼロコピー、URN サポート） |
+
 ## ビルド・テスト
 
 ```bash

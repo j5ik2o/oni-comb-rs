@@ -260,6 +260,14 @@ cargo bench -p oni-comb-parser --bench comparison -- arithmetic
 cargo bench -p oni-comb-parser --bench alloc_count
 ```
 
+## Crates
+
+| Crate | Description |
+|-------|-------------|
+| [oni-comb-parser](modules/parser/) | Core parser combinator library |
+| [oni-comb-crond](modules/crond/) | Cron expression parser & scheduler |
+| [oni-comb-uri](modules/uri/) | RFC 3986 URI parser (zero-copy, URN support) |
+
 ## Build & Test
 
 ```bash
