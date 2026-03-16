@@ -1,3 +1,5 @@
+use alloc::vec::Vec;
+
 use crate::fail::{Fail, PResult};
 use crate::input::Input;
 use crate::parser::Parser;

@@ -1,4 +1,6 @@
-use std::fmt;
+use alloc::vec;
+use alloc::vec::Vec;
+use core::fmt;
 
 /// `or` で左右の Backtrack エラーを合成するトレイト。
 pub trait MergeError: Sized {
@@ -66,7 +68,7 @@ impl ParseError {
 
 impl MergeError for ParseError {
     fn merge(mut self, other: Self) -> Self {
-        use std::cmp::Ordering;
+        use core::cmp::Ordering;
         match self.position.cmp(&other.position) {
             Ordering::Greater => self,
             Ordering::Less => other,

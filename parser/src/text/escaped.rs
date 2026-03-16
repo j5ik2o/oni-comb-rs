@@ -1,3 +1,5 @@
+use alloc::string::String;
+
 use crate::error::ParseError;
 use crate::fail::{Fail, PResult};
 use crate::input::Input;

@@ -1,3 +1,6 @@
+#![no_std]
+extern crate alloc;
+
 pub mod combinator;
 pub mod error;
 pub mod fail;

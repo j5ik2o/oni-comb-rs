@@ -132,6 +132,26 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 | **chumsky** | エラーリカバリ特化。trait ベースのコンビネータ |
 | **pom** | 演算子オーバーロード中心。旧 v1 に近い設計 |
 
+### 機能比較
+
+| 評価項目 | oni-comb | winnow | nom | chumsky | pom |
+|---------|:--------:|:------:|:---:|:-------:|:---:|
+| **メソッドチェーン API** (`p1.zip(p2)`) | o | o | x | o | x |
+| **パーサーモナド** (Functor/Applicative/Monad 全階層) | o | x | x | x | o |
+| **Applicative 合成でヒープ確保ゼロ** | o | o | o | x | x |
+| **flat_map 同一型がゼロコスト** | o | o | o | x | x |
+| **構造化エラー** (位置・期待トークン) | o | o | △ | o | x |
+| **Backtrack / Cut の明示的制御** | o | o | o | x | x |
+| **`.context()` ラベル付け** | o | o | △ | o | x |
+| **`recursive()` ヘルパー** | o | x | x | o | x |
+| **`chainl1` / `chainr1`** (演算子結合) | o | x | x | x | x |
+| **`sep_by` / `between`** | o | o | o | o | o |
+| **`no_std` 対応** (`alloc` 使用) | o | o | o | x | x |
+
+- o = サポート、△ = 部分的（VerboseError 等で追加対応が必要）、x = 未サポートまたは設計上不可
+
+**oni-comb-rs の立ち位置**: winnow/nom 並みのゼロコスト性能と、chumsky 並みのメソッドチェーン体験を両立。さらに Monad 階層（`flat_map`）と `chainl1`/`recursive()` を提供する唯一のライブラリ。
+
 ### Token ワークロード結果（Identifier）
 
 入力が長くなるほど oni-comb-rs の `TakeWhile` のバイトスキャンが効き、nom を大きく引き離します。

@@ -1,5 +1,6 @@
-use std::cell::UnsafeCell;
-use std::rc::Rc;
+use alloc::boxed::Box;
+use alloc::rc::Rc;
+use core::cell::UnsafeCell;
 
 use crate::fail::PResult;
 use crate::parser::Parser;
