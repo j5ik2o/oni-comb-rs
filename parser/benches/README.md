@@ -149,19 +149,19 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 **参考: chumsky README のランキング（AMD Ryzen 7 3700x）との対照**
 
-| # | ライブラリ | スループット | oni-comb の位置 |
-|---|-----------|-------------|---------------|
-| 1 | chumsky (check-only) | 797 MB/s | |
-| → | **oni-comb** | **~937 MB/s** | **chumsky (check-only) を上回る** |
-| 2 | winnow | 627 MB/s | |
-| 3 | chumsky | 533 MB/s | |
-| 4 | sn (hand-written) | 472 MB/s | |
-| 5 | serde_json | 235 MB/s | |
-| 6 | nom | 213 MB/s | |
-| 7 | pest | 57 MB/s | |
-| 8 | pom | 8 MB/s | |
+| # | ライブラリ | スループット |
+|---|-----------|-------------|
+| 1 | **oni-comb** | **~977 MB/s** |
+| 2 | chumsky (check-only) | 797 MB/s |
+| 3 | winnow | 627 MB/s |
+| 4 | chumsky | 533 MB/s |
+| 5 | sn (hand-written) | 472 MB/s |
+| 6 | serde_json | 235 MB/s |
+| 7 | nom | 213 MB/s |
+| 8 | pest | 57 MB/s |
+| 9 | pom | 8 MB/s |
 
-※ ハードウェアが異なるため直接比較は参考値。同一マシンでの winnow/nom 比率から推定。
+※ chumsky ランキングは AMD Ryzen 7 3700x での計測。oni-comb は同一マシンでの winnow/nom 比率から推定したため参考値。
 
 ### ヒープアロケーション計測
 
