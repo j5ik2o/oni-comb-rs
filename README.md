@@ -240,7 +240,7 @@ ParseError 導入 + `#[inline]` で旧 8.3ns → 6.1ns（累計 ~26% 改善）�
 - **zip ≒ flat_map（同一型）** — 具象コンビネータ型設計によりモナディック合成でもゼロコスト
 - **3 回の最適化で累計 ~83% 改善** — ParseError 導入（~12%）+ `#[inline]`（~17%）+ ゼロコピー＋fn再帰（~77%）
 - **Applicative / flat_map 同一型でヒープアロケーションゼロ** — dhat で 0 bytes / 0 blocks 確認
-- 詳細な考察は [`parser/benches/README.md`](parser/benches/README.md) を参照
+- 詳細な考察は [`modules/parser/benches/README.md`](modules/parser/benches/README.md) を参照
 
 ### ベンチマーク実行
 

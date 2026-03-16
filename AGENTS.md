@@ -40,7 +40,7 @@ Fail (enum)            -- Backtrack(E) | Cut(E) | Incomplete | ZeroProgress
 PResult<T, E>          -- Result<T, Fail<E>>
 ```
 
-### モジュール構成 (`parser/src/`)
+### モジュール構成 (`modules/parser/src/`)
 
 | モジュール | 役割 |
 |-----------|------|
@@ -116,7 +116,7 @@ flat_map 再帰ではなく専用ループで実装する。
 | winnow | 159.3 µs | 159.8 µs | 161.8 µs | 162.3 µs | 2.46 µs | 672 MB/s |
 | nom | 283.2 µs | 282.7 µs | 286.6 µs | 287.9 µs | 2.26 µs | 378 MB/s |
 
-- **知見**: winnow の 1.45 倍のスループット（mean 基準）。token レベルでは winnow と同等〜90%。nom を中〜長入力で上回る。flat_map 同一型は zip とゼロコスト同等。詳細は `parser/benches/README.md` を参照
+- **知見**: winnow の 1.45 倍のスループット（mean 基準）。token レベルでは winnow と同等〜90%。nom を中〜長入力で上回る。flat_map 同一型は zip とゼロコスト同等。詳細は `modules/parser/benches/README.md` を参照
 
 # Rules
 
