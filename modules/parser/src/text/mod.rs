@@ -8,6 +8,7 @@ pub mod quoted_string;
 pub mod quoted_string_cow;
 pub mod satisfy;
 pub mod tag;
+mod take;
 pub mod take_while;
 mod take_while0;
 mod take_while1;

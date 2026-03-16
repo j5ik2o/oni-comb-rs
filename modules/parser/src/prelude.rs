@@ -12,7 +12,7 @@ pub use crate::text::quoted_string::quoted_string;
 pub use crate::text::quoted_string_cow::quoted_string_cow;
 pub use crate::text::satisfy::satisfy;
 pub use crate::text::tag::tag;
-pub use crate::text::take_while::{take_while0, take_while1, take_while_n_m};
+pub use crate::text::take_while::{take, take_while0, take_while1, take_while_n_m};
 pub use crate::text::whitespace::{whitespace0, whitespace1};
 
 pub use crate::combinator::fn_parser::fn_parser;
