@@ -10,6 +10,7 @@ on:
         options:
           - oni-comb-parser
           - oni-comb-crond
+          - oni-comb-uri
       dry_run:
         description: 'Set true to preview the next version without creating commits, tags, or releases'
         required: false
@@ -52,6 +53,10 @@ jobs:
             oni-comb-crond)
               echo "tag_prefix=oni-comb-crond-v" >> "$GITHUB_OUTPUT"
               echo "version_file=modules/crond/Cargo.toml" >> "$GITHUB_OUTPUT"
+              ;;
+            oni-comb-uri)
+              echo "tag_prefix=oni-comb-uri-v" >> "$GITHUB_OUTPUT"
+              echo "version_file=modules/uri/Cargo.toml" >> "$GITHUB_OUTPUT"
               ;;
           esac
       - name: Generate Changelog and Bump Version

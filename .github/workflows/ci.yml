@@ -24,6 +24,7 @@ jobs:
       - run: cargo fmt -- --check
       - run: cargo clippy -p oni-comb-parser -- -D warnings
       - run: cargo clippy -p oni-comb-crond -- -D warnings
+      - run: cargo clippy -p oni-comb-uri -- -D warnings
 
   test:
     runs-on: ubuntu-latest
@@ -36,3 +37,4 @@ jobs:
           shared-key: test
       - run: cargo test --verbose -p oni-comb-parser
       - run: cargo test --verbose -p oni-comb-crond
+      - run: cargo test --verbose -p oni-comb-uri
