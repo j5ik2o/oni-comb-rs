@@ -14,6 +14,14 @@ pub fn satisfy<'a, F: FnMut(char) -> bool>(f: F) -> crate::primitive::satisfy::S
   crate::primitive::satisfy::satisfy(f)
 }
 
+pub fn one_of<'a, 's>(set: &'s [char]) -> crate::primitive::one_of::OneOf<'s, StrInput<'a>> {
+  crate::primitive::one_of::one_of(set)
+}
+
+pub fn none_of<'a, 's>(set: &'s [char]) -> crate::primitive::none_of::NoneOf<'s, StrInput<'a>> {
+  crate::primitive::none_of::none_of(set)
+}
+
 pub fn take<'a>(n: usize) -> crate::primitive::take::Take<StrInput<'a>> {
   crate::primitive::take::take(n)
 }

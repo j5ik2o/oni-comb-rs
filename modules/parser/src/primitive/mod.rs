@@ -1,4 +1,6 @@
 pub mod eof;
+pub mod none_of;
+pub mod one_of;
 pub mod satisfy;
 pub mod take;
 pub mod take_till0;
