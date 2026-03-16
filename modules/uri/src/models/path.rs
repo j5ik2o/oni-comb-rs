@@ -29,9 +29,19 @@ impl<'a> Path<'a> {
 impl fmt::Display for Path<'_> {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     match self {
-      Path::Abempty(segs) | Path::Absolute(segs) => {
+      Path::Abempty(segs) => {
         for seg in segs {
           write!(f, "/{}", seg)?;
+        }
+        Ok(())
+      }
+      Path::Absolute(segs) => {
+        write!(f, "/")?;
+        for (i, seg) in segs.iter().enumerate() {
+          if i > 0 {
+            write!(f, "/")?;
+          }
+          write!(f, "{}", seg)?;
         }
         Ok(())
       }

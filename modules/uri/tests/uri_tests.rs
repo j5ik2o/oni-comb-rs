@@ -116,6 +116,27 @@ fn display_round_trip() {
 }
 
 #[test]
+fn parse_bare_slash_path() {
+  let uri = Uri::parse("http://host/").unwrap();
+  assert_eq!(uri.to_string(), "http://host/");
+  assert_eq!(uri.path().to_string(), "/");
+}
+
+#[test]
+fn parse_absolute_path_only() {
+  let uri = Uri::parse("scheme:/").unwrap();
+  assert_eq!(uri.to_string(), "scheme:/");
+}
+
+#[test]
+fn urn_nss_with_slashes() {
+  let uri = Uri::parse("urn:example:a/b/c").unwrap();
+  assert!(uri.is_urn());
+  assert_eq!(uri.urn_nid(), Some("example"));
+  assert_eq!(uri.urn_nss(), Some("a/b/c"));
+}
+
+#[test]
 fn reject_invalid() {
   assert!(Uri::parse("://missing-scheme").is_err());
 }
