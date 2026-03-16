@@ -21,7 +21,7 @@ MS7 (Benchmark) の完了条件は「v1 比較でボトルネック定量化、1
 
 ## Impact
 
-- `parser/benches/workloads/json.rs`: スタブ → 実装
-- `parser/benches/workloads/arithmetic.rs`: スタブ → 実装
-- `parser/benches/README.md`: 再計測結果で更新
+- `modules/parser/benches/workloads/json.rs`: スタブ → 実装
+- `modules/parser/benches/workloads/arithmetic.rs`: スタブ → 実装
+- `modules/parser/benches/README.md`: 再計測結果で更新
 - COMMON.md, README.md: MS7 完了に更新

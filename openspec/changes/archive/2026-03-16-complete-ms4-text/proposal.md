@@ -27,8 +27,8 @@ text モジュールに 5 つの便利関数を追加する:
 
 ## Impact
 
-- `parser/src/text/`: 4 ファイル追加（whitespace.rs, identifier.rs, integer.rs, quoted_string.rs）
-- `parser/src/text/mod.rs`: モジュール登録
-- `parser/src/prelude.rs`: 新関数をエクスポート
-- `parser/tests/`: 各パーサーのテスト + JSON subset 統合テスト
+- `modules/parser/src/text/`: 4 ファイル追加（whitespace.rs, identifier.rs, integer.rs, quoted_string.rs）
+- `modules/parser/src/text/mod.rs`: モジュール登録
+- `modules/parser/src/prelude.rs`: 新関数をエクスポート
+- `modules/parser/tests/`: 各パーサーのテスト + JSON subset 統合テスト
 - 既存コードへの影響なし

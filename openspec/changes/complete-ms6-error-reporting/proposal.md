@@ -30,10 +30,10 @@
 
 ## Impact
 
-- `parser/src/error.rs`: `ParseError`, `Expected`, `MergeError`, `ContextError` (新規)
-- `parser/src/text/*.rs`: 全パーサーのエラー生成を `ParseError` に変更 (10 ファイル)
-- `parser/src/combinator/or.rs`: マージロジック追加
-- `parser/src/parser_ext.rs`: `.context()` メソッド追加
-- `parser/src/combinator/context.rs`: `Context` 具象型 (新規)
-- `parser/tests/`: テスト更新 + エラーテスト追加
+- `modules/parser/src/error.rs`: `ParseError`, `Expected`, `MergeError`, `ContextError` (新規)
+- `modules/parser/src/text/*.rs`: 全パーサーのエラー生成を `ParseError` に変更 (10 ファイル)
+- `modules/parser/src/combinator/or.rs`: マージロジック追加
+- `modules/parser/src/parser_ext.rs`: `.context()` メソッド追加
+- `modules/parser/src/combinator/context.rs`: `Context` 具象型 (新規)
+- `modules/parser/tests/`: テスト更新 + エラーテスト追加
 - 既存テストの一部で `Err(Fail::Backtrack(String))` → `Err(Fail::Backtrack(ParseError))` への対応が必要

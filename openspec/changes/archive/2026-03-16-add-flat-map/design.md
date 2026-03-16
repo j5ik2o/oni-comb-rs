@@ -2,7 +2,7 @@
 
 oni-comb-rs v2 は trait + concrete combinator 型による Applicative/Alternative 主体の設計を採用しており、`then`, `or`, `map` 等のコンビネータ合成でヒープアロケーションがゼロであることをベンチマークで実証済み。しかし、1つ目のパーサーの結果に基づいて次のパーサーを動的に選択するモナディック合成（`flat_map`）が未提供であり、文脈依存文法や動的分岐を表現できない。
 
-既存のコンビネータ型（`Map`, `Then`, `Or`, `Attempt`, `Cut`, `Optional`, `Many`）は `parser/src/combinator/` に格納され、それぞれ `Parser` トレイトを実装する concrete 型として定義されている。`ParserExt` トレイト（`parser/src/parser_ext.rs`）がメソッドチェーン API を提供する。
+既存のコンビネータ型（`Map`, `Then`, `Or`, `Attempt`, `Cut`, `Optional`, `Many`）は `modules/parser/src/combinator/` に格納され、それぞれ `Parser` トレイトを実装する concrete 型として定義されている。`ParserExt` トレイト（`modules/parser/src/parser_ext.rs`）がメソッドチェーン API を提供する。
 
 ## Goals / Non-Goals
 

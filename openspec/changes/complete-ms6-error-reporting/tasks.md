@@ -2,9 +2,9 @@
 
 ## Phase 1: エラー型基盤
 
-- [ ] `parser/src/error.rs`: `ParseError`, `Expected`, `MergeError`, `ContextError`
-- [ ] `parser/src/lib.rs`: `error` モジュール登録
-- [ ] `parser/src/fail.rs`: 変更なし（E はジェネリックのまま）
+- [ ] `modules/parser/src/error.rs`: `ParseError`, `Expected`, `MergeError`, `ContextError`
+- [ ] `modules/parser/src/lib.rs`: `error` モジュール登録
+- [ ] `modules/parser/src/fail.rs`: 変更なし（E はジェネリックのまま）
 
 ## Phase 2: text パーサーの移行
 

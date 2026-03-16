@@ -58,7 +58,7 @@ pest は PEG コード生成型で比較軸が異なるため除外。combine �
 ### Criterion.rs を使用
 
 ```toml
-# parser/Cargo.toml の [dev-dependencies] に追加
+# modules/parser/Cargo.toml の [dev-dependencies] に追加
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
 nom = "8"
@@ -74,13 +74,13 @@ harness = false
 ### ディレクトリ構成
 
 ```
-parser/
+modules/parser/
   benches/
     comparison.rs          # Criterion main
     workloads/
       mod.rs
       arithmetic.rs        # 各ライブラリの arithmetic 実装
-      json.rs              # 各ライブラリの JSON 実装  
+      json.rs              # 各ライブラリの JSON 実装
       token.rs             # 各ライブラリの token 実装
     data/
       json_small.json      # ~100B

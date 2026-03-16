@@ -18,9 +18,9 @@ MS5 (Recursive) の完了条件は「四則演算+括弧の parser が動く」�
 
 ## Impact
 
-- `parser/src/combinator/recursive.rs`: `Recursive` 型 + `recursive()` 関数
-- `parser/src/combinator/mod.rs`: モジュール登録
-- `parser/src/prelude.rs`: `recursive` をエクスポート
-- `parser/tests/recursive.rs`: 再帰パーサーのテスト
-- `parser/tests/arithmetic.rs`: 四則演算+括弧の統合テスト
+- `modules/parser/src/combinator/recursive.rs`: `Recursive` 型 + `recursive()` 関数
+- `modules/parser/src/combinator/mod.rs`: モジュール登録
+- `modules/parser/src/prelude.rs`: `recursive` をエクスポート
+- `modules/parser/tests/recursive.rs`: 再帰パーサーのテスト
+- `modules/parser/tests/arithmetic.rs`: 四則演算+括弧の統合テスト
 - 既存コードへの変更なし

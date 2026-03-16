@@ -38,8 +38,8 @@ MS3 (Combinators) の完了条件は「expression parser と CSV/JSON subset の
 
 ## Impact
 
-- `parser/src/parser_ext.rs`: 7 メソッド追加
-- `parser/src/combinator/`: 具象型ファイル 7 つ追加（zip_left, zip_right, many1, sep_by0, sep_by1, chainl1, chainr1）
-- `parser/src/prelude.rs`: `between` 関数をエクスポート
-- `parser/tests/`: 各コンビネータのテストファイル追加
+- `modules/parser/src/parser_ext.rs`: 7 メソッド追加
+- `modules/parser/src/combinator/`: 具象型ファイル 7 つ追加（zip_left, zip_right, many1, sep_by0, sep_by1, chainl1, chainr1）
+- `modules/parser/src/prelude.rs`: `between` 関数をエクスポート
+- `modules/parser/tests/`: 各コンビネータのテストファイル追加
 - 既存コードへの影響なし

@@ -18,8 +18,8 @@ oni-comb-rs v2 は Applicative/Alternative 主体の設計で、コンビネー�
 
 ## Impact
 
-- `parser/src/parser_ext.rs`: `flat_map` メソッド追加
-- `parser/src/combinator/`: `FlatMap<P, F>` 型と `Parser` 実装の新規ファイル追加
-- `parser/tests/`: flat_map のテストファイル追加
+- `modules/parser/src/parser_ext.rs`: `flat_map` メソッド追加
+- `modules/parser/src/combinator/`: `FlatMap<P, F>` 型と `Parser` 実装の新規ファイル追加
+- `modules/parser/tests/`: flat_map のテストファイル追加
 - `README.md`: 使用例とガイド追記
 - 既存の Applicative コンビネータへの影響なし（後方互換）

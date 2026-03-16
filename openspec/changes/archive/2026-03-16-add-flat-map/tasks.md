@@ -1,12 +1,12 @@
 ## 1. FlatMap combinator type
 
-- [x] 1.1 Create `parser/src/combinator/flat_map.rs` with `FlatMap<P, F>` struct (private fields)
+- [x] 1.1 Create `modules/parser/src/combinator/flat_map.rs` with `FlatMap<P, F>` struct (private fields)
 - [x] 1.2 Implement `Parser<I>` for `FlatMap<P, F>` with transparent Fail propagation
-- [x] 1.3 Register `flat_map` module in `parser/src/combinator/mod.rs`
+- [x] 1.3 Register `flat_map` module in `modules/parser/src/combinator/mod.rs`
 
 ## 2. ParserExt integration
 
-- [x] 2.1 Add `.flat_map(f)` method to `ParserExt` trait in `parser/src/parser_ext.rs`
+- [x] 2.1 Add `.flat_map(f)` method to `ParserExt` trait in `modules/parser/src/parser_ext.rs`
 - [x] 2.2 Add `flat_map` constructor function (if needed) and re-export from prelude
 
 ## 3. Box<dyn Parser> support
