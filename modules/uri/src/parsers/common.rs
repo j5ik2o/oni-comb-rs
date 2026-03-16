@@ -9,10 +9,7 @@ fn is_unreserved(c: char) -> bool {
 }
 
 fn is_sub_delim(c: char) -> bool {
-  matches!(
-    c,
-    '!' | '$' | '&' | '\'' | '(' | ')' | '*' | '+' | ',' | ';' | '='
-  )
+  matches!(c, '!' | '$' | '&' | '\'' | '(' | ')' | '*' | '+' | ',' | ';' | '=')
 }
 
 // pct-encoded = "%" HEXDIG HEXDIG

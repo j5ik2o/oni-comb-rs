@@ -57,25 +57,25 @@
 
 ## 10. proptest Property-Based テスト
 
-- [ ] 10.1 `tests/proptest_strategies.rs`: 共通 Strategy（unreserved, pct_encoded, pchar 等）
-- [ ] 10.2 scheme Strategy + round-trip テスト
-- [ ] 10.3 IPv4 Strategy + round-trip テスト
-- [ ] 10.4 IPv6 Strategy + round-trip テスト
-- [ ] 10.5 host Strategy + round-trip テスト
-- [ ] 10.6 authority Strategy + round-trip テスト
-- [ ] 10.7 path Strategy + round-trip テスト
-- [ ] 10.8 query Strategy + round-trip テスト
-- [ ] 10.9 URI 全体 Strategy + round-trip テスト
+- [x] 10.1 `tests/proptest_strategies.rs`: 共通 Strategy（unreserved, pct_encoded, pchar 等）
+- [x] 10.2 scheme Strategy + round-trip テスト
+- [x] 10.3 IPv4 Strategy + round-trip テスト
+- [x] 10.4 IPv6 Strategy + round-trip テスト
+- [x] 10.5 host Strategy + round-trip テスト
+- [x] 10.6 authority Strategy + round-trip テスト
+- [x] 10.7 path Strategy + round-trip テスト
+- [x] 10.8 query Strategy + round-trip テスト
+- [x] 10.9 URI 全体 Strategy + round-trip テスト
 
 ## 11. CI / ドキュメント
 
-- [ ] 11.1 `.github/workflows/ci.yml`: lint/test に `-p oni-comb-uri` 追加
-- [ ] 11.2 `.github/workflows/publish.yml`: `oni-comb-uri-v*` タグ対応
-- [ ] 11.3 `.github/workflows/bump-version.yml`: `oni-comb-uri` 選択肢追加
-- [ ] 11.4 `modules/uri/README.md` + `README.ja.md`
+- [x] 11.1 `.github/workflows/ci.yml`: lint/test に `-p oni-comb-uri` 追加
+- [x] 11.2 `.github/workflows/publish.yml`: `oni-comb-uri-v*` タグ対応
+- [x] 11.3 `.github/workflows/bump-version.yml`: `oni-comb-uri` 選択肢追加
+- [x] 11.4 `modules/uri/README.md` + `README.ja.md`
 
 ## 12. 最終検証
 
-- [ ] 12.1 `cargo test -p oni-comb-uri` 全テスト通過
-- [ ] 12.2 `RUSTFLAGS="-D warnings" cargo clippy -p oni-comb-uri` 通過
-- [ ] 12.3 `cargo fmt -- --check` 通過
+- [x] 12.1 `cargo test -p oni-comb-uri` 全テスト通過
+- [x] 12.2 `RUSTFLAGS="-D warnings" cargo clippy -p oni-comb-uri` 通過
+- [x] 12.3 `cargo fmt -- --check` 通過
