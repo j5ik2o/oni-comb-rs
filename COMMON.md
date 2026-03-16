@@ -117,3 +117,19 @@ flat_map 再帰ではなく専用ループで実装する。
 | nom | 283.2 µs | 282.7 µs | 286.6 µs | 287.9 µs | 2.26 µs | 378 MB/s |
 
 - **知見**: winnow の 1.45 倍のスループット（mean 基準）。token レベルでは winnow と同等〜90%。nom を中〜長入力で上回る。flat_map 同一型は zip とゼロコスト同等。詳細は `modules/parser/benches/README.md` を参照
+- **アロケーション**: パーサーコンビネータインフラはゼロアロケーション。JSON フルパースのアロケーション（743 blocks / 336KB）は全て AST 構築（`Vec` grow + エスケープ文字列 `Cow::Owned`）に起因
+
+## 設計メモ: `no_std` core-only 層
+
+現在 `#![no_std]` + `extern crate alloc` だが、`alloc` なしの `core` のみ層を feature gate で分離可能。
+
+**`alloc` 不要（core のみで動作）**:
+`tag`, `char`, `satisfy`, `take_while0/1`, `eof`, `whitespace0/1`, `identifier`, `integer`,
+`zip`, `zip_left`, `zip_right`, `map`, `or`, `attempt`, `cut`, `optional`, `context`,
+`fn_parser`, `flat_map`（同一型返却時）, `peek_byte`
+
+**`alloc` が必要**:
+`many0/1`, `sep_by0/1`, `chainl1/r1`（`Vec` 返却）, `quoted_string`/`quoted_string_cow`/`escaped`（`String`/`Cow`）,
+`recursive`（`Box<dyn Parser>` + `Rc`）, `ParseError`（`Vec<Expected>` + `Vec<&str>`）
+
+**実装方針**: `default = ["alloc"]` feature で分離。core-only 層だけでプロトコルパーサーや組み込みトークナイザーに使える。
