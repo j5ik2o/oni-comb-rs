@@ -117,13 +117,13 @@ flat_map 再帰ではなく専用ループで実装する。
 
 | ライブラリ | Mean | Throughput (mean, MiB/s) |
 |-----------|------|-------------------------|
-| **oni-comb** | **193.4 µs** | **527.8** |
-| winnow | 206.5 µs | 494.4 |
-| nom | 262.8 µs | 388.5 |
-| chumsky | 495.6 µs | 206.0 |
-| pom | 7.56 ms | 13.5 |
+| oni-comb | 203.7 µs | 501.1 |
+| **winnow** | **180.7 µs** | **564.8** |
+| nom | 260.5 µs | 391.8 |
+| chumsky | 490.0 µs | 208.3 |
+| pom | 7.33 ms | 13.9 |
 
-- **知見**: winnow の 1.07 倍、nom の 1.36 倍、chumsky の 2.56 倍、pom の 39.1 倍のスループット（mean 基準）。flat_map 同一型は zip とゼロコスト同等。chumsky 0.12 で v0.9 比 ~54 倍の劇的改善（identifier "x": 918ns → 17.1ns）。短い入力では oni-comb/winnow/nom と競合するレベルに到達。ただし中〜長入力では依然 2 倍程度遅い（11B identifier: 83.8ns vs 38.9ns）。詳細は `modules/parser/benches/README.md` を参照
+- **知見**: 2026-03-18 の再計測では `winnow` 1.0.0 が JSON フルベンチの首位。oni-comb はそれでも nom の 1.28 倍、chumsky の 2.41 倍、pom の 36.0 倍のスループットを維持する。flat_map 同一型は引き続き zip とゼロコスト同等。token レベルでは `winnow` / `nom` が優位で、例えば 11B identifier は oni-comb 39.2ns に対し winnow 19.8ns / nom 32.7ns。詳細は `modules/parser/benches/README.md` を参照
 - **Generic Input リファクタリングの影響**: `primitive/` のジェネリックパーサー（`satisfy`, `take_while0/1`）は `peek_token`+`next_token` の per-token オーバーヘッドにより、長い入力で 40-150% の退行あり（例: identifier 28B で 44→82 ns）。`text/` の専用パーサー（`identifier`, `integer` 等）は `as_str().chars()` 直接使用のため影響なし。JSON/arithmetic マクロベンチも変化なし
 - **アロケーション**: パーサーコンビネータインフラはゼロアロケーション。JSON フルパースのアロケーション（743 blocks / 336KB）は全て AST 構築（`Vec` grow + エスケープ文字列 `Cow::Owned`）に起因
 
