@@ -17,7 +17,7 @@ criterion = { version = "0.8", features = ["html_reports"] }
 dhat = "0.3"
 nom = "8"
 winnow = "0.6"
-chumsky = "0.9"
+chumsky = "0.12"
 pom = "3"
 
 [[bench]]

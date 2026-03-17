@@ -1,8 +1,11 @@
 use chumsky::prelude::*;
 
 pub fn parse_identifier(s: &str) -> Option<String> {
-  let head = filter::<_, _, Simple<char>>(|c: &char| c.is_ascii_alphabetic() || *c == '_');
-  let tail = filter::<_, _, Simple<char>>(|c: &char| c.is_ascii_alphanumeric() || *c == '_').repeated();
+  let head = any::<_, extra::Default>().filter(|c: &char| c.is_ascii_alphabetic() || *c == '_');
+  let tail = any::<_, extra::Default>()
+    .filter(|c: &char| c.is_ascii_alphanumeric() || *c == '_')
+    .repeated()
+    .collect::<Vec<_>>();
   let ident = head.then(tail).map(|(h, t): (char, Vec<char>)| {
     let mut result = String::with_capacity(1 + t.len());
     result.push(h);
@@ -11,50 +14,51 @@ pub fn parse_identifier(s: &str) -> Option<String> {
     }
     result
   });
-  ident.parse(s).ok()
+  // chumsky 0.12 の parse() は内部で end() を追加するため、残余入力を明示的に消費する
+  ident.then_ignore(any().repeated()).parse(s).into_output()
 }
 
 pub fn parse_integer(s: &str) -> Option<u64> {
-  let digits = filter::<_, _, Simple<char>>(|c: &char| c.is_ascii_digit())
+  let digits = any::<_, extra::Default>()
+    .filter(|c: &char| c.is_ascii_digit())
     .repeated()
     .at_least(1)
     .collect::<String>();
   let parser = digits.map(|d| d.parse::<u64>().unwrap());
-  parser.parse(s).ok()
+  // chumsky 0.12 の parse() は内部で end() を追加するため、残余入力を明示的に消費する
+  parser.then_ignore(any().repeated()).parse(s).into_output()
 }
 
-/// flat_map 同一型分岐: digit → tag (chumsky は then_with を使用)
+/// flat_map 同一型分岐: digit → tag (chumsky 0.12 は then_with が廃止されたため choice を使用)
 pub fn parse_flat_map_same_type(s: &str) -> Option<String> {
-  let digit = filter::<_, _, Simple<char>>(|c: &char| c.is_ascii_digit());
-  let parser = digit.then_with(|c: char| {
-    let expected: &str = match c {
-      '1' => "one",
-      '2' => "two",
-      '3' => "three",
-      _ => "",
-    };
-    just::<_, _, Simple<char>>(expected.chars().collect::<Vec<_>>()).map(|cs| cs.into_iter().collect::<String>())
-  });
-  parser.parse(s).ok()
+  let p1 = just::<_, &str, extra::Default>('1')
+    .ignore_then(just("one"))
+    .to("one".to_string());
+  let p2 = just::<_, &str, extra::Default>('2')
+    .ignore_then(just("two"))
+    .to("two".to_string());
+  let p3 = just::<_, &str, extra::Default>('3')
+    .ignore_then(just("three"))
+    .to("three".to_string());
+  choice((p1, p2, p3)).parse(s).into_output()
 }
 
 /// flat_map 異種型分岐: 先頭文字に応じて異なる型のパーサーを選択
-/// chumsky は元々動的ディスパッチなので、.boxed() で型を統一
+/// chumsky 0.12 は then_with が廃止されたため choice で実装
 pub fn parse_flat_map_boxed(s: &str) -> Option<(char, String)> {
-  let head = filter::<_, _, Simple<char>>(|c: &char| *c == 'c' || *c == 'i');
-  let parser = head.then_with(|t: char| {
-    let colon = just::<_, _, Simple<char>>(':');
-    let value = match t {
-      'c' => filter::<_, _, Simple<char>>(|c: &char| c.is_ascii_alphabetic())
-        .repeated()
-        .at_least(1)
-        .boxed(),
-      _ => filter::<_, _, Simple<char>>(|c: &char| c.is_ascii_digit())
-        .repeated()
-        .at_least(1)
-        .boxed(),
-    };
-    colon.then(value).map(|(c, v)| (c, v.into_iter().collect::<String>()))
-  });
-  parser.parse(s).ok()
+  let c_parser = just('c').then_ignore(just(':')).then(
+    any::<_, extra::Default>()
+      .filter(|c: &char| c.is_ascii_alphabetic())
+      .repeated()
+      .at_least(1)
+      .collect::<String>(),
+  );
+  let i_parser = just('i').then_ignore(just(':')).then(
+    any::<_, extra::Default>()
+      .filter(|c: &char| c.is_ascii_digit())
+      .repeated()
+      .at_least(1)
+      .collect::<String>(),
+  );
+  choice((c_parser, i_parser)).parse(s).into_output()
 }
