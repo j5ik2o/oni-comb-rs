@@ -1,4 +1,4 @@
-use oni_comb_parser::error::ParseError;
+use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::fail::Fail;
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
@@ -16,16 +16,19 @@ fn dec_octet<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseError>
     // Reject leading zeros: "0" is ok, "00"/"01"/"001" etc. are not
     if s.len() > 1 && s.starts_with('0') {
       input.reset(cp);
-      return Err(Fail::Backtrack(ParseError::expected_description(
+      return Err(Fail::Backtrack(ParseError::from_expected(
         pos,
-        "dec-octet (no leading zeros)",
+        Expected::Description("dec-octet (no leading zeros)"),
       )));
     }
     match s.parse::<u16>() {
       Ok(n) if n <= 255 => Ok(n as u8),
       _ => {
         input.reset(cp);
-        Err(Fail::Backtrack(ParseError::expected_description(pos, "dec-octet")))
+        Err(Fail::Backtrack(ParseError::from_expected(
+          pos,
+          Expected::Description("dec-octet"),
+        )))
       }
     }
   })

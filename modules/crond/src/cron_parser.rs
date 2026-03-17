@@ -1,4 +1,4 @@
-use oni_comb_parser::error::ParseError;
+use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::fail::{Fail, PResult};
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
@@ -27,7 +27,10 @@ fn ranged_uint8<'a>(min: u8, max: u8) -> impl Parser<StrInput<'a>, Output = u8, 
       Ok(n) if n >= min && n <= max => Ok(n),
       _ => {
         input.reset(cp);
-        Err(Fail::Backtrack(ParseError::expected_description(pos, "value in range")))
+        Err(Fail::Backtrack(ParseError::from_expected(
+          pos,
+          Expected::Description("value in range"),
+        )))
       }
     }
   })
@@ -60,7 +63,10 @@ fn nonzero_uint8<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseEr
     let n = p.parse_next(input)?;
     if n == 0 {
       input.reset(cp);
-      return Err(Fail::Backtrack(ParseError::expected_description(pos, "non-zero step")));
+      return Err(Fail::Backtrack(ParseError::from_expected(
+        pos,
+        Expected::Description("non-zero step"),
+      )));
     }
     Ok(n)
   })

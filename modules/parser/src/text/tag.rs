@@ -1,4 +1,4 @@
-use crate::error::ParseError;
+use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
 use crate::input::Input;
 use crate::parser::Parser;
@@ -10,19 +10,19 @@ pub fn tag(s: &'static str) -> Tag {
   Tag(s)
 }
 
-impl Parser<StrInput<'_>> for Tag {
-  type Error = ParseError;
+impl<'a> Parser<StrInput<'a>> for Tag {
+  type Error = <StrInput<'a> as Input>::Error;
   type Output = &'static str;
 
   #[inline]
-  fn parse_next(&mut self, input: &mut StrInput<'_>) -> PResult<Self::Output, Self::Error> {
+  fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<Self::Output, Self::Error> {
     let pos = input.offset();
     let remaining = input.remaining();
     if remaining.starts_with(self.0) {
       input.advance(self.0.len());
       Ok(self.0)
     } else {
-      Err(Fail::Backtrack(ParseError::expected_tag(pos, self.0)))
+      Err(Fail::Backtrack(Self::Error::from_expected(pos, Expected::Tag(self.0))))
     }
   }
 }

@@ -1,4 +1,4 @@
-use crate::error::ParseError;
+use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
 use crate::input::Input;
 use crate::parser::Parser;
@@ -12,19 +12,23 @@ pub struct MapRes<P, F> {
 impl<I, P, F, O2, E2> Parser<I> for MapRes<P, F>
 where
   I: Input,
-  P: Parser<I, Error = ParseError>,
+  P: Parser<I>,
+  P::Error: ExpectError,
   F: FnMut(P::Output) -> Result<O2, E2>,
 {
-  type Error = ParseError;
+  type Error = P::Error;
   type Output = O2;
 
   #[inline]
-  fn parse_next(&mut self, input: &mut I) -> PResult<Self::Output, ParseError> {
+  fn parse_next(&mut self, input: &mut I) -> PResult<Self::Output, Self::Error> {
     let pos = input.offset();
     let v = self.parser.parse_next(input)?;
     match (self.f)(v) {
       Ok(o) => Ok(o),
-      Err(_) => Err(Fail::Backtrack(ParseError::expected_description(pos, self.label))),
+      Err(_) => Err(Fail::Backtrack(Self::Error::from_expected(
+        pos,
+        Expected::Description(self.label),
+      ))),
     }
   }
 }

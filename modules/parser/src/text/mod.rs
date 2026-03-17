@@ -1,8 +1,10 @@
 pub mod char;
+#[cfg(feature = "alloc")]
 pub mod escaped;
 pub mod identifier;
 pub mod integer;
 pub mod lexeme;
+#[cfg(feature = "alloc")]
 pub mod quoted_string;
 #[cfg(feature = "regex")]
 pub mod regex;

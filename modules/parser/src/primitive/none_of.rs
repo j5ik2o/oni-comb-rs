@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::error::ParseError;
+use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
 use crate::input::Input;
 use crate::parser::Parser;
@@ -18,18 +18,21 @@ pub fn none_of<'s, I: Input>(set: &'s [I::Token]) -> NoneOf<'s, I> {
 }
 
 impl<'s, I: Input> Parser<I> for NoneOf<'s, I> {
-  type Error = ParseError;
+  type Error = I::Error;
   type Output = I::Token;
 
   #[inline]
-  fn parse_next(&mut self, input: &mut I) -> PResult<I::Token, ParseError> {
+  fn parse_next(&mut self, input: &mut I) -> PResult<I::Token, I::Error> {
     let pos = input.offset();
     match input.peek_token() {
       Some(t) if !self.set.contains(&t) => {
         input.next_token();
         Ok(t)
       }
-      _ => Err(Fail::Backtrack(ParseError::expected_description(pos, "none of set"))),
+      _ => Err(Fail::Backtrack(I::Error::from_expected(
+        pos,
+        Expected::Description("none of set"),
+      ))),
     }
   }
 }

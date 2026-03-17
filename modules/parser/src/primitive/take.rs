@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::error::ParseError;
+use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
 use crate::input::Input;
 use crate::parser::Parser;
@@ -18,17 +18,20 @@ pub fn take<I: Input>(n: usize) -> Take<I> {
 }
 
 impl<I: Input> Parser<I> for Take<I> {
-  type Error = ParseError;
+  type Error = I::Error;
   type Output = I::Slice;
 
   #[inline]
-  fn parse_next(&mut self, input: &mut I) -> PResult<I::Slice, ParseError> {
+  fn parse_next(&mut self, input: &mut I) -> PResult<I::Slice, I::Error> {
     let pos = input.offset();
     let cp = input.checkpoint();
     for _ in 0..self.n {
       if input.next_token().is_none() {
         input.reset(cp);
-        return Err(Fail::Backtrack(ParseError::expected_description(pos, "enough input")));
+        return Err(Fail::Backtrack(I::Error::from_expected(
+          pos,
+          Expected::Description("enough input"),
+        )));
       }
     }
     Ok(input.slice_since(cp))

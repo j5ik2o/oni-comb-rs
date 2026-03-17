@@ -1,11 +1,15 @@
 pub mod attempt;
+#[cfg(feature = "alloc")]
 pub mod chainl1;
+#[cfg(feature = "alloc")]
 pub mod chainr1;
 pub mod context;
 pub mod cut;
 pub mod flat_map;
 pub mod fn_parser;
+#[cfg(feature = "alloc")]
 pub mod many;
+#[cfg(feature = "alloc")]
 pub mod many1;
 pub mod many1_fold;
 pub mod many_fold;
@@ -13,7 +17,9 @@ pub mod map;
 pub mod map_res;
 pub mod optional;
 pub mod or;
+#[cfg(feature = "alloc")]
 pub mod recursive;
+#[cfg(feature = "alloc")]
 pub mod sep_by;
 pub mod sep_by_fold;
 pub mod zip;

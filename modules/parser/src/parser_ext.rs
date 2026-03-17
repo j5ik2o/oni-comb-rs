@@ -1,10 +1,14 @@
 use crate::combinator::attempt::Attempt;
+#[cfg(feature = "alloc")]
 use crate::combinator::chainl1::ChainL1;
+#[cfg(feature = "alloc")]
 use crate::combinator::chainr1::ChainR1;
 use crate::combinator::context::Context;
 use crate::combinator::cut::Cut;
 use crate::combinator::flat_map::FlatMap;
+#[cfg(feature = "alloc")]
 use crate::combinator::many::Many;
+#[cfg(feature = "alloc")]
 use crate::combinator::many1::Many1;
 use crate::combinator::many1_fold::Many1Fold;
 use crate::combinator::many_fold::ManyFold;
@@ -12,6 +16,7 @@ use crate::combinator::map::Map;
 use crate::combinator::map_res::MapRes;
 use crate::combinator::optional::Optional;
 use crate::combinator::or::Or;
+#[cfg(feature = "alloc")]
 use crate::combinator::sep_by::{SepBy0, SepBy1};
 use crate::combinator::sep_by_fold::{SepByFold0, SepByFold1};
 use crate::combinator::zip::Zip;
@@ -75,10 +80,12 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
     Optional { parser: self }
   }
 
+  #[cfg(feature = "alloc")]
   fn many0(self) -> Many<Self> {
     Many { parser: self }
   }
 
+  #[cfg(feature = "alloc")]
   fn many1(self) -> Many1<Self> {
     Many1 { parser: self }
   }
@@ -133,6 +140,7 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
   }
 
   /// 区切り付き 0 個以上の繰り返し。
+  #[cfg(feature = "alloc")]
   fn sep_by0<S>(self, sep: S) -> SepBy0<Self, S>
   where
     S: Parser<I, Error = Self::Error>, {
@@ -140,6 +148,7 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
   }
 
   /// 区切り付き 1 個以上の繰り返し。
+  #[cfg(feature = "alloc")]
   fn sep_by1<S>(self, sep: S) -> SepBy1<Self, S>
   where
     S: Parser<I, Error = Self::Error>, {
@@ -213,6 +222,7 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
   }
 
   /// 左結合の二項演算子チェーン。operand (op operand)* を左から畳む。
+  #[cfg(feature = "alloc")]
   fn chainl1<Op, F>(self, op: Op) -> ChainL1<Self, Op>
   where
     Op: Parser<I, Output = F, Error = Self::Error>,
@@ -224,6 +234,7 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
   }
 
   /// 右結合の二項演算子チェーン。operand (op operand)* を右から畳む。
+  #[cfg(feature = "alloc")]
   fn chainr1<Op, F>(self, op: Op) -> ChainR1<Self, Op>
   where
     Op: Parser<I, Output = F, Error = Self::Error>,
@@ -235,11 +246,9 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
   }
 
   /// パーサーの結果を失敗しうる関数で変換する。
-  /// 関数が `Err` を返した場合、`Backtrack` エラーになる。
-  /// 入力は巻き戻さない（巻き戻したい場合は `.attempt()` と組み合わせる）。
   fn map_res<F, O2, E2>(self, f: F, label: &'static str) -> MapRes<Self, F>
   where
-    Self: Parser<I, Error = crate::error::ParseError>,
+    Self::Error: crate::error::ExpectError,
     F: FnMut(Self::Output) -> Result<O2, E2>, {
     MapRes { parser: self, f, label }
   }

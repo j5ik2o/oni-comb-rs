@@ -27,6 +27,10 @@ impl<'a> StrInput<'a> {
 
 impl<'a> Input for StrInput<'a> {
   type Checkpoint = usize;
+  #[cfg(feature = "alloc")]
+  type Error = crate::error::ParseError;
+  #[cfg(not(feature = "alloc"))]
+  type Error = crate::error::MinimalError;
   type Slice = &'a str;
   type Token = char;
 

@@ -1,7 +1,10 @@
+use crate::error::ExpectError;
+
 pub trait Input {
   type Token: Copy + Eq;
   type Slice;
   type Checkpoint: Copy + Eq + Ord;
+  type Error: ExpectError;
 
   /// 1トークン消費して返す。EOF なら None。
   fn next_token(&mut self) -> Option<Self::Token>;

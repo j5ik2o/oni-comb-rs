@@ -1,7 +1,7 @@
 use alloc::borrow::Cow;
 use alloc::string::String;
 
-use crate::error::ParseError;
+use crate::error::{ExpectError, Expected, ParseError};
 use crate::fail::{Fail, PResult};
 use crate::input::Input;
 use crate::parser::Parser;
@@ -26,14 +26,14 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
     let bytes = remaining.as_bytes();
 
     if bytes.is_empty() || bytes[0] != b'"' {
-      return Err(Fail::Backtrack(ParseError::expected_char(pos, '"')));
+      return Err(Fail::Backtrack(ParseError::from_expected(pos, Expected::Char('"'))));
     }
 
     // Fast path: scan for closing quote without escape
     let mut i = 1; // skip opening quote
     loop {
       if i >= bytes.len() {
-        return Err(Fail::Cut(ParseError::expected_char(pos + i, '"')));
+        return Err(Fail::Cut(ParseError::from_expected(pos + i, Expected::Char('"'))));
       }
       match bytes[i] {
         b'"' => {
@@ -105,9 +105,9 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
                     code = code * 16 + c.to_digit(16).unwrap();
                   }
                   _ => {
-                    return Err(Fail::Cut(ParseError::expected_description(
+                    return Err(Fail::Cut(ParseError::from_expected(
                       pos + consumed,
-                      "4 hex digits after \\u",
+                      Expected::Description("4 hex digits after \\u"),
                     )));
                   }
                 }
@@ -115,23 +115,23 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
               match char::from_u32(code) {
                 Some(c) => result.push(c),
                 None => {
-                  return Err(Fail::Cut(ParseError::expected_description(
+                  return Err(Fail::Cut(ParseError::from_expected(
                     pos + consumed - 4,
-                    "valid unicode code point",
+                    Expected::Description("valid unicode code point"),
                   )));
                 }
               }
             }
             Some(_) => {
-              return Err(Fail::Cut(ParseError::expected_description(
+              return Err(Fail::Cut(ParseError::from_expected(
                 pos + consumed,
-                "valid escape sequence",
+                Expected::Description("valid escape sequence"),
               )));
             }
             None => {
-              return Err(Fail::Cut(ParseError::expected_description(
+              return Err(Fail::Cut(ParseError::from_expected(
                 pos + consumed,
-                "escape character after '\\'",
+                Expected::Description("escape character after '\\'"),
               )));
             }
           }
@@ -141,7 +141,10 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
           result.push(c);
         }
         None => {
-          return Err(Fail::Cut(ParseError::expected_char(pos + consumed, '"')));
+          return Err(Fail::Cut(ParseError::from_expected(
+            pos + consumed,
+            Expected::Char('"'),
+          )));
         }
       }
     }

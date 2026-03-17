@@ -18,6 +18,10 @@ impl<'a> ByteInput<'a> {
 
 impl<'a> Input for ByteInput<'a> {
   type Checkpoint = usize;
+  #[cfg(feature = "alloc")]
+  type Error = crate::error::ParseError;
+  #[cfg(not(feature = "alloc"))]
+  type Error = crate::error::MinimalError;
   type Slice = &'a [u8];
   type Token = u8;
 
