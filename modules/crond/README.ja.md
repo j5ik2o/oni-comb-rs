@@ -1,5 +1,7 @@
 # oni-comb-crond
 
+[English](README.md)
+
 [oni-comb-parser](../parser/) v2 コンビネータ API で構築した cron 式パーサー＆スケジューラー。
 
 v1 の `crond` クレートを v2 の trait + 具象コンビネータ型設計に移植したものです。

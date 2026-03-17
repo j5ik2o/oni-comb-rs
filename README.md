@@ -276,9 +276,9 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 | Crate | Description |
 |-------|-------------|
-| [oni-comb-parser](modules/parser/) | Core parser combinator library |
-| [oni-comb-crond](modules/crond/) | Cron expression parser & scheduler |
-| [oni-comb-uri](modules/uri/) | RFC 3986 URI parser (zero-copy, URN support) |
+| [oni-comb-parser](modules/parser/README.md) | Core parser combinator library |
+| [oni-comb-crond](modules/crond/README.md) | Cron expression parser & scheduler |
+| [oni-comb-uri](modules/uri/README.md) | RFC 3986 URI parser (zero-copy, URN support) |
 
 ## Build & Test
 

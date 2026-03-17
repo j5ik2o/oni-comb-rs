@@ -256,7 +256,7 @@ ParseError 導入 + `#[inline]` で旧 8.3ns → 7.2ns。chumsky 0.12 は ~930ns
 - **3 回の最適化で累計 ~83% 改善** — ParseError 導入（~12%）+ `#[inline]`（~17%）+ ゼロコピー＋fn再帰（~77%）
 - **JSON/arithmetic ワークロードで 2-5% 改善** — 全ワークロードで継続的な微改善
 - **Applicative / flat_map 同一型でヒープアロケーションゼロ** — dhat で 0 bytes / 0 blocks 確認
-- 詳細な考察は [`modules/parser/benches/README.md`](modules/parser/benches/README.md) を参照
+- 詳細な考察は [`modules/parser/benches/README.ja.md`](modules/parser/benches/README.ja.md) を参照
 
 ### ベンチマーク実行
 
@@ -276,9 +276,9 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 | クレート | 説明 |
 |---------|------|
-| [oni-comb-parser](modules/parser/) | コアパーサーコンビネータライブラリ |
-| [oni-comb-crond](modules/crond/) | cron 式パーサー＆スケジューラー |
-| [oni-comb-uri](modules/uri/) | RFC 3986 URI パーサー（ゼロコピー、URN サポート） |
+| [oni-comb-parser](modules/parser/README.ja.md) | コアパーサーコンビネータライブラリ |
+| [oni-comb-crond](modules/crond/README.ja.md) | cron 式パーサー＆スケジューラー |
+| [oni-comb-uri](modules/uri/README.ja.md) | RFC 3986 URI パーサー（ゼロコピー、URN サポート） |
 
 ## ビルド・テスト
 

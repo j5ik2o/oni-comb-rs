@@ -1,5 +1,7 @@
 # oni-comb-parser
 
+[English](README.md)
+
 [oni-comb-rs](../../) のコアクレート。Rust 製パーサーモナドコンビネータライブラリ。
 
 ## 特徴

@@ -1,5 +1,7 @@
 # oni-comb-uri
 
+[English](README.md)
+
 [oni-comb-parser](../parser/) v2 コンビネータ API で構築したゼロコピー RFC 3986 URI パーサー。URN サポート付き。
 
 ## 特徴

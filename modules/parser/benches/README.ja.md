@@ -1,5 +1,7 @@
 # ベンチマーク
 
+[English](README.md)
+
 oni-comb-rs v2 と比較対象ライブラリ（winnow, nom, chumsky, pom）の性能比較。
 
 ## 実行方法
