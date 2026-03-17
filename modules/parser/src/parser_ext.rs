@@ -103,14 +103,26 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
   fn many0_into<C>(self, container: C) -> ManyFold<Self, impl FnMut() -> C, impl FnMut(C, Self::Output) -> C>
   where
     C: Extend<Self::Output> + Clone, {
-    self.many0_fold(move || container.clone(), |mut acc, item| { acc.extend(core::iter::once(item)); acc })
+    self.many0_fold(
+      move || container.clone(),
+      |mut acc, item| {
+        acc.extend(core::iter::once(item));
+        acc
+      },
+    )
   }
 
   /// 1個以上の要素をユーザー指定のコンテナに収集する。
   fn many1_into<C>(self, container: C) -> Many1Fold<Self, impl FnMut() -> C, impl FnMut(C, Self::Output) -> C>
   where
     C: Extend<Self::Output> + Clone, {
-    self.many1_fold(move || container.clone(), |mut acc, item| { acc.extend(core::iter::once(item)); acc })
+    self.many1_fold(
+      move || container.clone(),
+      |mut acc, item| {
+        acc.extend(core::iter::once(item));
+        acc
+      },
+    )
   }
 
   /// エラーにコンテキストラベルを付与する。
@@ -140,7 +152,12 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
     S: Parser<I, Error = Self::Error>,
     B: FnMut() -> Acc,
     F: FnMut(Acc, Self::Output) -> Acc, {
-    SepByFold0 { parser: self, sep, init, f }
+    SepByFold0 {
+      parser: self,
+      sep,
+      init,
+      f,
+    }
   }
 
   /// 区切り付き 1 個以上の要素を畳み込む（ゼロアロケーション）。
@@ -149,23 +166,50 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
     S: Parser<I, Error = Self::Error>,
     B: FnMut() -> Acc,
     F: FnMut(Acc, Self::Output) -> Acc, {
-    SepByFold1 { parser: self, sep, init, f }
+    SepByFold1 {
+      parser: self,
+      sep,
+      init,
+      f,
+    }
   }
 
   /// 区切り付き 0 個以上の要素をユーザー指定のコンテナに収集する。
-  fn sep_by0_into<S, C>(self, sep: S, container: C) -> SepByFold0<Self, S, impl FnMut() -> C, impl FnMut(C, Self::Output) -> C>
+  fn sep_by0_into<S, C>(
+    self,
+    sep: S,
+    container: C,
+  ) -> SepByFold0<Self, S, impl FnMut() -> C, impl FnMut(C, Self::Output) -> C>
   where
     S: Parser<I, Error = Self::Error>,
     C: Extend<Self::Output> + Clone, {
-    self.sep_by0_fold(sep, move || container.clone(), |mut acc, item| { acc.extend(core::iter::once(item)); acc })
+    self.sep_by0_fold(
+      sep,
+      move || container.clone(),
+      |mut acc, item| {
+        acc.extend(core::iter::once(item));
+        acc
+      },
+    )
   }
 
   /// 区切り付き 1 個以上の要素をユーザー指定のコンテナに収集する。
-  fn sep_by1_into<S, C>(self, sep: S, container: C) -> SepByFold1<Self, S, impl FnMut() -> C, impl FnMut(C, Self::Output) -> C>
+  fn sep_by1_into<S, C>(
+    self,
+    sep: S,
+    container: C,
+  ) -> SepByFold1<Self, S, impl FnMut() -> C, impl FnMut(C, Self::Output) -> C>
   where
     S: Parser<I, Error = Self::Error>,
     C: Extend<Self::Output> + Clone, {
-    self.sep_by1_fold(sep, move || container.clone(), |mut acc, item| { acc.extend(core::iter::once(item)); acc })
+    self.sep_by1_fold(
+      sep,
+      move || container.clone(),
+      |mut acc, item| {
+        acc.extend(core::iter::once(item));
+        acc
+      },
+    )
   }
 
   /// 左結合の二項演算子チェーン。operand (op operand)* を左から畳む。

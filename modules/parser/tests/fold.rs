@@ -31,9 +31,10 @@ fn many0_fold_multiple_elements() {
 
 #[test]
 fn many0_fold_accumulates_values() {
-  let mut parser = char('a')
-    .or(char('b'))
-    .many0_fold(String::new, |mut acc, c| { acc.push(c); acc });
+  let mut parser = char('a').or(char('b')).many0_fold(String::new, |mut acc, c| {
+    acc.push(c);
+    acc
+  });
   let mut input = StrInput::new("abba!");
 
   let result = parser.parse_next(&mut input);
