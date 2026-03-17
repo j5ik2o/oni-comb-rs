@@ -54,8 +54,7 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 | `whitespace0()` / `whitespace1()` | ASCII 空白を消費 | `&str` |
 | `identifier()` | ASCII 識別子 `[a-zA-Z_][a-zA-Z0-9_]*` | `&str` |
 | `integer()` | 符号付き整数 | `i64` |
-| `quoted_string()` | JSON 準拠ダブルクォート文字列 | `String` |
-| `quoted_string_cow()` | ゼロコピー版 quoted string | `Cow<'a, str>` |
+| `quoted_string()` | JSON 準拠ダブルクォート文字列（エスケープなしなら借用） | `Cow<'a, str>` |
 | `escaped(open, close, esc, handler)` | 汎用エスケープ文字列 | `String` |
 | `lexeme(p)` | パーサー実行後に後続の空白を消費 | `P::Output` |
 | `between(l, p, r)` | l, p, r を順に実行し p の値を返す | `P::Output` |

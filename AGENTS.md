@@ -129,7 +129,7 @@ flat_map 再帰ではなく専用ループで実装する。
 `fn_parser`, `flat_map`（同一型返却時）, `peek_byte`
 
 **`alloc` が必要**:
-`many0/1`, `sep_by0/1`, `chainl1/r1`（`Vec` 返却）, `quoted_string`/`quoted_string_cow`/`escaped`（`String`/`Cow`）,
+`many0/1`, `sep_by0/1`, `chainl1/r1`（`Vec` 返却）, `quoted_string`/`escaped`（`Cow`/`String`）,
 `recursive`（`Box<dyn Parser>` + `Rc`）, `ParseError`（`Vec<Expected>` + `Vec<&str>`）
 
 **実装方針**: `default = ["alloc"]` feature で分離。core-only 層だけでプロトコルパーサーや組み込みトークナイザーに使える。
@@ -739,4 +739,3 @@ function processLargeData(items) {
 - ナビゲーション性の向上（ファイル名 = 型名）
 - 責任の明確化（ファイル肥大化 = 設計の問題）
 - Git履歴の追跡容易性
-

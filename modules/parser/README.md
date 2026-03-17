@@ -55,8 +55,7 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 | `whitespace0()` / `whitespace1()` | Consume ASCII whitespace | `&str` |
 | `identifier()` | ASCII identifier `[a-zA-Z_][a-zA-Z0-9_]*` | `&str` |
 | `integer()` | Signed integer | `i64` |
-| `quoted_string()` | JSON-compliant double-quoted string | `String` |
-| `quoted_string_cow()` | Zero-copy quoted string | `Cow<'a, str>` |
+| `quoted_string()` | JSON-compliant double-quoted string (borrows when unescaped) | `Cow<'a, str>` |
 | `escaped(open, close, esc, handler)` | Generic escaped string | `String` |
 | `lexeme(p)` | Run parser then consume trailing whitespace | `P::Output` |
 | `between(l, p, r)` | Run l, p, r and return p's value | `P::Output` |

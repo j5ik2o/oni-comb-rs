@@ -104,8 +104,7 @@ let parser = satisfy(|c: char| c == 'c' || c == 't')
 | `whitespace1()` | Consume 1 or more ASCII whitespace characters | `&str` |
 | `identifier()` | ASCII identifier (`[a-zA-Z_][a-zA-Z0-9_]*`) | `&str` |
 | `integer()` | Signed integer | `i64` |
-| `quoted_string()` | Double-quoted string (JSON-compliant escaping) | `String` |
-| `quoted_string_cow()` | Zero-copy quoted_string (borrows when no escapes) | `Cow<'a, str>` |
+| `quoted_string()` | Double-quoted string (JSON-compliant escaping, borrows when unescaped) | `Cow<'a, str>` |
 | `escaped(open, close, esc, handler)` | Generic escaped string parser | `String` |
 | `lexeme(p)` | Run parser then consume trailing whitespace | `P::Output` |
 | `between(l, p, r)` | Run `l`, `p`, `r` in sequence and return `p`'s value | `P::Output` |
@@ -235,6 +234,7 @@ Improved from 8.3ns → 7.2ns through ParseError introduction + `#[inline]`. chu
 ### Full JSON Benchmark (107KB)
 
 Measured on the same machine (100 samples) after adding the `pom` implementation to `json_full.rs`.
+Measurement machine: Mac mini (Mac16,11), Apple M4 Pro (14 cores: 10P + 4E), 64 GB RAM, macOS 26.3.1, arm64.
 
 | Library | Mean | Throughput (mean, MiB/s) |
 |---------|------|-------------------------|
@@ -244,7 +244,7 @@ Measured on the same machine (100 samples) after adding the `pom` implementation
 | chumsky | 495.6 µs | 206.0 |
 | pom | 7.56 ms | 13.5 |
 
-Using `fn_parser` function recursion + `peek_byte` leading-byte dispatch + `quoted_string_cow` zero-copy, oni-comb outperforms winnow by 1.07x, nom by 1.36x, chumsky by 2.56x, and pom by 39.1x.
+Using `fn_parser` function recursion + `peek_byte` leading-byte dispatch + `quoted_string` zero-copy, oni-comb outperforms winnow by 1.07x, nom by 1.36x, chumsky by 2.56x, and pom by 39.1x.
 
 ### Summary
 

@@ -111,6 +111,7 @@ flat_map 再帰ではなく専用ループで実装する。
 - **比較対象**: `winnow`、`nom`、`chumsky`、`pom`
 - **workload**: identifier/integer、flat_map 同一型/異種型、zip vs flat_map、JSON subset、四則演算+括弧、107KB JSON フル
 - **観測項目**: throughput（Criterion）、allocation count（`dhat-rs`）
+- **計測マシン**: Mac mini (Mac16,11), Apple M4 Pro (14 cores: 10P + 4E), 64 GB RAM, macOS 26.3.1, arm64
 - **最適化サイクル**: ParseError 導入（~12%）+ `#[inline]`（~17%）+ ゼロコピー＋fn再帰（~77%）で累計 ~83% 改善
 - **107KB JSON フルベンチ（100 サンプル、pom を含む）**:
 
@@ -136,7 +137,7 @@ flat_map 再帰ではなく専用ループで実装する。
 `fn_parser`, `flat_map`（同一型返却時）, `peek_byte`
 
 **`alloc` が必要**:
-`many0/1`, `sep_by0/1`, `chainl1/r1`（`Vec` 返却）, `quoted_string`/`quoted_string_cow`/`escaped`（`String`/`Cow`）,
+`many0/1`, `sep_by0/1`, `chainl1/r1`（`Vec` 返却）, `quoted_string`/`escaped`（`Cow`/`String`）,
 `recursive`（`Box<dyn Parser>` + `Rc`）, `ParseError`（`Vec<Expected>` + `Vec<&str>`）
 
 **実装方針**: `default = ["alloc"]` feature で分離。core-only 層だけでプロトコルパーサーや組み込みトークナイザーに使える。
