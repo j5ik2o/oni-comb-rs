@@ -132,16 +132,17 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 ### JSON フルベンチ（107KB sample.json）
 
-同一マシンでの 107KB JSON ファイル計測（100 サンプル）。pom は除外（pom 3.x の API ではフル JSON パーサーの実装が困難）。
+`json_full.rs` に `pom` 実装を追加した後、同一マシンで 107KB JSON ファイルを計測（100 サンプル）。
 
-| ライブラリ | Mean | Throughput (mean) |
-|-----------|------|-------------------|
-| **oni-comb** | **196.5 µs** | **519 MB/s** |
-| winnow | 201.0 µs | 508 MB/s |
-| nom | 274.5 µs | 372 MB/s |
-| chumsky | 495.7 µs | 206 MB/s |
+| ライブラリ | Mean | Throughput (mean, MiB/s) |
+|-----------|------|-------------------------|
+| **oni-comb** | **193.4 µs** | **527.8** |
+| winnow | 206.5 µs | 494.4 |
+| nom | 262.8 µs | 388.5 |
+| chumsky | 495.6 µs | 206.0 |
+| pom | 7.56 ms | 13.5 |
 
-**oni-comb は winnow の 1.03 倍、nom の 1.40 倍、chumsky の 2.52 倍のスループット（mean 基準）。** 最適化の内訳:
+**oni-comb は winnow の 1.07 倍、nom の 1.36 倍、chumsky の 2.56 倍、pom の 39.1 倍のスループット（mean 基準）。** 最適化の内訳:
 - `fn_parser` による関数再帰（`recursive()` の `Box<dyn Parser>` vtable を排除）
 - `peek_byte` による先頭バイト分岐（`or` チェーンの線形スキャンを排除）
 - `quoted_string_cow` によるゼロコピー文字列（エスケープなし文字列は `&str` スライス）
@@ -263,9 +264,9 @@ dhat: At t-end:  0 bytes in 0 blocks
 
 ## 総合評価
 
-- **winnow を上回るスループット** — 107KB JSON で winnow の 1.03 倍（`fn_parser` + `peek_byte` 分岐 + ゼロコピー文字列）
+- **winnow を上回るスループット** — 107KB JSON で winnow の 1.07 倍（`fn_parser` + `peek_byte` 分岐 + ゼロコピー文字列）
 - **nom と中〜長入力で同等〜上回る** — identifier 11B: oni-comb 38.9ns vs nom 33.4ns（nom がやや高速）、28B: oni-comb 81.7ns vs nom 82.7ns（ほぼ同等）
-- **pom の 3〜30 倍高速** — 旧 v1 相当の `Rc<dyn Fn>` 設計との差を実証
+- **pom の 3〜39 倍高速** — 旧 v1 相当の `Rc<dyn Fn>` 設計との差を実証
 - **chumsky 0.12 で大幅改善** — identifier "x": 918ns -> 17.1ns（v0.9 比 ~54 倍高速化）。短い入力では oni-comb/winnow/nom と競合するレベルに到達。ただし中〜長入力では依然 2 倍程度遅い（11B identifier: 83.8ns vs 38.9ns）。flat_map boxed では chumsky が oni-comb と同等（25.4ns vs 30.9ns）
 - **zip ≒ flat_map（同一型）** — 具象コンビネータ型設計の妥当性を確認
 - **3 回の最適化サイクルで累計 ~83% 改善** — ParseError 導入（~12%）+ #[inline]（~17%）+ ゼロコピー＋fn再帰（~77%）

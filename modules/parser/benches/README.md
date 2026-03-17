@@ -134,16 +134,17 @@ All figures are Criterion **mean estimates** (100 samples, 95% confidence interv
 
 ### Full JSON Benchmark (107KB sample.json)
 
-Same-machine measurement using the same 107KB JSON file (100 samples). pom excluded (pom 3.x API makes a full JSON parser impractical for this benchmark).
+Same-machine measurement using the same 107KB JSON file (100 samples) after adding the `pom` implementation to `json_full.rs`.
 
-| Library | Mean | Throughput (mean) |
-|---------|------|-------------------|
-| **oni-comb** | **196.5 µs** | **519 MB/s** |
-| winnow | 201.0 µs | 508 MB/s |
-| nom | 274.5 µs | 372 MB/s |
-| chumsky | 495.7 µs | 206 MB/s |
+| Library | Mean | Throughput (mean, MiB/s) |
+|---------|------|-------------------------|
+| **oni-comb** | **193.4 µs** | **527.8** |
+| winnow | 206.5 µs | 494.4 |
+| nom | 262.8 µs | 388.5 |
+| chumsky | 495.6 µs | 206.0 |
+| pom | 7.56 ms | 13.5 |
 
-**oni-comb achieves 1.03x the throughput of winnow, 1.40x that of nom, and 2.52x that of chumsky (mean basis).** Optimization breakdown:
+**oni-comb achieves 1.07x the throughput of winnow, 1.36x that of nom, 2.56x that of chumsky, and 39.1x that of pom (mean basis).** Optimization breakdown:
 - Function recursion via `fn_parser` (eliminates `recursive()`'s `Box<dyn Parser>` vtable)
 - Leading-byte dispatch via `peek_byte` (eliminates `or` chain linear scanning)
 - Zero-copy strings via `quoted_string_cow` (unescaped strings use `&str` slices)
@@ -265,9 +266,9 @@ Introduced `Token`/`Slice` associated types to `Input` trait and moved `satisfy`
 
 ## Overall Assessment
 
-- **Outperforms winnow in throughput** — 1.03x faster on 107KB JSON (`fn_parser` + `peek_byte` dispatch + zero-copy strings)
+- **Outperforms winnow in throughput** — 1.07x faster on 107KB JSON (`fn_parser` + `peek_byte` dispatch + zero-copy strings)
 - **Outperforms nom on medium-to-long inputs** — identifier 11B: oni-comb 38.9ns vs nom 33.4ns (nom slightly faster), but 28B: oni-comb 81.7ns vs nom 82.7ns (comparable)
-- **3–30x faster than pom** — demonstrates the gap vs. old v1-equivalent `Rc<dyn Fn>` design
+- **3–39x faster than pom** — demonstrates the gap vs. old v1-equivalent `Rc<dyn Fn>` design
 - **chumsky 0.12 dramatically improved** — identifier "x": 918ns -> 17.1ns (~54x faster than v0.9). chumsky is now competitive on short inputs but still 2x slower on medium/long inputs (83.8ns vs 38.9ns at 11B identifier). flat_map boxed: chumsky now comparable to oni-comb (25.4ns vs 30.9ns)
 - **zip ≒ flat_map (same type)** — validates the concrete combinator type design
 - **~83% cumulative improvement across 3 optimization cycles** — ParseError introduction (~12%) + #[inline] (~17%) + zero-copy + fn recursion (~77%)

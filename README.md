@@ -64,7 +64,7 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 
 ### Why Applicative-First?
 
-In Rust, when a `flat_map` closure returns different parser types, type erasure via `Box<dyn Parser>` is required, incurring heap allocation + dynamic dispatch. The old v1 and pom built all combinators with `Rc<dyn Fn>`, which benchmarks show to be 3–30x slower than v2.
+In Rust, when a `flat_map` closure returns different parser types, type erasure via `Box<dyn Parser>` is required, incurring heap allocation + dynamic dispatch. The old v1 and pom built all combinators with `Rc<dyn Fn>`, which benchmarks show to be 3–39x slower than v2.
 
 In contrast, `zip` (Applicative) is built on the stack as a concrete type like `Zip<Char, Tag>`, allowing the compiler to perform monomorphization → inlining → LLVM optimization end-to-end, achieving performance close to hand-written recursive descent parsers.
 
@@ -234,22 +234,23 @@ Improved from 8.3ns → 7.2ns through ParseError introduction + `#[inline]`. chu
 
 ### Full JSON Benchmark (107KB)
 
-Measured on the same machine (100 samples). pom excluded (full JSON parser impractical with pom 3.x API).
+Measured on the same machine (100 samples) after adding the `pom` implementation to `json_full.rs`.
 
-| Library | Mean | Throughput (mean) |
-|---------|------|-------------------|
-| **oni-comb** | **196.5 µs** | **519 MB/s** |
-| winnow | 201.0 µs | 508 MB/s |
-| nom | 274.5 µs | 372 MB/s |
-| chumsky | 495.7 µs | 206 MB/s |
+| Library | Mean | Throughput (mean, MiB/s) |
+|---------|------|-------------------------|
+| **oni-comb** | **193.4 µs** | **527.8** |
+| winnow | 206.5 µs | 494.4 |
+| nom | 262.8 µs | 388.5 |
+| chumsky | 495.6 µs | 206.0 |
+| pom | 7.56 ms | 13.5 |
 
-Using `fn_parser` function recursion + `peek_byte` leading-byte dispatch + `quoted_string_cow` zero-copy, oni-comb outperforms winnow by 1.03x, nom by 1.40x, and chumsky by 2.52x.
+Using `fn_parser` function recursion + `peek_byte` leading-byte dispatch + `quoted_string_cow` zero-copy, oni-comb outperforms winnow by 1.07x, nom by 1.36x, chumsky by 2.56x, and pom by 39.1x.
 
 ### Summary
 
-- **Outperforms winnow in throughput** — 1.06x faster on 107KB JSON (`fn_parser` + `peek_byte` dispatch + zero-copy strings)
+- **Outperforms winnow in throughput** — 1.07x faster on 107KB JSON (`fn_parser` + `peek_byte` dispatch + zero-copy strings)
 - **Competitive with nom on medium-to-long inputs** — comparable at 11B and 28B identifier
-- **3–30x faster than pom** — demonstrates the gap vs. old v1-equivalent `Rc<dyn Fn>` design
+- **3–39x faster than pom** — demonstrates the gap vs. old v1-equivalent `Rc<dyn Fn>` design
 - **chumsky 0.12 dramatically improved** — identifier "x": 918ns -> 17.1ns (~54x faster than v0.9). Now competitive on short inputs, but still ~2x slower on medium/long inputs
 - **zip ≒ flat_map (same type)** — monadic composition is zero-cost thanks to concrete combinator type design
 - **~83% cumulative improvement across 3 optimization rounds** — ParseError introduction (~12%) + `#[inline]` (~17%) + zero-copy + fn recursion (~77%)

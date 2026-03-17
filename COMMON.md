@@ -112,16 +112,17 @@ flat_map 再帰ではなく専用ループで実装する。
 - **workload**: identifier/integer、flat_map 同一型/異種型、zip vs flat_map、JSON subset、四則演算+括弧、107KB JSON フル
 - **観測項目**: throughput（Criterion）、allocation count（`dhat-rs`）
 - **最適化サイクル**: ParseError 導入（~12%）+ `#[inline]`（~17%）+ ゼロコピー＋fn再帰（~77%）で累計 ~83% 改善
-- **107KB JSON フルベンチ（100 サンプル、pom 除外）**:
+- **107KB JSON フルベンチ（100 サンプル、pom を含む）**:
 
-| ライブラリ | Mean | Throughput (mean) |
-|-----------|------|-------------------|
-| **oni-comb** | **196.5 µs** | **519 MB/s** |
-| winnow | 201.0 µs | 508 MB/s |
-| nom | 274.5 µs | 372 MB/s |
-| chumsky | 495.7 µs | 206 MB/s |
+| ライブラリ | Mean | Throughput (mean, MiB/s) |
+|-----------|------|-------------------------|
+| **oni-comb** | **193.4 µs** | **527.8** |
+| winnow | 206.5 µs | 494.4 |
+| nom | 262.8 µs | 388.5 |
+| chumsky | 495.6 µs | 206.0 |
+| pom | 7.56 ms | 13.5 |
 
-- **知見**: winnow の 1.03 倍、nom の 1.40 倍、chumsky の 2.52 倍のスループット（mean 基準）。flat_map 同一型は zip とゼロコスト同等。chumsky 0.12 で v0.9 比 ~54 倍の劇的改善（identifier "x": 918ns → 17.1ns）。短い入力では oni-comb/winnow/nom と競合するレベルに到達。ただし中〜長入力では依然 2 倍程度遅い（11B identifier: 83.8ns vs 38.9ns）。詳細は `modules/parser/benches/README.md` を参照
+- **知見**: winnow の 1.07 倍、nom の 1.36 倍、chumsky の 2.56 倍、pom の 39.1 倍のスループット（mean 基準）。flat_map 同一型は zip とゼロコスト同等。chumsky 0.12 で v0.9 比 ~54 倍の劇的改善（identifier "x": 918ns → 17.1ns）。短い入力では oni-comb/winnow/nom と競合するレベルに到達。ただし中〜長入力では依然 2 倍程度遅い（11B identifier: 83.8ns vs 38.9ns）。詳細は `modules/parser/benches/README.md` を参照
 - **Generic Input リファクタリングの影響**: `primitive/` のジェネリックパーサー（`satisfy`, `take_while0/1`）は `peek_token`+`next_token` の per-token オーバーヘッドにより、長い入力で 40-150% の退行あり（例: identifier 28B で 44→82 ns）。`text/` の専用パーサー（`identifier`, `integer` 等）は `as_str().chars()` 直接使用のため影響なし。JSON/arithmetic マクロベンチも変化なし
 - **アロケーション**: パーサーコンビネータインフラはゼロアロケーション。JSON フルパースのアロケーション（743 blocks / 336KB）は全て AST 構築（`Vec` grow + エスケープ文字列 `Cow::Owned`）に起因
 

@@ -64,7 +64,7 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 
 ### なぜ Applicative 優先か
 
-Rust では `flat_map` のクロージャが異なる型のパーサーを返す場合、`Box<dyn Parser>` による型消去が必要になり、ヒープアロケーション＋動的ディスパッチが発生します。旧 v1 や pom は全コンビネータを `Rc<dyn Fn>` で構成しており、ベンチマークでは v2 の 3〜30 倍遅い結果になっています。
+Rust では `flat_map` のクロージャが異なる型のパーサーを返す場合、`Box<dyn Parser>` による型消去が必要になり、ヒープアロケーション＋動的ディスパッチが発生します。旧 v1 や pom は全コンビネータを `Rc<dyn Fn>` で構成しており、ベンチマークでは v2 の 3〜39 倍遅い結果になっています。
 
 一方、`zip`（Applicative）は `Zip<Char, Tag>` のような具象型としてスタック上に構築されるため、コンパイラがモノモーフィゼーション → インライン化 → LLVM 最適化まで一気通貫で行え、手書きの再帰下降パーサーに近い性能が出ます。
 
@@ -234,22 +234,23 @@ ParseError 導入 + `#[inline]` で旧 8.3ns → 7.2ns。chumsky 0.12 は ~930ns
 
 ### JSON フルベンチ（107KB）
 
-同一マシンでの計測（100 サンプル）。pom は除外（pom 3.x の API ではフル JSON パーサーの実装が困難）。
+`json_full.rs` に `pom` 実装を追加した後、同一マシンで計測（100 サンプル）。
 
-| ライブラリ | Mean | Throughput (mean) |
-|-----------|------|-------------------|
-| **oni-comb** | **196.5 µs** | **519 MB/s** |
-| winnow | 201.0 µs | 508 MB/s |
-| nom | 274.5 µs | 372 MB/s |
-| chumsky | 495.7 µs | 206 MB/s |
+| ライブラリ | Mean | Throughput (mean, MiB/s) |
+|-----------|------|-------------------------|
+| **oni-comb** | **193.4 µs** | **527.8** |
+| winnow | 206.5 µs | 494.4 |
+| nom | 262.8 µs | 388.5 |
+| chumsky | 495.6 µs | 206.0 |
+| pom | 7.56 ms | 13.5 |
 
-`fn_parser` による関数再帰 + `peek_byte` 先頭バイト分岐 + `quoted_string_cow` ゼロコピーにより、winnow の 1.03 倍、nom の 1.40 倍、chumsky の 2.52 倍。
+`fn_parser` による関数再帰 + `peek_byte` 先頭バイト分岐 + `quoted_string_cow` ゼロコピーにより、winnow の 1.07 倍、nom の 1.36 倍、chumsky の 2.56 倍、pom の 39.1 倍。
 
 ### 特性まとめ
 
-- **winnow を上回るスループット** — 107KB JSON で winnow の 1.06 倍（`fn_parser` + `peek_byte` 分岐 + ゼロコピー文字列）
+- **winnow を上回るスループット** — 107KB JSON で winnow の 1.07 倍（`fn_parser` + `peek_byte` 分岐 + ゼロコピー文字列）
 - **nom と中〜長入力で同等〜上回る** — identifier 11B/28B でほぼ同等
-- **pom の 3〜30 倍高速** — 旧 v1 相当の `Rc<dyn Fn>` 設計との差を実証
+- **pom の 3〜39 倍高速** — 旧 v1 相当の `Rc<dyn Fn>` 設計との差を実証
 - **chumsky 0.12 で大幅改善** — identifier "x": 918ns -> 17.1ns（v0.9 比 ~54 倍高速化）。短い入力では競合レベルに到達。ただし中〜長入力では依然 ~2 倍遅い
 - **zip ≒ flat_map（同一型）** — 具象コンビネータ型設計によりモナディック合成でもゼロコスト
 - **3 回の最適化で累計 ~83% 改善** — ParseError 導入（~12%）+ `#[inline]`（~17%）+ ゼロコピー＋fn再帰（~77%）
