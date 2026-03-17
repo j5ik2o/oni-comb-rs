@@ -31,9 +31,15 @@ pub fn parse_integer(s: &str) -> Option<u64> {
 
 /// flat_map 同一型分岐: digit → tag (chumsky 0.12 は then_with が廃止されたため choice を使用)
 pub fn parse_flat_map_same_type(s: &str) -> Option<String> {
-  let p1 = just::<_, &str, extra::Default>('1').ignore_then(just("one")).to("one".to_string());
-  let p2 = just::<_, &str, extra::Default>('2').ignore_then(just("two")).to("two".to_string());
-  let p3 = just::<_, &str, extra::Default>('3').ignore_then(just("three")).to("three".to_string());
+  let p1 = just::<_, &str, extra::Default>('1')
+    .ignore_then(just("one"))
+    .to("one".to_string());
+  let p2 = just::<_, &str, extra::Default>('2')
+    .ignore_then(just("two"))
+    .to("two".to_string());
+  let p3 = just::<_, &str, extra::Default>('3')
+    .ignore_then(just("three"))
+    .to("three".to_string());
   choice((p1, p2, p3)).parse(s).into_output()
 }
 
