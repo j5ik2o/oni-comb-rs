@@ -35,7 +35,7 @@ Input (trait)          -- 入力ストリーム抽象。Token/Slice/Checkpoint �
   └─ ByteInput         -- &[u8] 向け実装。Token=u8, Slice=&'a [u8], Checkpoint=usize
 
 Parser (trait)         -- parse_next(&mut self, &mut I) -> PResult<O, E>
-  └─ ParserExt (trait) -- map/zip/zip_left/zip_right/or/attempt/cut/optional/many0/many1/sep_by0/sep_by1/chainl1/chainr1/flat_map/and_then のメソッドチェーン
+  └─ ParserExt (trait) -- map/zip/zip_left/zip_right/or/attempt/cut/optional/many0/many1/many0_fold/many1_fold/many0_into/many1_into/sep_by0/sep_by1/sep_by0_fold/sep_by1_fold/sep_by0_into/sep_by1_into/chainl1/chainr1/context/map_res/flat_map/and_then のメソッドチェーン
 
 Fail (enum)            -- Backtrack(E) | Cut(E) | Incomplete | ZeroProgress
 PResult<T, E>          -- Result<T, Fail<E>>
@@ -51,7 +51,7 @@ PResult<T, E>          -- Result<T, Fail<E>>
 | `parser.rs` | `Parser<I>` トレイト（`Output`, `Error`, `parse_next`） |
 | `parser_ext.rs` | `ParserExt<I>` — 全 `Parser` に自動実装されるコンビネータメソッド |
 | `fail.rs` | `Fail<E>` enum と `PResult` 型エイリアス |
-| `combinator/` | 各コンビネータの具象型（`Map`, `Zip`, `ZipLeft`, `ZipRight`, `Or`, `Attempt`, `Cut`, `Optional`, `Many`, `Many1`, `SepBy0`, `SepBy1`, `ChainL1`, `ChainR1`, `FlatMap`） |
+| `combinator/` | 各コンビネータの具象型（`Map`, `Zip`, `ZipLeft`, `ZipRight`, `Or`, `Attempt`, `Cut`, `Optional`, `Many`, `Many1`, `ManyFold`, `Many1Fold`, `SepBy0`, `SepBy1`, `SepByFold0`, `SepByFold1`, `ChainL1`, `ChainR1`, `FlatMap`, `MapRes`, `Context`, `FnParser`, `Recursive`） |
 | `primitive/` | ジェネリックパーサー（`Take`, `Satisfy`, `TakeWhile0/1`, `TakeWhileNM`, `Eof`）— `I: Input` で `StrInput`/`ByteInput` 両対応 |
 | `text/` | テキスト専用パーサー（`Char`, `Tag`, `Whitespace0/1`, `Identifier`, `Integer`, `QuotedString`）— `StrInput` 固定 |
 
@@ -134,10 +134,12 @@ flat_map 再帰ではなく専用ループで実装する。
 **`alloc` 不要（core のみで動作）**:
 `tag`, `char`, `satisfy`, `take_while0/1`, `eof`, `whitespace0/1`, `identifier`, `integer`,
 `zip`, `zip_left`, `zip_right`, `map`, `or`, `attempt`, `cut`, `optional`, `context`,
-`fn_parser`, `flat_map`（同一型返却時）, `peek_byte`
+`fn_parser`, `flat_map`（同一型返却時）, `peek_byte`,
+`many0_fold/many1_fold`, `sep_by0_fold/sep_by1_fold`（fold 系はゼロアロケーション）
 
 **`alloc` が必要**:
-`many0/1`, `sep_by0/1`, `chainl1/r1`（`Vec` 返却）, `quoted_string`/`escaped`（`Cow`/`String`）,
+`many0/1`, `sep_by0/1`, `many0_into/many1_into`, `sep_by0_into/sep_by1_into`（`Vec`/`Extend` 返却）,
+`chainl1/r1`（`Vec` 返却）, `quoted_string`/`escaped`（`Cow`/`String`）,
 `recursive`（`Box<dyn Parser>` + `Rc`）, `ParseError`（`Vec<Expected>` + `Vec<&str>`）
 
 **実装方針**: `default = ["alloc"]` feature で分離。core-only 層だけでプロトコルパーサーや組み込みトークナイザーに使える。
