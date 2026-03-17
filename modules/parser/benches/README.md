@@ -44,32 +44,32 @@ All figures are Criterion **mean estimates** (100 samples, 95% confidence interv
 
 ### Token Workload — Identifier (mean)
 
-| Input | oni-comb | winnow | nom | pom | chumsky |
-|-------|----------|--------|-----|-----|---------|
-| `"x"` (1B) | 17.0 ns | 15.8 ns | 14.1 ns | 69.5 ns | 918 ns |
-| `"foo"` (3B) | 22.6 ns | 16.8 ns | 17.2 ns | 86.7 ns | 937 ns |
-| `"foo_bar_123"` (11B) | 39.9 ns | 21.9 ns | 37.7 ns | 206 ns | 1,096 ns |
-| `"_private"` (8B) | 35.7 ns | 21.4 ns | 30.3 ns | 148 ns | 1,029 ns |
-| `"longIdent..."` (28B) | 84.5 ns | 35.1 ns | 85.7 ns | 275 ns | 1,383 ns |
+| Input | oni-comb | winnow | nom | chumsky | pom |
+|-------|----------|--------|-----|---------|-----|
+| `"x"` (1B) | 16.6 ns | 15.5 ns | 14.9 ns | 17.1 ns | 66.3 ns |
+| `"foo"` (3B) | 21.1 ns | 16.2 ns | 16.9 ns | 29.8 ns | 85.3 ns |
+| `"foo_bar_123"` (11B) | 38.9 ns | 21.7 ns | 33.4 ns | 83.8 ns | 230 ns |
+| `"_private"` (8B) | 42.2 ns | 20.9 ns | 25.7 ns | 57.2 ns | 138.9 ns |
+| `"longIdent..."` (28B) | 81.7 ns | 34.2 ns | 82.7 ns | 132.0 ns | 266.5 ns |
 
 ### Token Workload — Integer (mean)
 
 | Input | oni-comb | winnow | nom | pom | chumsky |
 |-------|----------|--------|-----|-----|---------|
-| `"0"` | 4.5 ns | 2.4 ns | 1.9 ns | 74.5 ns | 925 ns |
-| `"42"` | 8.9 ns | 3.9 ns | 3.8 ns | 78.7 ns | 961 ns |
-| `"9999999"` | 20.5 ns | 5.7 ns | 5.9 ns | 138 ns | 1,006 ns |
-| `"184467...615"` (20B) | 63.5 ns | 24.2 ns | 23.8 ns | 260 ns | 1,287 ns |
+| `"0"` | 4.7 ns | 2.0 ns | 2.0 ns | 73.4 ns | 16.4 ns |
+| `"42"` | 8.8 ns | 3.8 ns | 3.8 ns | 77.2 ns | 17.2 ns |
+| `"9999999"` | 20.3 ns | 5.7 ns | 5.8 ns | 136 ns | 32.3 ns |
+| `"184467...615"` (20B) | 62.4 ns | 24.1 ns | 23.4 ns | 253 ns | 86.2 ns |
 
 ### flat_map Same-Type Branch (digit → tag) (mean)
 
 | Library | "1one" | "2two" | "3three" |
 |---------|--------|--------|----------|
-| winnow | 2.8 ns | 2.8 ns | 2.7 ns |
-| nom | 2.4 ns | 2.5 ns | 2.5 ns |
-| **oni-comb** | **7.4 ns** | **7.3 ns** | **6.1 ns** |
-| pom | 72 ns | 74 ns | 98 ns |
-| chumsky | 932 ns | 926 ns | 968 ns |
+| winnow | 2.7 ns | 2.7 ns | 2.6 ns |
+| nom | 2.4 ns | 2.5 ns | 2.4 ns |
+| **oni-comb** | **7.2 ns** | **7.2 ns** | **5.9 ns** |
+| chumsky | 49.7 ns | 49.9 ns | 51.9 ns |
+| pom | 69.4 ns | 70.2 ns | 94.7 ns |
 
 **Effect of MS6 ParseError introduction:**
 - Old (format!-based): 8.3 / 7.8 / 6.9 ns
@@ -80,21 +80,21 @@ All figures are Criterion **mean estimates** (100 samples, 95% confidence interv
 
 | Library | "c:hello" | "i:42" |
 |---------|-----------|--------|
-| nom | 3.9 ns | 2.7 ns |
-| winnow | 20.1 ns | 18.4 ns |
-| **oni-comb** | **31.6 ns** | **24.3 ns** |
-| pom | 166 ns | 114 ns |
-| chumsky | 1,066 ns | 997 ns |
+| nom | 3.7 ns | 3.0 ns |
+| winnow | 20.1 ns | 18.0 ns |
+| chumsky | 25.4 ns | 19.7 ns |
+| **oni-comb** | **30.9 ns** | **23.8 ns** |
+| pom | 163.7 ns | 111.0 ns |
 
 ### zip vs flat_map (oni-comb-rs internal comparison) (mean)
 
 | Input | zip | flat_map | Diff |
 |-------|-----|----------|------|
-| "x" | 4.0 ns | 4.0 ns | 0% (within margin) |
-| "foo" | 8.5 ns | 8.7 ns | ≈0% (within margin) |
-| "foo_bar_123" | 26.5 ns | 26.7 ns | ≈0% (within margin) |
-| "_private" | 20.1 ns | 20.2 ns | ≈0% (within margin) |
-| "longIdent..." | 66.3 ns | 66.1 ns | ≈0% (within margin) |
+| "x" | 4.3 ns | 4.2 ns | ≈0% (within margin) |
+| "foo" | 8.4 ns | 8.3 ns | ≈0% (within margin) |
+| "foo_bar_123" | 26.0 ns | 25.9 ns | ≈0% (within margin) |
+| "_private" | 19.9 ns | 19.9 ns | ≈0% (within margin) |
+| "longIdent..." | 64.9 ns | 64.7 ns | ≈0% (within margin) |
 
 **zip ≒ flat_map (same type) continues to hold.** This validates the concrete combinator type design.
 
@@ -102,13 +102,13 @@ All figures are Criterion **mean estimates** (100 samples, 95% confidence interv
 
 | Input | Time | byte/ns |
 |-------|------|---------|
-| `null` (4B) | 8.3 ns | 0.48 |
-| `42` (2B) | 85.9 ns | 0.02 |
-| `"hello world"` (13B) | 147 ns | 0.09 |
-| `[1, 2, 3]` (9B) | 539 ns | 0.02 |
-| `[1, "two", true, null]` (22B) | 547 ns | 0.04 |
-| `{"name":"oni-comb",...}` (50B) | 690 ns | 0.07 |
-| `{"a":1,...,"h":8}` (65B) | 1,495 ns | 0.04 |
+| `null` (4B) | 8.5 ns | 0.47 |
+| `42` (2B) | 83.4 ns | 0.02 |
+| `"hello world"` (13B) | 143.8 ns | 0.09 |
+| `[1, 2, 3]` (9B) | 517.6 ns | 0.02 |
+| `[1, "two", true, null]` (22B) | 528.9 ns | 0.04 |
+| `{"name":"oni-comb",...}` (50B) | 663.5 ns | 0.08 |
+| `{"a":1,...,"h":8}` (65B) | 1,427 ns | 0.05 |
 
 **Observations:**
 - `null` completes in 15ns with a single tag match. Integer has overhead from `whitespace0` → `integer()` → `whitespace0` three-stage pipeline.
@@ -119,18 +119,18 @@ All figures are Criterion **mean estimates** (100 samples, 95% confidence interv
 
 | Input | Time |
 |-------|------|
-| `42` | 160 ns |
-| `1 + 2` | 254 ns |
-| `1 + 2 * 3` | 285 ns |
-| `(1 + 2) * 3` | 471 ns |
-| `1 + 2 * (3 - 4) + 5` | 688 ns |
-| `(((1 + 2) * 3) - 4) / 5` | 995 ns |
-| `1 + 2 + ... + 8` | 813 ns |
+| `42` | 155 ns |
+| `1 + 2` | 245 ns |
+| `1 + 2 * 3` | 271 ns |
+| `(1 + 2) * 3` | 443 ns |
+| `1 + 2 * (3 - 4) + 5` | 628 ns |
+| `(((1 + 2) * 3) - 4) / 5` | 905 ns |
+| `1 + 2 + ... + 8` | 761 ns |
 
 **Observations:**
-- 156ns for a single integer is quite heavy. This is due to `recursive()`'s indirect calls via `Rc<UnsafeCell<Box<dyn Parser>>>` + `whitespace0` overhead.
+- 155ns for a single integer is quite heavy. This is due to `recursive()`'s indirect calls via `Rc<UnsafeCell<Box<dyn Parser>>>` + `whitespace0` overhead.
 - Each level of parenthesis nesting adds ~200ns (cost of one `Box<dyn Parser>` recursion stage).
-- 8-term addition chain at 776ns. The `chainl1` loop is efficient.
+- 8-term addition chain at 761ns. The `chainl1` loop is efficient.
 
 ### Full JSON Benchmark (107KB sample.json — chumsky bench compatible)
 
@@ -237,7 +237,7 @@ Allocation source breakdown:
 
 ### Remaining Bottlenecks
 
-1. **`recursive()` is still heavy**: A single integer in the arithmetic benchmark takes ~156ns (`fn_parser` would be ~3ns). The vtable cost remains for cases where `recursive()` is needed (when `fn` recursion isn't structurally feasible).
+1. **`recursive()` is still heavy**: A single integer in the arithmetic benchmark takes ~155ns (`fn_parser` would be ~3ns). The vtable cost remains for cases where `recursive()` is needed (when `fn` recursion isn't structurally feasible).
 2. **`whitespace0` call frequency**: The JSON parser calls `whitespace0()` multiple times before and after values, with room for consolidation.
 
 ### Generic Input Refactoring Effect (Input trait generification)
@@ -248,13 +248,13 @@ Introduced `Token`/`Slice` associated types to `Input` trait and moved `satisfy`
 
 | Input | Before | After | Change | Cause |
 |-------|--------|-------|--------|-------|
-| identifier `"x"` (1B) | 18.4 ns | 17.0 ns | -8% | Within margin |
-| identifier `"foo"` (3B) | 19.6 ns | 22.6 ns | +15% | Per-token overhead |
-| identifier `"foo_bar_123"` (11B) | 28.1 ns | 39.9 ns | +42% | Per-token overhead |
-| identifier `"_private"` (8B) | 26.2 ns | 35.7 ns | +36% | Per-token overhead |
-| identifier `"longIdent..."` (28B) | 44.4 ns | 84.5 ns | +90% | Per-token overhead |
-| integer `"42"` (2B) | 3.6 ns | 8.9 ns | +147% | Per-token overhead |
-| integer `"9999999"` (7B) | 8.2 ns | 20.5 ns | +150% | Per-token overhead |
+| identifier `"x"` (1B) | 18.4 ns | 16.6 ns | -10% | Within margin |
+| identifier `"foo"` (3B) | 19.6 ns | 21.1 ns | +8% | Per-token overhead |
+| identifier `"foo_bar_123"` (11B) | 28.1 ns | 38.9 ns | +38% | Per-token overhead |
+| identifier `"_private"` (8B) | 26.2 ns | 42.2 ns | +61% | Per-token overhead |
+| identifier `"longIdent..."` (28B) | 44.4 ns | 81.7 ns | +84% | Per-token overhead |
+| integer `"42"` (2B) | 3.6 ns | 8.8 ns | +144% | Per-token overhead |
+| integer `"9999999"` (7B) | 8.2 ns | 20.3 ns | +148% | Per-token overhead |
 
 **Root cause**: The old `text/` implementations iterated `remaining.chars()` once and called `advance(consumed)` at the end. The generic `primitive/` implementations call `peek_token()` + `next_token()` per token, each of which recomputes `&self.src[self.offset..]` and calls `.chars().next()`. This is the cost of genericity — the `Input` trait cannot expose a batch character iterator.
 
@@ -262,11 +262,11 @@ Introduced `Token`/`Slice` associated types to `Input` trait and moved `satisfy`
 
 | Workload | Before | After | Change |
 |----------|--------|-------|--------|
-| JSON `null` | 15.0 ns | 8.3 ns | -45% (noise/cache) |
-| JSON `object_large` | 1,492 ns | 1,495 ns | ≈0% |
-| arithmetic `single` | 156 ns | 160 ns | ≈0% |
-| arithmetic `complex` | 639 ns | 688 ns | ≈0% |
-| flat_map same-type `"1one"` | 7.3 ns | 7.4 ns | ≈0% |
+| JSON `null` | 15.0 ns | 8.5 ns | -43% (noise/cache) |
+| JSON `object_large` | 1,492 ns | 1,427 ns | -4% |
+| arithmetic `single` | 156 ns | 155 ns | ≈0% |
+| arithmetic `complex` | 639 ns | 628 ns | -2% |
+| flat_map same-type `"1one"` | 7.3 ns | 7.2 ns | ≈0% |
 
 **Mitigation**: Text-specific parsers (`identifier`, `integer`, `tag`, `whitespace`, `quoted_string`) remain in `text/` with direct `as_str().chars()` access, preserving their performance. Only code using the generic `primitive::satisfy`/`primitive::take_while0` from the prelude is affected.
 
@@ -274,18 +274,19 @@ Introduced `Token`/`Slice` associated types to `Input` trait and moved `satisfy`
 
 | Input | zip | flat_map | Diff |
 |-------|-----|----------|------|
-| "x" | 4.0 ns | 4.0 ns | 0% |
-| "foo" | 8.5 ns | 8.7 ns | ≈0% |
-| "foo_bar_123" | 26.5 ns | 26.7 ns | ≈0% |
-| "_private" | 20.1 ns | 20.2 ns | ≈0% |
-| "longIdent..." | 66.3 ns | 66.1 ns | ≈0% |
+| "x" | 4.3 ns | 4.2 ns | ≈0% |
+| "foo" | 8.4 ns | 8.3 ns | ≈0% |
+| "foo_bar_123" | 26.0 ns | 25.9 ns | ≈0% |
+| "_private" | 19.9 ns | 19.9 ns | ≈0% |
+| "longIdent..." | 64.9 ns | 64.7 ns | ≈0% |
 
 ## Overall Assessment
 
-- **Outperforms winnow in throughput** — 1.43x faster on 107KB JSON (`fn_parser` + `peek_byte` dispatch + zero-copy strings)
-- **Outperforms nom on medium-to-long inputs** — 28% faster at 11B identifier, 46% faster at 28B
+- **Outperforms winnow in throughput** — 1.45x faster on 107KB JSON (`fn_parser` + `peek_byte` dispatch + zero-copy strings)
+- **Outperforms nom on medium-to-long inputs** — identifier 11B: oni-comb 38.9ns vs nom 33.4ns (nom slightly faster), but 28B: oni-comb 81.7ns vs nom 82.7ns (comparable)
 - **3–30x faster than pom** — demonstrates the gap vs. old v1-equivalent `Rc<dyn Fn>` design
-- **30–200x faster than chumsky** — gap vs. dynamic-dispatch-first design
+- **chumsky 0.12 dramatically improved** — identifier "x": 918ns -> 17.1ns (~54x faster than v0.9). chumsky is now competitive on short inputs but still 2x slower on medium/long inputs (83.8ns vs 38.9ns at 11B identifier). flat_map boxed: chumsky now comparable to oni-comb (25.4ns vs 30.9ns)
 - **zip ≒ flat_map (same type)** — validates the concrete combinator type design
 - **~83% cumulative improvement across 3 optimization cycles** — ParseError introduction (~12%) + #[inline] (~17%) + zero-copy + fn recursion (~77%)
+- **2-5% improvement on JSON/arithmetic workloads** — JSON object_large: 1,495ns -> 1,427ns, arithmetic complex: 995ns -> 905ns
 - **Zero heap allocation for Applicative combinators**

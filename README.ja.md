@@ -169,39 +169,39 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 
 ### Token ワークロード結果（Identifier）（mean）
 
-入力が長くなるほど oni-comb-rs の `TakeWhile` のバイトスキャンが効き、nom を大きく引き離します。
+chumsky 0.12 で v0.9 比 ~54 倍の劇的改善（identifier "x": 918ns -> 17.1ns）。短い入力では oni-comb/winnow/nom と競合するレベルに到達。ただし中〜長入力では依然 2 倍程度遅い。
 
-| 入力 | oni-comb | winnow | nom | pom | chumsky |
-|------|----------|--------|-----|-----|---------|
-| `"x"` (1B) | 14.9 ns | 15.2 ns | 13.2 ns | 66.4 ns | 894 ns |
-| `"foo_bar_123"` (11B) | 26.7 ns | 21.4 ns | 37.8 ns | 199 ns | 1,144 ns |
-| `"longIdentifier..."` (28B) | 44.1 ns | 33.6 ns | 82.2 ns | 269 ns | 1,447 ns |
+| 入力 | oni-comb | winnow | nom | chumsky | pom |
+|------|----------|--------|-----|---------|-----|
+| `"x"` (1B) | 16.6 ns | 15.5 ns | 14.9 ns | 17.1 ns | 66.3 ns |
+| `"foo_bar_123"` (11B) | 38.9 ns | 21.7 ns | 33.4 ns | 83.8 ns | 230 ns |
+| `"longIdentifier..."` (28B) | 81.7 ns | 34.2 ns | 82.7 ns | 132.0 ns | 266.5 ns |
 
 ### Token ワークロード結果（Integer）（mean）
 
 | 入力 | oni-comb | winnow | nom | pom | chumsky |
 |------|----------|--------|-----|-----|---------|
-| `"42"` (2B) | 3.6 ns | 2.3 ns | 2.7 ns | 72 ns | 907 ns |
-| `"9999999"` (7B) | 8.2 ns | 5.2 ns | 5.3 ns | 133 ns | 995 ns |
-| `"184467...615"` (20B) | 25.9 ns | 22.6 ns | 22.7 ns | 264 ns | 1,256 ns |
+| `"42"` (2B) | 8.8 ns | 3.8 ns | 3.8 ns | 77.2 ns | 17.2 ns |
+| `"9999999"` (7B) | 20.3 ns | 5.7 ns | 5.8 ns | 136 ns | 32.3 ns |
+| `"184467...615"` (20B) | 62.4 ns | 24.1 ns | 23.4 ns | 253 ns | 86.2 ns |
 
 ### flat_map ワークロード結果
 
 #### 同一型分岐（digit → tag、Box 不要）（mean）
 
-| 入力 | oni-comb | winnow | nom | pom | chumsky |
-|------|----------|--------|-----|-----|---------|
-| `"1one"` | 6.1 ns | 2.6 ns | 2.4 ns | 70 ns | 892 ns |
-| `"3three"` | 4.8 ns | 2.6 ns | 2.4 ns | 94 ns | 929 ns |
+| 入力 | oni-comb | winnow | nom | chumsky | pom |
+|------|----------|--------|-----|---------|-----|
+| `"1one"` | 7.2 ns | 2.7 ns | 2.4 ns | 49.7 ns | 69.4 ns |
+| `"3three"` | 5.9 ns | 2.6 ns | 2.4 ns | 51.9 ns | 94.7 ns |
 
-ParseError 導入 + `#[inline]` で旧 8.3ns → 6.1ns（累計 ~26% 改善）。
+ParseError 導入 + `#[inline]` で旧 8.3ns → 7.2ns。chumsky 0.12 は ~930ns から ~50ns に改善。
 
 #### 異種型分岐（`Box<dyn Parser>` / 動的ディスパッチ）（mean）
 
-| 入力 | oni-comb | winnow | nom\* | pom | chumsky |
-|------|----------|--------|-------|-----|---------|
-| `"c:hello"` | 21.5 ns | 19.3 ns | 3.9 ns | 164 ns | 1,052 ns |
-| `"i:42"` | 19.8 ns | 18.6 ns | 2.8 ns | 109 ns | 972 ns |
+| 入力 | oni-comb | winnow | nom\* | chumsky | pom |
+|------|----------|--------|-------|---------|-----|
+| `"c:hello"` | 30.9 ns | 20.1 ns | 3.7 ns | 25.4 ns | 163.7 ns |
+| `"i:42"` | 23.8 ns | 18.0 ns | 3.0 ns | 19.7 ns | 111.0 ns |
 
 \* nom は `Parser` trait が dyn 非互換のため手動二段パース（Box なし）。
 
@@ -209,28 +209,28 @@ ParseError 導入 + `#[inline]` で旧 8.3ns → 6.1ns（累計 ~26% 改善）�
 
 | 入力 | zip | flat_map | 差分 |
 |------|-----|----------|------|
-| `"x"` | 4.8 ns | 4.8 ns | 0% (誤差) |
-| `"foo_bar_123"` | 17.7 ns | 17.7 ns | 0% (誤差) |
-| `"longIdentifier..."` | 31.2 ns | 31.1 ns | 0% (誤差) |
+| `"x"` | 4.3 ns | 4.2 ns | ≈0% (誤差) |
+| `"foo_bar_123"` | 26.0 ns | 25.9 ns | ≈0% (誤差) |
+| `"longIdentifier..."` | 64.9 ns | 64.7 ns | ≈0% (誤差) |
 
 ### JSON subset（oni-comb のみ）（mean）
 
 | 入力 | 時間 |
 |------|------|
-| `null` | 15 ns |
-| `42` | 86 ns |
-| `"hello world"` | 147 ns |
-| `[1, 2, 3]` | 536 ns |
-| `{"name":"oni-comb","version":2,"active":true}` | 693 ns |
+| `null` | 8.5 ns |
+| `42` | 83.4 ns |
+| `"hello world"` | 143.8 ns |
+| `[1, 2, 3]` | 517.6 ns |
+| `{"name":"oni-comb","version":2,"active":true}` | 663.5 ns |
 
 ### 四則演算 + 括弧（oni-comb のみ、recursive 使用）（mean）
 
 | 入力 | 時間 |
 |------|------|
-| `42` | 156 ns |
+| `42` | 155 ns |
 | `1 + 2 * 3` | 271 ns |
-| `(1 + 2) * 3` | 440 ns |
-| `(((1 + 2) * 3) - 4) / 5` | 931 ns |
+| `(1 + 2) * 3` | 443 ns |
+| `(((1 + 2) * 3) - 4) / 5` | 905 ns |
 
 ### JSON フルベンチ（107KB — chumsky ベンチ互換）
 
@@ -246,12 +246,13 @@ ParseError 導入 + `#[inline]` で旧 8.3ns → 6.1ns（累計 ~26% 改善）�
 
 ### 特性まとめ
 
-- **winnow を上回るスループット** — 107KB JSON で winnow の 1.43 倍（`fn_parser` + `peek_byte` 分岐 + ゼロコピー文字列）
-- **nom を中〜長入力で上回る** — 11B で 28% 高速、28B で 46% 高速（identifier）
+- **winnow を上回るスループット** — 107KB JSON で winnow の 1.45 倍（`fn_parser` + `peek_byte` 分岐 + ゼロコピー文字列）
+- **nom と中〜長入力で同等〜上回る** — identifier 11B/28B でほぼ同等
 - **pom の 3〜30 倍高速** — 旧 v1 相当の `Rc<dyn Fn>` 設計との差を実証
-- **chumsky の 30〜200 倍高速**
+- **chumsky 0.12 で大幅改善** — identifier "x": 918ns -> 17.1ns（v0.9 比 ~54 倍高速化）。短い入力では競合レベルに到達。ただし中〜長入力では依然 ~2 倍遅い
 - **zip ≒ flat_map（同一型）** — 具象コンビネータ型設計によりモナディック合成でもゼロコスト
 - **3 回の最適化で累計 ~83% 改善** — ParseError 導入（~12%）+ `#[inline]`（~17%）+ ゼロコピー＋fn再帰（~77%）
+- **JSON/arithmetic ワークロードで 2-5% 改善** — 全ワークロードで継続的な微改善
 - **Applicative / flat_map 同一型でヒープアロケーションゼロ** — dhat で 0 bytes / 0 blocks 確認
 - 詳細な考察は [`modules/parser/benches/README.md`](modules/parser/benches/README.md) を参照
 

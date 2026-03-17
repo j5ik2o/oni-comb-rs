@@ -120,8 +120,8 @@ flat_map 再帰ではなく専用ループで実装する。
 | winnow | 159.3 µs | 159.8 µs | 161.8 µs | 162.3 µs | 2.46 µs | 672 MB/s |
 | nom | 283.2 µs | 282.7 µs | 286.6 µs | 287.9 µs | 2.26 µs | 378 MB/s |
 
-- **知見**: winnow の 1.45 倍のスループット（mean 基準）。flat_map 同一型は zip とゼロコスト同等。詳細は `modules/parser/benches/README.md` を参照
-- **Generic Input リファクタリングの影響**: `primitive/` のジェネリックパーサー（`satisfy`, `take_while0/1`）は `peek_token`+`next_token` の per-token オーバーヘッドにより、長い入力で 40-150% の退行あり（例: identifier 28B で 44→85 ns）。`text/` の専用パーサー（`identifier`, `integer` 等）は `as_str().chars()` 直接使用のため影響なし。JSON/arithmetic マクロベンチも変化なし
+- **知見**: winnow の 1.45 倍のスループット（mean 基準）。flat_map 同一型は zip とゼロコスト同等。chumsky 0.12 で v0.9 比 ~54 倍の劇的改善（identifier "x": 918ns -> 17.1ns）。短い入力では oni-comb/winnow/nom と競合するレベルに到達。ただし中〜長入力では依然 2 倍程度遅い（11B identifier: 83.8ns vs 38.9ns）。JSON/arithmetic ワークロードで 2-5% 改善。詳細は `modules/parser/benches/README.md` を参照
+- **Generic Input リファクタリングの影響**: `primitive/` のジェネリックパーサー（`satisfy`, `take_while0/1`）は `peek_token`+`next_token` の per-token オーバーヘッドにより、長い入力で 40-150% の退行あり（例: identifier 28B で 44→82 ns）。`text/` の専用パーサー（`identifier`, `integer` 等）は `as_str().chars()` 直接使用のため影響なし。JSON/arithmetic マクロベンチも変化なし
 - **アロケーション**: パーサーコンビネータインフラはゼロアロケーション。JSON フルパースのアロケーション（743 blocks / 336KB）は全て AST 構築（`Vec` grow + エスケープ文字列 `Cow::Owned`）に起因
 
 ## 設計メモ: `no_std` core-only 層

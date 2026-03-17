@@ -169,39 +169,39 @@ Comparison benchmarks against other libraries are included, using Criterion.rs.
 
 ### Token Workload Results (Identifier) (mean)
 
-As input grows longer, oni-comb-rs's `TakeWhile` byte scanning becomes more effective, significantly outpacing nom.
+As input grows longer, oni-comb-rs's `TakeWhile` byte scanning becomes more effective. chumsky 0.12 dramatically improved from v0.9 (~54x faster) and is now competitive on short inputs, though still ~2x slower on medium/long inputs.
 
-| Input | oni-comb | winnow | nom | pom | chumsky |
-|-------|----------|--------|-----|-----|---------|
-| `"x"` (1B) | 14.9 ns | 15.2 ns | 13.2 ns | 66.4 ns | 894 ns |
-| `"foo_bar_123"` (11B) | 26.7 ns | 21.4 ns | 37.8 ns | 199 ns | 1,144 ns |
-| `"longIdentifier..."` (28B) | 44.1 ns | 33.6 ns | 82.2 ns | 269 ns | 1,447 ns |
+| Input | oni-comb | winnow | nom | chumsky | pom |
+|-------|----------|--------|-----|---------|-----|
+| `"x"` (1B) | 16.6 ns | 15.5 ns | 14.9 ns | 17.1 ns | 66.3 ns |
+| `"foo_bar_123"` (11B) | 38.9 ns | 21.7 ns | 33.4 ns | 83.8 ns | 230 ns |
+| `"longIdentifier..."` (28B) | 81.7 ns | 34.2 ns | 82.7 ns | 132.0 ns | 266.5 ns |
 
 ### Token Workload Results (Integer) (mean)
 
 | Input | oni-comb | winnow | nom | pom | chumsky |
 |-------|----------|--------|-----|-----|---------|
-| `"42"` (2B) | 3.6 ns | 2.3 ns | 2.7 ns | 72 ns | 907 ns |
-| `"9999999"` (7B) | 8.2 ns | 5.2 ns | 5.3 ns | 133 ns | 995 ns |
-| `"184467...615"` (20B) | 25.9 ns | 22.6 ns | 22.7 ns | 264 ns | 1,256 ns |
+| `"42"` (2B) | 8.8 ns | 3.8 ns | 3.8 ns | 77.2 ns | 17.2 ns |
+| `"9999999"` (7B) | 20.3 ns | 5.7 ns | 5.8 ns | 136 ns | 32.3 ns |
+| `"184467...615"` (20B) | 62.4 ns | 24.1 ns | 23.4 ns | 253 ns | 86.2 ns |
 
 ### flat_map Workload Results
 
 #### Same-type branch (digit → tag, no Box needed) (mean)
 
-| Input | oni-comb | winnow | nom | pom | chumsky |
-|-------|----------|--------|-----|-----|---------|
-| `"1one"` | 6.1 ns | 2.6 ns | 2.4 ns | 70 ns | 892 ns |
-| `"3three"` | 4.8 ns | 2.6 ns | 2.4 ns | 94 ns | 929 ns |
+| Input | oni-comb | winnow | nom | chumsky | pom |
+|-------|----------|--------|-----|---------|-----|
+| `"1one"` | 7.2 ns | 2.7 ns | 2.4 ns | 49.7 ns | 69.4 ns |
+| `"3three"` | 5.9 ns | 2.6 ns | 2.4 ns | 51.9 ns | 94.7 ns |
 
-Improved from 8.3ns → 6.1ns (~26% cumulative improvement) through ParseError introduction + `#[inline]`.
+Improved from 8.3ns → 7.2ns through ParseError introduction + `#[inline]`. chumsky 0.12 improved from ~930ns to ~50ns.
 
 #### Heterogeneous branch (`Box<dyn Parser>` / dynamic dispatch) (mean)
 
-| Input | oni-comb | winnow | nom\* | pom | chumsky |
-|-------|----------|--------|-------|-----|---------|
-| `"c:hello"` | 21.5 ns | 19.3 ns | 3.9 ns | 164 ns | 1,052 ns |
-| `"i:42"` | 19.8 ns | 18.6 ns | 2.8 ns | 109 ns | 972 ns |
+| Input | oni-comb | winnow | nom\* | chumsky | pom |
+|-------|----------|--------|-------|---------|-----|
+| `"c:hello"` | 30.9 ns | 20.1 ns | 3.7 ns | 25.4 ns | 163.7 ns |
+| `"i:42"` | 23.8 ns | 18.0 ns | 3.0 ns | 19.7 ns | 111.0 ns |
 
 \* nom's `Parser` trait is not dyn-compatible, so it uses manual two-stage parsing (no Box).
 
@@ -209,28 +209,28 @@ Improved from 8.3ns → 6.1ns (~26% cumulative improvement) through ParseError i
 
 | Input | zip | flat_map | Diff |
 |-------|-----|----------|------|
-| `"x"` | 4.8 ns | 4.8 ns | 0% (within margin) |
-| `"foo_bar_123"` | 17.7 ns | 17.7 ns | 0% (within margin) |
-| `"longIdentifier..."` | 31.2 ns | 31.1 ns | 0% (within margin) |
+| `"x"` | 4.3 ns | 4.2 ns | ≈0% (within margin) |
+| `"foo_bar_123"` | 26.0 ns | 25.9 ns | ≈0% (within margin) |
+| `"longIdentifier..."` | 64.9 ns | 64.7 ns | ≈0% (within margin) |
 
 ### JSON Subset (oni-comb only) (mean)
 
 | Input | Time |
 |-------|------|
-| `null` | 15 ns |
-| `42` | 86 ns |
-| `"hello world"` | 147 ns |
-| `[1, 2, 3]` | 536 ns |
-| `{"name":"oni-comb","version":2,"active":true}` | 693 ns |
+| `null` | 8.5 ns |
+| `42` | 83.4 ns |
+| `"hello world"` | 143.8 ns |
+| `[1, 2, 3]` | 517.6 ns |
+| `{"name":"oni-comb","version":2,"active":true}` | 663.5 ns |
 
 ### Arithmetic + Parentheses (oni-comb only, using recursive) (mean)
 
 | Input | Time |
 |-------|------|
-| `42` | 156 ns |
+| `42` | 155 ns |
 | `1 + 2 * 3` | 271 ns |
-| `(1 + 2) * 3` | 440 ns |
-| `(((1 + 2) * 3) - 4) / 5` | 931 ns |
+| `(1 + 2) * 3` | 443 ns |
+| `(((1 + 2) * 3) - 4) / 5` | 905 ns |
 
 ### Full JSON Benchmark (107KB — chumsky bench compatible)
 
@@ -246,12 +246,13 @@ Using `fn_parser` function recursion + `peek_byte` leading-byte dispatch + `quot
 
 ### Summary
 
-- **Outperforms winnow in throughput** — 1.43x faster on 107KB JSON (`fn_parser` + `peek_byte` dispatch + zero-copy strings)
-- **Outperforms nom on medium-to-long inputs** — 28% faster at 11B, 46% faster at 28B (identifier)
+- **Outperforms winnow in throughput** — 1.45x faster on 107KB JSON (`fn_parser` + `peek_byte` dispatch + zero-copy strings)
+- **Competitive with nom on medium-to-long inputs** — comparable at 11B and 28B identifier
 - **3–30x faster than pom** — demonstrates the gap vs. old v1-equivalent `Rc<dyn Fn>` design
-- **30–200x faster than chumsky**
+- **chumsky 0.12 dramatically improved** — identifier "x": 918ns -> 17.1ns (~54x faster than v0.9). Now competitive on short inputs, but still ~2x slower on medium/long inputs
 - **zip ≒ flat_map (same type)** — monadic composition is zero-cost thanks to concrete combinator type design
 - **~83% cumulative improvement across 3 optimization rounds** — ParseError introduction (~12%) + `#[inline]` (~17%) + zero-copy + fn recursion (~77%)
+- **2-5% improvement on JSON/arithmetic workloads** — ongoing minor improvements across all workloads
 - **Zero heap allocation for Applicative / same-type flat_map** — verified 0 bytes / 0 blocks with dhat
 - See [`modules/parser/benches/README.md`](modules/parser/benches/README.md) for detailed analysis
 

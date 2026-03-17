@@ -42,32 +42,32 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 ### Token ワークロード — Identifier（mean）
 
-| 入力 | oni-comb | winnow | nom | pom | chumsky |
-|------|----------|--------|-----|-----|---------|
-| `"x"` (1B) | 17.0 ns | 15.8 ns | 14.1 ns | 69.5 ns | 918 ns |
-| `"foo"` (3B) | 22.6 ns | 16.8 ns | 17.2 ns | 86.7 ns | 937 ns |
-| `"foo_bar_123"` (11B) | 39.9 ns | 21.9 ns | 37.7 ns | 206 ns | 1,096 ns |
-| `"_private"` (8B) | 35.7 ns | 21.4 ns | 30.3 ns | 148 ns | 1,029 ns |
-| `"longIdent..."` (28B) | 84.5 ns | 35.1 ns | 85.7 ns | 275 ns | 1,383 ns |
+| 入力 | oni-comb | winnow | nom | chumsky | pom |
+|------|----------|--------|-----|---------|-----|
+| `"x"` (1B) | 16.6 ns | 15.5 ns | 14.9 ns | 17.1 ns | 66.3 ns |
+| `"foo"` (3B) | 21.1 ns | 16.2 ns | 16.9 ns | 29.8 ns | 85.3 ns |
+| `"foo_bar_123"` (11B) | 38.9 ns | 21.7 ns | 33.4 ns | 83.8 ns | 230 ns |
+| `"_private"` (8B) | 42.2 ns | 20.9 ns | 25.7 ns | 57.2 ns | 138.9 ns |
+| `"longIdent..."` (28B) | 81.7 ns | 34.2 ns | 82.7 ns | 132.0 ns | 266.5 ns |
 
 ### Token ワークロード — Integer（mean）
 
 | 入力 | oni-comb | winnow | nom | pom | chumsky |
 |------|----------|--------|-----|-----|---------|
-| `"0"` | 4.5 ns | 2.4 ns | 1.9 ns | 74.5 ns | 925 ns |
-| `"42"` | 8.9 ns | 3.9 ns | 3.8 ns | 78.7 ns | 961 ns |
-| `"9999999"` | 20.5 ns | 5.7 ns | 5.9 ns | 138 ns | 1,006 ns |
-| `"184467...615"` (20B) | 63.5 ns | 24.2 ns | 23.8 ns | 260 ns | 1,287 ns |
+| `"0"` | 4.7 ns | 2.0 ns | 2.0 ns | 73.4 ns | 16.4 ns |
+| `"42"` | 8.8 ns | 3.8 ns | 3.8 ns | 77.2 ns | 17.2 ns |
+| `"9999999"` | 20.3 ns | 5.7 ns | 5.8 ns | 136 ns | 32.3 ns |
+| `"184467...615"` (20B) | 62.4 ns | 24.1 ns | 23.4 ns | 253 ns | 86.2 ns |
 
 ### flat_map 同一型分岐（digit → tag）（mean）
 
 | ライブラリ | "1one" | "2two" | "3three" |
 |-----------|--------|--------|----------|
-| winnow | 2.8 ns | 2.8 ns | 2.7 ns |
-| nom | 2.4 ns | 2.5 ns | 2.5 ns |
-| **oni-comb** | **7.4 ns** | **7.3 ns** | **6.1 ns** |
-| pom | 72 ns | 74 ns | 98 ns |
-| chumsky | 932 ns | 926 ns | 968 ns |
+| winnow | 2.7 ns | 2.7 ns | 2.6 ns |
+| nom | 2.4 ns | 2.5 ns | 2.4 ns |
+| **oni-comb** | **7.2 ns** | **7.2 ns** | **5.9 ns** |
+| chumsky | 49.7 ns | 49.9 ns | 51.9 ns |
+| pom | 69.4 ns | 70.2 ns | 94.7 ns |
 
 **MS6 ParseError 導入の効果:**
 - 旧（format! ベース）: 8.3 / 7.8 / 6.9 ns
@@ -78,21 +78,21 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 | ライブラリ | "c:hello" | "i:42" |
 |-----------|-----------|--------|
-| nom | 3.9 ns | 2.7 ns |
-| winnow | 20.1 ns | 18.4 ns |
-| **oni-comb** | **31.6 ns** | **24.3 ns** |
-| pom | 166 ns | 114 ns |
-| chumsky | 1,066 ns | 997 ns |
+| nom | 3.7 ns | 3.0 ns |
+| winnow | 20.1 ns | 18.0 ns |
+| chumsky | 25.4 ns | 19.7 ns |
+| **oni-comb** | **30.9 ns** | **23.8 ns** |
+| pom | 163.7 ns | 111.0 ns |
 
 ### zip vs flat_map（oni-comb-rs 内部比較）（mean）
 
 | 入力 | zip | flat_map | 差分 |
 |------|-----|----------|------|
-| "x" | 4.0 ns | 4.0 ns | 0% (誤差) |
-| "foo" | 8.5 ns | 8.7 ns | ≈0% (誤差) |
-| "foo_bar_123" | 26.5 ns | 26.7 ns | ≈0% (誤差) |
-| "_private" | 20.1 ns | 20.2 ns | ≈0% (誤差) |
-| "longIdent..." | 66.3 ns | 66.1 ns | ≈0% (誤差) |
+| "x" | 4.3 ns | 4.2 ns | ≈0% (誤差) |
+| "foo" | 8.4 ns | 8.3 ns | ≈0% (誤差) |
+| "foo_bar_123" | 26.0 ns | 25.9 ns | ≈0% (誤差) |
+| "_private" | 19.9 ns | 19.9 ns | ≈0% (誤差) |
+| "longIdent..." | 64.9 ns | 64.7 ns | ≈0% (誤差) |
 
 **zip ≒ flat_map（同一型）は引き続き成立。** 具象コンビネータ型設計の成果。
 
@@ -100,13 +100,13 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 | 入力 | 時間 | byte/ns |
 |------|------|---------|
-| `null` (4B) | 8.3 ns | 0.48 |
-| `42` (2B) | 85.9 ns | 0.02 |
-| `"hello world"` (13B) | 147 ns | 0.09 |
-| `[1, 2, 3]` (9B) | 539 ns | 0.02 |
-| `[1, "two", true, null]` (22B) | 547 ns | 0.04 |
-| `{"name":"oni-comb",...}` (50B) | 690 ns | 0.07 |
-| `{"a":1,...,"h":8}` (65B) | 1,495 ns | 0.04 |
+| `null` (4B) | 8.5 ns | 0.47 |
+| `42` (2B) | 83.4 ns | 0.02 |
+| `"hello world"` (13B) | 143.8 ns | 0.09 |
+| `[1, 2, 3]` (9B) | 517.6 ns | 0.02 |
+| `[1, "two", true, null]` (22B) | 528.9 ns | 0.04 |
+| `{"name":"oni-comb",...}` (50B) | 663.5 ns | 0.08 |
+| `{"a":1,...,"h":8}` (65B) | 1,427 ns | 0.05 |
 
 **所見:**
 - `null` は tag 1回で 15ns。integer は `whitespace0` → `integer()` → `whitespace0` の3段でオーバーヘッドがある。
@@ -117,18 +117,18 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 | 入力 | 時間 |
 |------|------|
-| `42` | 160 ns |
-| `1 + 2` | 254 ns |
-| `1 + 2 * 3` | 285 ns |
-| `(1 + 2) * 3` | 471 ns |
-| `1 + 2 * (3 - 4) + 5` | 688 ns |
-| `(((1 + 2) * 3) - 4) / 5` | 995 ns |
-| `1 + 2 + ... + 8` | 813 ns |
+| `42` | 155 ns |
+| `1 + 2` | 245 ns |
+| `1 + 2 * 3` | 271 ns |
+| `(1 + 2) * 3` | 443 ns |
+| `1 + 2 * (3 - 4) + 5` | 628 ns |
+| `(((1 + 2) * 3) - 4) / 5` | 905 ns |
+| `1 + 2 + ... + 8` | 761 ns |
 
 **所見:**
-- 単一整数で 156ns はかなり重い。`recursive()` の `Rc<UnsafeCell<Box<dyn Parser>>>` 経由の間接呼び出し + `whitespace0` のオーバーヘッド。
+- 単一整数で 155ns はかなり重い。`recursive()` の `Rc<UnsafeCell<Box<dyn Parser>>>` 経由の間接呼び出し + `whitespace0` のオーバーヘッド。
 - 括弧のネストごとに ~200ns 追加（再帰 1 段の `Box<dyn Parser>` コスト）。
-- 8項の加算チェーンで 776ns。`chainl1` のループは効率的。
+- 8項の加算チェーンで 761ns。`chainl1` のループは効率的。
 
 ### JSON フルベンチ（107KB sample.json — chumsky ベンチ互換）
 
@@ -235,7 +235,7 @@ dhat: At t-end:  0 bytes in 0 blocks
 
 ### 残存するボトルネック
 
-1. **`recursive()` は依然として重い**: 四則演算ベンチの単一整数で ~156ns（`fn_parser` なら ~3ns）。`recursive()` が必要なケース（文法構造上 `fn` で書けない場合）では vtable コストが残る。
+1. **`recursive()` は依然として重い**: 四則演算ベンチの単一整数で ~155ns（`fn_parser` なら ~3ns）。`recursive()` が必要なケース（文法構造上 `fn` で書けない場合）では vtable コストが残る。
 2. **whitespace0 の呼び出し回数**: JSON パーサーで値の前後に `whitespace0()` を複数回呼んでおり、統合の余地がある。
 
 ### Generic Input リファクタリングの影響（Input トレイトジェネリック化）
@@ -246,13 +246,13 @@ dhat: At t-end:  0 bytes in 0 blocks
 
 | 入力 | Before | After | 変化 | 原因 |
 |------|--------|-------|------|------|
-| identifier `"x"` (1B) | 18.4 ns | 17.0 ns | -8% | 誤差範囲 |
-| identifier `"foo"` (3B) | 19.6 ns | 22.6 ns | +15% | トークン毎オーバーヘッド |
-| identifier `"foo_bar_123"` (11B) | 28.1 ns | 39.9 ns | +42% | トークン毎オーバーヘッド |
-| identifier `"_private"` (8B) | 26.2 ns | 35.7 ns | +36% | トークン毎オーバーヘッド |
-| identifier `"longIdent..."` (28B) | 44.4 ns | 84.5 ns | +90% | トークン毎オーバーヘッド |
-| integer `"42"` (2B) | 3.6 ns | 8.9 ns | +147% | トークン毎オーバーヘッド |
-| integer `"9999999"` (7B) | 8.2 ns | 20.5 ns | +150% | トークン毎オーバーヘッド |
+| identifier `"x"` (1B) | 18.4 ns | 16.6 ns | -10% | 誤差範囲 |
+| identifier `"foo"` (3B) | 19.6 ns | 21.1 ns | +8% | トークン毎オーバーヘッド |
+| identifier `"foo_bar_123"` (11B) | 28.1 ns | 38.9 ns | +38% | トークン毎オーバーヘッド |
+| identifier `"_private"` (8B) | 26.2 ns | 42.2 ns | +61% | トークン毎オーバーヘッド |
+| identifier `"longIdent..."` (28B) | 44.4 ns | 81.7 ns | +84% | トークン毎オーバーヘッド |
+| integer `"42"` (2B) | 3.6 ns | 8.8 ns | +144% | トークン毎オーバーヘッド |
+| integer `"9999999"` (7B) | 8.2 ns | 20.3 ns | +148% | トークン毎オーバーヘッド |
 
 **原因**: 旧 `text/` 実装は `remaining.chars()` で1回イテレーションし最後に `advance(consumed)` を呼んでいた。ジェネリック `primitive/` 実装はトークン毎に `peek_token()` + `next_token()` を呼び、各呼び出しで `&self.src[self.offset..]` の再計算と `.chars().next()` が発生する。これはジェネリシティのコストであり、`Input` トレイトではバッチ文字イテレーターを公開できない。
 
@@ -260,11 +260,11 @@ dhat: At t-end:  0 bytes in 0 blocks
 
 | ワークロード | Before | After | 変化 |
 |-------------|--------|-------|------|
-| JSON `null` | 15.0 ns | 8.3 ns | -45%（ノイズ/キャッシュ） |
-| JSON `object_large` | 1,492 ns | 1,495 ns | ≈0% |
-| arithmetic `single` | 156 ns | 160 ns | ≈0% |
-| arithmetic `complex` | 639 ns | 688 ns | ≈0% |
-| flat_map 同一型 `"1one"` | 7.3 ns | 7.4 ns | ≈0% |
+| JSON `null` | 15.0 ns | 8.5 ns | -43%（ノイズ/キャッシュ） |
+| JSON `object_large` | 1,492 ns | 1,427 ns | -4% |
+| arithmetic `single` | 156 ns | 155 ns | ≈0% |
+| arithmetic `complex` | 639 ns | 628 ns | -2% |
+| flat_map 同一型 `"1one"` | 7.3 ns | 7.2 ns | ≈0% |
 
 **緩和策**: テキスト専用パーサー（`identifier`, `integer`, `tag`, `whitespace`, `quoted_string`）は `text/` に残し `as_str().chars()` を直接使用するため性能維持。prelude からジェネリックな `primitive::satisfy`/`primitive::take_while0` を使うコードのみ影響あり。
 
@@ -272,18 +272,19 @@ dhat: At t-end:  0 bytes in 0 blocks
 
 | 入力 | zip | flat_map | 差分 |
 |------|-----|----------|------|
-| "x" | 4.0 ns | 4.0 ns | 0% |
-| "foo" | 8.5 ns | 8.7 ns | ≈0% |
-| "foo_bar_123" | 26.5 ns | 26.7 ns | ≈0% |
-| "_private" | 20.1 ns | 20.2 ns | ≈0% |
-| "longIdent..." | 66.3 ns | 66.1 ns | ≈0% |
+| "x" | 4.3 ns | 4.2 ns | ≈0% |
+| "foo" | 8.4 ns | 8.3 ns | ≈0% |
+| "foo_bar_123" | 26.0 ns | 25.9 ns | ≈0% |
+| "_private" | 19.9 ns | 19.9 ns | ≈0% |
+| "longIdent..." | 64.9 ns | 64.7 ns | ≈0% |
 
 ## 総合評価
 
-- **winnow を上回るスループット** — 107KB JSON で winnow の 1.43 倍（`fn_parser` + `peek_byte` 分岐 + ゼロコピー文字列）
-- **nom を中〜長入力で上回る** — 11B identifier で 28% 高速、28B で 46% 高速
+- **winnow を上回るスループット** — 107KB JSON で winnow の 1.45 倍（`fn_parser` + `peek_byte` 分岐 + ゼロコピー文字列）
+- **nom と中〜長入力で同等〜上回る** — identifier 11B: oni-comb 38.9ns vs nom 33.4ns（nom がやや高速）、28B: oni-comb 81.7ns vs nom 82.7ns（ほぼ同等）
 - **pom の 3〜30 倍高速** — 旧 v1 相当の `Rc<dyn Fn>` 設計との差を実証
-- **chumsky の 30〜200 倍高速** — 動的ディスパッチ前提の設計との差
+- **chumsky 0.12 で大幅改善** — identifier "x": 918ns -> 17.1ns（v0.9 比 ~54 倍高速化）。短い入力では oni-comb/winnow/nom と競合するレベルに到達。ただし中〜長入力では依然 2 倍程度遅い（11B identifier: 83.8ns vs 38.9ns）。flat_map boxed では chumsky が oni-comb と同等（25.4ns vs 30.9ns）
 - **zip ≒ flat_map（同一型）** — 具象コンビネータ型設計の妥当性を確認
 - **3 回の最適化サイクルで累計 ~83% 改善** — ParseError 導入（~12%）+ #[inline]（~17%）+ ゼロコピー＋fn再帰（~77%）
+- **JSON/arithmetic ワークロードで 2-5% 改善** — JSON object_large: 1,495ns -> 1,427ns、arithmetic complex: 995ns -> 905ns
 - **Applicative コンビネータでヒープアロケーションゼロ**
