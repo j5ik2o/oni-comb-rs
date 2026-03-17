@@ -1,4 +1,6 @@
+#[cfg(feature = "alloc")]
 use alloc::vec;
+#[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 use core::fmt;
 
@@ -10,6 +12,11 @@ pub trait MergeError: Sized {
 /// `.context()` でコンテキストラベルを積むトレイト。
 pub trait ContextError: Sized {
   fn add_context(self, context: &'static str) -> Self;
+}
+
+/// パーサーがエラーを生成するための trait。
+pub trait ExpectError: Sized {
+  fn from_expected(position: usize, expected: Expected) -> Self;
 }
 
 /// パース失敗時の期待トークン。
@@ -29,7 +36,45 @@ pub enum Expected {
   Eof,
 }
 
+/// core-only 環境用の軽量エラー型。位置のみ保持。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MinimalError {
+  pub position: usize,
+}
+
+impl ExpectError for MinimalError {
+  #[inline]
+  fn from_expected(position: usize, _expected: Expected) -> Self {
+    Self { position }
+  }
+}
+
+impl MergeError for MinimalError {
+  #[inline]
+  fn merge(self, other: Self) -> Self {
+    if self.position >= other.position {
+      self
+    } else {
+      other
+    }
+  }
+}
+
+impl ContextError for MinimalError {
+  #[inline]
+  fn add_context(self, _context: &'static str) -> Self {
+    self
+  }
+}
+
+impl fmt::Display for MinimalError {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    write!(f, "parse error at position {}", self.position)
+  }
+}
+
 /// 構造化パースエラー。位置・期待トークン・コンテキストを保持する。
+#[cfg(feature = "alloc")]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParseError {
   /// 失敗した byte offset
@@ -40,32 +85,19 @@ pub struct ParseError {
   pub context: Vec<&'static str>,
 }
 
-impl ParseError {
-  pub fn new(position: usize, expected: Expected) -> Self {
+#[cfg(feature = "alloc")]
+impl ExpectError for ParseError {
+  #[inline(always)]
+  fn from_expected(position: usize, expected: Expected) -> Self {
     ParseError {
       position,
       expected: vec![expected],
       context: Vec::new(),
     }
   }
-
-  pub fn expected_char(position: usize, c: char) -> Self {
-    Self::new(position, Expected::Char(c))
-  }
-
-  pub fn expected_tag(position: usize, tag: &'static str) -> Self {
-    Self::new(position, Expected::Tag(tag))
-  }
-
-  pub fn expected_description(position: usize, desc: &'static str) -> Self {
-    Self::new(position, Expected::Description(desc))
-  }
-
-  pub fn expected_eof(position: usize) -> Self {
-    Self::new(position, Expected::Eof)
-  }
 }
 
+#[cfg(feature = "alloc")]
 impl MergeError for ParseError {
   fn merge(mut self, other: Self) -> Self {
     use core::cmp::Ordering;
@@ -84,6 +116,7 @@ impl MergeError for ParseError {
   }
 }
 
+#[cfg(feature = "alloc")]
 impl ContextError for ParseError {
   fn add_context(mut self, context: &'static str) -> Self {
     self.context.push(context);
@@ -91,6 +124,7 @@ impl ContextError for ParseError {
   }
 }
 
+#[cfg(feature = "alloc")]
 impl fmt::Display for ParseError {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     write!(f, "parse error at position {}", self.position)?;

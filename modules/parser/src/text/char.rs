@@ -1,4 +1,4 @@
-use crate::error::ParseError;
+use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
 use crate::input::Input;
 use crate::parser::Parser;
@@ -10,12 +10,12 @@ pub fn char(c: char) -> Char {
   Char(c)
 }
 
-impl Parser<StrInput<'_>> for Char {
-  type Error = ParseError;
+impl<'a> Parser<StrInput<'a>> for Char {
+  type Error = <StrInput<'a> as Input>::Error;
   type Output = char;
 
   #[inline]
-  fn parse_next(&mut self, input: &mut StrInput<'_>) -> PResult<Self::Output, Self::Error> {
+  fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<Self::Output, Self::Error> {
     let pos = input.offset();
     let remaining = input.remaining();
     match remaining.chars().next() {
@@ -23,7 +23,7 @@ impl Parser<StrInput<'_>> for Char {
         input.advance(c.len_utf8());
         Ok(c)
       }
-      _ => Err(Fail::Backtrack(ParseError::expected_char(pos, self.0))),
+      _ => Err(Fail::Backtrack(Self::Error::from_expected(pos, Expected::Char(self.0)))),
     }
   }
 }

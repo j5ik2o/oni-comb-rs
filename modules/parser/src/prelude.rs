@@ -17,15 +17,19 @@ pub use crate::primitive::take_while_n_m::take_while_n_m;
 
 // text 専用パーサー（StrInput のみ）
 pub use crate::text::char::char;
-pub use crate::text::escaped::escaped;
 pub use crate::text::identifier::identifier;
 pub use crate::text::integer::integer;
 pub use crate::text::lexeme::lexeme;
-pub use crate::text::quoted_string::quoted_string;
 pub use crate::text::tag::tag;
 pub use crate::text::whitespace::{whitespace0, whitespace1};
 
+#[cfg(feature = "alloc")]
+pub use crate::text::escaped::escaped;
+#[cfg(feature = "alloc")]
+pub use crate::text::quoted_string::quoted_string;
+
 pub use crate::combinator::fn_parser::fn_parser;
+#[cfg(feature = "alloc")]
 pub use crate::combinator::recursive::recursive;
 
 #[cfg(feature = "regex")]

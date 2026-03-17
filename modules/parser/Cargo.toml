@@ -6,7 +6,8 @@ license = "MIT OR Apache-2.0"
 description = "Rebooted parser combinator library"
 
 [features]
-default = []
+default = ["alloc"]
+alloc = []
 regex = ["dep:regex-automata"]
 
 [dependencies]

@@ -1,4 +1,5 @@
 use crate::combinator::zip_left::ZipLeft;
+use crate::input::Input;
 use crate::parser::Parser;
 use crate::parser_ext::ParserExt;
 use crate::primitive::take_while0::TakeWhile0;
@@ -20,6 +21,6 @@ pub type Lexeme<'a, P> = ZipLeft<P, TakeWhile0<fn(char) -> bool, StrInput<'a>>>;
 /// ```
 pub fn lexeme<'a, P>(parser: P) -> Lexeme<'a, P>
 where
-  P: Parser<StrInput<'a>, Error = crate::error::ParseError>, {
+  P: Parser<StrInput<'a>, Error = <StrInput<'a> as Input>::Error>, {
   parser.zip_left(take_while0(is_ws as fn(char) -> bool))
 }

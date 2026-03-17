@@ -1,4 +1,4 @@
-use oni_comb_parser::error::ParseError;
+use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
@@ -50,8 +50,9 @@ pub fn pchar<'a>() -> impl Parser<StrInput<'a>, Output = &'a str, Error = ParseE
     {
       return Ok(input.slice_since(cp));
     }
-    Err(oni_comb_parser::fail::Fail::Backtrack(
-      ParseError::expected_description(input.offset(), "pchar"),
-    ))
+    Err(oni_comb_parser::fail::Fail::Backtrack(ParseError::from_expected(
+      input.offset(),
+      Expected::Description("pchar"),
+    )))
   })
 }

@@ -1,4 +1,4 @@
-use crate::error::ParseError;
+use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
 use crate::input::Input;
 use crate::parser::Parser;
@@ -11,11 +11,11 @@ pub fn identifier() -> Identifier {
 }
 
 impl<'a> Parser<StrInput<'a>> for Identifier {
-  type Error = ParseError;
+  type Error = <StrInput<'a> as Input>::Error;
   type Output = &'a str;
 
   #[inline]
-  fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<&'a str, ParseError> {
+  fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<&'a str, Self::Error> {
     let pos = input.offset();
     let remaining = input.as_str();
     let mut chars = remaining.chars();
@@ -23,7 +23,10 @@ impl<'a> Parser<StrInput<'a>> for Identifier {
     match chars.next() {
       Some(c) if c.is_ascii_alphabetic() || c == '_' => {}
       _ => {
-        return Err(Fail::Backtrack(ParseError::expected_description(pos, "identifier")));
+        return Err(Fail::Backtrack(Self::Error::from_expected(
+          pos,
+          Expected::Description("identifier"),
+        )));
       }
     }
 

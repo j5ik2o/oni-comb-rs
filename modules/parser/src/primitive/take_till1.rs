@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::error::ParseError;
+use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
 use crate::input::Input;
 use crate::parser::Parser;
@@ -15,11 +15,11 @@ impl<I: Input, F> Parser<I> for TakeTill1<F, I>
 where
   F: FnMut(I::Token) -> bool,
 {
-  type Error = ParseError;
+  type Error = I::Error;
   type Output = I::Slice;
 
   #[inline]
-  fn parse_next(&mut self, input: &mut I) -> PResult<I::Slice, ParseError> {
+  fn parse_next(&mut self, input: &mut I) -> PResult<I::Slice, I::Error> {
     let pos = input.offset();
     let cp = input.checkpoint();
     while let Some(t) = input.peek_token() {
@@ -30,9 +30,9 @@ where
       }
     }
     if input.checkpoint() == cp {
-      return Err(Fail::Backtrack(ParseError::expected_description(
+      return Err(Fail::Backtrack(I::Error::from_expected(
         pos,
-        "at least one non-matching token",
+        Expected::Description("at least one non-matching token"),
       )));
     }
     Ok(input.slice_since(cp))

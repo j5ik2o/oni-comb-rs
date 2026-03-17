@@ -5,7 +5,7 @@ use core::fmt;
 use regex_automata::meta::Regex;
 use regex_automata::{Anchored, Input as ReInput};
 
-use crate::error::ParseError;
+use crate::error::{ExpectError, Expected, ParseError};
 use crate::fail::{Fail, PResult};
 use crate::input::Input;
 use crate::parser::Parser;
@@ -84,7 +84,10 @@ impl<'a> Parser<StrInput<'a>> for RegexParser {
         input.advance(m.len());
         Ok(matched)
       }
-      None => Err(Fail::Backtrack(ParseError::expected_description(pos, "regex match"))),
+      None => Err(Fail::Backtrack(ParseError::from_expected(
+        pos,
+        Expected::Description("regex match"),
+      ))),
     }
   }
 }

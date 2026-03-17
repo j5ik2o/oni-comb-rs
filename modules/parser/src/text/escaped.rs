@@ -1,6 +1,6 @@
 use alloc::string::String;
 
-use crate::error::ParseError;
+use crate::error::{ExpectError, Expected, ParseError};
 use crate::fail::{Fail, PResult};
 use crate::input::Input;
 use crate::parser::Parser;
@@ -41,7 +41,10 @@ where
     match chars.next() {
       Some(c) if c == self.open => {}
       _ => {
-        return Err(Fail::Backtrack(ParseError::expected_char(pos, self.open)));
+        return Err(Fail::Backtrack(ParseError::from_expected(
+          pos,
+          Expected::Char(self.open),
+        )));
       }
     }
 
@@ -63,17 +66,17 @@ where
               match (self.handler)(next) {
                 Some(replacement) => result.push(replacement),
                 None => {
-                  return Err(Fail::Cut(ParseError::expected_description(
+                  return Err(Fail::Cut(ParseError::from_expected(
                     pos + consumed - next.len_utf8(),
-                    "valid escape sequence",
+                    Expected::Description("valid escape sequence"),
                   )));
                 }
               }
             }
             None => {
-              return Err(Fail::Cut(ParseError::expected_description(
+              return Err(Fail::Cut(ParseError::from_expected(
                 pos + consumed,
-                "escape character",
+                Expected::Description("escape character"),
               )));
             }
           }
@@ -83,7 +86,10 @@ where
           result.push(c);
         }
         None => {
-          return Err(Fail::Cut(ParseError::expected_char(pos + consumed, self.close)));
+          return Err(Fail::Cut(ParseError::from_expected(
+            pos + consumed,
+            Expected::Char(self.close),
+          )));
         }
       }
     }

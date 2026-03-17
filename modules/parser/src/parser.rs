@@ -1,3 +1,4 @@
+#[cfg(feature = "alloc")]
 use alloc::boxed::Box;
 
 use crate::fail::PResult;
@@ -10,6 +11,7 @@ pub trait Parser<I: Input> {
   fn parse_next(&mut self, input: &mut I) -> PResult<Self::Output, Self::Error>;
 }
 
+#[cfg(feature = "alloc")]
 impl<I: Input, P: Parser<I> + ?Sized> Parser<I> for Box<P> {
   type Error = P::Error;
   type Output = P::Output;

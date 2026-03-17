@@ -1,4 +1,4 @@
-use oni_comb_parser::error::ParseError;
+use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
@@ -52,9 +52,10 @@ fn segment_nz_nc<'a>() -> impl Parser<StrInput<'a>, Output = &'a str, Error = Pa
       .is_ok()
     };
     if !ok(input) {
-      return Err(oni_comb_parser::fail::Fail::Backtrack(
-        ParseError::expected_description(pos, "segment-nz-nc"),
-      ));
+      return Err(oni_comb_parser::fail::Fail::Backtrack(ParseError::from_expected(
+        pos,
+        Expected::Description("segment-nz-nc"),
+      )));
     }
     while ok(input) {}
     Ok(input.slice_since(cp))

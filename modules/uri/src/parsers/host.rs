@@ -1,4 +1,4 @@
-use oni_comb_parser::error::ParseError;
+use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::fail::Fail;
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
@@ -42,7 +42,10 @@ fn ip_literal<'a>() -> impl Parser<StrInput<'a>, Output = Host<'a>, Error = Pars
       return Ok(Host::IpvFuture(future_str));
     }
 
-    Err(Fail::Backtrack(ParseError::expected_description(pos, "IP-literal")))
+    Err(Fail::Backtrack(ParseError::from_expected(
+      pos,
+      Expected::Description("IP-literal"),
+    )))
   })
 }
 

@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::error::ParseError;
+use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
 use crate::input::Input;
 use crate::parser::Parser;
@@ -15,18 +15,21 @@ impl<I: Input, F> Parser<I> for Satisfy<F, I>
 where
   F: FnMut(I::Token) -> bool,
 {
-  type Error = ParseError;
+  type Error = I::Error;
   type Output = I::Token;
 
   #[inline]
-  fn parse_next(&mut self, input: &mut I) -> PResult<I::Token, ParseError> {
+  fn parse_next(&mut self, input: &mut I) -> PResult<I::Token, I::Error> {
     let pos = input.offset();
     match input.peek_token() {
       Some(t) if (self.0)(t) => {
         input.next_token();
         Ok(t)
       }
-      _ => Err(Fail::Backtrack(ParseError::expected_description(pos, "satisfy"))),
+      _ => Err(Fail::Backtrack(I::Error::from_expected(
+        pos,
+        Expected::Description("satisfy"),
+      ))),
     }
   }
 }

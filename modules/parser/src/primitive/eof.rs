@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::error::ParseError;
+use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
 use crate::input::Input;
 use crate::parser::Parser;
@@ -12,15 +12,15 @@ pub fn eof<I: Input>() -> Eof<I> {
 }
 
 impl<I: Input> Parser<I> for Eof<I> {
-  type Error = ParseError;
+  type Error = I::Error;
   type Output = ();
 
   #[inline]
-  fn parse_next(&mut self, input: &mut I) -> PResult<(), ParseError> {
+  fn parse_next(&mut self, input: &mut I) -> PResult<(), I::Error> {
     if input.is_eof() {
       Ok(())
     } else {
-      Err(Fail::Backtrack(ParseError::expected_eof(input.offset())))
+      Err(Fail::Backtrack(I::Error::from_expected(input.offset(), Expected::Eof)))
     }
   }
 }

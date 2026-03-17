@@ -4,7 +4,7 @@
 use std::borrow::Cow;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
-use oni_comb_parser::error::ParseError;
+use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::fail::{Fail, PResult};
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
@@ -42,9 +42,9 @@ fn json_value<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
         .map(|s: &str| Json::Num(s.parse::<f64>().unwrap()))
         .parse_next(input)
     }
-    _ => Err(Fail::Backtrack(ParseError::expected_description(
+    _ => Err(Fail::Backtrack(ParseError::from_expected(
       input.offset(),
-      "JSON value",
+      Expected::Description("JSON value"),
     ))),
   }
 }
