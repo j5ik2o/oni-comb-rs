@@ -1,5 +1,4 @@
 use crate::combinator::attempt::Attempt;
-#[cfg(feature = "alloc")]
 use crate::combinator::chainl1::ChainL1;
 #[cfg(feature = "alloc")]
 use crate::combinator::chainr1::ChainR1;
@@ -222,7 +221,6 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
   }
 
   /// 左結合の二項演算子チェーン。operand (op operand)* を左から畳む。
-  #[cfg(feature = "alloc")]
   fn chainl1<Op, F>(self, op: Op) -> ChainL1<Self, Op>
   where
     Op: Parser<I, Output = F, Error = Self::Error>,

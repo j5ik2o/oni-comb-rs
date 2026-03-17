@@ -1,5 +1,4 @@
 pub mod attempt;
-#[cfg(feature = "alloc")]
 pub mod chainl1;
 #[cfg(feature = "alloc")]
 pub mod chainr1;
