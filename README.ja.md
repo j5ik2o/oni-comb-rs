@@ -232,21 +232,22 @@ ParseError 導入 + `#[inline]` で旧 8.3ns → 7.2ns。chumsky 0.12 は ~930ns
 | `(1 + 2) * 3` | 443 ns |
 | `(((1 + 2) * 3) - 4) / 5` | 905 ns |
 
-### JSON フルベンチ（107KB — chumsky ベンチ互換）
+### JSON フルベンチ（107KB）
 
-同一マシンでの計測（100 サンプル）:
+同一マシンでの計測（100 サンプル）。pom は除外（pom 3.x の API ではフル JSON パーサーの実装が困難）。
 
-| ライブラリ | Mean | Median | p90 | p95 | StdDev | Throughput (mean) |
-|-----------|------|--------|-----|-----|--------|-------------------|
-| **oni-comb** | **109.6 µs** | **109.4 µs** | **112.7 µs** | **113.8 µs** | **2.10 µs** | **977 MB/s** |
-| winnow | 159.3 µs | 159.8 µs | 161.8 µs | 162.3 µs | 2.46 µs | 672 MB/s |
-| nom | 283.2 µs | 282.7 µs | 286.6 µs | 287.9 µs | 2.26 µs | 378 MB/s |
+| ライブラリ | Mean | Throughput (mean) |
+|-----------|------|-------------------|
+| **oni-comb** | **196.5 µs** | **519 MB/s** |
+| winnow | 201.0 µs | 508 MB/s |
+| nom | 274.5 µs | 372 MB/s |
+| chumsky | 495.7 µs | 206 MB/s |
 
-`fn_parser` による関数再帰 + `peek_byte` 先頭バイト分岐 + `quoted_string_cow` ゼロコピーにより、winnow を 1.45x 上回る。3 ライブラリとも StdDev ~2µs で安定。
+`fn_parser` による関数再帰 + `peek_byte` 先頭バイト分岐 + `quoted_string_cow` ゼロコピーにより、winnow の 1.03 倍、nom の 1.40 倍、chumsky の 2.52 倍。
 
 ### 特性まとめ
 
-- **winnow を上回るスループット** — 107KB JSON で winnow の 1.45 倍（`fn_parser` + `peek_byte` 分岐 + ゼロコピー文字列）
+- **winnow を上回るスループット** — 107KB JSON で winnow の 1.06 倍（`fn_parser` + `peek_byte` 分岐 + ゼロコピー文字列）
 - **nom と中〜長入力で同等〜上回る** — identifier 11B/28B でほぼ同等
 - **pom の 3〜30 倍高速** — 旧 v1 相当の `Rc<dyn Fn>` 設計との差を実証
 - **chumsky 0.12 で大幅改善** — identifier "x": 918ns -> 17.1ns（v0.9 比 ~54 倍高速化）。短い入力では競合レベルに到達。ただし中〜長入力では依然 ~2 倍遅い

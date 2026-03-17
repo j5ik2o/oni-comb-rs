@@ -305,6 +305,156 @@ mod nom_json {
   }
 }
 
+// ── chumsky JSON パーサー ──────────────────────
+
+mod chumsky_json {
+  use chumsky::prelude::*;
+
+  #[derive(Debug, Clone)]
+  pub enum Json {
+    Null,
+    Bool(bool),
+    Num(f64),
+    Str(String),
+    Array(Vec<Json>),
+    Object(Vec<(String, Json)>),
+  }
+
+  pub fn json_parser<'a>() -> impl Parser<'a, &'a str, Json> {
+    recursive(|value| {
+      let number = just('-')
+        .or_not()
+        .then(text::int(10))
+        .then(just('.').then(text::digits(10)).or_not())
+        .then(
+          just('e')
+            .or(just('E'))
+            .then(just('+').or(just('-')).or_not())
+            .then(text::digits(10))
+            .or_not(),
+        )
+        .to_slice()
+        .map(|s: &str| Json::Num(s.parse().unwrap()));
+
+      let escape = just('\\').then(choice((
+        just('\\'),
+        just('/'),
+        just('"'),
+        just('n').to('\n'),
+        just('r').to('\r'),
+        just('t').to('\t'),
+      )));
+
+      let string = just('"')
+        .ignore_then(
+          none_of("\\\"")
+            .or(escape.map(|(_, c)| c))
+            .repeated()
+            .collect::<String>(),
+        )
+        .then_ignore(just('"'));
+
+      let array = value
+        .clone()
+        .separated_by(just(',').padded())
+        .collect()
+        .padded()
+        .delimited_by(just('['), just(']'))
+        .map(Json::Array);
+
+      let member = string.clone().then_ignore(just(':').padded()).then(value.clone());
+
+      let object = member
+        .separated_by(just(',').padded())
+        .collect()
+        .padded()
+        .delimited_by(just('{'), just('}'))
+        .map(Json::Object);
+
+      choice((
+        just("null").to(Json::Null),
+        just("true").to(Json::Bool(true)),
+        just("false").to(Json::Bool(false)),
+        number,
+        string.map(Json::Str),
+        array,
+        object,
+      ))
+      .padded()
+    })
+  }
+
+  pub fn parse(input: &str) -> Option<Json> {
+    json_parser().parse(input).into_output()
+  }
+}
+
+// ── pom JSON パーサー ─────────────────────────
+
+// pom は 107KB JSON のフルパースに対応する JSON パーサーの実装が困難なため除外。
+// token レベルのベンチ（comparison ベンチ）で pom の数値は計測済み。
+
+#[cfg(never)]
+mod pom_json {
+  use pom::parser::*;
+
+  #[derive(Debug)]
+  pub enum Json {
+    Null,
+    Bool(bool),
+    Num(f64),
+    Str(String),
+    Array(Vec<Json>),
+    Object(Vec<(String, Json)>),
+  }
+
+  fn space() -> pom::parser::Parser<char, ()> {
+    one_of(" \t\r\n").repeat(0..).discard()
+  }
+
+  fn number() -> pom::parser::Parser<char, f64> {
+    let integer = one_of("123456789") - one_of("0123456789").repeat(0..) | sym('0');
+    let frac = sym('.') + one_of("0123456789").repeat(1..);
+    let exp = one_of("eE") + one_of("+-").opt() + one_of("0123456789").repeat(1..);
+    let number = sym('-').opt() + integer + frac.opt() + exp.opt();
+    number
+      .collect()
+      .map(|s: Vec<&char>| s.into_iter().collect::<String>().parse::<f64>().unwrap())
+  }
+
+  fn string() -> pom::parser::Parser<char, String> {
+    let escape = sym('\\')
+      * (sym('"') | sym('\\') | sym('/') | sym('n').map(|_| '\n') | sym('r').map(|_| '\r') | sym('t').map(|_| '\t'));
+    let char_string = none_of("\"\\") | escape;
+    sym('"') * char_string.repeat(0..).map(|cs| cs.into_iter().collect()) - sym('"')
+  }
+
+  fn array() -> pom::parser::Parser<char, Vec<Json>> {
+    sym('[') * space() * call(value).sep_by(sym(',') * space()) - space() - sym(']')
+  }
+
+  fn object() -> pom::parser::Parser<char, Vec<(String, Json)>> {
+    let member = string() - space() - sym(':') - space() + call(value);
+    sym('{') * space() * member.sep_by(sym(',') * space()) - space() - sym('}')
+  }
+
+  fn value() -> pom::parser::Parser<char, Json> {
+    (tag("null").map(|_| Json::Null)
+      | tag("true").map(|_| Json::Bool(true))
+      | tag("false").map(|_| Json::Bool(false))
+      | number().map(Json::Num)
+      | string().map(Json::Str)
+      | array().map(Json::Array)
+      | object().map(Json::Object))
+      - space()
+  }
+
+  pub fn parse(input: &str) -> Result<Json, pom::Error> {
+    let chars: Vec<char> = input.chars().collect();
+    (space() * value()).parse(&chars)
+  }
+}
+
 // ── ベンチマーク ─────────────────────────────
 
 static JSON_STR: &str = include_str!("data/sample.json");
@@ -318,7 +468,7 @@ fn bench_json_full(c: &mut Criterion) {
   }
   assert!(winnow_json::parse(JSON_BYTES).is_ok());
   assert!(nom_json::parse(JSON_BYTES).is_ok());
-
+  assert!(chumsky_json::parse(JSON_STR).is_some());
   let mut group = c.benchmark_group("json_full");
   group.throughput(Throughput::Bytes(JSON_BYTES.len() as u64));
 
@@ -335,6 +485,10 @@ fn bench_json_full(c: &mut Criterion) {
 
   group.bench_function("nom", |b| {
     b.iter(|| black_box(nom_json::parse(black_box(JSON_BYTES)).unwrap()))
+  });
+
+  group.bench_function("chumsky", |b| {
+    b.iter(|| black_box(chumsky_json::parse(black_box(JSON_STR)).unwrap()))
   });
 
   group.finish();

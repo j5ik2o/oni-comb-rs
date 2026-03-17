@@ -232,21 +232,22 @@ Improved from 8.3ns → 7.2ns through ParseError introduction + `#[inline]`. chu
 | `(1 + 2) * 3` | 443 ns |
 | `(((1 + 2) * 3) - 4) / 5` | 905 ns |
 
-### Full JSON Benchmark (107KB — chumsky bench compatible)
+### Full JSON Benchmark (107KB)
 
-Measured on the same machine (100 samples):
+Measured on the same machine (100 samples). pom excluded (full JSON parser impractical with pom 3.x API).
 
-| Library | Mean | Median | p90 | p95 | StdDev | Throughput (mean) |
-|---------|------|--------|-----|-----|--------|-------------------|
-| **oni-comb** | **109.6 µs** | **109.4 µs** | **112.7 µs** | **113.8 µs** | **2.10 µs** | **977 MB/s** |
-| winnow | 159.3 µs | 159.8 µs | 161.8 µs | 162.3 µs | 2.46 µs | 672 MB/s |
-| nom | 283.2 µs | 282.7 µs | 286.6 µs | 287.9 µs | 2.26 µs | 378 MB/s |
+| Library | Mean | Throughput (mean) |
+|---------|------|-------------------|
+| **oni-comb** | **196.5 µs** | **519 MB/s** |
+| winnow | 201.0 µs | 508 MB/s |
+| nom | 274.5 µs | 372 MB/s |
+| chumsky | 495.7 µs | 206 MB/s |
 
-Using `fn_parser` function recursion + `peek_byte` leading-byte dispatch + `quoted_string_cow` zero-copy, oni-comb outperforms winnow by 1.45x. All 3 libraries show stable StdDev ~2µs.
+Using `fn_parser` function recursion + `peek_byte` leading-byte dispatch + `quoted_string_cow` zero-copy, oni-comb outperforms winnow by 1.03x, nom by 1.40x, and chumsky by 2.52x.
 
 ### Summary
 
-- **Outperforms winnow in throughput** — 1.45x faster on 107KB JSON (`fn_parser` + `peek_byte` dispatch + zero-copy strings)
+- **Outperforms winnow in throughput** — 1.06x faster on 107KB JSON (`fn_parser` + `peek_byte` dispatch + zero-copy strings)
 - **Competitive with nom on medium-to-long inputs** — comparable at 11B and 28B identifier
 - **3–30x faster than pom** — demonstrates the gap vs. old v1-equivalent `Rc<dyn Fn>` design
 - **chumsky 0.12 dramatically improved** — identifier "x": 918ns -> 17.1ns (~54x faster than v0.9). Now competitive on short inputs, but still ~2x slower on medium/long inputs

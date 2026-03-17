@@ -130,25 +130,22 @@ cargo bench -p oni-comb-parser --bench alloc_count
 - 括弧のネストごとに ~200ns 追加（再帰 1 段の `Box<dyn Parser>` コスト）。
 - 8項の加算チェーンで 761ns。`chainl1` のループは効率的。
 
-### JSON フルベンチ（107KB sample.json — chumsky ベンチ互換）
+### JSON フルベンチ（107KB sample.json）
 
-[chumsky ベンチマーク](https://github.com/zesterer/chumsky/tree/main/benches)と同じ 107KB の JSON ファイルでの同一マシン計測。
+同一マシンでの 107KB JSON ファイル計測（100 サンプル）。pom は除外（pom 3.x の API ではフル JSON パーサーの実装が困難）。
 
-100 サンプルでの統計:
+| ライブラリ | Mean | Throughput (mean) |
+|-----------|------|-------------------|
+| **oni-comb** | **196.5 µs** | **519 MB/s** |
+| winnow | 201.0 µs | 508 MB/s |
+| nom | 274.5 µs | 372 MB/s |
+| chumsky | 495.7 µs | 206 MB/s |
 
-| ライブラリ | Mean | Median | p90 | p95 | StdDev | Throughput (mean) |
-|-----------|------|--------|-----|-----|--------|-------------------|
-| **oni-comb** | **109.6 µs** | **109.4 µs** | **112.7 µs** | **113.8 µs** | **2.10 µs** | **977 MB/s** |
-| winnow | 159.3 µs | 159.8 µs | 161.8 µs | 162.3 µs | 2.46 µs | 672 MB/s |
-| nom | 283.2 µs | 282.7 µs | 286.6 µs | 287.9 µs | 2.26 µs | 378 MB/s |
-
-**oni-comb は winnow の 1.45 倍、nom の 2.59 倍のスループット（mean 基準）。** 3 ライブラリとも StdDev ~2µs で計測は安定。最適化の内訳:
+**oni-comb は winnow の 1.03 倍、nom の 1.40 倍、chumsky の 2.52 倍のスループット（mean 基準）。** 最適化の内訳:
 - `fn_parser` による関数再帰（`recursive()` の `Box<dyn Parser>` vtable を排除）
 - `peek_byte` による先頭バイト分岐（`or` チェーンの線形スキャンを排除）
 - `quoted_string_cow` によるゼロコピー文字列（エスケープなし文字列は `&str` スライス）
 - `take_while1` による数値パースのゼロコピー化
-
-**oni-comb は winnow の 1.45 倍、nom の 2.59 倍のスループット（mean 基準）。** 3 ライブラリとも StdDev ~2µs で計測は安定。
 
 ### ヒープアロケーション計測（dhat-rs）
 
@@ -266,7 +263,7 @@ dhat: At t-end:  0 bytes in 0 blocks
 
 ## 総合評価
 
-- **winnow を上回るスループット** — 107KB JSON で winnow の 1.45 倍（`fn_parser` + `peek_byte` 分岐 + ゼロコピー文字列）
+- **winnow を上回るスループット** — 107KB JSON で winnow の 1.03 倍（`fn_parser` + `peek_byte` 分岐 + ゼロコピー文字列）
 - **nom と中〜長入力で同等〜上回る** — identifier 11B: oni-comb 38.9ns vs nom 33.4ns（nom がやや高速）、28B: oni-comb 81.7ns vs nom 82.7ns（ほぼ同等）
 - **pom の 3〜30 倍高速** — 旧 v1 相当の `Rc<dyn Fn>` 設計との差を実証
 - **chumsky 0.12 で大幅改善** — identifier "x": 918ns -> 17.1ns（v0.9 比 ~54 倍高速化）。短い入力では oni-comb/winnow/nom と競合するレベルに到達。ただし中〜長入力では依然 2 倍程度遅い（11B identifier: 83.8ns vs 38.9ns）。flat_map boxed では chumsky が oni-comb と同等（25.4ns vs 30.9ns）
