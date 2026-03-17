@@ -1,3 +1,20 @@
+## [2.2.0](https://github.com/j5ik2o/oni-comb-rs/compare/oni-comb-parser-v2.1.0...oni-comb-parser-v2.2.0) (2026-03-17)
+
+
+### Features
+
+* **bench:** add pom full-json benchmark ([a31a407](https://github.com/j5ik2o/oni-comb-rs/commit/a31a40788e52db1de84ecd898d07660195f87a47))
+* **parser:** add fold combinator types for zero-allocation repetition ([d482c46](https://github.com/j5ik2o/oni-comb-rs/commit/d482c46f59293c46cfa4c8970029d76411b131fc))
+* **parser:** add fold/into methods to ParserExt ([b3da725](https://github.com/j5ik2o/oni-comb-rs/commit/b3da725b28db39b5cc3bcd50060329c7cfd683a6))
+* **parser:** replace quoted_string_cow with quoted_string ([1f92d82](https://github.com/j5ik2o/oni-comb-rs/commit/1f92d8226fb4a93219b150a4f47f9fafdb92aee2))
+
+
+### Bug Fixes
+
+* migrate chumsky_impl.rs to chumsky 0.12 API ([2abb0a9](https://github.com/j5ik2o/oni-comb-rs/commit/2abb0a9e00cb63f8335db38185a1032fc1cece86))
+* resolve merge conflict with dependabot/cargo/winnow-0.7 base branch ([2520981](https://github.com/j5ik2o/oni-comb-rs/commit/2520981e6490ed1fe8500e9e0d65386450de21a4))
+* update winnow_impl.rs for winnow 0.7 API (ErrMode removed) ([6041236](https://github.com/j5ik2o/oni-comb-rs/commit/60412367a62e16d61ccc6d387a5bcd0b6af314fb))
+
 ## [2.1.0](https://github.com/j5ik2o/oni-comb-rs/compare/oni-comb-parser-v2.0.0...oni-comb-parser-v2.1.0) (2026-03-16)
 
 
