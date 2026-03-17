@@ -148,23 +148,7 @@ cargo bench -p oni-comb-parser --bench alloc_count
 - `quoted_string_cow` によるゼロコピー文字列（エスケープなし文字列は `&str` スライス）
 - `take_while1` による数値パースのゼロコピー化
 
-**参考: chumsky README のランキング（AMD Ryzen 7 3700x）との対照**
-
-以下の表は chumsky v0.9 時代のベンチマークに基づく。**chumsky 0.12 ではトークンレベルで ~54 倍の改善**（identifier "x": 918ns → 17ns）があり、chumsky の行は実態と乖離している。chumsky 0.12 での JSON フルベンチは未実施。
-
-| # | ライブラリ | スループット | 備考 |
-|---|-----------|-------------|------|
-| 1 | **oni-comb** | **~977 MB/s** | winnow/nom 比率から推定 |
-| 2 | chumsky (check-only) | 797 MB/s | v0.9 — 0.12 ではさらに高速の可能性 |
-| 3 | winnow | 627 MB/s | |
-| 4 | chumsky | 533 MB/s | v0.9 — 0.12 ではさらに高速の可能性 |
-| 5 | sn (hand-written) | 472 MB/s | |
-| 6 | serde_json | 235 MB/s | |
-| 7 | nom | 213 MB/s | |
-| 8 | pest | 57 MB/s | |
-| 9 | pom | 8 MB/s | |
-
-※ chumsky ランキングは AMD Ryzen 7 3700x での chumsky v0.9 計測。oni-comb は同一マシンでの winnow/nom 比率から推定した参考値。chumsky 0.12 のトークンレベル大幅改善を受け、このランキングは変動する見込み — 再計測を予定。
+**oni-comb は winnow の 1.45 倍、nom の 2.59 倍のスループット（mean 基準）。** 3 ライブラリとも StdDev ~2µs で計測は安定。
 
 ### ヒープアロケーション計測（dhat-rs）
 

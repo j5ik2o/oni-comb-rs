@@ -150,23 +150,7 @@ Statistics from 100 samples:
 - Zero-copy strings via `quoted_string_cow` (unescaped strings use `&str` slices)
 - Zero-copy number parsing via `take_while1`
 
-**Reference: chumsky README rankings (AMD Ryzen 7 3700x) for comparison**
-
-The table below was derived from chumsky v0.9 benchmarks. **chumsky 0.12 improved ~54x on token workloads** (identifier "x": 918ns → 17ns), so the chumsky rows below are outdated. A new full JSON benchmark with chumsky 0.12 has not yet been run.
-
-| # | Library | Throughput | Notes |
-|---|---------|-----------|-------|
-| 1 | **oni-comb** | **~977 MB/s** | Estimated from winnow/nom ratio |
-| 2 | chumsky (check-only) | 797 MB/s | v0.9 — likely much faster in 0.12 |
-| 3 | winnow | 627 MB/s | |
-| 4 | chumsky | 533 MB/s | v0.9 — likely much faster in 0.12 |
-| 5 | sn (hand-written) | 472 MB/s | |
-| 6 | serde_json | 235 MB/s | |
-| 7 | nom | 213 MB/s | |
-| 8 | pest | 57 MB/s | |
-| 9 | pom | 8 MB/s | |
-
-*chumsky rankings are from AMD Ryzen 7 3700x measurements with chumsky v0.9. oni-comb throughput is estimated from winnow/nom ratios on the same machine. Given chumsky 0.12's dramatic token-level improvement, these rankings will shift — a re-run is planned.*
+**oni-comb achieves 1.45x the throughput of winnow and 2.59x that of nom (mean basis).** All 3 libraries show stable StdDev ~2µs.
 
 ### Heap Allocation Measurement (dhat-rs)
 
