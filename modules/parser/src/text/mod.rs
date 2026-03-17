@@ -4,7 +4,6 @@ pub mod identifier;
 pub mod integer;
 pub mod lexeme;
 pub mod quoted_string;
-pub mod quoted_string_cow;
 #[cfg(feature = "regex")]
 pub mod regex;
 pub mod tag;

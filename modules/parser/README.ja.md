@@ -1,5 +1,7 @@
 # oni-comb-parser
 
+[English](README.md)
+
 [oni-comb-rs](../../) のコアクレート。Rust 製パーサーモナドコンビネータライブラリ。
 
 ## 特徴
@@ -52,8 +54,7 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 | `whitespace0()` / `whitespace1()` | ASCII 空白を消費 | `&str` |
 | `identifier()` | ASCII 識別子 `[a-zA-Z_][a-zA-Z0-9_]*` | `&str` |
 | `integer()` | 符号付き整数 | `i64` |
-| `quoted_string()` | JSON 準拠ダブルクォート文字列 | `String` |
-| `quoted_string_cow()` | ゼロコピー版 quoted string | `Cow<'a, str>` |
+| `quoted_string()` | JSON 準拠ダブルクォート文字列（エスケープなしなら借用） | `Cow<'a, str>` |
 | `escaped(open, close, esc, handler)` | 汎用エスケープ文字列 | `String` |
 | `lexeme(p)` | パーサー実行後に後続の空白を消費 | `P::Output` |
 | `between(l, p, r)` | l, p, r を順に実行し p の値を返す | `P::Output` |
@@ -74,9 +75,14 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 | `.cut()` | — | Backtrack を Cut に昇格 |
 | `.optional()` | — | Backtrack を None に変換 |
 | `.many0()` / `.many1()` | — | 0回以上 / 1回以上の繰り返し |
+| `.many0_fold(init, f)` / `.many1_fold(init, f)` | — | 0個以上 / 1個以上の畳み込み（ゼロアロケーション） |
+| `.many0_into(c)` / `.many1_into(c)` | — | ユーザー指定コンテナ（`Extend`）に収集 |
 | `.sep_by0(sep)` / `.sep_by1(sep)` | — | 区切り付き繰り返し |
+| `.sep_by0_fold(sep, init, f)` / `.sep_by1_fold(sep, init, f)` | — | 区切り付き畳み込み（ゼロアロケーション） |
+| `.sep_by0_into(sep, c)` / `.sep_by1_into(sep, c)` | — | 区切り付きコンテナ収集 |
 | `.chainl1(op)` / `.chainr1(op)` | — | 演算子結合チェーン |
 | `.context(label)` | — | エラーコンテキストラベル追加 |
+| `.map_res(f, label)` | — | 失敗しうる関数で変換 |
 
 ## 入力型
 

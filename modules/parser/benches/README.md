@@ -39,7 +39,14 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 ## Results and Analysis
 
-Measured on Apple M-series chip (after ParseError introduction).
+Measurement environment:
+- Mac mini (Mac16,11)
+- Apple M4 Pro, 14 cores (10 Performance + 4 Efficiency)
+- Memory: 64 GB
+- macOS 26.3.1
+- Architecture: arm64
+
+Measured on the machine above (after ParseError introduction).
 All figures are Criterion **mean estimates** (100 samples, 95% confidence interval midpoint).
 
 ### Token Workload — Identifier (mean)
@@ -147,7 +154,7 @@ Same-machine measurement using the same 107KB JSON file (100 samples) after addi
 **oni-comb achieves 1.07x the throughput of winnow, 1.36x that of nom, 2.56x that of chumsky, and 39.1x that of pom (mean basis).** Optimization breakdown:
 - Function recursion via `fn_parser` (eliminates `recursive()`'s `Box<dyn Parser>` vtable)
 - Leading-byte dispatch via `peek_byte` (eliminates `or` chain linear scanning)
-- Zero-copy strings via `quoted_string_cow` (unescaped strings use `&str` slices)
+- Zero-copy strings via `quoted_string` (unescaped strings use `&str` slices)
 - Zero-copy number parsing via `take_while1`
 
 ### Heap Allocation Measurement (dhat-rs)
@@ -176,12 +183,12 @@ Allocation source breakdown:
 | Source | Bytes | Description |
 |--------|-------|-------------|
 | `Vec` grow (array/object element collection) | 312,512 | `Vec::push` growth for JSON arrays `[]` / objects `{}` |
-| `quoted_string_cow` slow path | 23,135 | Only escaped strings construct `Cow::Owned(String)` |
+| `quoted_string` slow path | 23,135 | Only escaped strings construct `Cow::Owned(String)` |
 
 **The parser combinator infrastructure itself has zero allocations.** All allocations come from AST construction:
 - `Vec<Json>` / `Vec<(Cow, Json)>` — array/object element collection (unavoidable)
 - `Cow::Owned` — only for escaped strings (unescaped strings use `Cow::Borrowed(&str)` for zero-copy)
-- `fn_parser`, `tag`, `char`, `whitespace0`, `take_while1`, `quoted_string_cow` (fast path), `peek_byte` — all zero-allocation
+- `fn_parser`, `tag`, `char`, `whitespace0`, `take_while1`, `quoted_string` (fast path), `peek_byte` — all zero-allocation
 
 ## Optimization Cycle Record
 
@@ -213,7 +220,7 @@ Allocation source breakdown:
 | Step | oni-comb | Throughput | Improvement |
 |------|----------|-----------|-------------|
 | Before (recursive + or chain) | 640 µs | 159 MB/s | — |
-| + `quoted_string_cow` zero-copy | 486 µs | 210 MB/s | -24% |
+| + `quoted_string` zero-copy | 486 µs | 210 MB/s | -24% |
 | + number zero-copy | 477 µs | 214 MB/s | -2% |
 | + `fn_parser` recursion + `peek_byte` dispatch | **109 µs** | **937 MB/s** | **-77%** |
 

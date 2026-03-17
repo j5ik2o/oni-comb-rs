@@ -1,3 +1,4 @@
+use alloc::borrow::Cow;
 use alloc::string::String;
 
 use crate::error::ParseError;
@@ -6,6 +7,8 @@ use crate::input::Input;
 use crate::parser::Parser;
 use crate::str_input::StrInput;
 
+/// エスケープなし文字列はゼロコピー (`&'a str`) で返し、
+/// エスケープありの場合のみ `String` にフォールバックする quoted string パーサー。
 pub struct QuotedString;
 
 pub fn quoted_string() -> QuotedString {
@@ -14,31 +17,48 @@ pub fn quoted_string() -> QuotedString {
 
 impl<'a> Parser<StrInput<'a>> for QuotedString {
   type Error = ParseError;
-  type Output = String;
+  type Output = Cow<'a, str>;
 
   #[inline]
-  fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<String, ParseError> {
+  fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<Cow<'a, str>, ParseError> {
     let pos = input.offset();
     let remaining = input.as_str();
-    let mut chars = remaining.chars();
+    let bytes = remaining.as_bytes();
 
-    // opening quote
-    match chars.next() {
-      Some('"') => {}
-      _ => {
-        return Err(Fail::Backtrack(ParseError::expected_char(pos, '"')));
+    if bytes.is_empty() || bytes[0] != b'"' {
+      return Err(Fail::Backtrack(ParseError::expected_char(pos, '"')));
+    }
+
+    // Fast path: scan for closing quote without escape
+    let mut i = 1; // skip opening quote
+    loop {
+      if i >= bytes.len() {
+        return Err(Fail::Cut(ParseError::expected_char(pos + i, '"')));
+      }
+      match bytes[i] {
+        b'"' => {
+          let s = &remaining[1..i];
+          input.advance(i + 1);
+          return Ok(Cow::Borrowed(s));
+        }
+        b'\\' => break,
+        _ => i += 1,
       }
     }
 
-    let mut result = String::new();
-    let mut consumed = 1; // opening quote
+    // Slow path: build String, reusing the prefix before the first escape
+    let mut result = String::with_capacity(i + 16);
+    result.push_str(&remaining[1..i]);
+
+    let mut chars = remaining[i..].chars();
+    let mut consumed = i; // bytes consumed so far (including opening quote)
 
     loop {
       match chars.next() {
         Some('"') => {
           consumed += 1;
           input.advance(consumed);
-          return Ok(result);
+          return Ok(Cow::Owned(result));
         }
         Some('\\') => {
           consumed += 1;
@@ -77,12 +97,12 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
             }
             Some('u') => {
               consumed += 1;
-              let mut hex = String::with_capacity(4);
+              let mut code: u32 = 0;
               for _ in 0..4 {
                 match chars.next() {
                   Some(c) if c.is_ascii_hexdigit() => {
-                    consumed += c.len_utf8();
-                    hex.push(c);
+                    consumed += 1;
+                    code = code * 16 + c.to_digit(16).unwrap();
                   }
                   _ => {
                     return Err(Fail::Cut(ParseError::expected_description(
@@ -92,8 +112,7 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
                   }
                 }
               }
-              let code_point = u32::from_str_radix(&hex, 16).unwrap();
-              match char::from_u32(code_point) {
+              match char::from_u32(code) {
                 Some(c) => result.push(c),
                 None => {
                   return Err(Fail::Cut(ParseError::expected_description(

@@ -27,7 +27,7 @@ fn json_primitive() -> impl Parser<StrInput<'static>, Output = JsonValue, Error 
   let bool_true = tag("true").map(|_| JsonValue::Bool(true));
   let bool_false = tag("false").map(|_| JsonValue::Bool(false));
   let int = integer().map(JsonValue::Int);
-  let string = quoted_string().map(JsonValue::Str);
+  let string = quoted_string().map(|s| JsonValue::Str(s.into_owned()));
   null.or(bool_true).or(bool_false).or(int).or(string)
 }
 
@@ -39,7 +39,10 @@ fn json_array() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = Pa
 }
 
 fn json_object() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
-  let pair = ws(quoted_string()).zip_left(ws(char(':'))).zip(ws(json_primitive()));
+  let pair = ws(quoted_string())
+    .map(|s| s.into_owned())
+    .zip_left(ws(char(':')))
+    .zip(ws(json_primitive()));
   ws(char('{'))
     .zip_right(pair.sep_by0(ws(char(','))))
     .zip_left(ws(char('}')))

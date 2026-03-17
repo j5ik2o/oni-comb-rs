@@ -1,5 +1,7 @@
 # ベンチマーク
 
+[English](README.md)
+
 oni-comb-rs v2 と比較対象ライブラリ（winnow, nom, chumsky, pom）の性能比較。
 
 ## 実行方法
@@ -37,7 +39,14 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 ## 結果と考察
 
-以下は Apple M 系チップでの計測結果（ParseError 導入後）。
+計測環境:
+- Mac mini (Mac16,11)
+- Apple M4 Pro, 14 cores (10 Performance + 4 Efficiency)
+- Memory: 64 GB
+- macOS 26.3.1
+- Architecture: arm64
+
+以下は上記マシンでの計測結果（ParseError 導入後）。
 全数値は Criterion 報告の **mean 推定値**（100 サンプル、95% 信頼区間中央）。
 
 ### Token ワークロード — Identifier（mean）
@@ -145,7 +154,7 @@ cargo bench -p oni-comb-parser --bench alloc_count
 **oni-comb は winnow の 1.07 倍、nom の 1.36 倍、chumsky の 2.56 倍、pom の 39.1 倍のスループット（mean 基準）。** 最適化の内訳:
 - `fn_parser` による関数再帰（`recursive()` の `Box<dyn Parser>` vtable を排除）
 - `peek_byte` による先頭バイト分岐（`or` チェーンの線形スキャンを排除）
-- `quoted_string_cow` によるゼロコピー文字列（エスケープなし文字列は `&str` スライス）
+- `quoted_string` によるゼロコピー文字列（エスケープなし文字列は `&str` スライス）
 - `take_while1` による数値パースのゼロコピー化
 
 ### ヒープアロケーション計測（dhat-rs）
@@ -174,12 +183,12 @@ dhat: At t-end:  0 bytes in 0 blocks
 | ソース | bytes | 説明 |
 |--------|-------|------|
 | `Vec` grow（配列・オブジェクト要素収集） | 312,512 | JSON の配列 `[]` / オブジェクト `{}` の `Vec::push` による grow |
-| `quoted_string_cow` slow path | 23,135 | エスケープ付き文字列のみ `Cow::Owned(String)` を構築 |
+| `quoted_string` slow path | 23,135 | エスケープ付き文字列のみ `Cow::Owned(String)` を構築 |
 
 **パーサーコンビネータインフラ自体のアロケーションはゼロ。** 全てのアロケーションは AST 構築に起因:
 - `Vec<Json>` / `Vec<(Cow, Json)>` — 配列・オブジェクトの要素収集（不可避）
 - `Cow::Owned` — エスケープ付き文字列のみ（エスケープなし文字列は `Cow::Borrowed(&str)` でゼロコピー）
-- `fn_parser`、`tag`、`char`、`whitespace0`、`take_while1`、`quoted_string_cow`（fast path）、`peek_byte` — 全てゼロアロケーション
+- `fn_parser`、`tag`、`char`、`whitespace0`、`take_while1`、`quoted_string`（fast path）、`peek_byte` — 全てゼロアロケーション
 
 ## 最適化サイクルの記録
 
@@ -211,7 +220,7 @@ dhat: At t-end:  0 bytes in 0 blocks
 | ステップ | oni-comb | スループット | 改善 |
 |---------|----------|-------------|------|
 | Before（recursive + or チェーン） | 640 µs | 159 MB/s | — |
-| + `quoted_string_cow` ゼロコピー | 486 µs | 210 MB/s | -24% |
+| + `quoted_string` ゼロコピー | 486 µs | 210 MB/s | -24% |
 | + number ゼロコピー | 477 µs | 214 MB/s | -2% |
 | + `fn_parser` 再帰 + `peek_byte` 分岐 | **109 µs** | **937 MB/s** | **-77%** |
 

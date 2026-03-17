@@ -34,7 +34,7 @@ fn json_value<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
     Some(b'n') => tag("null").map(|_| Json::Null).parse_next(input),
     Some(b't') => tag("true").map(|_| Json::Bool(true)).parse_next(input),
     Some(b'f') => tag("false").map(|_| Json::Bool(false)).parse_next(input),
-    Some(b'"') => quoted_string_cow().map(Json::Str).parse_next(input),
+    Some(b'"') => quoted_string().map(Json::Str).parse_next(input),
     Some(b'[') => json_array(input),
     Some(b'{') => json_object(input),
     Some(c) if c == b'-' || c.is_ascii_digit() => {
@@ -99,7 +99,7 @@ fn json_object<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
 
 fn json_member<'a>(input: &mut StrInput<'a>) -> PResult<(Cow<'a, str>, Json<'a>), ParseError> {
   whitespace0().parse_next(input)?;
-  let key = quoted_string_cow().parse_next(input)?;
+  let key = quoted_string().parse_next(input)?;
   whitespace0().parse_next(input)?;
   char(':').parse_next(input)?;
   let val = json_value(input)?;

@@ -104,8 +104,7 @@ let parser = satisfy(|c: char| c == 'c' || c == 't')
 | `whitespace1()` | Consume 1 or more ASCII whitespace characters | `&str` |
 | `identifier()` | ASCII identifier (`[a-zA-Z_][a-zA-Z0-9_]*`) | `&str` |
 | `integer()` | Signed integer | `i64` |
-| `quoted_string()` | Double-quoted string (JSON-compliant escaping) | `String` |
-| `quoted_string_cow()` | Zero-copy quoted_string (borrows when no escapes) | `Cow<'a, str>` |
+| `quoted_string()` | Double-quoted string (JSON-compliant escaping, borrows when unescaped) | `Cow<'a, str>` |
 | `escaped(open, close, esc, handler)` | Generic escaped string parser | `String` |
 | `lexeme(p)` | Run parser then consume trailing whitespace | `P::Output` |
 | `between(l, p, r)` | Run `l`, `p`, `r` in sequence and return `p`'s value | `P::Output` |
@@ -127,10 +126,20 @@ let parser = satisfy(|c: char| c == 'c' || c == 't')
 | `.optional()` | — | Convert Backtrack to `None` |
 | `.many0()` | — | Repeat 0 or more times |
 | `.many1()` | — | Repeat 1 or more times |
+| `.many0_fold(init, f)` | — | Fold 0+ elements (zero-allocation) |
+| `.many1_fold(init, f)` | — | Fold 1+ elements (zero-allocation) |
+| `.many0_into(container)` | — | Collect 0+ elements into custom `Extend` container |
+| `.many1_into(container)` | — | Collect 1+ elements into custom `Extend` container |
 | `.sep_by0(sep)` | — | Repeat 0 or more times with separator |
 | `.sep_by1(sep)` | — | Repeat 1 or more times with separator |
+| `.sep_by0_fold(sep, init, f)` | — | Fold 0+ separated elements (zero-allocation) |
+| `.sep_by1_fold(sep, init, f)` | — | Fold 1+ separated elements (zero-allocation) |
+| `.sep_by0_into(sep, container)` | — | Collect 0+ separated elements into custom container |
+| `.sep_by1_into(sep, container)` | — | Collect 1+ separated elements into custom container |
 | `.chainl1(op)` | — | Left-associative binary operator chain |
 | `.chainr1(op)` | — | Right-associative binary operator chain |
+| `.context(label)` | — | Add error context label |
+| `.map_res(f, label)` | — | Transform with fallible function |
 
 ## Benchmarks
 
@@ -235,6 +244,7 @@ Improved from 8.3ns → 7.2ns through ParseError introduction + `#[inline]`. chu
 ### Full JSON Benchmark (107KB)
 
 Measured on the same machine (100 samples) after adding the `pom` implementation to `json_full.rs`.
+Measurement machine: Mac mini (Mac16,11), Apple M4 Pro (14 cores: 10P + 4E), 64 GB RAM, macOS 26.3.1, arm64.
 
 | Library | Mean | Throughput (mean, MiB/s) |
 |---------|------|-------------------------|
@@ -244,7 +254,7 @@ Measured on the same machine (100 samples) after adding the `pom` implementation
 | chumsky | 495.6 µs | 206.0 |
 | pom | 7.56 ms | 13.5 |
 
-Using `fn_parser` function recursion + `peek_byte` leading-byte dispatch + `quoted_string_cow` zero-copy, oni-comb outperforms winnow by 1.07x, nom by 1.36x, chumsky by 2.56x, and pom by 39.1x.
+Using `fn_parser` function recursion + `peek_byte` leading-byte dispatch + `quoted_string` zero-copy, oni-comb outperforms winnow by 1.07x, nom by 1.36x, chumsky by 2.56x, and pom by 39.1x.
 
 ### Summary
 
@@ -276,9 +286,9 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 | Crate | Description |
 |-------|-------------|
-| [oni-comb-parser](modules/parser/) | Core parser combinator library |
-| [oni-comb-crond](modules/crond/) | Cron expression parser & scheduler |
-| [oni-comb-uri](modules/uri/) | RFC 3986 URI parser (zero-copy, URN support) |
+| [oni-comb-parser](modules/parser/README.md) | Core parser combinator library |
+| [oni-comb-crond](modules/crond/README.md) | Cron expression parser & scheduler |
+| [oni-comb-uri](modules/uri/README.md) | RFC 3986 URI parser (zero-copy, URN support) |
 
 ## Build & Test
 

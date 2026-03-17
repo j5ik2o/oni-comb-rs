@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use oni_comb_parser::fail::Fail;
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
@@ -21,6 +23,14 @@ fn simple_string() {
 }
 
 #[test]
+fn simple_string_is_borrowed() {
+  let mut parser = quoted_string();
+  let mut input = StrInput::new("\"hello\"");
+
+  assert!(matches!(parser.parse_next(&mut input).unwrap(), Cow::Borrowed("hello")));
+}
+
+#[test]
 fn string_with_remaining() {
   let mut parser = quoted_string();
   let mut input = StrInput::new("\"hello\" world");
@@ -37,6 +47,17 @@ fn escape_quote() {
   let mut input = StrInput::new(r#""say \"hi\"""#);
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "say \"hi\"");
+}
+
+#[test]
+fn escaped_string_is_owned() {
+  let mut parser = quoted_string();
+  let mut input = StrInput::new(r#""say \"hi\"""#);
+
+  assert!(matches!(
+    parser.parse_next(&mut input).unwrap(),
+    Cow::Owned(ref s) if s == "say \"hi\""
+  ));
 }
 
 #[test]

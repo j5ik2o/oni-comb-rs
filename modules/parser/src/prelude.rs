@@ -22,7 +22,6 @@ pub use crate::text::identifier::identifier;
 pub use crate::text::integer::integer;
 pub use crate::text::lexeme::lexeme;
 pub use crate::text::quoted_string::quoted_string;
-pub use crate::text::quoted_string_cow::quoted_string_cow;
 pub use crate::text::tag::tag;
 pub use crate::text::whitespace::{whitespace0, whitespace1};
 

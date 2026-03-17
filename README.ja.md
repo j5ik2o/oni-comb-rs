@@ -104,8 +104,7 @@ let parser = satisfy(|c: char| c == 'c' || c == 't')
 | `whitespace1()` | ASCII 空白を 1 個以上消費 | `&str` |
 | `identifier()` | ASCII 識別子（`[a-zA-Z_][a-zA-Z0-9_]*`） | `&str` |
 | `integer()` | 符号付き整数 | `i64` |
-| `quoted_string()` | ダブルクォート文字列（JSON 準拠エスケープ） | `String` |
-| `quoted_string_cow()` | ゼロコピー版 quoted_string（エスケープなしなら借用） | `Cow<'a, str>` |
+| `quoted_string()` | ダブルクォート文字列（JSON 準拠エスケープ、エスケープなしなら借用） | `Cow<'a, str>` |
 | `escaped(open, close, esc, handler)` | 汎用エスケープ文字列パーサー | `String` |
 | `lexeme(p)` | パーサー実行後に後続の空白を消費 | `P::Output` |
 | `between(l, p, r)` | `l`, `p`, `r` を順に実行し `p` の値を返す | `P::Output` |
@@ -127,10 +126,20 @@ let parser = satisfy(|c: char| c == 'c' || c == 't')
 | `.optional()` | — | Backtrack を `None` に変換 |
 | `.many0()` | — | 0回以上の繰り返し |
 | `.many1()` | — | 1回以上の繰り返し |
+| `.many0_fold(init, f)` | — | 0個以上の要素を畳み込み（ゼロアロケーション） |
+| `.many1_fold(init, f)` | — | 1個以上の要素を畳み込み（ゼロアロケーション） |
+| `.many0_into(container)` | — | 0個以上の要素をユーザー指定コンテナ（`Extend`）に収集 |
+| `.many1_into(container)` | — | 1個以上の要素をユーザー指定コンテナ（`Extend`）に収集 |
 | `.sep_by0(sep)` | — | 区切り付き 0回以上の繰り返し |
 | `.sep_by1(sep)` | — | 区切り付き 1回以上の繰り返し |
+| `.sep_by0_fold(sep, init, f)` | — | 区切り付き 0個以上の要素を畳み込み（ゼロアロケーション） |
+| `.sep_by1_fold(sep, init, f)` | — | 区切り付き 1個以上の要素を畳み込み（ゼロアロケーション） |
+| `.sep_by0_into(sep, container)` | — | 区切り付き 0個以上の要素をユーザー指定コンテナに収集 |
+| `.sep_by1_into(sep, container)` | — | 区切り付き 1個以上の要素をユーザー指定コンテナに収集 |
 | `.chainl1(op)` | — | 左結合の二項演算子チェーン |
 | `.chainr1(op)` | — | 右結合の二項演算子チェーン |
+| `.context(label)` | — | エラーコンテキストラベル追加 |
+| `.map_res(f, label)` | — | 失敗しうる関数で変換 |
 
 ## ベンチマーク
 
@@ -235,6 +244,7 @@ ParseError 導入 + `#[inline]` で旧 8.3ns → 7.2ns。chumsky 0.12 は ~930ns
 ### JSON フルベンチ（107KB）
 
 `json_full.rs` に `pom` 実装を追加した後、同一マシンで計測（100 サンプル）。
+計測マシン: Mac mini (Mac16,11), Apple M4 Pro (14 cores: 10P + 4E), 64 GB RAM, macOS 26.3.1, arm64.
 
 | ライブラリ | Mean | Throughput (mean, MiB/s) |
 |-----------|------|-------------------------|
@@ -244,7 +254,7 @@ ParseError 導入 + `#[inline]` で旧 8.3ns → 7.2ns。chumsky 0.12 は ~930ns
 | chumsky | 495.6 µs | 206.0 |
 | pom | 7.56 ms | 13.5 |
 
-`fn_parser` による関数再帰 + `peek_byte` 先頭バイト分岐 + `quoted_string_cow` ゼロコピーにより、winnow の 1.07 倍、nom の 1.36 倍、chumsky の 2.56 倍、pom の 39.1 倍。
+`fn_parser` による関数再帰 + `peek_byte` 先頭バイト分岐 + `quoted_string` ゼロコピーにより、winnow の 1.07 倍、nom の 1.36 倍、chumsky の 2.56 倍、pom の 39.1 倍。
 
 ### 特性まとめ
 
@@ -256,7 +266,7 @@ ParseError 導入 + `#[inline]` で旧 8.3ns → 7.2ns。chumsky 0.12 は ~930ns
 - **3 回の最適化で累計 ~83% 改善** — ParseError 導入（~12%）+ `#[inline]`（~17%）+ ゼロコピー＋fn再帰（~77%）
 - **JSON/arithmetic ワークロードで 2-5% 改善** — 全ワークロードで継続的な微改善
 - **Applicative / flat_map 同一型でヒープアロケーションゼロ** — dhat で 0 bytes / 0 blocks 確認
-- 詳細な考察は [`modules/parser/benches/README.md`](modules/parser/benches/README.md) を参照
+- 詳細な考察は [`modules/parser/benches/README.ja.md`](modules/parser/benches/README.ja.md) を参照
 
 ### ベンチマーク実行
 
@@ -276,9 +286,9 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 | クレート | 説明 |
 |---------|------|
-| [oni-comb-parser](modules/parser/) | コアパーサーコンビネータライブラリ |
-| [oni-comb-crond](modules/crond/) | cron 式パーサー＆スケジューラー |
-| [oni-comb-uri](modules/uri/) | RFC 3986 URI パーサー（ゼロコピー、URN サポート） |
+| [oni-comb-parser](modules/parser/README.ja.md) | コアパーサーコンビネータライブラリ |
+| [oni-comb-crond](modules/crond/README.ja.md) | cron 式パーサー＆スケジューラー |
+| [oni-comb-uri](modules/uri/README.ja.md) | RFC 3986 URI パーサー（ゼロコピー、URN サポート） |
 
 ## ビルド・テスト
 
