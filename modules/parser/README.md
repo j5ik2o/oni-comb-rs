@@ -76,9 +76,14 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 | `.cut()` | — | Upgrade Backtrack to Cut |
 | `.optional()` | — | Convert Backtrack to None |
 | `.many0()` / `.many1()` | — | Repeat 0+ / 1+ times |
+| `.many0_fold(init, f)` / `.many1_fold(init, f)` | — | Fold 0+ / 1+ elements (zero-allocation) |
+| `.many0_into(c)` / `.many1_into(c)` | — | Collect into custom `Extend` container |
 | `.sep_by0(sep)` / `.sep_by1(sep)` | — | Separated repetition |
+| `.sep_by0_fold(sep, init, f)` / `.sep_by1_fold(sep, init, f)` | — | Fold separated elements (zero-allocation) |
+| `.sep_by0_into(sep, c)` / `.sep_by1_into(sep, c)` | — | Collect separated elements into custom container |
 | `.chainl1(op)` / `.chainr1(op)` | — | Operator associativity chains |
 | `.context(label)` | — | Add error context label |
+| `.map_res(f, label)` | — | Transform with fallible function |
 
 ## Input Types
 

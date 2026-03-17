@@ -126,10 +126,20 @@ let parser = satisfy(|c: char| c == 'c' || c == 't')
 | `.optional()` | — | Convert Backtrack to `None` |
 | `.many0()` | — | Repeat 0 or more times |
 | `.many1()` | — | Repeat 1 or more times |
+| `.many0_fold(init, f)` | — | Fold 0+ elements (zero-allocation) |
+| `.many1_fold(init, f)` | — | Fold 1+ elements (zero-allocation) |
+| `.many0_into(container)` | — | Collect 0+ elements into custom `Extend` container |
+| `.many1_into(container)` | — | Collect 1+ elements into custom `Extend` container |
 | `.sep_by0(sep)` | — | Repeat 0 or more times with separator |
 | `.sep_by1(sep)` | — | Repeat 1 or more times with separator |
+| `.sep_by0_fold(sep, init, f)` | — | Fold 0+ separated elements (zero-allocation) |
+| `.sep_by1_fold(sep, init, f)` | — | Fold 1+ separated elements (zero-allocation) |
+| `.sep_by0_into(sep, container)` | — | Collect 0+ separated elements into custom container |
+| `.sep_by1_into(sep, container)` | — | Collect 1+ separated elements into custom container |
 | `.chainl1(op)` | — | Left-associative binary operator chain |
 | `.chainr1(op)` | — | Right-associative binary operator chain |
+| `.context(label)` | — | Add error context label |
+| `.map_res(f, label)` | — | Transform with fallible function |
 
 ## Benchmarks
 

@@ -126,10 +126,20 @@ let parser = satisfy(|c: char| c == 'c' || c == 't')
 | `.optional()` | — | Backtrack を `None` に変換 |
 | `.many0()` | — | 0回以上の繰り返し |
 | `.many1()` | — | 1回以上の繰り返し |
+| `.many0_fold(init, f)` | — | 0個以上の要素を畳み込み（ゼロアロケーション） |
+| `.many1_fold(init, f)` | — | 1個以上の要素を畳み込み（ゼロアロケーション） |
+| `.many0_into(container)` | — | 0個以上の要素をユーザー指定コンテナ（`Extend`）に収集 |
+| `.many1_into(container)` | — | 1個以上の要素をユーザー指定コンテナ（`Extend`）に収集 |
 | `.sep_by0(sep)` | — | 区切り付き 0回以上の繰り返し |
 | `.sep_by1(sep)` | — | 区切り付き 1回以上の繰り返し |
+| `.sep_by0_fold(sep, init, f)` | — | 区切り付き 0個以上の要素を畳み込み（ゼロアロケーション） |
+| `.sep_by1_fold(sep, init, f)` | — | 区切り付き 1個以上の要素を畳み込み（ゼロアロケーション） |
+| `.sep_by0_into(sep, container)` | — | 区切り付き 0個以上の要素をユーザー指定コンテナに収集 |
+| `.sep_by1_into(sep, container)` | — | 区切り付き 1個以上の要素をユーザー指定コンテナに収集 |
 | `.chainl1(op)` | — | 左結合の二項演算子チェーン |
 | `.chainr1(op)` | — | 右結合の二項演算子チェーン |
+| `.context(label)` | — | エラーコンテキストラベル追加 |
+| `.map_res(f, label)` | — | 失敗しうる関数で変換 |
 
 ## ベンチマーク
 

@@ -75,9 +75,14 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 | `.cut()` | — | Backtrack を Cut に昇格 |
 | `.optional()` | — | Backtrack を None に変換 |
 | `.many0()` / `.many1()` | — | 0回以上 / 1回以上の繰り返し |
+| `.many0_fold(init, f)` / `.many1_fold(init, f)` | — | 0個以上 / 1個以上の畳み込み（ゼロアロケーション） |
+| `.many0_into(c)` / `.many1_into(c)` | — | ユーザー指定コンテナ（`Extend`）に収集 |
 | `.sep_by0(sep)` / `.sep_by1(sep)` | — | 区切り付き繰り返し |
+| `.sep_by0_fold(sep, init, f)` / `.sep_by1_fold(sep, init, f)` | — | 区切り付き畳み込み（ゼロアロケーション） |
+| `.sep_by0_into(sep, c)` / `.sep_by1_into(sep, c)` | — | 区切り付きコンテナ収集 |
 | `.chainl1(op)` / `.chainr1(op)` | — | 演算子結合チェーン |
 | `.context(label)` | — | エラーコンテキストラベル追加 |
+| `.map_res(f, label)` | — | 失敗しうる関数で変換 |
 
 ## 入力型
 
