@@ -3,7 +3,7 @@ use winnow::error::ContextError;
 use winnow::prelude::*;
 use winnow::token::{one_of, take_while};
 
-type WErr = winnow::error::ErrMode<ContextError>;
+type WErr = ContextError;
 
 pub fn parse_identifier(s: &str) -> Option<String> {
   let mut input = s;
