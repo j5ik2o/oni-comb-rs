@@ -122,9 +122,16 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
               // サロゲートペア処理
               if (0xD800..=0xDBFF).contains(&code) {
                 // 高サロゲート: 次の \uXXXX を読んで低サロゲートと合成
-                match (chars.next(), chars.next()) {
+                let c1 = chars.next();
+                if let Some(ch) = c1 {
+                  consumed += ch.len_utf8();
+                }
+                let c2 = chars.next();
+                if let Some(ch) = c2 {
+                  consumed += ch.len_utf8();
+                }
+                match (c1, c2) {
                   (Some('\\'), Some('u')) => {
-                    consumed += 2;
                     let low = parse_hex4(&mut chars, &mut consumed, pos)?;
                     if !(0xDC00..=0xDFFF).contains(&low) {
                       return Err(Fail::Cut(ParseError::from_expected(

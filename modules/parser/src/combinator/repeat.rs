@@ -23,6 +23,7 @@ where
   #[inline]
   fn parse_next(&mut self, input: &mut I) -> PResult<Self::Output, Self::Error> {
     let mut items = Vec::new();
+    let start_cp = input.checkpoint();
     let start_pos = input.offset();
 
     loop {
@@ -52,6 +53,7 @@ where
     }
 
     if items.len() < self.min {
+      input.reset(start_cp);
       Err(Fail::Backtrack(P::Error::from_expected(
         start_pos,
         Expected::Description("repeat minimum"),
