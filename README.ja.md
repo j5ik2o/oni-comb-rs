@@ -178,21 +178,21 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 
 ### Token ワークロード結果（Identifier）（mean）
 
-2026-03-18 の再計測では identifier のマイクロベンチで `winnow` 1.0.0 と `nom` が引き続き優位。chumsky 0.12 は旧版より大幅改善したままで、最短入力では oni-comb にかなり近いが、中〜長入力ではまだ差がある。
+2026-03-18 の再計測では、generic identifier パスの回復により、以下の中〜長 ASCII 入力では oni-comb が `winnow` を上回るまで戻った。chumsky 0.12 は旧版より大幅改善したままだが、実用的な長さではまだ差がある。
 
 | 入力 | oni-comb | winnow | nom | chumsky | pom |
 |------|----------|--------|-----|---------|-----|
-| `"x"` (1B) | 17.7 ns | 16.9 ns | 15.6 ns | 17.8 ns | 67.2 ns |
-| `"foo_bar_123"` (11B) | 39.2 ns | 19.8 ns | 32.7 ns | 84.7 ns | 203.5 ns |
-| `"longIdentifier..."` (28B) | 80.1 ns | 33.3 ns | 81.4 ns | 130.8 ns | 263.5 ns |
+| `"x"` (1B) | 15.0 ns | 15.2 ns | 15.1 ns | 17.5 ns | 68.2 ns |
+| `"foo_bar_123"` (11B) | 18.6 ns | 20.3 ns | 33.2 ns | 86.9 ns | 202.0 ns |
+| `"longIdentifier..."` (28B) | 30.2 ns | 33.2 ns | 86.5 ns | 132.7 ns | 269.7 ns |
 
 ### Token ワークロード結果（Integer）（mean）
 
 | 入力 | oni-comb | winnow | nom | pom | chumsky |
 |------|----------|--------|-----|-----|---------|
-| `"42"` (2B) | 6.9 ns | 2.7 ns | 2.5 ns | 72.6 ns | 20.9 ns |
-| `"9999999"` (7B) | 19.3 ns | 5.2 ns | 5.1 ns | 131.5 ns | 28.8 ns |
-| `"184467...615"` (20B) | 59.2 ns | 22.3 ns | 21.9 ns | 256.4 ns | 94.0 ns |
+| `"42"` (2B) | 2.6 ns | 2.8 ns | 2.8 ns | 70.8 ns | 20.7 ns |
+| `"9999999"` (7B) | 5.2 ns | 5.4 ns | 5.4 ns | 132.3 ns | 29.5 ns |
+| `"184467...615"` (20B) | 20.0 ns | 23.1 ns | 22.7 ns | 273.1 ns | 100.1 ns |
 
 ### flat_map ワークロード結果
 
@@ -200,17 +200,17 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 
 | 入力 | oni-comb | winnow | nom | chumsky | pom |
 |------|----------|--------|-----|---------|-----|
-| `"1one"` | 6.8 ns | 2.4 ns | 2.4 ns | 48.4 ns | 69.9 ns |
-| `"3three"` | 5.5 ns | 2.7 ns | 2.3 ns | 51.6 ns | 94.4 ns |
+| `"1one"` | 5.7 ns | 2.6 ns | 3.2 ns | 72.8 ns | 76.2 ns |
+| `"3three"` | 4.1 ns | 2.7 ns | 2.4 ns | 51.5 ns | 95.0 ns |
 
-ParseError 導入 + `#[inline]` で旧 8.3ns → 7.2ns。chumsky 0.12 は ~930ns から ~50ns に改善。
+ParseError 導入、`#[inline]`、さらに generic token fast path の整理により、旧 8ns 台からさらに短縮した。残差は主に branch dispatch のオーバーヘッド。
 
 #### 異種型分岐（`Box<dyn Parser>` / 動的ディスパッチ）（mean）
 
 | 入力 | oni-comb | winnow | nom\* | chumsky | pom |
 |------|----------|--------|-------|---------|-----|
-| `"c:hello"` | 30.5 ns | 18.8 ns | 3.6 ns | 25.7 ns | 161.8 ns |
-| `"i:42"` | 23.3 ns | 17.6 ns | 2.7 ns | 18.8 ns | 110.5 ns |
+| `"c:hello"` | 20.7 ns | 19.2 ns | 4.6 ns | 41.4 ns | 307.5 ns |
+| `"i:42"` | 18.3 ns | 17.7 ns | 2.8 ns | 24.2 ns | 114.2 ns |
 
 \* nom は `Parser` trait が dyn 非互換のため手動二段パース（Box なし）。
 
@@ -218,9 +218,9 @@ ParseError 導入 + `#[inline]` で旧 8.3ns → 7.2ns。chumsky 0.12 は ~930ns
 
 | 入力 | zip | flat_map | 差分 |
 |------|-----|----------|------|
-| `"x"` | 3.8 ns | 3.8 ns | ≈0% (誤差) |
-| `"foo_bar_123"` | 25.2 ns | 25.3 ns | ≈0% (誤差) |
-| `"longIdentifier..."` | 62.9 ns | 62.8 ns | ≈0% (誤差) |
+| `"x"` | 2.3 ns | 1.9 ns | 同レンジ |
+| `"foo_bar_123"` | 6.7 ns | 6.6 ns | 同レンジ |
+| `"longIdentifier..."` | 15.6 ns | 15.4 ns | 同レンジ |
 
 ### JSON subset（oni-comb のみ）（mean）
 
@@ -248,21 +248,22 @@ ParseError 導入 + `#[inline]` で旧 8.3ns → 7.2ns。chumsky 0.12 は ~930ns
 
 | ライブラリ | Mean | Throughput (mean, MiB/s) |
 |-----------|------|-------------------------|
-| oni-comb | 203.7 µs | 501.1 |
-| **winnow** | **180.7 µs** | **564.8** |
-| nom | 260.5 µs | 391.8 |
-| chumsky | 490.0 µs | 208.3 |
-| pom | 7.33 ms | 13.9 |
+| **oni-comb** | **112.6 µs** | **906.6** |
+| winnow | 202.6 µs | 503.9 |
+| nom | 280.2 µs | 364.4 |
+| chumsky | 552.1 µs | 184.9 |
+| pom | 8.58 ms | 11.9 |
 
-今回の再計測では `winnow` 1.0.0 が JSON フルベンチの首位。oni-comb はなお nom の 1.28 倍、chumsky の 2.41 倍、pom の 36.0 倍のスループットを維持し、winnow 比では 0.89 倍。
+今回の再計測では oni-comb が JSON フルベンチ首位を奪還した。`winnow` 1.0.0 の 1.80 倍、nom の 2.49 倍、chumsky の 4.90 倍、pom の 76.2 倍のスループットに到達している。
 
 ### 特性まとめ
 
-- **`winnow` 1.0.0 が JSON フルのマクロベンチで先行** — 564.8 MiB/s に対し、oni-comb は 501.1 MiB/s
-- **oni-comb は JSON フルで nom / chumsky / pom より依然高速** — nom の 1.28 倍、chumsky の 2.41 倍、pom の 36.0 倍
-- **identifier / integer の token レベルはまだ winnow / nom に劣る** — 今回の再計測で最も明確に残った差分
-- **chumsky 0.12 で大幅改善** — 短い identifier は oni-comb に近いが、中〜長入力では依然差がある
-- **zip ≒ flat_map（同一型）** — 具象コンビネータ型設計によりモナディック合成でもゼロコスト
+- **oni-comb が JSON フルのマクロベンチ首位に復帰** — 906.6 MiB/s、winnow は 503.9 MiB/s
+- **oni-comb は JSON フルで nom / chumsky / pom に大差** — nom の 2.49 倍、chumsky の 4.90 倍、pom の 76.2 倍
+- **generic identifier / integer はもはや最大の弱点ではない** — この再計測では掲載ケースで oni-comb が winnow を上回る
+- **chumsky 0.12 で大幅改善** — 短い identifier は今も oni-comb に近いが、中〜長入力では依然差がある
+- **flat_map が現時点の最大の microbenchmark ギャップ** — とくに同一型分岐で winnow / nom に差がある
+- **zip ≒ flat_map（同一型）** — 具象コンビネータ型設計により両者は同じ性能レンジに収まる
 - **JSON subset / arithmetic は今回も安定** — object は ~625.6ns、`(((1 + 2) * 3) - 4) / 5` は ~912ns
 - **Applicative / flat_map 同一型でヒープアロケーションゼロ** — dhat で 0 bytes / 0 blocks 確認
 - 詳細な考察は [`modules/parser/benches/README.ja.md`](modules/parser/benches/README.ja.md) を参照

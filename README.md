@@ -178,21 +178,21 @@ Comparison benchmarks against other libraries are included, using Criterion.rs.
 
 ### Token Workload Results (Identifier) (mean)
 
-In the March 18, 2026 rerun, `winnow` 1.0.0 and `nom` remain clearly ahead on identifier microbenchmarks. chumsky 0.12 is still dramatically better than older releases and is now close to oni-comb on the shortest input, though still much slower on medium/long inputs.
+In the March 18, 2026 rerun, oni-comb recovers the generic identifier path enough to edge out `winnow` on the medium/long ASCII cases shown below, while chumsky 0.12 remains dramatically better than older releases but still trails on non-trivial inputs.
 
 | Input | oni-comb | winnow | nom | chumsky | pom |
 |-------|----------|--------|-----|---------|-----|
-| `"x"` (1B) | 17.7 ns | 16.9 ns | 15.6 ns | 17.8 ns | 67.2 ns |
-| `"foo_bar_123"` (11B) | 39.2 ns | 19.8 ns | 32.7 ns | 84.7 ns | 203.5 ns |
-| `"longIdentifier..."` (28B) | 80.1 ns | 33.3 ns | 81.4 ns | 130.8 ns | 263.5 ns |
+| `"x"` (1B) | 15.0 ns | 15.2 ns | 15.1 ns | 17.5 ns | 68.2 ns |
+| `"foo_bar_123"` (11B) | 18.6 ns | 20.3 ns | 33.2 ns | 86.9 ns | 202.0 ns |
+| `"longIdentifier..."` (28B) | 30.2 ns | 33.2 ns | 86.5 ns | 132.7 ns | 269.7 ns |
 
 ### Token Workload Results (Integer) (mean)
 
 | Input | oni-comb | winnow | nom | pom | chumsky |
 |-------|----------|--------|-----|-----|---------|
-| `"42"` (2B) | 6.9 ns | 2.7 ns | 2.5 ns | 72.6 ns | 20.9 ns |
-| `"9999999"` (7B) | 19.3 ns | 5.2 ns | 5.1 ns | 131.5 ns | 28.8 ns |
-| `"184467...615"` (20B) | 59.2 ns | 22.3 ns | 21.9 ns | 256.4 ns | 94.0 ns |
+| `"42"` (2B) | 2.6 ns | 2.8 ns | 2.8 ns | 70.8 ns | 20.7 ns |
+| `"9999999"` (7B) | 5.2 ns | 5.4 ns | 5.4 ns | 132.3 ns | 29.5 ns |
+| `"184467...615"` (20B) | 20.0 ns | 23.1 ns | 22.7 ns | 273.1 ns | 100.1 ns |
 
 ### flat_map Workload Results
 
@@ -200,17 +200,17 @@ In the March 18, 2026 rerun, `winnow` 1.0.0 and `nom` remain clearly ahead on id
 
 | Input | oni-comb | winnow | nom | chumsky | pom |
 |-------|----------|--------|-----|---------|-----|
-| `"1one"` | 6.8 ns | 2.4 ns | 2.4 ns | 48.4 ns | 69.9 ns |
-| `"3three"` | 5.5 ns | 2.7 ns | 2.3 ns | 51.6 ns | 94.4 ns |
+| `"1one"` | 5.7 ns | 2.6 ns | 3.2 ns | 72.8 ns | 76.2 ns |
+| `"3three"` | 4.1 ns | 2.7 ns | 2.4 ns | 51.5 ns | 95.0 ns |
 
-Improved from 8.3ns → 7.2ns through ParseError introduction + `#[inline]`. chumsky 0.12 improved from ~930ns to ~50ns.
+Improved from the older 8ns class through ParseError cleanup, cross-crate inlining, and the later generic token fast-path pass. The remaining gap is now mostly branch-dispatch overhead.
 
 #### Heterogeneous branch (`Box<dyn Parser>` / dynamic dispatch) (mean)
 
 | Input | oni-comb | winnow | nom\* | chumsky | pom |
 |-------|----------|--------|-------|---------|-----|
-| `"c:hello"` | 30.5 ns | 18.8 ns | 3.6 ns | 25.7 ns | 161.8 ns |
-| `"i:42"` | 23.3 ns | 17.6 ns | 2.7 ns | 18.8 ns | 110.5 ns |
+| `"c:hello"` | 20.7 ns | 19.2 ns | 4.6 ns | 41.4 ns | 307.5 ns |
+| `"i:42"` | 18.3 ns | 17.7 ns | 2.8 ns | 24.2 ns | 114.2 ns |
 
 \* nom's `Parser` trait is not dyn-compatible, so it uses manual two-stage parsing (no Box).
 
@@ -218,9 +218,9 @@ Improved from 8.3ns → 7.2ns through ParseError introduction + `#[inline]`. chu
 
 | Input | zip | flat_map | Diff |
 |-------|-----|----------|------|
-| `"x"` | 3.8 ns | 3.8 ns | ≈0% (within margin) |
-| `"foo_bar_123"` | 25.2 ns | 25.3 ns | ≈0% (within margin) |
-| `"longIdentifier..."` | 62.9 ns | 62.8 ns | ≈0% (within margin) |
+| `"x"` | 2.3 ns | 1.9 ns | same envelope |
+| `"foo_bar_123"` | 6.7 ns | 6.6 ns | same envelope |
+| `"longIdentifier..."` | 15.6 ns | 15.4 ns | same envelope |
 
 ### JSON Subset (oni-comb only) (mean)
 
@@ -248,21 +248,22 @@ Measurement machine: Mac mini (Mac16,11), Apple M4 Pro (14 cores: 10P + 4E), 64 
 
 | Library | Mean | Throughput (mean, MiB/s) |
 |---------|------|-------------------------|
-| oni-comb | 203.7 µs | 501.1 |
-| **winnow** | **180.7 µs** | **564.8** |
-| nom | 260.5 µs | 391.8 |
-| chumsky | 490.0 µs | 208.3 |
-| pom | 7.33 ms | 13.9 |
+| **oni-comb** | **112.6 µs** | **906.6** |
+| winnow | 202.6 µs | 503.9 |
+| nom | 280.2 µs | 364.4 |
+| chumsky | 552.1 µs | 184.9 |
+| pom | 8.58 ms | 11.9 |
 
-On this rerun, `winnow` 1.0.0 leads the full-JSON benchmark. oni-comb still delivers 1.28x the throughput of nom, 2.41x that of chumsky, and 36.0x that of pom, while reaching 0.89x of winnow.
+On this rerun, oni-comb retakes the full-JSON benchmark lead. It delivers 1.80x the throughput of `winnow` 1.0.0, 2.49x that of nom, 4.90x that of chumsky, and 76.2x that of pom.
 
 ### Summary
 
-- **`winnow` 1.0.0 now leads the full-JSON macro benchmark** — 564.8 MiB/s vs oni-comb's 501.1 MiB/s
-- **oni-comb still stays ahead of nom, chumsky, and pom on full JSON** — 1.28x faster than nom, 2.41x faster than chumsky, and 36.0x faster than pom
-- **Token-level identifier / integer parsers are still behind winnow and nom** — this is the clearest remaining gap in the current rerun
-- **chumsky 0.12 dramatically improved** — short identifiers are now close to oni-comb, but medium/long inputs still trail substantially
-- **zip ≒ flat_map (same type)** — monadic composition is zero-cost thanks to concrete combinator type design
+- **oni-comb now leads the full-JSON macro benchmark again** — 906.6 MiB/s vs winnow's 503.9 MiB/s
+- **oni-comb stays well ahead of nom, chumsky, and pom on full JSON** — 2.49x faster than nom, 4.90x faster than chumsky, and 76.2x faster than pom
+- **Generic identifier / integer parsers are no longer the clearest remaining gap** — the current rerun puts oni-comb ahead of winnow on the 11B identifier and 20B integer cases shown above
+- **chumsky 0.12 dramatically improved** — short identifiers are still in the same ballpark as oni-comb, but medium/long inputs still trail substantially
+- **flat_map remains the clearest microbenchmark gap** — especially same-type branch dispatch against winnow / nom
+- **zip ≒ flat_map (same type)** — concrete combinator types still keep monadic composition in the same performance envelope
 - **JSON subset / arithmetic remain stable in the rerun** — object parsing is ~625.6ns and `(((1 + 2) * 3) - 4) / 5` stays ~912ns
 - **Zero heap allocation for Applicative / same-type flat_map** — verified 0 bytes / 0 blocks with dhat
 - See [`modules/parser/benches/README.md`](modules/parser/benches/README.md) for detailed analysis
