@@ -1,6 +1,5 @@
 //! YAML 1.2 parser built on oni-comb-parser.
 
-mod anchor;
 mod block;
 mod common;
 mod context;
