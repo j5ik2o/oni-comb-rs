@@ -2,7 +2,13 @@
 name = "oni-comb-crond"
 version = "3.0.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Cron expression parser and scheduler built on oni-comb-parser"
+repository = "https://github.com/j5ik2o/oni-comb-rs"
+homepage = "https://github.com/j5ik2o/oni-comb-rs"
+documentation = "https://docs.rs/oni-comb-crond"
+readme = "README.md"
 
 [dependencies]
-oni-comb-parser = { path = "../parser" }
+oni-comb-parser = { version = "3.0.0", path = "../parser" }
 chrono = { version = "0.4.20", default-features = false, features = ["std"] }

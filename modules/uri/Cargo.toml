@@ -2,9 +2,15 @@
 name = "oni-comb-uri"
 version = "3.0.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Zero-copy RFC 3986 URI parser with URN support built on oni-comb-parser"
+repository = "https://github.com/j5ik2o/oni-comb-rs"
+homepage = "https://github.com/j5ik2o/oni-comb-rs"
+documentation = "https://docs.rs/oni-comb-uri"
+readme = "README.md"
 
 [dependencies]
-oni-comb-parser = { path = "../parser" }
+oni-comb-parser = { version = "3.0.0", path = "../parser" }
 
 [dev-dependencies]
 proptest = "1.10"
