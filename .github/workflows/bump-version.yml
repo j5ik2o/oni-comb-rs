@@ -49,14 +49,20 @@ jobs:
             oni-comb-parser)
               echo "tag_prefix=oni-comb-parser-v" >> "$GITHUB_OUTPUT"
               echo "version_file=modules/parser/Cargo.toml" >> "$GITHUB_OUTPUT"
+              echo "changelog_file=modules/parser/CHANGELOG.md" >> "$GITHUB_OUTPUT"
+              echo "git_path=modules/parser" >> "$GITHUB_OUTPUT"
               ;;
             oni-comb-crond)
               echo "tag_prefix=oni-comb-crond-v" >> "$GITHUB_OUTPUT"
               echo "version_file=modules/crond/Cargo.toml" >> "$GITHUB_OUTPUT"
+              echo "changelog_file=modules/crond/CHANGELOG.md" >> "$GITHUB_OUTPUT"
+              echo "git_path=modules/crond" >> "$GITHUB_OUTPUT"
               ;;
             oni-comb-uri)
               echo "tag_prefix=oni-comb-uri-v" >> "$GITHUB_OUTPUT"
               echo "version_file=modules/uri/Cargo.toml" >> "$GITHUB_OUTPUT"
+              echo "changelog_file=modules/uri/CHANGELOG.md" >> "$GITHUB_OUTPUT"
+              echo "git_path=modules/uri" >> "$GITHUB_OUTPUT"
               ;;
           esac
       - name: Generate Changelog and Bump Version
@@ -69,10 +75,11 @@ jobs:
           git-user-email: 'release-bot@oni-comb.dev'
           preset: 'conventionalcommits'
           tag-prefix: ${{ steps.vars.outputs.tag_prefix }}
-          output-file: 'CHANGELOG.md'
+          output-file: ${{ steps.vars.outputs.changelog_file }}
           release-count: '0'
           version-file: ${{ steps.vars.outputs.version_file }}
           version-path: 'package.version'
+          git-path: ${{ steps.vars.outputs.git_path }}
           skip-on-empty: 'true'
           skip-commit: ${{ inputs.dry_run }}
           skip-tag: ${{ inputs.dry_run }}
