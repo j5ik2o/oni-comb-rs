@@ -18,4 +18,9 @@ pub trait Input {
   fn offset(&self) -> usize;
   fn remaining(&self) -> Self::Slice;
   fn is_eof(&self) -> bool;
+
+  /// 現在の行番号 (1-origin)。`\n` で区切る。
+  fn line(&self) -> usize;
+  /// 現在の列番号 (1-origin)。Token 単位で数える。
+  fn column(&self) -> usize;
 }

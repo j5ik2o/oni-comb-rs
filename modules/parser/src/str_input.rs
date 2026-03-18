@@ -1,17 +1,60 @@
 use crate::input::Input;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct StrCheckpoint {
+  pub offset: usize,
+  pub line: usize,
+  pub column: usize,
+  pub line_start: usize,
+}
+
+impl PartialOrd for StrCheckpoint {
+  fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+    Some(self.cmp(other))
+  }
+}
+
+impl Ord for StrCheckpoint {
+  fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+    self.offset.cmp(&other.offset)
+  }
+}
+
 pub struct StrInput<'a> {
   src: &'a str,
   offset: usize,
+  line: usize,
+  column: usize,
+  line_start: usize,
 }
 
 impl<'a> StrInput<'a> {
   pub fn new(src: &'a str) -> Self {
-    Self { src, offset: 0 }
+    Self {
+      src,
+      offset: 0,
+      line: 1,
+      column: 1,
+      line_start: 0,
+    }
   }
 
-  pub(crate) fn advance(&mut self, n: usize) {
-    self.offset += n;
+  pub fn advance(&mut self, n: usize) {
+    let end = self.offset + n;
+    let slice = &self.src[self.offset..end];
+    for c in slice.chars() {
+      if c == '\n' {
+        self.line += 1;
+        self.column = 1;
+      } else {
+        self.column += 1;
+      }
+    }
+    self.offset = end;
+    // line_start: find last newline in advanced range
+    if let Some(pos) = slice.rfind('\n') {
+      self.line_start = (end - n) + pos + 1;
+    }
   }
 
   pub(crate) fn as_str(&self) -> &'a str {
@@ -26,7 +69,7 @@ impl<'a> StrInput<'a> {
 }
 
 impl<'a> Input for StrInput<'a> {
-  type Checkpoint = usize;
+  type Checkpoint = StrCheckpoint;
   #[cfg(feature = "alloc")]
   type Error = crate::error::ParseError;
   #[cfg(not(feature = "alloc"))]
@@ -37,13 +80,23 @@ impl<'a> Input for StrInput<'a> {
   #[inline]
   fn next_token(&mut self) -> Option<char> {
     let b = *self.src.as_bytes().get(self.offset)?;
-    if b.is_ascii() {
+    let c = if b.is_ascii() {
       self.offset += 1;
-      return Some(b as char);
+      b as char
+    } else {
+      let c = self.as_str().chars().next()?;
+      self.offset += c.len_utf8();
+      c
+    };
+
+    if c == '\n' {
+      self.line += 1;
+      self.column = 1;
+      self.line_start = self.offset;
+    } else {
+      self.column += 1;
     }
 
-    let c = self.as_str().chars().next()?;
-    self.offset += c.len_utf8();
     Some(c)
   }
 
@@ -58,16 +111,24 @@ impl<'a> Input for StrInput<'a> {
   }
 
   #[inline]
-  fn slice_since(&self, cp: usize) -> &'a str {
-    &self.src[cp..self.offset]
+  fn slice_since(&self, cp: StrCheckpoint) -> &'a str {
+    &self.src[cp.offset..self.offset]
   }
 
   fn checkpoint(&self) -> Self::Checkpoint {
-    self.offset
+    StrCheckpoint {
+      offset: self.offset,
+      line: self.line,
+      column: self.column,
+      line_start: self.line_start,
+    }
   }
 
   fn reset(&mut self, checkpoint: Self::Checkpoint) {
-    self.offset = checkpoint;
+    self.offset = checkpoint.offset;
+    self.line = checkpoint.line;
+    self.column = checkpoint.column;
+    self.line_start = checkpoint.line_start;
   }
 
   fn offset(&self) -> usize {
@@ -80,5 +141,13 @@ impl<'a> Input for StrInput<'a> {
 
   fn is_eof(&self) -> bool {
     self.offset >= self.src.len()
+  }
+
+  fn line(&self) -> usize {
+    self.line
+  }
+
+  fn column(&self) -> usize {
+    self.column
   }
 }
