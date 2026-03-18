@@ -1,7 +1,9 @@
 //! JSON フルパースベンチ。
 //! 107KB の sample.json を使い、他ライブラリとのランキング比較を行う。
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
+use std::hint::black_box;
+
+use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::prelude::*;
 
@@ -209,6 +211,7 @@ mod chumsky_json {
   use chumsky::prelude::*;
 
   #[derive(Debug, Clone)]
+  #[allow(dead_code)]
   pub enum Json {
     Null,
     Bool(bool),
@@ -260,7 +263,7 @@ mod chumsky_json {
         .delimited_by(just('['), just(']'))
         .map(Json::Array);
 
-      let member = string.clone().then_ignore(just(':').padded()).then(value.clone());
+      let member = string.then_ignore(just(':').padded()).then(value.clone());
 
       let object = member
         .separated_by(just(',').padded())
@@ -309,7 +312,7 @@ mod pom_json {
   }
 
   fn number<'a>() -> Parser<'a, u8, f64> {
-    let integer = one_of(b"123456789") - one_of(b"0123456789").repeat(0..) | sym(b'0');
+    let integer = (one_of(b"123456789") - one_of(b"0123456789").repeat(0..)) | sym(b'0');
     let frac = sym(b'.') + one_of(b"0123456789").repeat(1..);
     let exp = one_of(b"eE") + one_of(b"+-").opt() + one_of(b"0123456789").repeat(1..);
     let number = sym(b'-').opt() + integer + frac.opt() + exp.opt();

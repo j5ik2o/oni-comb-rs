@@ -1,4 +1,6 @@
-use criterion::{black_box, BenchmarkId, Criterion, Throughput};
+use std::hint::black_box;
+
+use criterion::{BenchmarkId, Criterion, Throughput};
 
 use oni_comb_parser::error::ParseError;
 use oni_comb_parser::parser::Parser;
