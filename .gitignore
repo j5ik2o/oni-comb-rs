@@ -15,7 +15,7 @@ dhat-heap.json
 /.codex*/.personality_migration
 /.codex*/shell_snapshots/
 /.codex*/sessions/
-/.codex*/state*.sqlite
+/.codex*/state*.sqlite*
 /.codex*/tmp/
 /.codex*/version.json
 /.codex*/skills/.system
