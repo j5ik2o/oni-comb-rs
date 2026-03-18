@@ -11,6 +11,10 @@
 
 [日本語](README.ja.md)
 
+<p align="center">
+  <img src="images/icon.png" alt="oni-comb-rs mascot" width="420">
+</p>
+
 A parser-monad combinator library for Rust (**v2/reboot**).
 
 The old v1 design based on `Rc<dyn Fn>` has been replaced with **trait + concrete combinator types** (`Map`, `Zip`, `Or`, `FlatMap`, etc.). It provides the full Functor / Applicative / Alternative / Monad hierarchy while minimizing dynamic dispatch and heap allocation.

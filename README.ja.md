@@ -11,6 +11,10 @@
 
 [英語](README.md)
 
+<p align="center">
+  <img src="images/icon.png" alt="oni-comb-rs mascot" width="420">
+</p>
+
 Rust 製パーサーモナドライブラリ（**v2/リブート版**）。
 
 旧 v1 の `Rc<dyn Fn>` ベース設計を捨て、**trait + 具象コンビネータ型**（`Map`, `Zip`, `Or`, `FlatMap` 等）で構成。Functor / Applicative / Alternative / Monad の全階層を提供しつつ、動的ディスパッチ・ヒープ確保を最小化する設計です。
