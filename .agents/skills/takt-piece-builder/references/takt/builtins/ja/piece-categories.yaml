@@ -1,0 +1,62 @@
+piece_categories:
+  🚀 クイックスタート:
+    pieces:
+      - default
+      - frontend-mini
+      - backend-mini
+      - compound-eye
+  ⚡ Mini:
+    pieces:
+      - frontend-mini
+      - backend-mini
+      - backend-cqrs-mini
+      - dual-mini
+      - dual-cqrs-mini
+  🎨 フロントエンド:
+    pieces:
+      - frontend
+      - frontend-mini
+  ⚙️ バックエンド:
+    pieces:
+      - backend
+      - backend-mini
+      - backend-cqrs
+      - backend-cqrs-mini
+  🔧 デュアル:
+    pieces:
+      - dual
+      - dual-mini
+      - dual-cqrs
+      - dual-cqrs-mini
+  🏗️ インフラストラクチャ:
+    pieces:
+      - terraform
+  🔍 レビュー:
+    pieces:
+      - review
+      - review-fix
+      - frontend-review
+      - frontend-review-fix
+      - backend-review
+      - backend-review-fix
+      - dual-review
+      - dual-review-fix
+      - dual-cqrs-review
+      - dual-cqrs-review-fix
+      - backend-cqrs-review
+      - backend-cqrs-review-fix
+  🧪 テスト:
+    pieces:
+      - unit-test
+      - e2e-test
+  🎵 TAKT開発:
+    pieces:
+      - takt-default
+      - takt-default-review-fix
+  その他:
+    pieces:
+      - research
+      - deep-research
+      - magi
+show_others_category: true
+others_category_name: その他
