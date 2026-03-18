@@ -14,6 +14,13 @@ A parser-monad combinator library for Rust. The core crate of [oni-comb-rs](../.
 - **Generic Input trait** — `StrInput<'a>` for `&str`, `ByteInput<'a>` for `&[u8]`
 - **`no_std` support** — `#![no_std]` with `alloc`
 
+## Performance
+
+- **Full JSON benchmark lead (March 18, 2026 rerun)** — `112.6 µs`, `906.6 MiB/s` on the 107KB sample, ahead of `winnow` (`202.6 µs`, `503.9 MiB/s`)
+- **Generic token parsers recovered** — identifier `"foo_bar_123"` is `18.6 ns`, integer `"184467...615"` is `20.0 ns`
+- **Remaining hotspot** — `flat_map` still trails `winnow` / `nom` on the smallest branch-dispatch microbenchmarks
+- See [benchmark details](benches/README.md) and [Japanese benchmark notes](benches/README.ja.md)
+
 ## Quickstart
 
 ```rust
@@ -101,6 +108,10 @@ cargo test -p oni-comb-parser
 # Benchmarks
 cargo bench -p oni-comb-parser --bench comparison
 ```
+
+Detailed benchmark tables and analysis:
+- [English benchmark notes](benches/README.md)
+- [Japanese benchmark notes](benches/README.ja.md)
 
 ## License
 

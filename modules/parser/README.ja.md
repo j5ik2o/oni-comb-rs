@@ -14,6 +14,13 @@
 - **ジェネリック Input トレイト** — `StrInput<'a>`（`&str`）、`ByteInput<'a>`（`&[u8]`）
 - **`no_std` 対応** — `#![no_std]` + `alloc`
 
+## パフォーマンス
+
+- **JSON フルベンチ首位（2026-03-18 再計測）** — 107KB サンプルで `112.6 µs`、`906.6 MiB/s`。`winnow` は `202.6 µs`、`503.9 MiB/s`
+- **generic token パーサーは回復済み** — identifier `"foo_bar_123"` が `18.6 ns`、integer `"184467...615"` が `20.0 ns`
+- **残るホットスポット** — 極小の分岐ディスパッチ系 microbenchmark では `flat_map` がまだ `winnow` / `nom` に劣る
+- 詳細は [ベンチマーク結果（英語）](benches/README.md) と [ベンチマーク結果（日本語）](benches/README.ja.md) を参照
+
 ## クイックスタート
 
 ```rust
@@ -100,6 +107,10 @@ cargo test -p oni-comb-parser
 # ベンチマーク
 cargo bench -p oni-comb-parser --bench comparison
 ```
+
+詳細なベンチ表と分析:
+- [ベンチマーク結果（英語）](benches/README.md)
+- [ベンチマーク結果（日本語）](benches/README.ja.md)
 
 ## License
 
