@@ -22,7 +22,7 @@ pub(crate) fn flow_value<'a>(input: &mut StrInput<'a>, ctx: &mut ParseContext) -
       input.next_token();
       let remaining = input.remaining();
       let end = remaining
-        .find(|c: char| c == ' ' || c == '\n' || c == ',' || c == ']' || c == '}')
+        .find([' ', '\n', ',', ']', '}'])
         .unwrap_or(remaining.len());
       let name = &remaining[..end];
       input.advance(end);

@@ -30,7 +30,7 @@ fn parse_anchor_prefix<'a>(input: &mut StrInput<'a>) -> PResult<Option<String>, 
   input.next_token(); // consume '&'
   let remaining = input.remaining();
   let end = remaining
-    .find(|c: char| c == ' ' || c == '\n' || c == '\r' || c == '\t' || c == ',' || c == ']' || c == '}' || c == ':')
+    .find([' ', '\n', '\r', '\t', ',', ']', '}', ':'])
     .unwrap_or(remaining.len());
   if end == 0 {
     return Err(Fail::Cut(ParseError::from_expected(
@@ -50,7 +50,7 @@ fn parse_alias<'a>(input: &mut StrInput<'a>, ctx: &ParseContext) -> PResult<Yaml
   input.next_token(); // consume '*'
   let remaining = input.remaining();
   let end = remaining
-    .find(|c: char| c == ' ' || c == '\n' || c == '\r' || c == '\t' || c == ',' || c == ']' || c == '}')
+    .find([' ', '\n', '\r', '\t', ',', ']', '}'])
     .unwrap_or(remaining.len());
   if end == 0 {
     return Err(Fail::Cut(ParseError::from_expected(
