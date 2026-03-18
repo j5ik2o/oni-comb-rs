@@ -7,10 +7,10 @@ oni-comb-rs v2 と比較対象ライブラリ（winnow, nom, chumsky, pom）の�
 ## 実行方法
 
 ```bash
-# 全ベンチ実行
+# 比較ベンチ実行（token / JSON subset / arithmetic）
 cargo bench -p oni-comb-parser --bench comparison
 
-# 特定グループのみ
+# comparison 内の特定グループのみ
 cargo bench -p oni-comb-parser --bench comparison -- identifier
 cargo bench -p oni-comb-parser --bench comparison -- integer
 cargo bench -p oni-comb-parser --bench comparison -- flat_map
@@ -18,14 +18,35 @@ cargo bench -p oni-comb-parser --bench comparison -- zip_vs
 cargo bench -p oni-comb-parser --bench comparison -- json
 cargo bench -p oni-comb-parser --bench comparison -- arithmetic
 
+# 独立した JSON フルベンチ（107KB sample.json）
+cargo bench -p oni-comb-parser --bench json_full
+
 # コンパイル確認（計測なし）
 cargo bench -p oni-comb-parser --bench comparison -- --test
+cargo bench -p oni-comb-parser --bench json_full -- --test
 
 # ヒープアロケーション計測
 cargo bench -p oni-comb-parser --bench alloc_count
 ```
 
-## ベンチグループ一覧
+## ベンチターゲット一覧
+
+| ターゲット | 対象 | 補足 |
+|-----------|------|------|
+| `comparison` | token マイクロベンチ、JSON subset、四則演算 | `identifier`, `integer`, `flat_map`, `zip_vs`, `json`, `arithmetic` などの Criterion filter を利用可能 |
+| `json_full` | 107KB `sample.json` のフルパース順位比較 | 実運用寄りの JSON 負荷でマクロスループットを測る独立ハーネス |
+| `alloc_count` | `dhat-rs` によるヒープアロケーション計測 | token ワークロードと JSON フルパースの両方を計測 |
+
+## この README に含まれる結果
+
+| 結果セクション | 元のターゲット |
+|---------------|----------------|
+| Token ワークロード（`identifier`, `integer`, `flat_map`, `zip_vs_flat_map`） | `comparison` |
+| JSON subset と四則演算 | `comparison` |
+| 107KB `sample.json` の JSON フルベンチ | `json_full` |
+| ヒープアロケーション計測 | `alloc_count` |
+
+## ベンチグループ一覧（`comparison` ターゲット）
 
 | グループ | 内容 | ライブラリ |
 |---------|------|-----------|
@@ -140,6 +161,8 @@ cargo bench -p oni-comb-parser --bench alloc_count
 - 8項の加算チェーンは ~0.76µs で横ばい。主ボトルネックは `chainl1` ループ自体ではない。
 
 ### JSON フルベンチ（107KB sample.json）
+
+この節は `cargo bench -p oni-comb-parser --bench json_full` の結果。
 
 2026-03-18 に同一マシンで 107KB JSON ファイルを再計測（100 サンプル）。`winnow` のベンチ依存も 0.7 から 1.0.0 に更新済み。
 

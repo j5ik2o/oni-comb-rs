@@ -7,10 +7,10 @@ Performance comparison of oni-comb-rs v2 against other libraries (winnow, nom, c
 ## How to Run
 
 ```bash
-# Run all benchmarks
+# Run comparison benchmarks (token / JSON subset / arithmetic)
 cargo bench -p oni-comb-parser --bench comparison
 
-# Run specific groups
+# Run specific comparison groups
 cargo bench -p oni-comb-parser --bench comparison -- identifier
 cargo bench -p oni-comb-parser --bench comparison -- integer
 cargo bench -p oni-comb-parser --bench comparison -- flat_map
@@ -18,14 +18,35 @@ cargo bench -p oni-comb-parser --bench comparison -- zip_vs
 cargo bench -p oni-comb-parser --bench comparison -- json
 cargo bench -p oni-comb-parser --bench comparison -- arithmetic
 
+# Run the standalone full JSON benchmark (107KB sample.json)
+cargo bench -p oni-comb-parser --bench json_full
+
 # Compile check only (no measurements)
 cargo bench -p oni-comb-parser --bench comparison -- --test
+cargo bench -p oni-comb-parser --bench json_full -- --test
 
 # Heap allocation measurement
 cargo bench -p oni-comb-parser --bench alloc_count
 ```
 
-## Benchmark Groups
+## Benchmark Targets
+
+| Target | Focus | Notes |
+|--------|-------|-------|
+| `comparison` | Token microbenchmarks, JSON subset, arithmetic | Supports Criterion filters such as `identifier`, `integer`, `flat_map`, `zip_vs`, `json`, `arithmetic` |
+| `json_full` | Full parse ranking on 107KB `sample.json` | Separate harness for macro throughput on a realistic JSON payload |
+| `alloc_count` | Heap allocation counts with `dhat-rs` | Measures both token workloads and the full JSON parse |
+
+## Included Results
+
+| Result Section | Source target |
+|----------------|---------------|
+| Token workloads (`identifier`, `integer`, `flat_map`, `zip_vs_flat_map`) | `comparison` |
+| JSON subset and arithmetic | `comparison` |
+| Full JSON benchmark on 107KB `sample.json` | `json_full` |
+| Heap allocation measurement | `alloc_count` |
+
+## Benchmark Groups (`comparison` target)
 
 | Group | Description | Libraries |
 |-------|-------------|-----------|
@@ -140,6 +161,8 @@ All figures are Criterion **mean estimates** (100 samples, 95% confidence interv
 - The 8-term addition chain remains ~0.76µs, which suggests the `chainl1` loop itself is not the main bottleneck.
 
 ### Full JSON Benchmark (107KB sample.json)
+
+This section corresponds to `cargo bench -p oni-comb-parser --bench json_full`.
 
 Same-machine rerun on March 18, 2026 using the same 107KB JSON file (100 samples), after updating the benchmark dependency from `winnow` 0.7 to 1.0.0.
 
