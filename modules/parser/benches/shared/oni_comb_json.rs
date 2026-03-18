@@ -137,7 +137,10 @@ mod tests {
     let compact = r#"{"a":[1,2],"b":{"c":true}}"#;
     let spaced = r#" { "a" : [ 1 , 2 ] , "b" : { "c" : true } } "#;
 
-    assert_eq!(super::parse_complete(compact).unwrap(), super::parse_complete(spaced).unwrap());
+    assert_eq!(
+      super::parse_complete(compact).unwrap(),
+      super::parse_complete(spaced).unwrap()
+    );
   }
 
   #[test]
@@ -145,7 +148,10 @@ mod tests {
     let compact = r#"[1,"two",true,null]"#;
     let spaced = r#"[ 1 , "two" , true , null ]"#;
 
-    assert_eq!(super::parse_complete(compact).unwrap(), super::parse_complete(spaced).unwrap());
+    assert_eq!(
+      super::parse_complete(compact).unwrap(),
+      super::parse_complete(spaced).unwrap()
+    );
   }
 
   #[test]
