@@ -36,6 +36,12 @@ impl<'a> Input for StrInput<'a> {
 
   #[inline]
   fn next_token(&mut self) -> Option<char> {
+    let b = *self.src.as_bytes().get(self.offset)?;
+    if b.is_ascii() {
+      self.offset += 1;
+      return Some(b as char);
+    }
+
     let c = self.as_str().chars().next()?;
     self.offset += c.len_utf8();
     Some(c)
@@ -43,6 +49,11 @@ impl<'a> Input for StrInput<'a> {
 
   #[inline]
   fn peek_token(&self) -> Option<char> {
+    let b = *self.src.as_bytes().get(self.offset)?;
+    if b.is_ascii() {
+      return Some(b as char);
+    }
+
     self.as_str().chars().next()
   }
 
