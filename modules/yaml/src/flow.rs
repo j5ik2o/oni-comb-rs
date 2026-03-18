@@ -21,9 +21,7 @@ pub(crate) fn flow_value<'a>(input: &mut StrInput<'a>, ctx: &mut ParseContext) -
       let pos = input.offset();
       input.next_token();
       let remaining = input.remaining();
-      let end = remaining
-        .find([' ', '\n', ',', ']', '}'])
-        .unwrap_or(remaining.len());
+      let end = remaining.find([' ', '\n', ',', ']', '}']).unwrap_or(remaining.len());
       let name = &remaining[..end];
       input.advance(end);
       match ctx.get_anchor(name) {
