@@ -1,4 +1,4 @@
-# oni-comb-rs (v2/reboot)
+# oni-comb-rs (v3/reboot)
 
 [![Workflow Status](https://github.com/j5ik2o/oni-comb-rs/workflows/ci/badge.svg)](https://github.com/j5ik2o/oni-comb-rs/actions?query=workflow%3A%22ci%22)
 [![crates.io](https://img.shields.io/crates/v/oni-comb-parser-rs.svg)](https://crates.io/crates/oni-comb-parser-rs)
@@ -15,7 +15,7 @@
   <img src="images/icon.png" alt="oni-comb-rs mascot" width="420">
 </p>
 
-A parser-monad combinator library for Rust (**v2/reboot**).
+A parser-monad combinator library for Rust (**v3/reboot**).
 
 The old v1 design based on `Rc<dyn Fn>` has been replaced with **trait + concrete combinator types** (`Map`, `Zip`, `Or`, `FlatMap`, etc.). It provides the full Functor / Applicative / Alternative / Monad hierarchy while minimizing dynamic dispatch and heap allocation.
 
@@ -68,7 +68,7 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 
 ### Why Applicative-First?
 
-In Rust, when a `flat_map` closure returns different parser types, type erasure via `Box<dyn Parser>` is required, incurring heap allocation + dynamic dispatch. The old v1 and pom built all combinators with `Rc<dyn Fn>`, which benchmarks show to be 3–39x slower than v2.
+In Rust, when a `flat_map` closure returns different parser types, type erasure via `Box<dyn Parser>` is required, incurring heap allocation + dynamic dispatch. The old v1 and pom built all combinators with `Rc<dyn Fn>`, which benchmarks show to be 3–39x slower than v3.
 
 In contrast, `zip` (Applicative) is built on the stack as a concrete type like `Zip<Char, Tag>`, allowing the compiler to perform monomorphization → inlining → LLVM optimization end-to-end, achieving performance close to hand-written recursive descent parsers.
 
