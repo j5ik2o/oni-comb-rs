@@ -46,16 +46,21 @@ impl<'a> ByteInput<'a> {
 
   #[inline]
   pub fn advance(&mut self, n: usize) {
-    for &b in &self.src[self.offset..self.offset + n] {
+    let end = self.offset + n;
+    let slice = &self.src[self.offset..end];
+    for &b in slice {
       if b == b'\n' {
         self.line += 1;
         self.column = 1;
-        self.line_start = self.offset + 1;
       } else {
         self.column += 1;
       }
     }
-    self.offset += n;
+    // Find last newline in the advanced range for line_start
+    if let Some(pos) = slice.iter().rposition(|&b| b == b'\n') {
+      self.line_start = self.offset + pos + 1;
+    }
+    self.offset = end;
   }
 }
 
