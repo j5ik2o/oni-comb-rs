@@ -123,35 +123,42 @@ fn resolve_core_scalar(s: &str) -> YamlValue {
 fn parse_single_quoted<'a>(input: &mut StrInput<'a>) -> PResult<YamlValue, ParseError> {
   let pos = input.offset();
   let remaining = input.remaining();
-  let bytes = remaining.as_bytes();
 
-  if bytes.is_empty() || bytes[0] != b'\'' {
+  if !remaining.starts_with('\'') {
     return Err(Fail::Backtrack(ParseError::from_expected(pos, Expected::Char('\''))));
   }
 
   let mut result = String::new();
-  let mut i = 1; // skip opening quote
+  let mut chars = remaining[1..].chars(); // skip opening quote
+  let mut consumed = 1; // bytes consumed (opening quote)
 
   loop {
-    if i >= bytes.len() {
-      return Err(Fail::Cut(ParseError::from_expected(pos + i, Expected::Char('\''))));
-    }
-    if bytes[i] == b'\'' {
-      if i + 1 < bytes.len() && bytes[i + 1] == b'\'' {
-        // Escaped single quote
-        result.push('\'');
-        i += 2;
-      } else {
-        // End of string
-        i += 1;
-        break;
+    match chars.next() {
+      None => {
+        return Err(Fail::Cut(ParseError::from_expected(
+          pos + consumed,
+          Expected::Char('\''),
+        )));
       }
-    } else {
-      result.push(bytes[i] as char);
-      i += 1;
+      Some('\'') => {
+        consumed += 1;
+        // Check for escaped single quote ('')
+        if chars.as_str().starts_with('\'') {
+          chars.next();
+          consumed += 1;
+          result.push('\'');
+        } else {
+          // End of string
+          break;
+        }
+      }
+      Some(c) => {
+        consumed += c.len_utf8();
+        result.push(c);
+      }
     }
   }
 
-  input.advance(i);
+  input.advance(consumed);
   Ok(YamlValue::String(result))
 }

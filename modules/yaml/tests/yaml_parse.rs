@@ -85,6 +85,22 @@ fn parse_single_quoted_string() {
   );
 }
 
+#[test]
+fn parse_single_quoted_non_ascii() {
+  assert_eq!(
+    parse("'café'").unwrap(),
+    YamlValue::String("café".to_string())
+  );
+}
+
+#[test]
+fn parse_single_quoted_escaped_quote() {
+  assert_eq!(
+    parse("'it''s'").unwrap(),
+    YamlValue::String("it's".to_string())
+  );
+}
+
 // ── Flow Style ──────────────────────────────────
 
 #[test]
