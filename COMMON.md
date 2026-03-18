@@ -10,6 +10,9 @@ oni-comb-rs は Rust 製パーサーコンビネータライブラリの v2 リ�
 # ビルド
 cargo build
 
+# フォーマット
+cargo fmt
+
 # 全テスト実行
 cargo test
 
