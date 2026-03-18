@@ -7,6 +7,26 @@ use crate::input::Input;
 use crate::parser::Parser;
 use crate::str_input::StrInput;
 
+/// 4桁の16進数を読んで u32 を返すヘルパー。
+fn parse_hex4(chars: &mut core::str::Chars<'_>, consumed: &mut usize, pos: usize) -> PResult<u32, ParseError> {
+  let mut code: u32 = 0;
+  for _ in 0..4 {
+    match chars.next() {
+      Some(c) if c.is_ascii_hexdigit() => {
+        *consumed += 1;
+        code = code * 16 + c.to_digit(16).unwrap();
+      }
+      _ => {
+        return Err(Fail::Cut(ParseError::from_expected(
+          pos + *consumed,
+          Expected::Description("4 hex digits after \\u"),
+        )));
+      }
+    }
+  }
+  Ok(code)
+}
+
 /// エスケープなし文字列はゼロコピー (`&'a str`) で返し、
 /// エスケープありの場合のみ `String` にフォールバックする quoted string パーサー。
 pub struct QuotedString;
@@ -97,28 +117,54 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
             }
             Some('u') => {
               consumed += 1;
-              let mut code: u32 = 0;
-              for _ in 0..4 {
-                match chars.next() {
-                  Some(c) if c.is_ascii_hexdigit() => {
-                    consumed += 1;
-                    code = code * 16 + c.to_digit(16).unwrap();
+              let code = parse_hex4(&mut chars, &mut consumed, pos)?;
+
+              // サロゲートペア処理
+              if (0xD800..=0xDBFF).contains(&code) {
+                // 高サロゲート: 次の \uXXXX を読んで低サロゲートと合成
+                match (chars.next(), chars.next()) {
+                  (Some('\\'), Some('u')) => {
+                    consumed += 2;
+                    let low = parse_hex4(&mut chars, &mut consumed, pos)?;
+                    if !(0xDC00..=0xDFFF).contains(&low) {
+                      return Err(Fail::Cut(ParseError::from_expected(
+                        pos + consumed - 4,
+                        Expected::Description("low surrogate (\\uDC00-\\uDFFF)"),
+                      )));
+                    }
+                    let cp = 0x10000 + ((code - 0xD800) << 10) + (low - 0xDC00);
+                    match char::from_u32(cp) {
+                      Some(c) => result.push(c),
+                      None => {
+                        return Err(Fail::Cut(ParseError::from_expected(
+                          pos + consumed - 10,
+                          Expected::Description("valid surrogate pair"),
+                        )));
+                      }
+                    }
                   }
                   _ => {
                     return Err(Fail::Cut(ParseError::from_expected(
                       pos + consumed,
-                      Expected::Description("4 hex digits after \\u"),
+                      Expected::Description("low surrogate pair (\\uXXXX)"),
                     )));
                   }
                 }
-              }
-              match char::from_u32(code) {
-                Some(c) => result.push(c),
-                None => {
-                  return Err(Fail::Cut(ParseError::from_expected(
-                    pos + consumed - 4,
-                    Expected::Description("valid unicode code point"),
-                  )));
+              } else if (0xDC00..=0xDFFF).contains(&code) {
+                // 孤立した低サロゲートはエラー
+                return Err(Fail::Cut(ParseError::from_expected(
+                  pos + consumed - 4,
+                  Expected::Description("high surrogate before low surrogate"),
+                )));
+              } else {
+                match char::from_u32(code) {
+                  Some(c) => result.push(c),
+                  None => {
+                    return Err(Fail::Cut(ParseError::from_expected(
+                      pos + consumed - 4,
+                      Expected::Description("valid unicode code point"),
+                    )));
+                  }
                 }
               }
             }

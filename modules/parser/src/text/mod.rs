@@ -1,6 +1,7 @@
 pub mod char;
 #[cfg(feature = "alloc")]
 pub mod escaped;
+pub mod float;
 pub mod identifier;
 pub mod integer;
 pub mod lexeme;

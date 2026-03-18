@@ -158,3 +158,33 @@ fn incomplete_unicode_escape_is_cut() {
 
   assert!(matches!(parser.parse_next(&mut input), Err(Fail::Cut(_))));
 }
+
+#[test]
+fn surrogate_pair_emoji() {
+  let mut parser = quoted_string();
+  let mut input = StrInput::new(r#""\uD83D\uDE00""#);
+  let result = parser.parse_next(&mut input).unwrap();
+  assert_eq!(result, Cow::<str>::Owned("😀".to_string()));
+}
+
+#[test]
+fn surrogate_pair_musical_symbol() {
+  let mut parser = quoted_string();
+  let mut input = StrInput::new(r#""\uD834\uDD1E""#);
+  let result = parser.parse_next(&mut input).unwrap();
+  assert_eq!(result, Cow::<str>::Owned("𝄞".to_string()));
+}
+
+#[test]
+fn lone_high_surrogate_is_error() {
+  let mut parser = quoted_string();
+  let mut input = StrInput::new(r#""\uD83D""#);
+  assert!(matches!(parser.parse_next(&mut input), Err(Fail::Cut(_))));
+}
+
+#[test]
+fn lone_low_surrogate_is_error() {
+  let mut parser = quoted_string();
+  let mut input = StrInput::new(r#""\uDE00""#);
+  assert!(matches!(parser.parse_next(&mut input), Err(Fail::Cut(_))));
+}

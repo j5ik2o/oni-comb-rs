@@ -1,7 +1,11 @@
+pub mod any;
 pub mod eof;
 pub mod none_of;
+pub mod not_a;
 pub mod one_of;
 pub mod satisfy;
+pub mod seq;
+pub mod sym;
 pub mod take;
 pub mod take_till0;
 pub mod take_till1;

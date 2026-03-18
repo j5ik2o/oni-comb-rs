@@ -7,6 +7,7 @@ pub mod combinator;
 pub mod error;
 pub mod fail;
 pub mod input;
+pub mod ops;
 pub mod parser;
 pub mod parser_ext;
 pub mod prelude;

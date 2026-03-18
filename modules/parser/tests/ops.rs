@@ -1,0 +1,80 @@
+use oni_comb_parser::input::Input;
+use oni_comb_parser::parser::Parser;
+use oni_comb_parser::parser_ext::ParserExt;
+use oni_comb_parser::prelude::*;
+
+#[test]
+fn add_is_zip() {
+  let mut input = StrInput::new("ab");
+  let result = (sym('a').ops() + sym('b').ops()).parse_next(&mut input).unwrap();
+  assert_eq!(result, ('a', 'b'));
+}
+
+#[test]
+fn sub_is_zip_left() {
+  let mut input = StrInput::new("ab");
+  let result = (sym('a').ops() - sym('b').ops()).parse_next(&mut input).unwrap();
+  assert_eq!(result, 'a');
+  assert_eq!(input.remaining(), "");
+}
+
+#[test]
+fn mul_is_zip_right() {
+  let mut input = StrInput::new("ab");
+  let result = (sym('a').ops() * sym('b').ops()).parse_next(&mut input).unwrap();
+  assert_eq!(result, 'b');
+}
+
+#[test]
+fn bitor_is_or() {
+  let mut input = StrInput::new("bc");
+  let result = (sym('a').ops() | sym('b').ops()).parse_next(&mut input).unwrap();
+  assert_eq!(result, 'b');
+}
+
+#[test]
+fn not_op_is_negative_lookahead() {
+  let mut input = StrInput::new("bc");
+  let result = (!sym('a').ops()).parse_next(&mut input).unwrap();
+  assert_eq!(result, ());
+  assert_eq!(input.remaining(), "bc");
+}
+
+#[test]
+fn neg_op_is_peek() {
+  let mut input = StrInput::new("abc");
+  let result = (-sym('a').ops()).parse_next(&mut input).unwrap();
+  // Peek returns the output of the inner parser (which is Peek<Sym> → ())
+  // Neg on Ops returns Ops<Peek<Sym>> which returns Sym's output without consuming
+  // Actually Peek returns P::Output, which for Sym is char
+  // But wait - Neg returns Ops<Peek<P>> and Peek returns P::Output
+  // However, we need to check that it doesn't consume input
+  assert_eq!(input.remaining(), "abc"); // didn't consume
+}
+
+#[test]
+fn shr_is_flat_map() {
+  let mut input = StrInput::new("ab");
+  let result = (sym('a').ops() >> |_: char| sym('b')).parse_next(&mut input).unwrap();
+  assert_eq!(result, 'b');
+}
+
+#[test]
+fn chained_ops_work() {
+  // pom style: sym('(') * sym('x') - sym(')')
+  let mut input = StrInput::new("(x)");
+  let result = (sym('(').ops() * sym('x').ops() - sym(')').ops())
+    .parse_next(&mut input)
+    .unwrap();
+  assert_eq!(result, 'x');
+  assert_eq!(input.remaining(), "");
+}
+
+#[test]
+fn or_chain_works() {
+  let mut input = StrInput::new("c");
+  let result = (sym('a').ops() | sym('b').ops() | sym('c').ops())
+    .parse_next(&mut input)
+    .unwrap();
+  assert_eq!(result, 'c');
+}

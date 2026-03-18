@@ -2,8 +2,10 @@ use crate::combinator::attempt::Attempt;
 use crate::combinator::chainl1::ChainL1;
 #[cfg(feature = "alloc")]
 use crate::combinator::chainr1::ChainR1;
+use crate::combinator::collect::Collect;
 use crate::combinator::context::Context;
 use crate::combinator::cut::Cut;
+use crate::combinator::discard::Discard;
 use crate::combinator::flat_map::FlatMap;
 #[cfg(feature = "alloc")]
 use crate::combinator::many::Many;
@@ -13,8 +15,12 @@ use crate::combinator::many1_fold::Many1Fold;
 use crate::combinator::many_fold::ManyFold;
 use crate::combinator::map::Map;
 use crate::combinator::map_res::MapRes;
+use crate::combinator::not::Not;
 use crate::combinator::optional::Optional;
 use crate::combinator::or::Or;
+use crate::combinator::peek::Peek;
+#[cfg(feature = "alloc")]
+use crate::combinator::repeat::Repeat;
 #[cfg(feature = "alloc")]
 use crate::combinator::sep_by::{SepBy0, SepBy1};
 use crate::combinator::sep_by_fold::{SepByFold0, SepByFold1};
@@ -263,6 +269,42 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
     P2: Parser<I, Error = Self::Error>,
     F: FnMut(Self::Output) -> P2, {
     FlatMap { parser: self, f }
+  }
+
+  /// 否定先読み。内部パーサーが失敗すれば Ok(()), 成功すれば Backtrack。入力を消費しない。
+  fn not(self) -> Not<Self> {
+    Not { parser: self }
+  }
+
+  /// 正先読み。成功時は出力を返すが入力を消費しない。
+  fn peek(self) -> Peek<Self> {
+    Peek { parser: self }
+  }
+
+  /// 回数指定の繰り返し。Range 引数 (0.., 1.., 2..=4 等) をサポート。
+  #[cfg(feature = "alloc")]
+  fn repeat<R: crate::combinator::repeat::RepeatRange>(self, range: R) -> Repeat<Self> {
+    Repeat {
+      parser: self,
+      min: range.min_count(),
+      max: range.max_count(),
+    }
+  }
+
+  /// パース範囲の入力 Slice を返す（出力を捨てる）。
+  fn collect(self) -> Collect<Self> {
+    Collect { parser: self }
+  }
+
+  /// 出力を () に変換する。
+  fn discard(self) -> Discard<Self> {
+    Discard { parser: self }
+  }
+
+  /// 演算子オーバーロードを有効にするラッパーで包む。
+  /// `sym('a').ops() + sym('b').ops()` のように使う。
+  fn ops(self) -> crate::ops::Ops<Self, I> {
+    crate::ops::Ops::new(self)
   }
 }
 
