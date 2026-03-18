@@ -1,3 +1,39 @@
+## [3.0.0](https://github.com/j5ik2o/oni-comb-rs/compare/oni-comb-parser-v2.2.0...oni-comb-parser-v3.0.0) (2026-03-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* **parser:** `Input` trait now requires `type Error: ExpectError`.
+`ParseError` factory methods (`expected_char`, `expected_tag`,
+`expected_description`, `expected_eof`) are removed; use
+`ExpectError::from_expected(pos, Expected::Variant(...))` instead.
+
+- Add `ExpectError` trait and `MinimalError` type for core-only error handling
+- Add `Input::Error` associated type with cfg-based switching
+  (ParseError when alloc enabled, MinimalError when not)
+- Migrate all primitive/ and text/ parsers from `ParseError` to `I::Error`
+- Gate alloc-dependent modules behind `#[cfg(feature = "alloc")]`:
+  many, many1, sep_by, chainl1/r1, recursive, quoted_string, escaped
+- Add `default = ["alloc"]` feature flag
+- `cargo build --no-default-features` now succeeds for core-only usage
+- Targets: RP2040/RP2350, WASM (no_std + no alloc)
+
+### Features
+
+* **parser:** add no_std core-only support without alloc ([a2a6e1b](https://github.com/j5ik2o/oni-comb-rs/commit/a2a6e1b405b005918c543be45e62669057a878ea))
+* **parser:** unify collector combinators with fold-based primitives ([942604c](https://github.com/j5ik2o/oni-comb-rs/commit/942604c7a7e0723a7e5029436c74e85627252126))
+
+
+### Bug Fixes
+
+* **parser:** ungated chainl1 from alloc feature ([bd22eda](https://github.com/j5ik2o/oni-comb-rs/commit/bd22eda74170af10d77ddedb9b1ea7ccc9d99866))
+
+
+### Performance Improvements
+
+* **benches:** optimize JSON whitespace handling in benchmarks ([dd44ff6](https://github.com/j5ik2o/oni-comb-rs/commit/dd44ff62ca10cdc78ded6a02832472eddc6a1891))
+* **parser:** reduce generic token decoding overhead ([463a190](https://github.com/j5ik2o/oni-comb-rs/commit/463a190ab0cde890dcf9a175e8b8afcafe36069d))
+
 ## [2.2.0](https://github.com/j5ik2o/oni-comb-rs/compare/oni-comb-parser-v2.1.0...oni-comb-parser-v2.2.0) (2026-03-17)
 
 
