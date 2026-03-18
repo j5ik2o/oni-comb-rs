@@ -1,0 +1,75 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: ja
+early_access: false
+enable_free_tier: true
+
+tone_instructions: |
+  簡潔かつ具体的にレビューすること。
+  このプロジェクトは "Less is more" と "YAGNI" を設計原則としている。
+  過剰設計や不要な抽象化を指摘すること。
+  Rust の所有権・借用システムを活かした設計を重視すること。
+
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbitai summary"
+  review_status: true
+  commit_status: true
+  collapse_walkthrough: true
+  sequence_diagrams: false
+  poem: false
+  abort_on_close: true
+
+  path_filters:
+    - "!references/**"
+    - "!target/**"
+    - "!.claude/**"
+    - "!.codex*/**"
+    - "!.gemini/**"
+    - "!.cursor/**"
+    - "!.opencode/**"
+    - "!.takt/**"
+    - "!.kiro/**"
+    - "!openspec/**"
+
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+
+  labeling_instructions: []
+
+  tools:
+    clippy:
+      enabled: true
+    gitleaks:
+      enabled: true
+    ast-grep:
+      essential_rules: true
+
+knowledge_base:
+  opt_out: false
+  learnings:
+    scope: auto
+  issues:
+    scope: auto
+  pull_requests:
+    scope: auto
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "CLAUDE.md"
+      - ".agent/rules/*.md"
+      - ".agent/rules/rust/*.md"
+      - ".agent/skills/*/SKILL.md"
+
+chat:
+  auto_reply: true
