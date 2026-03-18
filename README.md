@@ -226,11 +226,11 @@ Improved from the older 8ns class through ParseError cleanup, cross-crate inlini
 
 | Input | Time |
 |-------|------|
-| `null` | 8.4 ns |
-| `42` | 77.5 ns |
-| `"hello world"` | 115.4 ns |
-| `[1, 2, 3]` | 484.4 ns |
-| `{"name":"oni-comb","version":2,"active":true}` | 625.6 ns |
+| `null` | 11.5 ns |
+| `42` | 88.7 ns |
+| `"hello world"` | 129.1 ns |
+| `[1, 2, 3]` | 494.3 ns |
+| `{"name":"oni-comb","version":2,"active":true}` | 596.5 ns |
 
 ### Arithmetic + Parentheses (oni-comb only, using recursive) (mean)
 
@@ -248,23 +248,23 @@ Measurement machine: Mac mini (Mac16,11), Apple M4 Pro (14 cores: 10P + 4E), 64 
 
 | Library | Mean | Throughput (mean, MiB/s) |
 |---------|------|-------------------------|
-| **oni-comb** | **112.6 µs** | **906.6** |
-| winnow | 202.6 µs | 503.9 |
-| nom | 280.2 µs | 364.4 |
-| chumsky | 552.1 µs | 184.9 |
-| pom | 8.58 ms | 11.9 |
+| **oni-comb** | **109.5 µs** | **932.1** |
+| winnow | 178.7 µs | 571.3 |
+| nom | 282.8 µs | 360.9 |
+| chumsky | 561.0 µs | 181.9 |
+| pom | 7.69 ms | 13.3 |
 
-On this rerun, oni-comb retakes the full-JSON benchmark lead. It delivers 1.80x the throughput of `winnow` 1.0.0, 2.49x that of nom, 4.90x that of chumsky, and 76.2x that of pom.
+On this rerun, oni-comb widens the full-JSON benchmark lead further. It delivers 1.63x the throughput of `winnow` 1.0.0, 2.58x that of nom, 5.12x that of chumsky, and 70.2x that of pom.
 
 ### Summary
 
-- **oni-comb now leads the full-JSON macro benchmark again** — 906.6 MiB/s vs winnow's 503.9 MiB/s
-- **oni-comb stays well ahead of nom, chumsky, and pom on full JSON** — 2.49x faster than nom, 4.90x faster than chumsky, and 76.2x faster than pom
+- **oni-comb now leads the full-JSON macro benchmark by a wider margin** — 932.1 MiB/s vs winnow's 571.3 MiB/s
+- **oni-comb stays well ahead of nom, chumsky, and pom on full JSON** — 2.58x faster than nom, 5.12x faster than chumsky, and 70.2x faster than pom
 - **Generic identifier / integer parsers are no longer the clearest remaining gap** — the current rerun puts oni-comb ahead of winnow on the 11B identifier and 20B integer cases shown above
 - **chumsky 0.12 dramatically improved** — short identifiers are still in the same ballpark as oni-comb, but medium/long inputs still trail substantially
 - **flat_map remains the clearest microbenchmark gap** — especially same-type branch dispatch against winnow / nom
 - **zip ≒ flat_map (same type)** — concrete combinator types still keep monadic composition in the same performance envelope
-- **JSON subset / arithmetic remain stable in the rerun** — object parsing is ~625.6ns and `(((1 + 2) * 3) - 4) / 5` stays ~912ns
+- **The whitespace refactor is mixed on JSON subset** — primitive-heavy cases regressed, but object parsing improved to ~596.5ns and full JSON moved in the right direction
 - **Zero heap allocation for Applicative / same-type flat_map** — verified 0 bytes / 0 blocks with dhat
 - See [`modules/parser/benches/README.md`](modules/parser/benches/README.md) for detailed analysis
 

@@ -1,14 +1,11 @@
 #[global_allocator]
 static ALLOC: dhat::Alloc = dhat::Alloc;
 
-use std::borrow::Cow;
-
-use oni_comb_parser::error::{ExpectError, Expected, ParseError};
-use oni_comb_parser::fail::{Fail, PResult};
-use oni_comb_parser::input::Input;
-use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
+
+#[path = "shared/oni_comb_json.rs"]
+mod oni_comb_json;
 
 /// コンビネータ合成のみを測定するため、String 構築を行わない identifier パーサー。
 /// satisfy + take_while0 の .zip() で (char, &str) を返す。
@@ -39,100 +36,16 @@ fn parse_flat_map_same_type_no_alloc(s: &str) -> Option<&str> {
   parser.parse_next(&mut input).ok()
 }
 
-// ── JSON パーサー（json_full.rs と同一） ───────
-
-#[derive(Debug, Clone)]
-#[allow(dead_code)]
-enum Json<'a> {
-  Null,
-  Bool(bool),
-  Num(f64),
-  Str(Cow<'a, str>),
-  Array(Vec<Json<'a>>),
-  Object(Vec<(Cow<'a, str>, Json<'a>)>),
-}
-
-fn json_value<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
-  whitespace0().parse_next(input)?;
-  match input.peek_byte() {
-    Some(b'n') => tag("null").map(|_| Json::Null).parse_next(input),
-    Some(b't') => tag("true").map(|_| Json::Bool(true)).parse_next(input),
-    Some(b'f') => tag("false").map(|_| Json::Bool(false)).parse_next(input),
-    Some(b'"') => quoted_string().map(Json::Str).parse_next(input),
-    Some(b'[') => json_array(input),
-    Some(b'{') => json_object(input),
-    Some(c) if c == b'-' || c.is_ascii_digit() => {
-      take_while1(|c: char| c.is_ascii_digit() || c == '-' || c == '.' || c == 'e' || c == 'E' || c == '+')
-        .map(|s: &str| Json::Num(s.parse::<f64>().unwrap()))
-        .parse_next(input)
-    }
-    _ => Err(Fail::Backtrack(ParseError::from_expected(
-      input.offset(),
-      Expected::Description("JSON value"),
-    ))),
-  }
-}
-
-fn json_array<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
-  char('[').parse_next(input)?;
-  let mut items = Vec::new();
-  whitespace0().parse_next(input)?;
-  if input.peek_byte() == Some(b']') {
-    char(']').parse_next(input)?;
-    return Ok(Json::Array(items));
-  }
-  items.push(json_value(input)?);
-  loop {
-    whitespace0().parse_next(input)?;
-    match input.peek_byte() {
-      Some(b',') => {
-        char(',').parse_next(input)?;
-        items.push(json_value(input)?);
-      }
-      _ => break,
-    }
-  }
-  whitespace0().parse_next(input)?;
-  char(']').parse_next(input)?;
-  Ok(Json::Array(items))
-}
-
-fn json_object<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
-  char('{').parse_next(input)?;
-  let mut pairs = Vec::new();
-  whitespace0().parse_next(input)?;
-  if input.peek_byte() == Some(b'}') {
-    char('}').parse_next(input)?;
-    return Ok(Json::Object(pairs));
-  }
-  pairs.push(json_member(input)?);
-  loop {
-    whitespace0().parse_next(input)?;
-    match input.peek_byte() {
-      Some(b',') => {
-        char(',').parse_next(input)?;
-        pairs.push(json_member(input)?);
-      }
-      _ => break,
-    }
-  }
-  whitespace0().parse_next(input)?;
-  char('}').parse_next(input)?;
-  Ok(Json::Object(pairs))
-}
-
-fn json_member<'a>(input: &mut StrInput<'a>) -> PResult<(Cow<'a, str>, Json<'a>), ParseError> {
-  whitespace0().parse_next(input)?;
-  let key = quoted_string().parse_next(input)?;
-  whitespace0().parse_next(input)?;
-  char(':').parse_next(input)?;
-  let val = json_value(input)?;
-  Ok((key, val))
-}
-
 static JSON_STR: &str = include_str!("data/sample.json");
 
 fn main() {
+  let compact = r#"{"a":[1,2],"b":{"c":true}}"#;
+  let spaced = r#" { "a" : [ 1 , 2 ] , "b" : { "c" : true } } "#;
+  assert_eq!(
+    oni_comb_json::parse_complete(compact).unwrap(),
+    oni_comb_json::parse_complete(spaced).unwrap()
+  );
+
   let _profiler = dhat::Profiler::new_heap();
 
   // ── Token ワークロード（ゼロアロケーション確認） ──
@@ -152,5 +65,5 @@ fn main() {
 
   // ── JSON フルパース（Vec のみアロケーション） ──
   let mut input = StrInput::new(JSON_STR);
-  let _ = json_value(&mut input).unwrap();
+  let _ = oni_comb_json::json_value(&mut input).unwrap();
 }

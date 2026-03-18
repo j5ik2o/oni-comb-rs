@@ -130,18 +130,18 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 | 入力 | 時間 | byte/ns |
 |------|------|---------|
-| `null` (4B) | 8.4 ns | 0.48 |
-| `42` (2B) | 77.5 ns | 0.03 |
-| `"hello world"` (13B) | 115.4 ns | 0.11 |
-| `[1, 2, 3]` (9B) | 484.4 ns | 0.02 |
-| `[1, "two", true, null]` (22B) | 499.9 ns | 0.04 |
-| `{"name":"oni-comb",...}` (50B) | 625.6 ns | 0.08 |
-| `{"a":1,...,"h":8}` (64B) | 1,322 ns | 0.05 |
+| `null` (4B) | 11.5 ns | 0.35 |
+| `42` (2B) | 88.7 ns | 0.02 |
+| `"hello world"` (13B) | 129.1 ns | 0.10 |
+| `[1, 2, 3]` (9B) | 494.3 ns | 0.02 |
+| `[1, "two", true, null]` (22B) | 499.4 ns | 0.04 |
+| `{"name":"oni-comb",...}` (50B) | 596.5 ns | 0.08 |
+| `{"a":1,...,"h":8}` (64B) | 1,259 ns | 0.05 |
 
 **所見:**
-- `null` は tag 1回で ~8.4ns。`integer` は依然として `whitespace0` → `integer()` → `whitespace0` の3段ぶん固定コストが乗る。
-- 配列・オブジェクトは引き続き要素数にほぼ比例。8フィールドのオブジェクトで ~1.32μs。
-- 固定コストの主体は分岐ディスパッチと空白処理で、今回の string / object の改善はコード生成やキャッシュ影響も含むが、ボトルネックの形自体は変わっていない。
+- 今回の whitespace-boundary リファクタリングは、小さい subset 入力では mixed な結果になった。primitive 寄りのケースは悪化しており、`null` は ~11.5ns、`integer` は ~88.7ns、`string` は ~129.1ns になった。新しい helper 構成のコンビネータオーバーヘッドが、このスケールでは効いていると考えられる。
+- 一方で object 寄りのケースは改善しており、`object` は ~596.5ns、`object_large` は ~1.26µs まで縮んだ。member 境界や delimiter まわりの重複空白走査を減らした効果が、要素数が増えるほど効いていると考えられる。
+- `array_mixed` はほぼ横ばいで、`array_3` はやや悪化した。subset ベンチ全体では一様な改善ではないが、object 系ホットパスの重みは下がった。
 
 ### 四則演算 + 括弧（oni-comb のみ、recursive 使用）（mean）
 
@@ -168,13 +168,13 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 | ライブラリ | Mean | Throughput (mean, MiB/s) |
 |-----------|------|-------------------------|
-| **oni-comb** | **112.6 µs** | **906.6** |
-| winnow | 202.6 µs | 503.9 |
-| nom | 280.2 µs | 364.4 |
-| chumsky | 552.1 µs | 184.9 |
-| pom | 8.58 ms | 11.9 |
+| **oni-comb** | **109.5 µs** | **932.1** |
+| winnow | 178.7 µs | 571.3 |
+| nom | 282.8 µs | 360.9 |
+| chumsky | 561.0 µs | 181.9 |
+| pom | 7.69 ms | 13.3 |
 
-**今回の再計測では oni-comb が JSON フルベンチの首位を奪還した。`winnow` 1.0.0 の 1.80 倍、nom の 2.49 倍、chumsky の 4.90 倍、pom の 76.2 倍のスループットに到達している。** この順位を支えているのは、従来の設計要素に加えて generic primitive の fast path 整理:
+**今回の再計測では oni-comb が JSON フルベンチの首位をさらに広げた。`winnow` 1.0.0 の 1.63 倍、nom の 2.58 倍、chumsky の 5.12 倍、pom の 70.2 倍のスループットに到達している。** subset ベンチは mixed だったが、107KB の実運用寄り JSON では whitespace-boundary 整理が効いており、tiny primitive より object-heavy な実入力で重複走査削減の効果が大きいことを示している。この順位を支えているのは、従来の設計要素に加えて次の最適化:
 - `fn_parser` による関数再帰（`recursive()` の `Box<dyn Parser>` vtable を排除）
 - `peek_byte` による先頭バイト分岐（`or` チェーンの線形スキャンを排除）
 - `quoted_string` によるゼロコピー文字列（エスケープなし文字列は `&str` スライス）
@@ -302,11 +302,11 @@ dhat: At t-end:  0 bytes in 0 blocks
 
 ## 総合評価
 
-- **oni-comb がマクロベンチ首位に復帰** — 107KB JSON 再計測で 906.6 MiB/s、winnow は 503.9 MiB/s
-- **oni-comb は JSON フルで nom / chumsky / pom に大差を付けた** — nom の 2.49 倍、chumsky の 4.90 倍、pom の 76.2 倍
+- **oni-comb がマクロベンチ首位をさらに広げた** — 107KB JSON 再計測で 932.1 MiB/s、winnow は 571.3 MiB/s
+- **oni-comb は JSON フルで nom / chumsky / pom に大差を付けた** — nom の 2.58 倍、chumsky の 5.12 倍、pom の 70.2 倍
 - **generic token パーサーは、もはや以前ほどの弱点ではない** — identifier 11B: oni-comb 18.6ns vs winnow 20.3ns / nom 33.2ns、integer 20B: oni-comb 20.0ns vs winnow 23.1ns / nom 22.7ns
 - **chumsky 0.12 は旧版より大幅改善したまま** — 短い identifier は今も oni-comb と同じ桁にある（`"x"`: 17.5ns vs 15.0ns）が、中〜長入力ではなお差がある（`"foo_bar_123"`: 86.9ns vs 18.6ns）
 - **flat_map は依然として最速勢に差がある** — とくに同一型分岐（`"1one"`: oni-comb 5.7ns vs winnow 2.6ns / nom 3.2ns）
 - **zip と flat_map は同レンジに収まる** — 具象コンビネータ型設計の妥当性を確認
-- **今回の再計測でも JSON subset / arithmetic は安定** — JSON `object_large` は ~1.32µs、arithmetic `complex` は ~618ns
+- **今回の whitespace リファクタは JSON subset では mixed** — primitive 寄りケースは悪化したが、object-heavy ケースは改善し（`object_large`: ~1.26µs）、full JSON マクロベンチは前進した
 - **Applicative コンビネータでヒープアロケーションゼロ**

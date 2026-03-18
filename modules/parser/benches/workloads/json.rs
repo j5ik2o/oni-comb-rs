@@ -5,7 +5,7 @@ use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 #[allow(dead_code)]
 enum JsonValue {
   Null,
@@ -16,10 +16,10 @@ enum JsonValue {
   Object(Vec<(String, JsonValue)>),
 }
 
-fn ws<P>(p: P) -> impl Parser<StrInput<'static>, Output = P::Output, Error = ParseError>
+fn trailing_ws<P>(p: P) -> impl Parser<StrInput<'static>, Output = P::Output, Error = ParseError>
 where
   P: Parser<StrInput<'static>, Error = ParseError>, {
-  whitespace0().zip_right(p).zip_left(whitespace0())
+  p.zip_left(whitespace0())
 }
 
 fn json_primitive() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
@@ -32,25 +32,31 @@ fn json_primitive() -> impl Parser<StrInput<'static>, Output = JsonValue, Error 
 }
 
 fn json_array() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
-  ws(char('['))
-    .zip_right(ws(json_primitive()).sep_by0(ws(char(','))))
-    .zip_left(ws(char(']')))
+  let comma = char(',').zip_left(whitespace0());
+
+  trailing_ws(char('['))
+    .zip_right(trailing_ws(json_primitive()).sep_by0(comma))
+    .zip_left(char(']'))
     .map(JsonValue::Array)
 }
 
 fn json_object() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
-  let pair = ws(quoted_string())
+  let colon = char(':').zip_left(whitespace0());
+  let comma = char(',').zip_left(whitespace0());
+  let pair = trailing_ws(quoted_string())
     .map(|s| s.into_owned())
-    .zip_left(ws(char(':')))
-    .zip(ws(json_primitive()));
-  ws(char('{'))
-    .zip_right(pair.sep_by0(ws(char(','))))
-    .zip_left(ws(char('}')))
+    .zip_left(colon)
+    .zip(trailing_ws(json_primitive()));
+  trailing_ws(char('{'))
+    .zip_right(pair.sep_by0(comma))
+    .zip_left(char('}'))
     .map(JsonValue::Object)
 }
 
 fn json_value() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
-  json_primitive().or(json_array()).or(json_object())
+  whitespace0()
+    .zip_right(json_primitive().or(json_array()).or(json_object()))
+    .zip_left(whitespace0())
 }
 
 const JSON_INPUTS: &[(&str, &str)] = &[
@@ -66,7 +72,21 @@ const JSON_INPUTS: &[(&str, &str)] = &[
   ),
 ];
 
+fn parse_json(input: &'static str) -> Result<JsonValue, oni_comb_parser::fail::Fail<ParseError>> {
+  let mut inp = StrInput::new(input);
+  json_value().parse_next(&mut inp)
+}
+
 pub fn register(c: &mut Criterion) {
+  assert_eq!(
+    parse_json(r#"[1,"two",true,null]"#).unwrap(),
+    parse_json(r#"[ 1 , "two" , true , null ]"#).unwrap()
+  );
+  assert_eq!(
+    parse_json(r#"{"name":"oni-comb","version":2,"active":true}"#).unwrap(),
+    parse_json(r#"{ "name" : "oni-comb" , "version" : 2 , "active" : true }"#).unwrap()
+  );
+
   let mut group = c.benchmark_group("json");
 
   for (name, input) in JSON_INPUTS {
