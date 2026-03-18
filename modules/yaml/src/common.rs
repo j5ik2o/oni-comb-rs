@@ -1,8 +1,6 @@
 use oni_comb_parser::error::ParseError;
 use oni_comb_parser::fail::PResult;
 use oni_comb_parser::input::Input;
-use oni_comb_parser::parser::Parser;
-use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
 
 /// Skip inline whitespace (spaces and tabs, not newlines).

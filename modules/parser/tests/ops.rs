@@ -43,12 +43,7 @@ fn not_op_is_negative_lookahead() {
 #[test]
 fn neg_op_is_peek() {
   let mut input = StrInput::new("abc");
-  let result = (-sym('a').ops()).parse_next(&mut input).unwrap();
-  // Peek returns the output of the inner parser (which is Peek<Sym> → ())
-  // Neg on Ops returns Ops<Peek<Sym>> which returns Sym's output without consuming
-  // Actually Peek returns P::Output, which for Sym is char
-  // But wait - Neg returns Ops<Peek<P>> and Peek returns P::Output
-  // However, we need to check that it doesn't consume input
+  let _result = (-sym('a').ops()).parse_next(&mut input).unwrap();
   assert_eq!(input.remaining(), "abc"); // didn't consume
 }
 

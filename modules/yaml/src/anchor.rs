@@ -5,11 +5,13 @@ use crate::value::YamlValue;
 
 /// Resolve anchors and aliases in a parsed YAML tree.
 /// This is a post-processing step after parsing.
+#[allow(dead_code)]
 pub fn resolve_anchors(value: &YamlValue) -> YamlValue {
   let mut anchors = HashMap::new();
   resolve_inner(value, &mut anchors)
 }
 
+#[allow(dead_code)]
 fn resolve_inner(value: &YamlValue, anchors: &mut HashMap<String, YamlValue>) -> YamlValue {
   match value {
     YamlValue::Sequence(items) => {

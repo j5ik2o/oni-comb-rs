@@ -1,8 +1,6 @@
 use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::fail::{Fail, PResult};
 use oni_comb_parser::input::Input;
-use oni_comb_parser::parser::Parser;
-use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
 
 use crate::value::YamlValue;
@@ -91,7 +89,7 @@ pub(crate) fn block_scalar<'a>(input: &mut StrInput<'a>) -> PResult<YamlValue, P
     }
 
     // Read line content
-    let line_start = result.len();
+    let _line_start = result.len();
     while input.peek_byte().is_some() && input.peek_byte() != Some(b'\n') {
       if let Some(c) = input.next_token() {
         result.push(c);
