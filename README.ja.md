@@ -1,4 +1,4 @@
-# oni-comb-rs (v2/reboot)
+# oni-comb-rs (v3/reboot)
 
 [![Workflow Status](https://github.com/j5ik2o/oni-comb-rs/workflows/ci/badge.svg)](https://github.com/j5ik2o/oni-comb-rs/actions?query=workflow%3A%22ci%22)
 [![crates.io](https://img.shields.io/crates/v/oni-comb-parser-rs.svg)](https://crates.io/crates/oni-comb-parser-rs)
@@ -15,7 +15,7 @@
   <img src="images/icon.png" alt="oni-comb-rs mascot" width="420">
 </p>
 
-Rust 製パーサーモナドライブラリ（**v2/リブート版**）。
+Rust 製パーサーモナドライブラリ（**v3/リブート版**）。
 
 旧 v1 の `Rc<dyn Fn>` ベース設計を捨て、**trait + 具象コンビネータ型**（`Map`, `Zip`, `Or`, `FlatMap` 等）で構成。Functor / Applicative / Alternative / Monad の全階層を提供しつつ、動的ディスパッチ・ヒープ確保を最小化する設計です。
 
@@ -68,7 +68,7 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 
 ### なぜ Applicative 優先か
 
-Rust では `flat_map` のクロージャが異なる型のパーサーを返す場合、`Box<dyn Parser>` による型消去が必要になり、ヒープアロケーション＋動的ディスパッチが発生します。旧 v1 や pom は全コンビネータを `Rc<dyn Fn>` で構成しており、ベンチマークでは v2 の 3〜39 倍遅い結果になっています。
+Rust では `flat_map` のクロージャが異なる型のパーサーを返す場合、`Box<dyn Parser>` による型消去が必要になり、ヒープアロケーション＋動的ディスパッチが発生します。旧 v1 や pom は全コンビネータを `Rc<dyn Fn>` で構成しており、ベンチマークでは v3 の 3〜39 倍遅い結果になっています。
 
 一方、`zip`（Applicative）は `Zip<Char, Tag>` のような具象型としてスタック上に構築されるため、コンパイラがモノモーフィゼーション → インライン化 → LLVM 最適化まで一気通貫で行え、手書きの再帰下降パーサーに近い性能が出ます。
 
