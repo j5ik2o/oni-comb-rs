@@ -1,114 +1,14 @@
 //! JSON フルパースベンチ。
 //! 107KB の sample.json を使い、他ライブラリとのランキング比較を行う。
 
-use std::borrow::Cow;
+use std::hint::black_box;
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
-use oni_comb_parser::error::{ExpectError, Expected, ParseError};
-use oni_comb_parser::fail::{Fail, PResult};
-use oni_comb_parser::input::Input;
+use criterion::{criterion_group, criterion_main, Criterion, Throughput};
 use oni_comb_parser::parser::Parser;
-use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
 
-// ── oni-comb JSON パーサー ────────────────────
-
-#[derive(Debug, Clone)]
-#[allow(dead_code)]
-enum Json<'a> {
-  Null,
-  Bool(bool),
-  Num(f64),
-  Str(Cow<'a, str>),
-  Array(Vec<Json<'a>>),
-  Object(Vec<(Cow<'a, str>, Json<'a>)>),
-}
-
-/// fn 再帰 + 先頭バイト分岐で JSON 値をパースする。
-/// `recursive()` の `Box<dyn Parser>` + vtable を回避し、
-/// `or()` チェーンの線形スキャンも排除する。
-fn json_value<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
-  whitespace0().parse_next(input)?;
-
-  match input.peek_byte() {
-    Some(b'n') => tag("null").map(|_| Json::Null).parse_next(input),
-    Some(b't') => tag("true").map(|_| Json::Bool(true)).parse_next(input),
-    Some(b'f') => tag("false").map(|_| Json::Bool(false)).parse_next(input),
-    Some(b'"') => quoted_string().map(Json::Str).parse_next(input),
-    Some(b'[') => json_array(input),
-    Some(b'{') => json_object(input),
-    Some(c) if c == b'-' || c.is_ascii_digit() => {
-      take_while1(|c: char| c.is_ascii_digit() || c == '-' || c == '.' || c == 'e' || c == 'E' || c == '+')
-        .map(|s: &str| Json::Num(s.parse::<f64>().unwrap()))
-        .parse_next(input)
-    }
-    _ => Err(Fail::Backtrack(ParseError::from_expected(
-      input.offset(),
-      Expected::Description("JSON value"),
-    ))),
-  }
-}
-
-fn json_array<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
-  char('[').parse_next(input)?;
-  let mut items = Vec::new();
-  whitespace0().parse_next(input)?;
-  if input.peek_byte() == Some(b']') {
-    char(']').parse_next(input)?;
-    return Ok(Json::Array(items));
-  }
-  items.push(json_value(input)?);
-  loop {
-    whitespace0().parse_next(input)?;
-    match input.peek_byte() {
-      Some(b',') => {
-        char(',').parse_next(input)?;
-        items.push(json_value(input)?);
-      }
-      _ => break,
-    }
-  }
-  whitespace0().parse_next(input)?;
-  char(']').parse_next(input)?;
-  Ok(Json::Array(items))
-}
-
-fn json_object<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
-  char('{').parse_next(input)?;
-  let mut pairs = Vec::new();
-  whitespace0().parse_next(input)?;
-  if input.peek_byte() == Some(b'}') {
-    char('}').parse_next(input)?;
-    return Ok(Json::Object(pairs));
-  }
-  pairs.push(json_member(input)?);
-  loop {
-    whitespace0().parse_next(input)?;
-    match input.peek_byte() {
-      Some(b',') => {
-        char(',').parse_next(input)?;
-        pairs.push(json_member(input)?);
-      }
-      _ => break,
-    }
-  }
-  whitespace0().parse_next(input)?;
-  char('}').parse_next(input)?;
-  Ok(Json::Object(pairs))
-}
-
-fn json_member<'a>(input: &mut StrInput<'a>) -> PResult<(Cow<'a, str>, Json<'a>), ParseError> {
-  whitespace0().parse_next(input)?;
-  let key = quoted_string().parse_next(input)?;
-  whitespace0().parse_next(input)?;
-  char(':').parse_next(input)?;
-  let val = json_value(input)?;
-  Ok((key, val))
-}
-
-fn json_parser<'a>() -> impl Parser<StrInput<'a>, Output = Json<'a>, Error = ParseError> {
-  fn_parser(json_value)
-}
+#[path = "shared/oni_comb_json.rs"]
+mod oni_comb_json;
 
 // ── winnow JSON パーサー ─────────────────────
 
@@ -311,6 +211,7 @@ mod chumsky_json {
   use chumsky::prelude::*;
 
   #[derive(Debug, Clone)]
+  #[allow(dead_code)]
   pub enum Json {
     Null,
     Bool(bool),
@@ -362,7 +263,7 @@ mod chumsky_json {
         .delimited_by(just('['), just(']'))
         .map(Json::Array);
 
-      let member = string.clone().then_ignore(just(':').padded()).then(value.clone());
+      let member = string.then_ignore(just(':').padded()).then(value.clone());
 
       let object = member
         .separated_by(just(',').padded())
@@ -411,7 +312,7 @@ mod pom_json {
   }
 
   fn number<'a>() -> Parser<'a, u8, f64> {
-    let integer = one_of(b"123456789") - one_of(b"0123456789").repeat(0..) | sym(b'0');
+    let integer = (one_of(b"123456789") - one_of(b"0123456789").repeat(0..)) | sym(b'0');
     let frac = sym(b'.') + one_of(b"0123456789").repeat(1..);
     let exp = one_of(b"eE") + one_of(b"+-").opt() + one_of(b"0123456789").repeat(1..);
     let number = sym(b'-').opt() + integer + frac.opt() + exp.opt();
@@ -466,10 +367,11 @@ static JSON_BYTES: &[u8] = include_bytes!("data/sample.json");
 
 fn bench_json_full(c: &mut Criterion) {
   // 正しくパースできることを確認
-  {
-    let mut input = StrInput::new(JSON_STR);
-    assert!(json_parser().parse_next(&mut input).is_ok());
-  }
+  assert_eq!(
+    oni_comb_json::parse_complete(r#"{"a":[1,2],"b":{"c":true}}"#).unwrap(),
+    oni_comb_json::parse_complete(r#" { "a" : [ 1 , 2 ] , "b" : { "c" : true } } "#).unwrap()
+  );
+  assert!(oni_comb_json::parse_complete(JSON_STR).is_ok());
   assert!(winnow_json::parse(JSON_BYTES).is_ok());
   assert!(nom_json::parse(JSON_BYTES).is_ok());
   assert!(chumsky_json::parse(JSON_STR).is_some());
@@ -480,7 +382,7 @@ fn bench_json_full(c: &mut Criterion) {
   group.bench_function("oni-comb", |b| {
     b.iter(|| {
       let mut input = StrInput::new(black_box(JSON_STR));
-      black_box(json_parser().parse_next(&mut input).unwrap())
+      black_box(oni_comb_json::json_parser().parse_next(&mut input).unwrap())
     })
   });
 

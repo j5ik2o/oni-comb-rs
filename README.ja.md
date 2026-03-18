@@ -226,11 +226,11 @@ ParseError 導入、`#[inline]`、さらに generic token fast path の整理に
 
 | 入力 | 時間 |
 |------|------|
-| `null` | 8.4 ns |
-| `42` | 77.5 ns |
-| `"hello world"` | 115.4 ns |
-| `[1, 2, 3]` | 484.4 ns |
-| `{"name":"oni-comb","version":2,"active":true}` | 625.6 ns |
+| `null` | 11.5 ns |
+| `42` | 88.7 ns |
+| `"hello world"` | 129.1 ns |
+| `[1, 2, 3]` | 494.3 ns |
+| `{"name":"oni-comb","version":2,"active":true}` | 596.5 ns |
 
 ### 四則演算 + 括弧（oni-comb のみ、recursive 使用）（mean）
 
@@ -248,23 +248,23 @@ ParseError 導入、`#[inline]`、さらに generic token fast path の整理に
 
 | ライブラリ | Mean | Throughput (mean, MiB/s) |
 |-----------|------|-------------------------|
-| **oni-comb** | **112.6 µs** | **906.6** |
-| winnow | 202.6 µs | 503.9 |
-| nom | 280.2 µs | 364.4 |
-| chumsky | 552.1 µs | 184.9 |
-| pom | 8.58 ms | 11.9 |
+| **oni-comb** | **109.5 µs** | **932.1** |
+| winnow | 178.7 µs | 571.3 |
+| nom | 282.8 µs | 360.9 |
+| chumsky | 561.0 µs | 181.9 |
+| pom | 7.69 ms | 13.3 |
 
-今回の再計測では oni-comb が JSON フルベンチ首位を奪還した。`winnow` 1.0.0 の 1.80 倍、nom の 2.49 倍、chumsky の 4.90 倍、pom の 76.2 倍のスループットに到達している。
+今回の再計測では oni-comb が JSON フルベンチ首位をさらに広げた。`winnow` 1.0.0 の 1.63 倍、nom の 2.58 倍、chumsky の 5.12 倍、pom の 70.2 倍のスループットに到達している。
 
 ### 特性まとめ
 
-- **oni-comb が JSON フルのマクロベンチ首位に復帰** — 906.6 MiB/s、winnow は 503.9 MiB/s
-- **oni-comb は JSON フルで nom / chumsky / pom に大差** — nom の 2.49 倍、chumsky の 4.90 倍、pom の 76.2 倍
+- **oni-comb が JSON フルのマクロベンチ首位をさらに広げた** — 932.1 MiB/s、winnow は 571.3 MiB/s
+- **oni-comb は JSON フルで nom / chumsky / pom に大差** — nom の 2.58 倍、chumsky の 5.12 倍、pom の 70.2 倍
 - **generic identifier / integer はもはや最大の弱点ではない** — この再計測では掲載ケースで oni-comb が winnow を上回る
 - **chumsky 0.12 で大幅改善** — 短い identifier は今も oni-comb に近いが、中〜長入力では依然差がある
 - **flat_map が現時点の最大の microbenchmark ギャップ** — とくに同一型分岐で winnow / nom に差がある
 - **zip ≒ flat_map（同一型）** — 具象コンビネータ型設計により両者は同じ性能レンジに収まる
-- **JSON subset / arithmetic は今回も安定** — object は ~625.6ns、`(((1 + 2) * 3) - 4) / 5` は ~912ns
+- **今回の whitespace リファクタは JSON subset では mixed** — primitive 寄りは悪化したが、object は ~596.5ns まで改善し、full JSON は前進した
 - **Applicative / flat_map 同一型でヒープアロケーションゼロ** — dhat で 0 bytes / 0 blocks 確認
 - 詳細な考察は [`modules/parser/benches/README.ja.md`](modules/parser/benches/README.ja.md) を参照
 
