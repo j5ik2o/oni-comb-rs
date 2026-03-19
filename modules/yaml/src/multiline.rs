@@ -86,7 +86,7 @@ pub(crate) fn block_scalar<'a>(input: &mut StrInput<'a>) -> PResult<YamlValue, P
       continue;
     }
     if remaining.bytes().take_while(|&b| b == b' ').count() == remaining.len()
-      || remaining.as_bytes().get(line_indent) == Some(&b'\n') && line_indent < content_indent
+      || (remaining.as_bytes().get(line_indent) == Some(&b'\n') && line_indent < content_indent)
     {
       // Line of only spaces (fewer than content_indent) — treat as blank
       for _ in 0..line_indent {

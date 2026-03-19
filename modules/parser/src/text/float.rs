@@ -33,7 +33,6 @@ impl<'a> Parser<StrInput<'a>> for Float {
     }
 
     // int part (required)
-    let int_start = i;
     if i >= len || !bytes[i].is_ascii_digit() {
       return Err(Fail::Backtrack(Self::Error::from_expected(
         pos,
@@ -50,13 +49,6 @@ impl<'a> Parser<StrInput<'a>> for Float {
       while i < len && bytes[i].is_ascii_digit() {
         i += 1;
       }
-    }
-
-    if i == int_start {
-      return Err(Fail::Backtrack(Self::Error::from_expected(
-        pos,
-        Expected::Description("number"),
-      )));
     }
 
     // optional frac
