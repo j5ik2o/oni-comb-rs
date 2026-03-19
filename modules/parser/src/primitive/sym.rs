@@ -32,9 +32,19 @@ where
       Some(t) if t == self.token => Ok(t),
       Some(_) => {
         input.reset(cp);
-        Err(Fail::Backtrack(I::Error::from_expected_with_location(pos, input.line(), input.column(), self.token.to_expected())))
+        Err(Fail::Backtrack(I::Error::from_expected_with_location(
+          pos,
+          input.line(),
+          input.column(),
+          self.token.to_expected(),
+        )))
       }
-      None => Err(Fail::Backtrack(I::Error::from_expected_with_location(pos, input.line(), input.column(), self.token.to_expected()))),
+      None => Err(Fail::Backtrack(I::Error::from_expected_with_location(
+        pos,
+        input.line(),
+        input.column(),
+        self.token.to_expected(),
+      ))),
     }
   }
 }

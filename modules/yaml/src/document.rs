@@ -37,9 +37,7 @@ pub(crate) fn yaml_document<'a>(input: &mut YamlInput<'a>) -> PResult<YamlValue,
   block_value(input)
 }
 
-pub(crate) fn yaml_documents<'a>(
-  input: &mut YamlInput<'a>,
-) -> PResult<Vec<YamlValue>, ParseError> {
+pub(crate) fn yaml_documents<'a>(input: &mut YamlInput<'a>) -> PResult<Vec<YamlValue>, ParseError> {
   let mut docs = Vec::new();
 
   loop {

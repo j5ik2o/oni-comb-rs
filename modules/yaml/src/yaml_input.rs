@@ -76,10 +76,10 @@ impl<'a> YamlInput<'a> {
 }
 
 impl<'a> Input for YamlInput<'a> {
-  type Token = char;
-  type Slice = &'a str;
   type Checkpoint = StrCheckpoint;
   type Error = ParseError;
+  type Slice = &'a str;
+  type Token = char;
 
   #[inline]
   fn next_token(&mut self) -> Option<char> {

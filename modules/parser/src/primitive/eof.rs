@@ -20,7 +20,12 @@ impl<I: Input> Parser<I> for Eof<I> {
     if input.is_eof() {
       Ok(())
     } else {
-      Err(Fail::Backtrack(I::Error::from_expected_with_location(input.offset(), input.line(), input.column(), Expected::Eof)))
+      Err(Fail::Backtrack(I::Error::from_expected_with_location(
+        input.offset(),
+        input.line(),
+        input.column(),
+        Expected::Eof,
+      )))
     }
   }
 }

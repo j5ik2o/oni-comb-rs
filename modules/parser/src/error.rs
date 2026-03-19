@@ -21,12 +21,7 @@ pub trait ExpectError: Sized {
   fn from_expected(position: usize, expected: Expected) -> Self;
 
   /// 位置と行/列情報を含むエラーを生成する。
-  fn from_expected_with_location(
-    position: usize,
-    line: usize,
-    column: usize,
-    expected: Expected,
-  ) -> Self;
+  fn from_expected_with_location(position: usize, line: usize, column: usize, expected: Expected) -> Self;
 }
 
 /// パース失敗時の期待トークン。
@@ -139,7 +134,6 @@ impl ParseError {
     self.column = column;
     self
   }
-
 }
 
 #[cfg(feature = "alloc")]

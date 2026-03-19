@@ -23,7 +23,12 @@ impl<'a> Parser<StrInput<'a>> for Char {
         input.advance(c.len_utf8());
         Ok(c)
       }
-      _ => Err(Fail::Backtrack(Self::Error::from_expected_with_location(pos, input.line(), input.column(), Expected::Char(self.0)))),
+      _ => Err(Fail::Backtrack(Self::Error::from_expected_with_location(
+        pos,
+        input.line(),
+        input.column(),
+        Expected::Char(self.0),
+      ))),
     }
   }
 }

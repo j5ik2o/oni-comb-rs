@@ -27,8 +27,7 @@ pub(crate) struct WithIndent<P> {
 
 pub(crate) fn with_indent<'a, P>(indent: usize, parser: P) -> WithIndent<P>
 where
-  P: Parser<YamlInput<'a>, Output = YamlValue, Error = ParseError>,
-{
+  P: Parser<YamlInput<'a>, Output = YamlValue, Error = ParseError>, {
   WithIndent { indent, parser }
 }
 
@@ -36,8 +35,8 @@ impl<'a, P> Parser<YamlInput<'a>> for WithIndent<P>
 where
   P: Parser<YamlInput<'a>, Output = YamlValue, Error = ParseError>,
 {
-  type Output = YamlValue;
   type Error = ParseError;
+  type Output = YamlValue;
 
   fn parse_next(&mut self, input: &mut YamlInput<'a>) -> PResult<YamlValue, ParseError> {
     input.push_indent(self.indent);
@@ -57,8 +56,8 @@ pub(crate) fn indent_guard() -> IndentGuard {
 }
 
 impl<'a> Parser<YamlInput<'a>> for IndentGuard {
-  type Output = ();
   type Error = ParseError;
+  type Output = ();
 
   fn parse_next(&mut self, input: &mut YamlInput<'a>) -> PResult<(), ParseError> {
     let current = input.column() - 1; // 0-based indent
@@ -85,8 +84,7 @@ pub(crate) struct SaveAnchor<P> {
 
 pub(crate) fn save_anchor<'a, P>(parser: P) -> SaveAnchor<P>
 where
-  P: Parser<YamlInput<'a>, Output = YamlValue, Error = ParseError>,
-{
+  P: Parser<YamlInput<'a>, Output = YamlValue, Error = ParseError>, {
   SaveAnchor { parser }
 }
 
@@ -94,8 +92,8 @@ impl<'a, P> Parser<YamlInput<'a>> for SaveAnchor<P>
 where
   P: Parser<YamlInput<'a>, Output = YamlValue, Error = ParseError>,
 {
-  type Output = YamlValue;
   type Error = ParseError;
+  type Output = YamlValue;
 
   fn parse_next(&mut self, input: &mut YamlInput<'a>) -> PResult<YamlValue, ParseError> {
     // Check for anchor prefix
@@ -146,8 +144,8 @@ pub(crate) fn resolve_alias() -> ResolveAlias {
 }
 
 impl<'a> Parser<YamlInput<'a>> for ResolveAlias {
-  type Output = YamlValue;
   type Error = ParseError;
+  type Output = YamlValue;
 
   fn parse_next(&mut self, input: &mut YamlInput<'a>) -> PResult<YamlValue, ParseError> {
     if input.peek_byte() != Some(b'*') {
@@ -197,8 +195,7 @@ pub(crate) struct WithTag<P> {
 
 pub(crate) fn with_tag<'a, P>(parser: P) -> WithTag<P>
 where
-  P: Parser<YamlInput<'a>, Output = YamlValue, Error = ParseError>,
-{
+  P: Parser<YamlInput<'a>, Output = YamlValue, Error = ParseError>, {
   WithTag { parser }
 }
 
@@ -206,8 +203,8 @@ impl<'a, P> Parser<YamlInput<'a>> for WithTag<P>
 where
   P: Parser<YamlInput<'a>, Output = YamlValue, Error = ParseError>,
 {
-  type Output = YamlValue;
   type Error = ParseError;
+  type Output = YamlValue;
 
   fn parse_next(&mut self, input: &mut YamlInput<'a>) -> PResult<YamlValue, ParseError> {
     let tag_str = if input.peek_byte() == Some(b'!') {
@@ -257,9 +254,7 @@ mod tests {
   fn test_scalar<'a>() -> impl Parser<YamlInput<'a>, Output = YamlValue, Error = ParseError> {
     fn_parser(|input: &mut YamlInput| {
       let remaining = input.remaining();
-      let end = remaining
-        .find(['\n', ',', ']', '}'])
-        .unwrap_or(remaining.len());
+      let end = remaining.find(['\n', ',', ']', '}']).unwrap_or(remaining.len());
       let s = remaining[..end].trim().to_string();
       input.advance(end);
       Ok(YamlValue::String(s))
@@ -300,10 +295,7 @@ mod tests {
     let mut input = YamlInput::new("&myref hello");
     let result = save_anchor(test_scalar()).parse_next(&mut input).unwrap();
     assert_eq!(result, YamlValue::String("hello".to_string()));
-    assert_eq!(
-      input.get_anchor("myref"),
-      Some(&YamlValue::String("hello".to_string()))
-    );
+    assert_eq!(input.get_anchor("myref"), Some(&YamlValue::String("hello".to_string())));
   }
 
   #[test]

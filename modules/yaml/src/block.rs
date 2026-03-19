@@ -135,10 +135,7 @@ fn is_block_seq_indicator<'a>(input: &YamlInput<'a>) -> bool {
     || (bytes.len() == 1 && bytes[0] == b'-')
 }
 
-fn block_sequence<'a>(
-  input: &mut YamlInput<'a>,
-  min_indent: usize,
-) -> PResult<YamlValue, ParseError> {
+fn block_sequence<'a>(input: &mut YamlInput<'a>, min_indent: usize) -> PResult<YamlValue, ParseError> {
   let seq_indent = current_indent(input);
   if seq_indent < min_indent {
     return Err(Fail::Backtrack(ParseError::from_expected_with_location(
@@ -180,10 +177,7 @@ fn block_sequence<'a>(
   Ok(YamlValue::Sequence(items))
 }
 
-fn try_block_mapping<'a>(
-  input: &mut YamlInput<'a>,
-  map_indent: usize,
-) -> PResult<YamlValue, ParseError> {
+fn try_block_mapping<'a>(input: &mut YamlInput<'a>, map_indent: usize) -> PResult<YamlValue, ParseError> {
   let mut pairs = BTreeMap::new();
 
   loop {

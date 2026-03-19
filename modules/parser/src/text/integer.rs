@@ -45,9 +45,14 @@ impl<'a> Parser<StrInput<'a>> for Integer {
     }
 
     let s = &remaining[..consumed];
-    let value = s
-      .parse::<i64>()
-      .map_err(|_| Fail::Backtrack(Self::Error::from_expected_with_location(pos, input.line(), input.column(), Expected::Description("integer"))))?;
+    let value = s.parse::<i64>().map_err(|_| {
+      Fail::Backtrack(Self::Error::from_expected_with_location(
+        pos,
+        input.line(),
+        input.column(),
+        Expected::Description("integer"),
+      ))
+    })?;
     input.advance(consumed);
     Ok(value)
   }

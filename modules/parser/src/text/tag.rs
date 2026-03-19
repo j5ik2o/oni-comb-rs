@@ -22,7 +22,12 @@ impl<'a> Parser<StrInput<'a>> for Tag {
       input.advance(self.0.len());
       Ok(self.0)
     } else {
-      Err(Fail::Backtrack(Self::Error::from_expected_with_location(pos, input.line(), input.column(), Expected::Tag(self.0))))
+      Err(Fail::Backtrack(Self::Error::from_expected_with_location(
+        pos,
+        input.line(),
+        input.column(),
+        Expected::Tag(self.0),
+      )))
     }
   }
 }

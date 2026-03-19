@@ -84,9 +84,14 @@ impl<'a> Parser<StrInput<'a>> for Float {
     }
 
     let s = &remaining[..i];
-    let value = s
-      .parse::<f64>()
-      .map_err(|_| Fail::Backtrack(Self::Error::from_expected_with_location(pos, input.line(), input.column(), Expected::Description("number"))))?;
+    let value = s.parse::<f64>().map_err(|_| {
+      Fail::Backtrack(Self::Error::from_expected_with_location(
+        pos,
+        input.line(),
+        input.column(),
+        Expected::Description("number"),
+      ))
+    })?;
     input.advance(i);
     Ok(value)
   }

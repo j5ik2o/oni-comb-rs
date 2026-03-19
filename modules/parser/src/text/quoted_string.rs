@@ -8,7 +8,13 @@ use crate::parser::Parser;
 use crate::str_input::StrInput;
 
 /// 4桁の16進数を読んで u32 を返すヘルパー。
-fn parse_hex4(chars: &mut core::str::Chars<'_>, consumed: &mut usize, pos: usize, line: usize, column: usize) -> PResult<u32, ParseError> {
+fn parse_hex4(
+  chars: &mut core::str::Chars<'_>,
+  consumed: &mut usize,
+  pos: usize,
+  line: usize,
+  column: usize,
+) -> PResult<u32, ParseError> {
   let mut code: u32 = 0;
   for _ in 0..4 {
     match chars.next() {
@@ -48,14 +54,24 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
     let bytes = remaining.as_bytes();
 
     if bytes.is_empty() || bytes[0] != b'"' {
-      return Err(Fail::Backtrack(ParseError::from_expected_with_location(pos, input.line(), input.column(), Expected::Char('"'))));
+      return Err(Fail::Backtrack(ParseError::from_expected_with_location(
+        pos,
+        input.line(),
+        input.column(),
+        Expected::Char('"'),
+      )));
     }
 
     // Fast path: scan for closing quote without escape
     let mut i = 1; // skip opening quote
     loop {
       if i >= bytes.len() {
-        return Err(Fail::Cut(ParseError::from_expected_with_location(pos + i, input.line(), input.column(), Expected::Char('"'))));
+        return Err(Fail::Cut(ParseError::from_expected_with_location(
+          pos + i,
+          input.line(),
+          input.column(),
+          Expected::Char('"'),
+        )));
       }
       match bytes[i] {
         b'"' => {
