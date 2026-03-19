@@ -7,16 +7,15 @@
 # Project configuration
 !config.yaml
 
-# Facets and pieces (version-controlled)
+# Pieces (version-controlled)
 !pieces/
 !pieces/**
-!personas/
-!personas/**
-!policies/
-!policies/**
-!knowledge/
-!knowledge/**
-!instructions/
-!instructions/**
-!output-contracts/
-!output-contracts/**
+
+# Facets (version-controlled, 0.22.0+ layout)
+!facets/
+!facets/**
+
+# Tasks (version-controlled for cross-machine execution)
+!tasks.yaml
+!tasks/
+!tasks/**
