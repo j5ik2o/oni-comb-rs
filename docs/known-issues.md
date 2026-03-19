@@ -1,0 +1,36 @@
+# Known Design Issues
+
+## 1. line_start (byte) と column (char) の単位不整合
+
+**影響範囲**: `StrInput::advance`, `ByteInput::advance`, `StrCheckpoint`, `ByteCheckpoint`
+
+**概要**:
+`column` は char (codepoint) 単位で数えるが、`line_start` はバイトオフセットで管理している。
+マルチバイト文字を含む行では、`line_start` からの文字数と `column` が一致しない場合がある。
+
+**現時点での影響**:
+- YAML のインデントはスペース (ASCII) のみなので `current_indent` (`column - 1`) は正しく動作する
+- `line_start` は Checkpoint の保存・復元にしか使われておらず、行テキスト抽出機能は未実装
+
+**本質的な解決**:
+`yaml-input-redesign` で `YamlInput` を導入する際に、`line_start` の用途を明確化し、
+必要なら char 単位に統一するか、バイト単位のまま「行テキスト抽出専用」と明確に分離する。
+
+## 2. YAML パーサーの手続き的スタイル
+
+**影響範囲**: `modules/yaml/src/` 全体 (`block.rs`, `flow.rs`, `document.rs`)
+
+**概要**:
+`ParseContext` (アンカーマップ) と `min_indent` を関数引数で引き回しており、
+`Parser` トレイトに乗らない。結果、`parse_next` の戻り値を捨てる手続き的コードが蔓延している。
+パーサーコンビネータの設計思想に反する。
+
+**根本原因**:
+`Input` 型 (`StrInput`) がパース状態を含んでいないため、追加状態を外部引数で渡す必要がある。
+
+**本質的な解決**:
+`yaml-input-redesign` で `YamlInput` 型を導入し、`StrInput` + `ParseContext` + インデントスタック
+を一体化する。全パーサーを `fn() -> impl Parser<YamlInput, ...>` 形式にし、
+コンビネータパイプラインで記述可能にする。
+
+参照: `openspec/changes/yaml-input-redesign/`
