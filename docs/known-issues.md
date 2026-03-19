@@ -57,3 +57,18 @@
 `ExpectError` トレイトのシグネチャを `fn from_expected(input: &I, expected: Expected) -> Self`
 に変更し、エラー生成時点で `Input` から行/列を取得する。これは parser クレート全体の
 破壊的変更になるため、`yaml-input-redesign` と合わせて計画的に実施する。
+
+## 4. YAML タグのパースが未統合
+
+**影響範囲**: `modules/yaml/src/tag.rs`
+
+**概要**:
+`parse_tag` 関数は実装済みだが `#[allow(dead_code)]` でパースパイプラインに統合されていない。
+`!!str 42` のようなタグ付きスカラーはパース時に認識されず、`apply_tag` による手動後処理が必要。
+
+**暫定対応**:
+`apply_tag` を公開 API として提供し、ユーザーがパース後に手動で型変換できるようにしている。
+
+**本質的な解決**:
+`yaml-input-redesign` で全パーサーをパイプラインに書き直す際に、`save_anchor` と同様の
+パターンで `with_tag(value_parser)` コンビネータを導入し、パース時にタグを認識・適用する。
