@@ -8,6 +8,12 @@ use oni_comb_parser::prelude::*;
 
 use crate::common::{at_document_marker, current_indent, skip_inline_ws, skip_ws_and_comments};
 use crate::context::ParseContext;
+
+// NOTE: YAML block parsers use procedural style because:
+// 1. ParseContext (&mut) must be threaded for anchor/alias resolution
+// 2. Indent-based parsing requires runtime state (min_indent parameter)
+//    that cannot be expressed as static combinator composition
+// These constraints make pure pipeline style impractical for block YAML.
 use crate::flow::flow_value;
 use crate::multiline::block_scalar;
 use crate::scalar::yaml_scalar;

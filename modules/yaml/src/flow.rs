@@ -11,6 +11,11 @@ use crate::context::ParseContext;
 use crate::scalar::yaml_scalar;
 use crate::value::YamlValue;
 
+// NOTE: YAML flow parsers use procedural style (explicit parse_next calls)
+// because ParseContext (&mut) must be threaded through recursive calls.
+// This prevents using pure combinator pipelines with sep_by0/recursive.
+// JSON parser (which has no context) uses the pure pipeline style.
+
 pub(crate) fn flow_value<'a>(input: &mut StrInput<'a>, ctx: &mut ParseContext) -> PResult<YamlValue, ParseError> {
   skip_inline_ws(input)?;
   match input.peek_byte() {
