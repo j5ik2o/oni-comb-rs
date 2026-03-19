@@ -222,6 +222,17 @@ fn parse_literal_block() {
 }
 
 #[test]
+fn parse_literal_block_with_leading_blank_line() {
+  let input = "text: |\n\n  hello\n";
+  let result = parse(input).unwrap();
+  if let YamlValue::Mapping(map) = result {
+    assert_eq!(map["text"], YamlValue::String("\nhello\n".to_string()));
+  } else {
+    panic!("Expected mapping");
+  }
+}
+
+#[test]
 fn parse_strip_chomping() {
   let input = "text: |-\n  line1\n  line2\n";
   let result = parse(input).unwrap();

@@ -36,19 +36,32 @@ pub(crate) fn block_scalar<'a>(input: &mut StrInput<'a>) -> PResult<YamlValue, P
     input.next_token();
   }
 
-  // Detect indent from first content line
+  // Detect indent from first non-empty line (YAML 1.2 §8.1.3)
+  // Skip blank lines to find the first line with content
   let mut content_indent = 0;
   let remaining = input.remaining();
-  for c in remaining.chars() {
-    if c == ' ' {
-      content_indent += 1;
-    } else {
-      break;
+  let mut scan_pos = 0;
+  let remaining_bytes = remaining.as_bytes();
+  loop {
+    if scan_pos >= remaining_bytes.len() {
+      // All remaining input is blank lines or EOF
+      return Ok(YamlValue::String(String::new()));
     }
+    if remaining_bytes[scan_pos] == b'\n' {
+      scan_pos += 1;
+      continue;
+    }
+    // Found a non-empty line; count leading spaces
+    let mut spaces = 0;
+    while scan_pos + spaces < remaining_bytes.len() && remaining_bytes[scan_pos + spaces] == b' ' {
+      spaces += 1;
+    }
+    content_indent = spaces;
+    break;
   }
 
   if content_indent == 0 {
-    // Empty block scalar
+    // No indentation detected — empty block scalar
     return Ok(YamlValue::String(String::new()));
   }
 
