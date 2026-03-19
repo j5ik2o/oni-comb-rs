@@ -123,7 +123,7 @@ pub(crate) fn block_value<'a>(
 fn is_block_seq_indicator<'a>(input: &StrInput<'a>) -> bool {
   let remaining = input.remaining();
   let bytes = remaining.as_bytes();
-  bytes.len() >= 2 && bytes[0] == b'-' && (bytes[1] == b' ' || bytes[1] == b'\n')
+  (bytes.len() >= 2 && bytes[0] == b'-' && (bytes[1] == b' ' || bytes[1] == b'\n'))
     || (bytes.len() == 1 && bytes[0] == b'-')
 }
 

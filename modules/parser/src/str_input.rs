@@ -25,6 +25,9 @@ pub struct StrInput<'a> {
   offset: usize,
   line: usize,
   column: usize,
+  /// Byte offset of the start of the current line. Stored in Checkpoint
+  /// for O(1) reset. Reserved for future error reporting (e.g. extracting
+  /// the full line text around an error position).
   line_start: usize,
 }
 
