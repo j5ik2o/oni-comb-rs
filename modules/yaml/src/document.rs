@@ -71,7 +71,7 @@ pub(crate) fn yaml_documents<'a>(
       break;
     }
 
-    if input.remaining().starts_with("...") {
+    if at_document_marker(input) == Some("...") {
       input.advance(3);
       skip_ws_and_comments(input)?;
       continue;

@@ -123,12 +123,12 @@ impl<'a> Parser<StrInput<'a>> for QuotedString {
               if (0xD800..=0xDBFF).contains(&code) {
                 // 高サロゲート: 次の \uXXXX を読んで低サロゲートと合成
                 let c1 = chars.next();
-                if let Some(ch) = c1 {
-                  consumed += ch.len_utf8();
+                if c1.is_some() {
+                  consumed += 1; // '\' is always ASCII (1 byte)
                 }
                 let c2 = chars.next();
-                if let Some(ch) = c2 {
-                  consumed += ch.len_utf8();
+                if c2.is_some() {
+                  consumed += 1; // 'u' is always ASCII (1 byte)
                 }
                 match (c1, c2) {
                   (Some('\\'), Some('u')) => {

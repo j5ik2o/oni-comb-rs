@@ -41,6 +41,12 @@ pub(crate) fn skip_ws_and_comments<'a>(input: &mut StrInput<'a>) -> PResult<(), 
 }
 
 /// Get the current indentation level (column - 1 for 0-based).
+///
+/// **Important:** This function only returns a meaningful indentation value
+/// when the input position is at the start of a line's content (i.e., after
+/// leading whitespace). Callers must ensure this precondition — typically by
+/// calling `skip_ws_and_comments` before invoking this function. Mid-line
+/// calls will return the column offset, not the line's indentation level.
 #[inline]
 pub(crate) fn current_indent<'a>(input: &StrInput<'a>) -> usize {
   input.column() - 1
