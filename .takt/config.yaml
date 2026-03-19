@@ -1,5 +1,5 @@
-provider: claude
-model: claude-opus-4-6[1m]
+provider: codex
+model: gpt-5.4
 concurrency: 1
 base_branch: main
 submodules: all
@@ -10,8 +10,8 @@ persona_providers:
     provider: codex
     model: gpt-5.4
   coder:
-    provider: claude
-    model: claude-opus-4-6[1m]
+    provider: codex
+    model: gpt-5.4
   qa-reviewer:
     provider: codex
     model: gpt-5.4

@@ -18,7 +18,8 @@ struct Uri<'a> {
   query: Option<&'a str>,
 }
 
-fn uri_parser<'a>() -> impl Parser<oni_comb_parser::str_input_stream::StrInputStream<'a>, Output = Uri<'a>, Error = ParseError> {
+fn uri_parser<'a>(
+) -> impl Parser<oni_comb_parser::str_input_stream::StrInputStream<'a>, Output = Uri<'a>, Error = ParseError> {
   let scheme = take_while1(|c: char| c.is_ascii_alphanumeric());
   let authority_sep = tag("://");
   let host = take_while1(|c: char| c.is_ascii_alphanumeric() || c == '.' || c == '-');

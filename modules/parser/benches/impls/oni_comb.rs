@@ -35,7 +35,9 @@ pub fn parse_flat_map_same_type(s: &str) -> Option<&str> {
 /// flat_map 異種型分岐: 先頭文字に応じて異なる型のパーサーを選択 (Box<dyn Parser> 必要)
 pub fn parse_flat_map_boxed(s: &str) -> Option<(&str, &str)> {
   let mut parser = satisfy(|c: char| c == 'c' || c == 'i').flat_map(
-    |t| -> Box<dyn Parser<oni_comb_parser::str_input_stream::StrInputStream<'_>, Output = (&str, &str), Error = ParseError>> {
+    |t| -> Box<
+      dyn Parser<oni_comb_parser::str_input_stream::StrInputStream<'_>, Output = (&str, &str), Error = ParseError>,
+    > {
       match t {
         'c' => Box::new(tag(":").zip(take_while1(|c: char| c.is_ascii_alphabetic()))),
         _ => Box::new(tag(":").zip(take_while1(|c: char| c.is_ascii_digit()))),
