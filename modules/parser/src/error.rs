@@ -79,6 +79,10 @@ impl fmt::Display for MinimalError {
 pub struct ParseError {
   /// 失敗した byte offset
   pub position: usize,
+  /// 失敗した行番号 (1-origin)。Input から取得できない場合は 0。
+  pub line: usize,
+  /// 失敗した列番号 (1-origin)。Input から取得できない場合は 0。
+  pub column: usize,
   /// 期待していたトークンの集合
   pub expected: Vec<Expected>,
   /// コンテキストスタック（外側から内側の順）
@@ -91,9 +95,44 @@ impl ExpectError for ParseError {
   fn from_expected(position: usize, expected: Expected) -> Self {
     ParseError {
       position,
+      line: 0,
+      column: 0,
       expected: vec![expected],
       context: Vec::new(),
     }
+  }
+}
+
+#[cfg(feature = "alloc")]
+impl ParseError {
+  /// line/column 情報を設定する。
+  pub fn with_location(mut self, line: usize, column: usize) -> Self {
+    self.line = line;
+    self.column = column;
+    self
+  }
+
+  /// position フィールドからソーステキストを走査して line/column を計算し設定する。
+  /// line/column が未設定 (0) の場合のみ上書きする。
+  pub fn fill_location_from_src(mut self, src: &str) -> Self {
+    if self.line == 0 && self.position <= src.len() {
+      let mut line = 1;
+      let mut col = 1;
+      for (i, c) in src.char_indices() {
+        if i >= self.position {
+          break;
+        }
+        if c == '\n' {
+          line += 1;
+          col = 1;
+        } else {
+          col += 1;
+        }
+      }
+      self.line = line;
+      self.column = col;
+    }
+    self
   }
 }
 
@@ -127,7 +166,11 @@ impl ContextError for ParseError {
 #[cfg(feature = "alloc")]
 impl fmt::Display for ParseError {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    write!(f, "parse error at position {}", self.position)?;
+    if self.line > 0 {
+      write!(f, "parse error at line {}:{}", self.line, self.column)?;
+    } else {
+      write!(f, "parse error at position {}", self.position)?;
+    }
 
     if !self.expected.is_empty() {
       write!(f, ": expected ")?;

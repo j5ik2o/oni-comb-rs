@@ -1,0 +1,9 @@
+[package]
+name = "oni-comb-json"
+version = "3.0.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "RFC 8259 compliant JSON parser built on oni-comb-parser"
+
+[dependencies]
+oni-comb-parser = { path = "../parser" }
