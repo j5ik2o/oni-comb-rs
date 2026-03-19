@@ -111,6 +111,29 @@ impl ParseError {
     self.column = column;
     self
   }
+
+  /// position フィールドからソーステキストを走査して line/column を計算し設定する。
+  /// line/column が未設定 (0) の場合のみ上書きする。
+  pub fn fill_location_from_src(mut self, src: &str) -> Self {
+    if self.line == 0 && self.position <= src.len() {
+      let mut line = 1;
+      let mut col = 1;
+      for (i, c) in src.char_indices() {
+        if i >= self.position {
+          break;
+        }
+        if c == '\n' {
+          line += 1;
+          col = 1;
+        } else {
+          col += 1;
+        }
+      }
+      self.line = line;
+      self.column = col;
+    }
+    self
+  }
 }
 
 #[cfg(feature = "alloc")]

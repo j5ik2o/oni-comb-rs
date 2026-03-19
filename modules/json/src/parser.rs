@@ -98,11 +98,15 @@ fn fail_to_error(e: Fail<ParseError>) -> ParseError {
 /// Parse a JSON string, returning the parsed value or an error.
 pub fn parse(src: &str) -> Result<JsonValue<'_>, ParseError> {
   let mut input = StrInput::new(src);
-  json().parse_next(&mut input).map_err(fail_to_error)
+  json()
+    .parse_next(&mut input)
+    .map_err(|e| fail_to_error(e).fill_location_from_src(src))
 }
 
 /// Parse a JSON string, returning the value without requiring EOF.
 pub fn parse_value(src: &str) -> Result<JsonValue<'_>, ParseError> {
   let mut input = StrInput::new(src);
-  json_value().parse_next(&mut input).map_err(fail_to_error)
+  json_value()
+    .parse_next(&mut input)
+    .map_err(|e| fail_to_error(e).fill_location_from_src(src))
 }
