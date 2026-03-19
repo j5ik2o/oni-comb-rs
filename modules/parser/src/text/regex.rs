@@ -84,8 +84,10 @@ impl<'a> Parser<StrInput<'a>> for RegexParser {
         input.advance(m.len());
         Ok(matched)
       }
-      None => Err(Fail::Backtrack(ParseError::from_expected(
+      None => Err(Fail::Backtrack(ParseError::from_expected_with_location(
         pos,
+        input.line(),
+        input.column(),
         Expected::Description("regex match"),
       ))),
     }

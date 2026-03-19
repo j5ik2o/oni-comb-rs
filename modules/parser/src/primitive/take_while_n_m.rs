@@ -48,8 +48,10 @@ where
     }
     if count < self.min {
       input.reset(cp);
-      return Err(Fail::Backtrack(I::Error::from_expected(
+      return Err(Fail::Backtrack(I::Error::from_expected_with_location(
         pos,
+        input.line(),
+        input.column(),
         Expected::Description("not enough matching tokens"),
       )));
     }

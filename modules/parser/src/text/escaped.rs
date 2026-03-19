@@ -41,8 +41,10 @@ where
     match chars.next() {
       Some(c) if c == self.open => {}
       _ => {
-        return Err(Fail::Backtrack(ParseError::from_expected(
+        return Err(Fail::Backtrack(ParseError::from_expected_with_location(
           pos,
+          input.line(),
+          input.column(),
           Expected::Char(self.open),
         )));
       }
@@ -66,16 +68,20 @@ where
               match (self.handler)(next) {
                 Some(replacement) => result.push(replacement),
                 None => {
-                  return Err(Fail::Cut(ParseError::from_expected(
+                  return Err(Fail::Cut(ParseError::from_expected_with_location(
                     pos + consumed - next.len_utf8(),
+                    input.line(),
+                    input.column(),
                     Expected::Description("valid escape sequence"),
                   )));
                 }
               }
             }
             None => {
-              return Err(Fail::Cut(ParseError::from_expected(
+              return Err(Fail::Cut(ParseError::from_expected_with_location(
                 pos + consumed,
+                input.line(),
+                input.column(),
                 Expected::Description("escape character"),
               )));
             }
@@ -86,8 +92,10 @@ where
           result.push(c);
         }
         None => {
-          return Err(Fail::Cut(ParseError::from_expected(
+          return Err(Fail::Cut(ParseError::from_expected_with_location(
             pos + consumed,
+            input.line(),
+            input.column(),
             Expected::Char(self.close),
           )));
         }

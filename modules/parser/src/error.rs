@@ -16,7 +16,17 @@ pub trait ContextError: Sized {
 
 /// パーサーがエラーを生成するための trait。
 pub trait ExpectError: Sized {
+  /// 位置のみでエラーを生成する (deprecated: from_expected_with_location を使用)。
+  #[deprecated(note = "use from_expected_with_location to include line/column")]
   fn from_expected(position: usize, expected: Expected) -> Self;
+
+  /// 位置と行/列情報を含むエラーを生成する。
+  fn from_expected_with_location(
+    position: usize,
+    line: usize,
+    column: usize,
+    expected: Expected,
+  ) -> Self;
 }
 
 /// パース失敗時の期待トークン。
@@ -44,7 +54,13 @@ pub struct MinimalError {
 
 impl ExpectError for MinimalError {
   #[inline]
+  #[allow(deprecated)]
   fn from_expected(position: usize, _expected: Expected) -> Self {
+    Self { position }
+  }
+
+  #[inline]
+  fn from_expected_with_location(position: usize, _line: usize, _column: usize, _expected: Expected) -> Self {
     Self { position }
   }
 }
@@ -92,11 +108,23 @@ pub struct ParseError {
 #[cfg(feature = "alloc")]
 impl ExpectError for ParseError {
   #[inline(always)]
+  #[allow(deprecated)]
   fn from_expected(position: usize, expected: Expected) -> Self {
     ParseError {
       position,
       line: 0,
       column: 0,
+      expected: vec![expected],
+      context: Vec::new(),
+    }
+  }
+
+  #[inline(always)]
+  fn from_expected_with_location(position: usize, line: usize, column: usize, expected: Expected) -> Self {
+    ParseError {
+      position,
+      line,
+      column,
       expected: vec![expected],
       context: Vec::new(),
     }
@@ -112,28 +140,6 @@ impl ParseError {
     self
   }
 
-  /// position フィールドからソーステキストを走査して line/column を計算し設定する。
-  /// line/column が未設定 (0) の場合のみ上書きする。
-  pub fn fill_location_from_src(mut self, src: &str) -> Self {
-    if self.line == 0 && self.position <= src.len() {
-      let mut line = 1;
-      let mut col = 1;
-      for (i, c) in src.char_indices() {
-        if i >= self.position {
-          break;
-        }
-        if c == '\n' {
-          line += 1;
-          col = 1;
-        } else {
-          col += 1;
-        }
-      }
-      self.line = line;
-      self.column = col;
-    }
-    self
-  }
 }
 
 #[cfg(feature = "alloc")]

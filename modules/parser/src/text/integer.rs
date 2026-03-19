@@ -36,8 +36,10 @@ impl<'a> Parser<StrInput<'a>> for Integer {
     }
 
     if consumed == digit_start {
-      return Err(Fail::Backtrack(Self::Error::from_expected(
+      return Err(Fail::Backtrack(Self::Error::from_expected_with_location(
         pos,
+        input.line(),
+        input.column(),
         Expected::Description("integer"),
       )));
     }
@@ -45,7 +47,7 @@ impl<'a> Parser<StrInput<'a>> for Integer {
     let s = &remaining[..consumed];
     let value = s
       .parse::<i64>()
-      .map_err(|_| Fail::Backtrack(Self::Error::from_expected(pos, Expected::Description("integer"))))?;
+      .map_err(|_| Fail::Backtrack(Self::Error::from_expected_with_location(pos, input.line(), input.column(), Expected::Description("integer"))))?;
     input.advance(consumed);
     Ok(value)
   }

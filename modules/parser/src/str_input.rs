@@ -4,7 +4,11 @@ use crate::input::Input;
 pub struct StrCheckpoint {
   pub offset: usize,
   pub line: usize,
+  /// Column in char (codepoint) units. 1-origin.
   pub column: usize,
+  /// Byte offset of the start of the current line. Used for extracting
+  /// the full line text around an error position (`&src[line_start..offset]`).
+  /// Intentionally in byte units (unlike `column` which is char units).
   pub line_start: usize,
 }
 

@@ -20,8 +20,10 @@ impl<I: Input> Parser<I> for Any<I> {
     let pos = input.offset();
     match input.next_token() {
       Some(t) => Ok(t),
-      None => Err(Fail::Backtrack(I::Error::from_expected(
+      None => Err(Fail::Backtrack(I::Error::from_expected_with_location(
         pos,
+        input.line(),
+        input.column(),
         Expected::Description("any token"),
       ))),
     }

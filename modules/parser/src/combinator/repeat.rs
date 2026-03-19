@@ -54,8 +54,10 @@ where
 
     if items.len() < self.min {
       input.reset(start_cp);
-      Err(Fail::Backtrack(P::Error::from_expected(
+      Err(Fail::Backtrack(P::Error::from_expected_with_location(
         start_pos,
+        input.line(),
+        input.column(),
         Expected::Description("repeat minimum"),
       )))
     } else {

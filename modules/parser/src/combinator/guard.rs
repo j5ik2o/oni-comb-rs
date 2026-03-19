@@ -29,8 +29,10 @@ where
     if (self.pred)(input) {
       Ok(())
     } else {
-      Err(Fail::Backtrack(I::Error::from_expected(
+      Err(Fail::Backtrack(I::Error::from_expected_with_location(
         input.offset(),
+        input.line(),
+        input.column(),
         Expected::Description("guard condition"),
       )))
     }

@@ -28,8 +28,10 @@ impl<I: Input> Parser<I> for Take<I> {
     for _ in 0..self.n {
       if input.next_token().is_none() {
         input.reset(cp);
-        return Err(Fail::Backtrack(I::Error::from_expected(
+        return Err(Fail::Backtrack(I::Error::from_expected_with_location(
           pos,
+          input.line(),
+          input.column(),
           Expected::Description("enough input"),
         )));
       }

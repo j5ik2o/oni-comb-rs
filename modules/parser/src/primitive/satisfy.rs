@@ -26,13 +26,17 @@ where
       Some(t) if (self.0)(t) => Ok(t),
       Some(_) => {
         input.reset(cp);
-        Err(Fail::Backtrack(I::Error::from_expected(
+        Err(Fail::Backtrack(I::Error::from_expected_with_location(
           pos,
+          input.line(),
+          input.column(),
           Expected::Description("satisfy"),
         )))
       }
-      None => Err(Fail::Backtrack(I::Error::from_expected(
+      None => Err(Fail::Backtrack(I::Error::from_expected_with_location(
         pos,
+        input.line(),
+        input.column(),
         Expected::Description("satisfy"),
       ))),
     }

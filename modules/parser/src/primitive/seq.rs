@@ -75,8 +75,10 @@ where
       input.advance_by(self.tag);
       Ok(self.tag)
     } else {
-      Err(Fail::Backtrack(I::Error::from_expected(
+      Err(Fail::Backtrack(I::Error::from_expected_with_location(
         pos,
+        input.line(),
+        input.column(),
         I::tag_to_expected(self.tag),
       )))
     }

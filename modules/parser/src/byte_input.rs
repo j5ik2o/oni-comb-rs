@@ -4,7 +4,10 @@ use crate::input::Input;
 pub struct ByteCheckpoint {
   pub offset: usize,
   pub line: usize,
+  /// Column in byte units. 1-origin.
   pub column: usize,
+  /// Byte offset of the start of the current line. Used for extracting
+  /// the full line text around an error position (`&src[line_start..offset]`).
   pub line_start: usize,
 }
 

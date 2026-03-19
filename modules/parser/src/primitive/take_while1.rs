@@ -34,8 +34,10 @@ where
       }
     }
     if input.checkpoint() == cp {
-      return Err(Fail::Backtrack(I::Error::from_expected(
+      return Err(Fail::Backtrack(I::Error::from_expected_with_location(
         pos,
+        input.line(),
+        input.column(),
         Expected::Description("at least one matching token"),
       )));
     }

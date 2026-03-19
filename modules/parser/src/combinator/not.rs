@@ -23,8 +23,10 @@ where
     match self.parser.parse_next(input) {
       Ok(_) => {
         input.reset(cp);
-        Err(Fail::Backtrack(P::Error::from_expected(
+        Err(Fail::Backtrack(P::Error::from_expected_with_location(
           pos,
+          input.line(),
+          input.column(),
           Expected::Description("not"),
         )))
       }

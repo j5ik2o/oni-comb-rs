@@ -23,8 +23,10 @@ impl<'a> Parser<StrInput<'a>> for Identifier {
     match chars.next() {
       Some(c) if c.is_ascii_alphabetic() || c == '_' => {}
       _ => {
-        return Err(Fail::Backtrack(Self::Error::from_expected(
+        return Err(Fail::Backtrack(Self::Error::from_expected_with_location(
           pos,
+          input.line(),
+          input.column(),
           Expected::Description("identifier"),
         )));
       }

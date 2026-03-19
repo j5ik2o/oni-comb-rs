@@ -25,8 +25,10 @@ where
     let v = self.parser.parse_next(input)?;
     match (self.f)(v) {
       Ok(o) => Ok(o),
-      Err(_) => Err(Fail::Backtrack(Self::Error::from_expected(
+      Err(_) => Err(Fail::Backtrack(Self::Error::from_expected_with_location(
         pos,
+        input.line(),
+        input.column(),
         Expected::Description(self.label),
       ))),
     }

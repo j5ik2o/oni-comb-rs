@@ -29,13 +29,17 @@ impl<'s, I: Input> Parser<I> for NoneOf<'s, I> {
       Some(t) if !self.set.contains(&t) => Ok(t),
       Some(_) => {
         input.reset(cp);
-        Err(Fail::Backtrack(I::Error::from_expected(
+        Err(Fail::Backtrack(I::Error::from_expected_with_location(
           pos,
+          input.line(),
+          input.column(),
           Expected::Description("none of set"),
         )))
       }
-      None => Err(Fail::Backtrack(I::Error::from_expected(
+      None => Err(Fail::Backtrack(I::Error::from_expected_with_location(
         pos,
+        input.line(),
+        input.column(),
         Expected::Description("none of set"),
       ))),
     }
