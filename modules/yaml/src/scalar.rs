@@ -77,7 +77,7 @@ fn collect_plain_scalar(remaining: &str) -> &str {
 fn resolve_core_scalar(s: &str) -> YamlValue {
   match s {
     // null
-    "null" | "Null" | "NULL" | "~" | "" => YamlValue::Null,
+    "null" | "Null" | "NULL" | "~" => YamlValue::Null,
 
     // bool
     "true" | "True" | "TRUE" => YamlValue::Bool(true),
