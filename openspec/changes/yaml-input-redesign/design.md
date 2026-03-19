@@ -1,25 +1,53 @@
 ## Context
 
-oni-comb-yaml は oni-comb-parser 上に構築された YAML 1.2 パーサー。現在、パース状態（アンカーマップ、インデントレベル）を `ParseContext` と `min_indent: usize` として関数引数で引き回している。この設計では `Parser` トレイト (`fn parse_next(&mut self, input: &mut I) -> PResult<O, E>`) に乗らず、`sep_by0`, `recursive`, `or` 等のコンビネータが使えない。結果、`parse_next` を手動で呼び出し戻り値を捨てる手続き的コードになっている。
+`docs/known-issues.md` に4件の設計課題が蓄積されている。個別に対処すると中途半端な状態が残るため、一括で解決する。parser クレートの `ExpectError` 改修と yaml クレートの `YamlInput` 導入を同時に行う。
 
-JSON パーサーは `recursive()` を使って純粋パイプラインスタイルで書き直し済み。YAML でも同じスタイルを実現したい。
+JSON パーサーは `recursive()` ベースの純粋パイプラインに書き直し済み。YAML も同じ品質にする。
 
 ## Goals / Non-Goals
 
 **Goals:**
-- 全 YAML パーサーを `fn() -> impl Parser<YamlInput, ...>` 形式にし、コンビネータパイプラインで記述する
-- `parse_next` の直接呼び出しを公開 API (`parse`, `parse_documents`) のみに限定する
-- 既存の35テストが全て通ること
-- 公開 API を変更しないこと
+- `docs/known-issues.md` の4件全てを解決し、ファイルを削除する
+- 全パーサーのエラーに行/列が自動的に含まれるようにする
+- 全 YAML パーサーを `fn() -> impl Parser<YamlInput, ...>` 形式にする
+- YAML タグ (`!!str` 等) をパース時に認識・適用する
+- 公開 API を変更しない
+- 全テスト通過
 
 **Non-Goals:**
-- parser クレートの `Input` トレイトを変更すること（YamlInput は YAML クレート内で実装）
-- パフォーマンス最適化（まず正しさと設計の一貫性を優先）
 - YAML 仕様カバレッジの拡大（既存機能の書き直しのみ）
+- パフォーマンス最適化（正しさと設計の一貫性を優先）
+- `from_expected` の即時削除（deprecated にして段階的に移行）
 
 ## Decisions
 
-### D1: YamlInput は StrInput をラップし Input トレイトを委譲実装する
+### D1: ExpectError に from_expected_at を追加し、from_expected は deprecated にする
+
+**選択**: 新メソッド `from_expected_at(input: &I, expected: Expected)` を追加。既存の `from_expected(position, expected)` は `#[deprecated]` にして互換維持。
+
+**代替案**:
+- (B) `from_expected` のシグネチャを直接変更 → 全コンビネータが一斉にコンパイルエラー、段階移行不可
+- (C) `Input` にデフォルトメソッド `fn make_error(expected) -> Self::Error` を追加 → Input トレイトが肥大化
+
+**理由**: deprecated 警告で段階的に移行できる。全コンビネータを一度に書き換える必要がない。
+
+### D2: from_expected_at で Input から line/column を自動取得する
+
+**選択**: `ParseError::from_expected_at` は `input.offset()`, `input.line()`, `input.column()` を取得して全フィールドを埋める。`fill_location_from_src` は不要になるため削除。
+
+**理由**: エラー生成時点の正確な行/列が取れる。後付け計算の O(n) が不要。
+
+### D3: line_start はバイト単位のまま残し、用途をドキュメント化する
+
+**選択**: `line_start` はバイトオフセットのまま維持。「エラー時の行テキスト切り出し用」とドキュメント化。`column` (char 単位) との不整合は意図的な設計として明示。
+
+**代替案**:
+- (B) line_start を char 単位に変更 → 行テキスト切り出しにバイトオフセットが必要で逆に不便
+- (C) line_start を削除 → Checkpoint が軽くなるが将来のエラー診断機能を失う
+
+**理由**: バイト単位の line_start は `&src[line_start..offset]` で行テキストを O(1) 取得できる。
+
+### D4: YamlInput は StrInput をラップし Input を委譲実装する
 
 **選択**: `YamlInput<'a>` は `StrInput<'a>` をフィールドに持ち、`Input` の全メソッドを `self.inner` に委譲する。YAML 固有状態（アンカーマップ、インデントスタック）は追加フィールド。
 
@@ -27,47 +55,46 @@ JSON パーサーは `recursive()` を使って純粋パイプラインスタイ
 - (B) `Input` トレイトに YAML 固有メソッドを追加 → 汎用トレイトを汚染
 - (C) `StrInput` を継承（Rust に継承はない）
 
-**理由**: 委譲パターンは Rust で最も自然。parser クレートへの変更が不要。YamlInput 固有メソッドは `guard(|input: &YamlInput| ...)` のクロージャ内でアクセスできる。
+**理由**: 委譲パターンは Rust で最も自然。parser クレートへの変更が最小限。
 
-### D2: インデントスタックを YamlInput に持ち、with_indent コンビネータで操作する
+### D5: インデントスタックを YamlInput に持ち with_indent で操作する
 
-**選択**: `YamlInput` に `indent_stack: Vec<usize>` を持つ。`with_indent(n, parser)` コンビネータがスタックに push し、内部パーサー実行後に pop する。`indent_guard()` は先頭を参照して判定。
+**選択**: `YamlInput` に `indent_stack: Vec<usize>` を持つ。`with_indent(n, parser)` コンビネータがスタックに push し、内部パーサー実行後に pop する。
 
 **代替案**:
-- (B) Checkpoint にインデントを含めて reset で戻す → Checkpoint サイズが増え、`or` の backtrack で意図せずインデントが巻き戻る
+- (B) Checkpoint にインデントを含めて reset で戻す → `or` の backtrack で意図せずインデントが巻き戻る
 - (C) guard のみで制御 → インデントレベルの「設定」ができない
 
-**理由**: スタックベースはブロックスタイルの再帰的ネスト構造と1対1対応する。`with_indent` が RAII 的にスコープを管理するので、pop 忘れがない。
+**理由**: スタックベースは再帰的ネストと1対1対応。RAII 的に pop 忘れがない。
 
-### D3: save_anchor は専用コンビネータとして実装する
+### D6: save_anchor / resolve_alias は専用コンビネータ
 
-**選択**: `save_anchor(parser)` は `&name` プレフィックスをパースし、内部パーサーで値を取得した後、`input.set_anchor(name, value.clone())` を呼ぶ。
+**選択**: `save_anchor(parser)` は `&name` + 値パース + アンカー保存。`resolve_alias()` は `*name` からクローン返却。
 
-**代替案**:
-- (B) `flat_map` で実装 → `flat_map` のクロージャ内では `input` にアクセスできない
-- (C) パース後の後処理で全ツリーを走査 → anchor が定義と同一ドキュメント内の後方参照で使われる場合に対応できない
+**理由**: パース時点でアンカー登録が必要。専用コンビネータなら外部から純粋パーサーに見える。
 
-**理由**: パース時点でアンカーを登録する必要がある（前方参照なし）。専用コンビネータなら `parse_next` 内で `input` を直接操作でき、外部から見ると純粋なパーサーに見える。
+### D7: with_tag コンビネータで YAML タグをパース時に認識する
 
-### D4: resolve_alias は YamlInput から値をクローンして返すパーサー
+**選択**: `with_tag(value_parser)` は `!tag` / `!!tag` プレフィックスを検出し、内部パーサーで値を取得した後、`apply_tag(tag, value)` で型変換する。
 
-**選択**: `resolve_alias()` は `*name` をパースし、`input.get_anchor(name).cloned()` を返す。
+**理由**: `save_anchor` と同じパターン。パースパイプラインに自然に合成できる。
 
-**理由**: 単純で、他のコンビネータと自然に合成できる（`save_anchor(value_parser).or(resolve_alias()).or(...)`）。
+### D8: Checkpoint にインデントスタックは含めない
 
-### D5: Checkpoint は StrCheckpoint をそのまま使う（インデントスタックは含めない）
+**選択**: `YamlInput` の `Checkpoint` は `StrCheckpoint` をそのまま使う。インデントは `with_indent` のスコープで管理。
 
-**選択**: `YamlInput` の `Checkpoint` は `StrCheckpoint` をそのまま使い、インデントスタックは `with_indent` の RAII パターンで管理する。
-
-**理由**: `or` の backtrack でインデントレベルが巻き戻ると、ブロックパースのセマンティクスが壊れる。インデントは構造的に管理すべきで、位置ベースの Checkpoint には入れない。
+**理由**: backtrack でインデントが巻き戻るとブロックパースが壊れる。
 
 ## Risks / Trade-offs
 
-### [R1] 全ファイル書き直しによるリグレッションリスク
-→ **軽減策**: 既存35テストを全て維持。書き直しは段階的に行い、各段階でテスト通過を確認。
+### [R1] ExpectError 変更の影響範囲が広い
+→ **軽減策**: deprecated で段階移行。全コンビネータの `from_expected` → `from_expected_at` は機械的置換。
 
-### [R2] with_indent のパニックリスク（pop 時にスタックが空）
-→ **軽減策**: `pop_indent` が空スタックの場合はデフォルト値 0 を返す。テストで空スタックケースをカバー。
+### [R2] YAML 全ファイル書き直しのリグレッション
+→ **軽減策**: 既存35テストを維持。段階的に書き直し、各段階でテスト通過確認。
 
-### [R3] Recursive + YamlInput の型推論の複雑さ
-→ **軽減策**: `recursive()` は `Box<dyn Parser>` ベースなので YamlInput でも動作する。型推論が効かない場合は `fn_parser` でフォールバック。
+### [R3] uri / crond の修正漏れ
+→ **軽減策**: deprecated 警告で未移行箇所が検出される。
+
+### [R4] with_indent のパニックリスク
+→ **軽減策**: `pop_indent` が空スタックの場合はデフォルト値 0 を返す。
