@@ -77,10 +77,16 @@ pub(crate) fn yaml_documents<'a>(
       continue;
     }
 
+    let before = input.offset();
     let doc = yaml_document(input, ctx)?;
     docs.push(doc);
 
     skip_ws_and_comments(input)?;
+
+    // Guard against infinite loop if no progress was made
+    if input.offset() == before {
+      break;
+    }
   }
 
   Ok(docs)

@@ -79,9 +79,23 @@ pub(crate) fn block_scalar<'a>(input: &mut StrInput<'a>) -> PResult<YamlValue, P
     // Check if this line has enough indent
     let line_indent = remaining.chars().take_while(|&c| c == ' ').count();
 
-    // Empty line
+    // Empty line (bare newline or spaces-only line)
     if remaining.starts_with('\n') {
       input.next_token();
+      trailing_newlines += 1;
+      continue;
+    }
+    if remaining.bytes().take_while(|&b| b == b' ').count() == remaining.len()
+      || remaining.as_bytes().get(line_indent) == Some(&b'\n')
+        && line_indent < content_indent
+    {
+      // Line of only spaces (fewer than content_indent) — treat as blank
+      for _ in 0..line_indent {
+        input.next_token();
+      }
+      if input.peek_byte() == Some(b'\n') {
+        input.next_token();
+      }
       trailing_newlines += 1;
       continue;
     }
