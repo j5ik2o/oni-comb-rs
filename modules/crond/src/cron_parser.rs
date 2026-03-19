@@ -27,8 +27,10 @@ fn ranged_uint8<'a>(min: u8, max: u8) -> impl Parser<StrInput<'a>, Output = u8, 
       Ok(n) if n >= min && n <= max => Ok(n),
       _ => {
         input.reset(cp);
-        Err(Fail::Backtrack(ParseError::from_expected(
+        Err(Fail::Backtrack(ParseError::from_expected_with_location(
           pos,
+          input.line(),
+          input.column(),
           Expected::Description("value in range"),
         )))
       }
@@ -63,8 +65,10 @@ fn nonzero_uint8<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseEr
     let n = p.parse_next(input)?;
     if n == 0 {
       input.reset(cp);
-      return Err(Fail::Backtrack(ParseError::from_expected(
+      return Err(Fail::Backtrack(ParseError::from_expected_with_location(
         pos,
+        input.line(),
+        input.column(),
         Expected::Description("non-zero step"),
       )));
     }

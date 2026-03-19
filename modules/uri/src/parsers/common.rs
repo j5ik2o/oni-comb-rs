@@ -50,8 +50,10 @@ pub fn pchar<'a>() -> impl Parser<StrInput<'a>, Output = &'a str, Error = ParseE
     {
       return Ok(input.slice_since(cp));
     }
-    Err(oni_comb_parser::fail::Fail::Backtrack(ParseError::from_expected(
+    Err(oni_comb_parser::fail::Fail::Backtrack(ParseError::from_expected_with_location(
       input.offset(),
+      input.line(),
+      input.column(),
       Expected::Description("pchar"),
     )))
   })

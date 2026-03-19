@@ -42,8 +42,10 @@ fn ip_literal<'a>() -> impl Parser<StrInput<'a>, Output = Host<'a>, Error = Pars
       return Ok(Host::IpvFuture(future_str));
     }
 
-    Err(Fail::Backtrack(ParseError::from_expected(
+    Err(Fail::Backtrack(ParseError::from_expected_with_location(
       pos,
+      input.line(),
+      input.column(),
       Expected::Description("IP-literal"),
     )))
   })

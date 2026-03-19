@@ -90,23 +90,19 @@ pub fn json<'a>() -> impl Parser<StrInput<'a>, Output = JsonValue<'a>, Error = P
 fn fail_to_error(e: Fail<ParseError>) -> ParseError {
   match e {
     Fail::Backtrack(e) | Fail::Cut(e) => e,
-    Fail::Incomplete => ParseError::from_expected(0, Expected::Description("incomplete input")),
-    Fail::ZeroProgress => ParseError::from_expected(0, Expected::Description("zero progress")),
+    Fail::Incomplete => ParseError::from_expected_with_location(0, 0, 0, Expected::Description("incomplete input")),
+    Fail::ZeroProgress => ParseError::from_expected_with_location(0, 0, 0, Expected::Description("zero progress")),
   }
 }
 
 /// Parse a JSON string, returning the parsed value or an error.
 pub fn parse(src: &str) -> Result<JsonValue<'_>, ParseError> {
   let mut input = StrInput::new(src);
-  json()
-    .parse_next(&mut input)
-    .map_err(|e| fail_to_error(e).fill_location_from_src(src))
+  json().parse_next(&mut input).map_err(fail_to_error)
 }
 
 /// Parse a JSON string, returning the value without requiring EOF.
 pub fn parse_value(src: &str) -> Result<JsonValue<'_>, ParseError> {
   let mut input = StrInput::new(src);
-  json_value()
-    .parse_next(&mut input)
-    .map_err(|e| fail_to_error(e).fill_location_from_src(src))
+  json_value().parse_next(&mut input).map_err(fail_to_error)
 }

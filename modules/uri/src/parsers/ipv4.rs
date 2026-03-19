@@ -16,8 +16,10 @@ fn dec_octet<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseError>
     // Reject leading zeros: "0" is ok, "00"/"01"/"001" etc. are not
     if s.len() > 1 && s.starts_with('0') {
       input.reset(cp);
-      return Err(Fail::Backtrack(ParseError::from_expected(
+      return Err(Fail::Backtrack(ParseError::from_expected_with_location(
         pos,
+        input.line(),
+        input.column(),
         Expected::Description("dec-octet (no leading zeros)"),
       )));
     }
@@ -25,8 +27,10 @@ fn dec_octet<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseError>
       Ok(n) if n <= 255 => Ok(n as u8),
       _ => {
         input.reset(cp);
-        Err(Fail::Backtrack(ParseError::from_expected(
+        Err(Fail::Backtrack(ParseError::from_expected_with_location(
           pos,
+          input.line(),
+          input.column(),
           Expected::Description("dec-octet"),
         )))
       }

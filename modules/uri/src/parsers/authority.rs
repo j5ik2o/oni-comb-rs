@@ -61,8 +61,10 @@ fn port<'a>() -> impl Parser<StrInput<'a>, Output = Option<u16>, Error = ParseEr
       Ok(n) => Ok(Some(n)),
       Err(_) => {
         input.reset(cp);
-        Err(Fail::Backtrack(ParseError::from_expected(
+        Err(Fail::Backtrack(ParseError::from_expected_with_location(
           pos,
+          input.line(),
+          input.column(),
           Expected::Description("port"),
         )))
       }

@@ -52,8 +52,10 @@ fn segment_nz_nc<'a>() -> impl Parser<StrInput<'a>, Output = &'a str, Error = Pa
       .is_ok()
     };
     if !ok(input) {
-      return Err(oni_comb_parser::fail::Fail::Backtrack(ParseError::from_expected(
+      return Err(oni_comb_parser::fail::Fail::Backtrack(ParseError::from_expected_with_location(
         pos,
+        input.line(),
+        input.column(),
         Expected::Description("segment-nz-nc"),
       )));
     }
