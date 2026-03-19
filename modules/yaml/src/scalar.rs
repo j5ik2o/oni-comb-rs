@@ -34,6 +34,9 @@ pub(crate) fn yaml_scalar<'a>(input: &mut StrInput<'a>) -> PResult<YamlValue, Pa
     )));
   }
 
+  // NOTE: plain is trim_end()'d, so trailing whitespace between the scalar
+  // and the next delimiter remains unconsumed. Callers (block_value, flow_value)
+  // are expected to call skip_inline_ws / skip_ws_and_comments afterward.
   input.advance(plain.len());
 
   // Resolve type per Core Schema
@@ -42,6 +45,8 @@ pub(crate) fn yaml_scalar<'a>(input: &mut StrInput<'a>) -> PResult<YamlValue, Pa
 
 /// Collect a plain scalar from remaining input.
 /// Stops at: newline, '#' preceded by space, ':', ',', '[', ']', '{', '}'
+/// Returns a trim_end()'d slice — trailing whitespace is intentionally excluded
+/// from the scalar value and left unconsumed for the caller to skip.
 fn collect_plain_scalar(remaining: &str) -> &str {
   let bytes = remaining.as_bytes();
   let mut end = 0;
