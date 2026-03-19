@@ -4,23 +4,23 @@ use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::fail::{Fail, PResult};
 use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
-use oni_comb_parser::prelude::*;
+use oni_comb_parser::prelude::char;
 
 use crate::common::{at_document_marker, current_indent, skip_inline_ws, skip_ws_and_comments};
-use crate::context::ParseContext;
 
 // NOTE: YAML block parsers use procedural style because:
-// 1. ParseContext (&mut) must be threaded for anchor/alias resolution
-// 2. Indent-based parsing requires runtime state (min_indent parameter)
+// 1. YamlInput (&mut) must be threaded for anchor/alias resolution
+// 2. Indent-based parsing requires runtime state (indent stack)
 //    that cannot be expressed as static combinator composition
 // These constraints make pure pipeline style impractical for block YAML.
 use crate::flow::flow_value;
 use crate::multiline::block_scalar;
 use crate::scalar::yaml_scalar;
 use crate::value::YamlValue;
+use crate::yaml_input::YamlInput;
 
 /// Parse an optional anchor prefix (&name) and return the anchor name.
-fn parse_anchor_prefix<'a>(input: &mut StrInput<'a>) -> PResult<Option<String>, ParseError> {
+fn parse_anchor_prefix<'a>(input: &mut YamlInput<'a>) -> PResult<Option<String>, ParseError> {
   if input.peek_byte() != Some(b'&') {
     return Ok(None);
   }
@@ -30,8 +30,10 @@ fn parse_anchor_prefix<'a>(input: &mut StrInput<'a>) -> PResult<Option<String>, 
     .find([' ', '\n', '\r', '\t', ',', ']', '}', ':'])
     .unwrap_or(remaining.len());
   if end == 0 {
-    return Err(Fail::Cut(ParseError::from_expected(
+    return Err(Fail::Cut(ParseError::from_expected_with_location(
       input.offset(),
+      input.line(),
+      input.column(),
       Expected::Description("anchor name"),
     )));
   }
@@ -41,8 +43,8 @@ fn parse_anchor_prefix<'a>(input: &mut StrInput<'a>) -> PResult<Option<String>, 
   Ok(Some(name))
 }
 
-/// Parse an alias (*name) and resolve it from the context.
-fn parse_alias<'a>(input: &mut StrInput<'a>, ctx: &ParseContext) -> PResult<YamlValue, ParseError> {
+/// Parse an alias (*name) and resolve it from the YamlInput anchor map.
+fn parse_alias<'a>(input: &mut YamlInput<'a>) -> PResult<YamlValue, ParseError> {
   let pos = input.offset();
   input.next_token(); // consume '*'
   let remaining = input.remaining();
@@ -50,33 +52,35 @@ fn parse_alias<'a>(input: &mut StrInput<'a>, ctx: &ParseContext) -> PResult<Yaml
     .find([' ', '\n', '\r', '\t', ',', ']', '}'])
     .unwrap_or(remaining.len());
   if end == 0 {
-    return Err(Fail::Cut(ParseError::from_expected(
+    return Err(Fail::Cut(ParseError::from_expected_with_location(
       pos,
+      input.line(),
+      input.column(),
       Expected::Description("alias name"),
     )));
   }
   let name = &remaining[..end];
   input.advance(end);
-  match ctx.get_anchor(name) {
+  match input.get_anchor(name) {
     Some(value) => Ok(value.clone()),
-    None => Err(Fail::Cut(ParseError::from_expected(
+    None => Err(Fail::Cut(ParseError::from_expected_with_location(
       pos,
+      input.line(),
+      input.column(),
       Expected::Description("known anchor"),
     ))),
   }
 }
 
-/// Parse a block value at the given minimum indent level.
-pub(crate) fn block_value<'a>(
-  input: &mut StrInput<'a>,
-  min_indent: usize,
-  ctx: &mut ParseContext,
-) -> PResult<YamlValue, ParseError> {
+/// Parse a block value using the indent stack in YamlInput.
+pub(crate) fn block_value<'a>(input: &mut YamlInput<'a>) -> PResult<YamlValue, ParseError> {
+  let min_indent = input.current_min_indent();
+
   skip_ws_and_comments(input)?;
 
   // Check for alias
   if input.peek_byte() == Some(b'*') {
-    return parse_alias(input, ctx);
+    return parse_alias(input);
   }
 
   // Check for anchor prefix
@@ -88,22 +92,24 @@ pub(crate) fn block_value<'a>(
   }
 
   let value = match input.peek_byte() {
-    Some(b'[') => flow_value(input, ctx)?,
-    Some(b'{') => flow_value(input, ctx)?,
-    Some(b'-') if is_block_seq_indicator(input) => block_sequence(input, min_indent, ctx)?,
+    Some(b'[') => flow_value(input)?,
+    Some(b'{') => flow_value(input)?,
+    Some(b'-') if is_block_seq_indicator(input) => block_sequence(input, min_indent)?,
     Some(b'|') | Some(b'>') => block_scalar(input)?,
-    Some(b'*') => parse_alias(input, ctx)?,
+    Some(b'*') => parse_alias(input)?,
     _ => {
       let cp = input.checkpoint();
       let indent = current_indent(input);
       if indent < min_indent {
-        return Err(Fail::Backtrack(ParseError::from_expected(
+        return Err(Fail::Backtrack(ParseError::from_expected_with_location(
           input.offset(),
+          input.line(),
+          input.column(),
           Expected::Description("indented content"),
         )));
       }
 
-      match try_block_mapping(input, indent, ctx) {
+      match try_block_mapping(input, indent) {
         Ok(v) => v,
         Err(Fail::Backtrack(_)) => {
           input.reset(cp);
@@ -116,13 +122,13 @@ pub(crate) fn block_value<'a>(
 
   // Save anchor if present
   if let Some(name) = anchor {
-    ctx.set_anchor(name, value.clone());
+    input.set_anchor(name, value.clone());
   }
 
   Ok(value)
 }
 
-fn is_block_seq_indicator<'a>(input: &StrInput<'a>) -> bool {
+fn is_block_seq_indicator<'a>(input: &YamlInput<'a>) -> bool {
   let remaining = input.remaining();
   let bytes = remaining.as_bytes();
   (bytes.len() >= 2 && bytes[0] == b'-' && (bytes[1] == b' ' || bytes[1] == b'\n'))
@@ -130,14 +136,15 @@ fn is_block_seq_indicator<'a>(input: &StrInput<'a>) -> bool {
 }
 
 fn block_sequence<'a>(
-  input: &mut StrInput<'a>,
+  input: &mut YamlInput<'a>,
   min_indent: usize,
-  ctx: &mut ParseContext,
 ) -> PResult<YamlValue, ParseError> {
   let seq_indent = current_indent(input);
   if seq_indent < min_indent {
-    return Err(Fail::Backtrack(ParseError::from_expected(
+    return Err(Fail::Backtrack(ParseError::from_expected_with_location(
       input.offset(),
+      input.line(),
+      input.column(),
       Expected::Description("indented sequence"),
     )));
   }
@@ -154,12 +161,14 @@ fn block_sequence<'a>(
       break;
     }
 
-    char('-').parse_next(input)?;
+    char('-').parse_next(input.inner_mut())?;
     if input.peek_byte() == Some(b' ') {
       input.next_token();
     }
 
-    let item = block_value(input, seq_indent + 1, ctx)?;
+    input.push_indent(seq_indent + 1);
+    let item = block_value(input)?;
+    input.pop_indent();
     items.push(item);
 
     skip_ws_and_comments(input)?;
@@ -172,9 +181,8 @@ fn block_sequence<'a>(
 }
 
 fn try_block_mapping<'a>(
-  input: &mut StrInput<'a>,
+  input: &mut YamlInput<'a>,
   map_indent: usize,
-  ctx: &mut ParseContext,
 ) -> PResult<YamlValue, ParseError> {
   let mut pairs = BTreeMap::new();
 
@@ -187,7 +195,7 @@ fn try_block_mapping<'a>(
     // Check for merge key (<<)
     let key = parse_mapping_key(input)?;
     skip_inline_ws(input)?;
-    char(':').parse_next(input)?;
+    char(':').parse_next(input.inner_mut())?;
 
     skip_inline_ws(input)?;
 
@@ -198,13 +206,19 @@ fn try_block_mapping<'a>(
       } else {
         let next_indent = current_indent(input);
         if next_indent > map_indent {
-          block_value(input, next_indent, ctx)?
+          input.push_indent(next_indent);
+          let v = block_value(input)?;
+          input.pop_indent();
+          v
         } else {
           YamlValue::Null
         }
       }
     } else {
-      block_value(input, map_indent + 1, ctx)?
+      input.push_indent(map_indent + 1);
+      let v = block_value(input)?;
+      input.pop_indent();
+      v
     };
 
     // Handle merge key
@@ -225,8 +239,10 @@ fn try_block_mapping<'a>(
   }
 
   if pairs.is_empty() {
-    return Err(Fail::Backtrack(ParseError::from_expected(
+    return Err(Fail::Backtrack(ParseError::from_expected_with_location(
       input.offset(),
+      input.line(),
+      input.column(),
       Expected::Description("mapping"),
     )));
   }
@@ -234,7 +250,7 @@ fn try_block_mapping<'a>(
   Ok(YamlValue::Mapping(pairs))
 }
 
-fn parse_mapping_key<'a>(input: &mut StrInput<'a>) -> PResult<String, ParseError> {
+fn parse_mapping_key<'a>(input: &mut YamlInput<'a>) -> PResult<String, ParseError> {
   match input.peek_byte() {
     Some(b'"') | Some(b'\'') => match yaml_scalar(input)? {
       YamlValue::String(s) => Ok(s),
@@ -257,8 +273,10 @@ fn parse_mapping_key<'a>(input: &mut StrInput<'a>) -> PResult<String, ParseError
       }
 
       if end == 0 {
-        return Err(Fail::Backtrack(ParseError::from_expected(
+        return Err(Fail::Backtrack(ParseError::from_expected_with_location(
           input.offset(),
+          input.line(),
+          input.column(),
           Expected::Description("mapping key"),
         )));
       }

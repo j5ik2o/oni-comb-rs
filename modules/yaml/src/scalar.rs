@@ -1,17 +1,19 @@
 use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::fail::{Fail, PResult};
 use oni_comb_parser::input::Input;
-use oni_comb_parser::prelude::*;
+use oni_comb_parser::parser::Parser;
+use oni_comb_parser::prelude::quoted_string;
 
 use crate::value::YamlValue;
+use crate::yaml_input::YamlInput;
 
 /// YAML Core Schema のスカラー値をパースする。
 /// null, bool, int (10進/8進/16進), float (小数/.inf/.nan), 文字列。
-pub(crate) fn yaml_scalar<'a>(input: &mut StrInput<'a>) -> PResult<YamlValue, ParseError> {
+pub(crate) fn yaml_scalar<'a>(input: &mut YamlInput<'a>) -> PResult<YamlValue, ParseError> {
   // Quoted strings: preserve as-is
   match input.peek_byte() {
     Some(b'"') => {
-      let s = oni_comb_parser::prelude::quoted_string().parse_next(input)?;
+      let s = quoted_string().parse_next(input.inner_mut())?;
       return Ok(YamlValue::String(s.into_owned()));
     }
     Some(b'\'') => {
@@ -28,8 +30,10 @@ pub(crate) fn yaml_scalar<'a>(input: &mut StrInput<'a>) -> PResult<YamlValue, Pa
   // First, collect the plain scalar text
   let plain = collect_plain_scalar(remaining);
   if plain.is_empty() {
-    return Err(Fail::Backtrack(ParseError::from_expected(
+    return Err(Fail::Backtrack(ParseError::from_expected_with_location(
       start,
+      input.line(),
+      input.column(),
       Expected::Description("YAML scalar"),
     )));
   }
@@ -125,12 +129,17 @@ fn resolve_core_scalar(s: &str) -> YamlValue {
 }
 
 /// Parse a single-quoted string (YAML style: '' for literal ')
-fn parse_single_quoted<'a>(input: &mut StrInput<'a>) -> PResult<YamlValue, ParseError> {
+fn parse_single_quoted<'a>(input: &mut YamlInput<'a>) -> PResult<YamlValue, ParseError> {
   let pos = input.offset();
   let remaining = input.remaining();
 
   if !remaining.starts_with('\'') {
-    return Err(Fail::Backtrack(ParseError::from_expected(pos, Expected::Char('\''))));
+    return Err(Fail::Backtrack(ParseError::from_expected_with_location(
+      pos,
+      input.line(),
+      input.column(),
+      Expected::Char('\''),
+    )));
   }
 
   let mut result = String::new();
@@ -140,8 +149,10 @@ fn parse_single_quoted<'a>(input: &mut StrInput<'a>) -> PResult<YamlValue, Parse
   loop {
     match chars.next() {
       None => {
-        return Err(Fail::Cut(ParseError::from_expected(
+        return Err(Fail::Cut(ParseError::from_expected_with_location(
           pos + consumed,
+          input.line(),
+          input.column(),
           Expected::Char('\''),
         )));
       }
