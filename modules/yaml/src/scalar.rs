@@ -89,7 +89,7 @@ fn resolve_core_scalar(s: &str) -> YamlValue {
     "false" | "False" | "FALSE" => YamlValue::Bool(false),
 
     // special float
-    ".inf" | ".Inf" | ".INF" => YamlValue::Float(f64::INFINITY),
+    ".inf" | ".Inf" | ".INF" | "+.inf" | "+.Inf" | "+.INF" => YamlValue::Float(f64::INFINITY),
     "-.inf" | "-.Inf" | "-.INF" => YamlValue::Float(f64::NEG_INFINITY),
     ".nan" | ".NaN" | ".NAN" => YamlValue::Float(f64::NAN),
 
