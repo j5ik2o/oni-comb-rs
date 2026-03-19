@@ -1,12 +1,20 @@
 use crate::input::Input;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy)]
 pub struct StrCheckpoint {
   pub offset: usize,
   pub line: usize,
   pub column: usize,
   pub line_start: usize,
 }
+
+impl PartialEq for StrCheckpoint {
+  fn eq(&self, other: &Self) -> bool {
+    self.offset == other.offset
+  }
+}
+
+impl Eq for StrCheckpoint {}
 
 impl PartialOrd for StrCheckpoint {
   fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
