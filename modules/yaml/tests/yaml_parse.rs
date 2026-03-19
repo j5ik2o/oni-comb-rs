@@ -279,6 +279,22 @@ fn parse_anchor_and_alias() {
 }
 
 #[test]
+fn parse_block_anchor_on_next_line() {
+  let input = "defaults: &defs\n  adapter: postgres\n  host: localhost";
+  let result = parse(input).unwrap();
+  if let YamlValue::Mapping(map) = &result {
+    if let YamlValue::Mapping(defaults) = &map["defaults"] {
+      assert_eq!(defaults["adapter"], YamlValue::String("postgres".to_string()));
+      assert_eq!(defaults["host"], YamlValue::String("localhost".to_string()));
+    } else {
+      panic!("Expected defaults to be a mapping, got {:?}", map["defaults"]);
+    }
+  } else {
+    panic!("Expected mapping, got {:?}", result);
+  }
+}
+
+#[test]
 fn parse_merge_key() {
   // Test merge with flow-style anchor value (simpler case)
   let input = "defaults: &defs {adapter: postgres}\ndev:\n  <<: *defs\n  db: mydb";

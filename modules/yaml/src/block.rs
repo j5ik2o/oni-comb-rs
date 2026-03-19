@@ -85,6 +85,11 @@ pub(crate) fn block_value<'a>(
   // Check for anchor prefix
   let anchor = parse_anchor_prefix(input)?;
 
+  // After consuming anchor, the value may start on the next line
+  if anchor.is_some() {
+    skip_ws_and_comments(input)?;
+  }
+
   let value = match input.peek_byte() {
     Some(b'[') => flow_value(input, ctx)?,
     Some(b'{') => flow_value(input, ctx)?,
