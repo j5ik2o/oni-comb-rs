@@ -1,7 +1,7 @@
-pub use crate::byte_input::ByteInput;
+pub use crate::byte_input_stream::ByteInputStream;
 pub use crate::parser::Parser;
 pub use crate::parser_ext::ParserExt;
-pub use crate::str_input::StrInput;
+pub use crate::str_input_stream::StrInputStream;
 
 // ジェネリックプリミティブパーサー（StrInput / ByteInput 両対応）
 pub use crate::primitive::any::any;
@@ -50,7 +50,7 @@ pub fn between<I, L, P, R>(
   right: R,
 ) -> crate::combinator::zip_right::ZipRight<L, crate::combinator::zip_left::ZipLeft<P, R>>
 where
-  I: crate::input::Input,
+  I: crate::input_stream::InputStream,
   L: crate::parser::Parser<I>,
   P: crate::parser::Parser<I, Error = L::Error>,
   R: crate::parser::Parser<I, Error = L::Error>, {

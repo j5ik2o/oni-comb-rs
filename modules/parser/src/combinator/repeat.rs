@@ -2,7 +2,7 @@ use alloc::vec::Vec;
 
 use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
 pub struct Repeat<P> {
@@ -13,7 +13,7 @@ pub struct Repeat<P> {
 
 impl<I, P> Parser<I> for Repeat<P>
 where
-  I: Input,
+  I: InputStream,
   P: Parser<I>,
   P::Error: crate::error::ExpectError,
 {

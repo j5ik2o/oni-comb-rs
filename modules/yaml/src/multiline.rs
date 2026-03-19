@@ -1,12 +1,12 @@
 use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::fail::{Fail, PResult};
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::prelude::*;
 
 use crate::value::YamlValue;
 
 /// Parse a block scalar (literal `|` or folded `>`).
-pub(crate) fn block_scalar<'a>(input: &mut StrInput<'a>) -> PResult<YamlValue, ParseError> {
+pub(crate) fn block_scalar<'a>(input: &mut StrInputStream<'a>) -> PResult<YamlValue, ParseError> {
   let style = input.next_token().ok_or_else(|| {
     Fail::Backtrack(ParseError::from_expected(
       input.offset(),

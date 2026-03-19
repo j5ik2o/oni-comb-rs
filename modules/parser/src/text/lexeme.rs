@@ -1,9 +1,9 @@
 use crate::combinator::zip_left::ZipLeft;
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 use crate::parser_ext::ParserExt;
 use crate::primitive::take_while0::TakeWhile0;
-use crate::str_input::StrInput;
+use crate::str_input_stream::StrInputStream;
 use crate::text::take_while::take_while0;
 
 fn is_ws(c: char) -> bool {
@@ -11,7 +11,7 @@ fn is_ws(c: char) -> bool {
 }
 
 /// `lexeme` の戻り値型。
-pub type Lexeme<'a, P> = ZipLeft<P, TakeWhile0<fn(char) -> bool, StrInput<'a>>>;
+pub type Lexeme<'a, P> = ZipLeft<P, TakeWhile0<fn(char) -> bool, StrInputStream<'a>>>;
 
 /// パーサーを実行した後に後続の空白を消費するトークンラッパー。
 ///
@@ -21,6 +21,6 @@ pub type Lexeme<'a, P> = ZipLeft<P, TakeWhile0<fn(char) -> bool, StrInput<'a>>>;
 /// ```
 pub fn lexeme<'a, P>(parser: P) -> Lexeme<'a, P>
 where
-  P: Parser<StrInput<'a>, Error = <StrInput<'a> as Input>::Error>, {
+  P: Parser<StrInputStream<'a>, Error = <StrInputStream<'a> as InputStream>::Error>, {
   parser.zip_left(take_while0(is_ws as fn(char) -> bool))
 }

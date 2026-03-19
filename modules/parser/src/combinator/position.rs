@@ -1,7 +1,7 @@
 use core::marker::PhantomData;
 
 use crate::fail::PResult;
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
 /// パーサーの現在位置を表す構造体。
@@ -12,13 +12,13 @@ pub struct InputPosition {
   pub column: usize,
 }
 
-pub struct Position<I: Input>(PhantomData<fn(&mut I)>);
+pub struct Position<I: InputStream>(PhantomData<fn(&mut I)>);
 
-pub fn position<I: Input>() -> Position<I> {
+pub fn position<I: InputStream>() -> Position<I> {
   Position(PhantomData)
 }
 
-impl<I: Input> Parser<I> for Position<I> {
+impl<I: InputStream> Parser<I> for Position<I> {
   type Error = I::Error;
   type Output = InputPosition;
 

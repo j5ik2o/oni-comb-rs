@@ -26,13 +26,13 @@ use oni_comb_parser::prelude::*;
 
 // Match 'a' or 'b'
 let mut parser = char('a').or(char('b'));
-let mut input = StrInput::new("b");
+let mut input = StrInputStream::new("b");
 assert_eq!(parser.parse_next(&mut input).unwrap(), 'b');
 
 // Identifier: starts with letter/_, followed by alphanumeric/_
 let mut ident = satisfy(|c: char| c.is_ascii_alphabetic() || c == '_')
     .zip(take_while0(|c: char| c.is_ascii_alphanumeric() || c == '_'));
-let mut input = StrInput::new("foo_bar_123");
+let mut input = StrInputStream::new("foo_bar_123");
 let (head, tail) = ident.parse_next(&mut input).unwrap();
 assert_eq!(head, 'f');
 assert_eq!(tail, "oo_bar_123");
@@ -40,7 +40,7 @@ assert_eq!(tail, "oo_bar_123");
 // Integer
 let mut int_parser = take_while1(|c: char| c.is_ascii_digit())
     .map(|s: &str| s.parse::<u64>().unwrap());
-let mut input = StrInput::new("42");
+let mut input = StrInputStream::new("42");
 assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 ```
 
@@ -84,7 +84,7 @@ let parser = satisfy(|c: char| c.is_ascii_digit()).flat_map(|n| match n {
 
 // Monad (heterogeneous): type erasure via Box<dyn Parser>
 let parser = satisfy(|c: char| c == 'c' || c == 't')
-    .flat_map(|c| -> Box<dyn Parser<StrInput<'_>, Output = &str, Error = String>> {
+    .flat_map(|c| -> Box<dyn Parser<StrInputStream<'_>, Output = &str, Error = String>> {
         match c {
             'c' => Box::new(tag("har")),
             _ => Box::new(take_while1(|c: char| c.is_ascii_digit())),
@@ -311,7 +311,7 @@ cargo test -p oni-comb-parser -- test_name
 
 | MS | Name | Status | Content |
 |----|------|--------|---------|
-| 1 | Core | **Done** | Input, Fail, PResult, Parser, ParserExt, StrInput |
+| 1 | Core | **Done** | InputStream, Fail, PResult, Parser, ParserExt, StrInputStream |
 | 2 | Primitive | **Done** | eof, char, tag, satisfy, take_while0/1, peek |
 | 3 | Combinators | **Done** | map, zip, zip_left, zip_right, between, or, attempt, cut, optional, many0/1, sep_by0/1, chainl1/r1, flat_map/and_then |
 | 4 | Text module | **Done** | whitespace0/1, identifier, integer, quoted_string, escaped, lexeme. Validated with JSON subset and URI tokenizer tests |

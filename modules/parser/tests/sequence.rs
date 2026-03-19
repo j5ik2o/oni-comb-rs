@@ -1,14 +1,14 @@
 use oni_comb_parser::fail::Fail;
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::{char, tag};
-use oni_comb_parser::str_input::StrInput;
+use oni_comb_parser::str_input_stream::StrInputStream;
 
 #[test]
 fn map_transforms_success_value() {
   let mut parser = char('a').map(|c: char| c.to_ascii_uppercase());
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   let result = parser.parse_next(&mut input);
 
@@ -19,7 +19,7 @@ fn map_transforms_success_value() {
 #[test]
 fn map_preserves_failure() {
   let mut parser = char('a').map(|c: char| c.to_ascii_uppercase());
-  let mut input = StrInput::new("xyz");
+  let mut input = StrInputStream::new("xyz");
 
   let result = parser.parse_next(&mut input);
 
@@ -30,7 +30,7 @@ fn map_preserves_failure() {
 #[test]
 fn map_preserves_cut_failure() {
   let mut parser = char('x').cut().map(|c: char| c.to_ascii_uppercase());
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   let result = parser.parse_next(&mut input);
 
@@ -42,7 +42,7 @@ fn map_chains_multiple_transforms() {
   let mut parser = char('a')
     .map(|c: char| c.to_ascii_uppercase())
     .map(|c: char| c.to_string());
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   let result = parser.parse_next(&mut input);
 
@@ -52,7 +52,7 @@ fn map_chains_multiple_transforms() {
 #[test]
 fn zip_sequences_two_parsers() {
   let mut parser = char('a').zip(char('b'));
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   let result = parser.parse_next(&mut input);
 
@@ -64,7 +64,7 @@ fn zip_sequences_two_parsers() {
 #[test]
 fn zip_fails_if_first_fails() {
   let mut parser = char('a').zip(char('b'));
-  let mut input = StrInput::new("xyz");
+  let mut input = StrInputStream::new("xyz");
 
   let result = parser.parse_next(&mut input);
 
@@ -75,7 +75,7 @@ fn zip_fails_if_first_fails() {
 #[test]
 fn zip_fails_if_second_fails() {
   let mut parser = char('a').zip(char('b'));
-  let mut input = StrInput::new("acd");
+  let mut input = StrInputStream::new("acd");
 
   let result = parser.parse_next(&mut input);
 
@@ -85,7 +85,7 @@ fn zip_fails_if_second_fails() {
 #[test]
 fn zip_chains_three_parsers() {
   let mut parser = char('a').zip(char('b')).zip(char('c'));
-  let mut input = StrInput::new("abcdef");
+  let mut input = StrInputStream::new("abcdef");
 
   let result = parser.parse_next(&mut input);
 
@@ -96,7 +96,7 @@ fn zip_chains_three_parsers() {
 #[test]
 fn zip_with_tags_sequences_string_slices() {
   let mut parser = tag("hello").zip(tag(" ")).zip(tag("world"));
-  let mut input = StrInput::new("hello world!");
+  let mut input = StrInputStream::new("hello world!");
 
   let result = parser.parse_next(&mut input);
 
@@ -107,7 +107,7 @@ fn zip_with_tags_sequences_string_slices() {
 #[test]
 fn zip_propagates_cut_from_second() {
   let mut parser = char('a').zip(char('b').cut());
-  let mut input = StrInput::new("ac");
+  let mut input = StrInputStream::new("ac");
 
   let result = parser.parse_next(&mut input);
 
@@ -119,7 +119,7 @@ fn map_over_zip_result() {
   let mut parser = char('a')
     .zip(char('b'))
     .map(|(a, b): (char, char)| format!("{}{}", a, b));
-  let mut input = StrInput::new("ab");
+  let mut input = StrInputStream::new("ab");
 
   let result = parser.parse_next(&mut input);
 

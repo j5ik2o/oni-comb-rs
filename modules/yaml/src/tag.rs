@@ -1,13 +1,13 @@
 use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::fail::{Fail, PResult};
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::prelude::*;
 
 use crate::value::YamlValue;
 
 /// Parse a tag prefix (!! or !) and return the tag string.
 #[allow(dead_code)]
-pub(crate) fn parse_tag<'a>(input: &mut StrInput<'a>) -> PResult<String, ParseError> {
+pub(crate) fn parse_tag<'a>(input: &mut StrInputStream<'a>) -> PResult<String, ParseError> {
   let pos = input.offset();
 
   if input.peek_byte() != Some(b'!') {

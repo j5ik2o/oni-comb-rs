@@ -1,13 +1,13 @@
 use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::fail::{Fail, PResult};
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::prelude::*;
 
 use crate::value::YamlValue;
 
 /// YAML Core Schema のスカラー値をパースする。
 /// null, bool, int (10進/8進/16進), float (小数/.inf/.nan), 文字列。
-pub(crate) fn yaml_scalar<'a>(input: &mut StrInput<'a>) -> PResult<YamlValue, ParseError> {
+pub(crate) fn yaml_scalar<'a>(input: &mut StrInputStream<'a>) -> PResult<YamlValue, ParseError> {
   // Quoted strings: preserve as-is
   match input.peek_byte() {
     Some(b'"') => {
@@ -125,7 +125,7 @@ fn resolve_core_scalar(s: &str) -> YamlValue {
 }
 
 /// Parse a single-quoted string (YAML style: '' for literal ')
-fn parse_single_quoted<'a>(input: &mut StrInput<'a>) -> PResult<YamlValue, ParseError> {
+fn parse_single_quoted<'a>(input: &mut StrInputStream<'a>) -> PResult<YamlValue, ParseError> {
   let pos = input.offset();
   let remaining = input.remaining();
 

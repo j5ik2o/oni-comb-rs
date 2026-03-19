@@ -1,5 +1,5 @@
 use oni_comb_parser::fail::Fail;
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::prelude::*;
 
@@ -7,7 +7,7 @@ use oni_comb_parser::prelude::*;
 
 #[test]
 fn any_consumes_one_char() {
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
   let result: char = any().parse_next(&mut input).unwrap();
   assert_eq!(result, 'a');
   assert_eq!(input.remaining(), "bc");
@@ -15,7 +15,7 @@ fn any_consumes_one_char() {
 
 #[test]
 fn any_consumes_one_byte() {
-  let mut input = ByteInput::new(b"abc");
+  let mut input = ByteInputStream::new(b"abc");
   let result: u8 = any().parse_next(&mut input).unwrap();
   assert_eq!(result, b'a');
   assert_eq!(input.remaining(), b"bc");
@@ -23,8 +23,8 @@ fn any_consumes_one_byte() {
 
 #[test]
 fn any_backtrack_on_eof() {
-  let mut input = StrInput::new("");
-  let result = any::<StrInput>().parse_next(&mut input);
+  let mut input = StrInputStream::new("");
+  let result = any::<StrInputStream>().parse_next(&mut input);
   assert!(matches!(result, Err(Fail::Backtrack(_))));
 }
 
@@ -32,7 +32,7 @@ fn any_backtrack_on_eof() {
 
 #[test]
 fn not_a_consumes_non_matching_char() {
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
   let result = not_a(|c: char| c == '"').parse_next(&mut input).unwrap();
   assert_eq!(result, 'a');
   assert_eq!(input.remaining(), "bc");
@@ -40,7 +40,7 @@ fn not_a_consumes_non_matching_char() {
 
 #[test]
 fn not_a_backtrack_on_matching_char() {
-  let mut input = StrInput::new("\"abc");
+  let mut input = StrInputStream::new("\"abc");
   let result = not_a(|c: char| c == '"').parse_next(&mut input);
   assert!(matches!(result, Err(Fail::Backtrack(_))));
   assert_eq!(input.remaining(), "\"abc");
@@ -48,7 +48,7 @@ fn not_a_backtrack_on_matching_char() {
 
 #[test]
 fn not_a_works_with_byte_input() {
-  let mut input = ByteInput::new(b"abc");
+  let mut input = ByteInputStream::new(b"abc");
   let result = not_a(|b: u8| b == b'"').parse_next(&mut input).unwrap();
   assert_eq!(result, b'a');
 }
@@ -57,7 +57,7 @@ fn not_a_works_with_byte_input() {
 
 #[test]
 fn sym_from_prelude_works() {
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
   let result = sym('a').parse_next(&mut input).unwrap();
   assert_eq!(result, 'a');
 }
@@ -66,7 +66,7 @@ fn sym_from_prelude_works() {
 
 #[test]
 fn seq_from_prelude_works() {
-  let mut input = StrInput::new("hello world");
+  let mut input = StrInputStream::new("hello world");
   let result = seq("hello").parse_next(&mut input).unwrap();
   assert_eq!(result, "hello");
 }

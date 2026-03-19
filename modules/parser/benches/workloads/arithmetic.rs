@@ -7,7 +7,7 @@ use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
 
-fn calc_parser() -> impl Parser<StrInput<'static>, Output = i64, Error = ParseError> {
+fn calc_parser() -> impl Parser<StrInputStream<'static>, Output = i64, Error = ParseError> {
   recursive(|expr| {
     let ws_int = whitespace0().zip_right(integer()).zip_left(whitespace0());
     let atom = ws_int.or(
@@ -56,7 +56,7 @@ pub fn register(c: &mut Criterion) {
     group.throughput(Throughput::Bytes(input.len() as u64));
     group.bench_with_input(BenchmarkId::new("oni-comb", name), input, |b, input| {
       b.iter(|| {
-        let mut inp = StrInput::new(black_box(input));
+        let mut inp = StrInputStream::new(black_box(input));
         calc_parser().parse_next(&mut inp)
       })
     });

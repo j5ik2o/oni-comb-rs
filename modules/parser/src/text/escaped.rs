@@ -2,9 +2,9 @@ use alloc::string::String;
 
 use crate::error::{ExpectError, Expected, ParseError};
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
-use crate::str_input::StrInput;
+use crate::str_input_stream::StrInputStream;
 
 pub struct Escaped<F> {
   open: char,
@@ -24,7 +24,7 @@ where
   }
 }
 
-impl<'a, F> Parser<StrInput<'a>> for Escaped<F>
+impl<'a, F> Parser<StrInputStream<'a>> for Escaped<F>
 where
   F: FnMut(char) -> Option<char>,
 {
@@ -32,7 +32,7 @@ where
   type Output = String;
 
   #[inline]
-  fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<String, ParseError> {
+  fn parse_next(&mut self, input: &mut StrInputStream<'a>) -> PResult<String, ParseError> {
     let pos = input.offset();
     let remaining = input.as_str();
     let mut chars = remaining.chars();

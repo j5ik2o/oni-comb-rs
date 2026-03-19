@@ -1,5 +1,5 @@
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
 pub struct ChainL1<P, Op> {
@@ -9,7 +9,7 @@ pub struct ChainL1<P, Op> {
 
 impl<I, P, Op, F> Parser<I> for ChainL1<P, Op>
 where
-  I: Input,
+  I: InputStream,
   P: Parser<I>,
   Op: Parser<I, Output = F, Error = P::Error>,
   F: FnMut(P::Output, P::Output) -> P::Output,

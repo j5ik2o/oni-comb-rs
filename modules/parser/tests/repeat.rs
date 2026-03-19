@@ -1,15 +1,15 @@
 use oni_comb_parser::error::ParseError;
 use oni_comb_parser::fail::{Fail, PResult};
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::{char, tag};
-use oni_comb_parser::str_input::StrInput;
+use oni_comb_parser::str_input_stream::StrInputStream;
 
 #[test]
 fn optional_returns_some_on_success() {
   let mut parser = char('a').optional();
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   let result = parser.parse_next(&mut input);
 
@@ -20,7 +20,7 @@ fn optional_returns_some_on_success() {
 #[test]
 fn optional_returns_none_on_backtrack() {
   let mut parser = char('a').optional();
-  let mut input = StrInput::new("xyz");
+  let mut input = StrInputStream::new("xyz");
 
   let result = parser.parse_next(&mut input);
 
@@ -32,7 +32,7 @@ fn optional_returns_none_on_backtrack() {
 fn optional_propagates_cut() {
   let inner = char('a').zip(char('b').cut());
   let mut parser = inner.optional();
-  let mut input = StrInput::new("ac");
+  let mut input = StrInputStream::new("ac");
 
   let result = parser.parse_next(&mut input);
 
@@ -42,7 +42,7 @@ fn optional_propagates_cut() {
 #[test]
 fn optional_returns_none_on_empty_input() {
   let mut parser = char('a').optional();
-  let mut input = StrInput::new("");
+  let mut input = StrInputStream::new("");
 
   let result = parser.parse_next(&mut input);
 
@@ -53,7 +53,7 @@ fn optional_returns_none_on_empty_input() {
 #[test]
 fn many0_collects_matching_items() {
   let mut parser = char('a').many0();
-  let mut input = StrInput::new("aaab");
+  let mut input = StrInputStream::new("aaab");
 
   let result = parser.parse_next(&mut input);
 
@@ -65,7 +65,7 @@ fn many0_collects_matching_items() {
 #[test]
 fn many0_returns_empty_vec_on_immediate_backtrack() {
   let mut parser = char('a').many0();
-  let mut input = StrInput::new("xyz");
+  let mut input = StrInputStream::new("xyz");
 
   let result = parser.parse_next(&mut input);
 
@@ -76,7 +76,7 @@ fn many0_returns_empty_vec_on_immediate_backtrack() {
 #[test]
 fn many0_succeeds_with_empty_vec_on_empty_input() {
   let mut parser = char('a').many0();
-  let mut input = StrInput::new("");
+  let mut input = StrInputStream::new("");
 
   let result = parser.parse_next(&mut input);
 
@@ -86,7 +86,7 @@ fn many0_succeeds_with_empty_vec_on_empty_input() {
 #[test]
 fn many0_consumes_all_matching() {
   let mut parser = char('a').many0();
-  let mut input = StrInput::new("aaaa");
+  let mut input = StrInputStream::new("aaaa");
 
   let result = parser.parse_next(&mut input);
 
@@ -98,7 +98,7 @@ fn many0_consumes_all_matching() {
 fn many0_propagates_cut() {
   let item = char('a').zip(char('b').cut());
   let mut parser = item.many0();
-  let mut input = StrInput::new("abac");
+  let mut input = StrInputStream::new("abac");
 
   let result = parser.parse_next(&mut input);
 
@@ -108,7 +108,7 @@ fn many0_propagates_cut() {
 #[test]
 fn many0_with_tags_collects_strings() {
   let mut parser = tag("ab").many0();
-  let mut input = StrInput::new("ababc");
+  let mut input = StrInputStream::new("ababc");
 
   let result = parser.parse_next(&mut input);
 
@@ -120,7 +120,7 @@ fn many0_with_tags_collects_strings() {
 #[test]
 fn many0_with_or_collects_alternatives() {
   let mut parser = char('a').or(char('b')).many0();
-  let mut input = StrInput::new("abba!");
+  let mut input = StrInputStream::new("abba!");
 
   let result = parser.parse_next(&mut input);
 
@@ -131,7 +131,7 @@ fn many0_with_or_collects_alternatives() {
 #[test]
 fn optional_after_many0() {
   let mut parser = char('a').many0().zip(char('!').optional());
-  let mut input = StrInput::new("aaa");
+  let mut input = StrInputStream::new("aaa");
 
   let result = parser.parse_next(&mut input);
 
@@ -143,7 +143,7 @@ fn optional_after_many0() {
 #[test]
 fn optional_after_many0_with_trailing() {
   let mut parser = char('a').many0().zip(char('!').optional());
-  let mut input = StrInput::new("aaa!");
+  let mut input = StrInputStream::new("aaa!");
 
   let result = parser.parse_next(&mut input);
 
@@ -155,7 +155,7 @@ fn optional_after_many0_with_trailing() {
 #[test]
 fn many0_with_map_transforms_collected() {
   let mut parser = char('a').many0().map(|items: Vec<char>| items.len());
-  let mut input = StrInput::new("aaabc");
+  let mut input = StrInputStream::new("aaabc");
 
   let result = parser.parse_next(&mut input);
 
@@ -165,7 +165,7 @@ fn many0_with_map_transforms_collected() {
 #[test]
 fn many0_detects_zero_progress() {
   let mut parser = tag("").many0();
-  let mut input = StrInput::new("anything");
+  let mut input = StrInputStream::new("anything");
 
   let result = parser.parse_next(&mut input);
 
@@ -174,11 +174,11 @@ fn many0_detects_zero_progress() {
 
 struct ZeroProgressParser;
 
-impl Parser<StrInput<'_>> for ZeroProgressParser {
+impl Parser<StrInputStream<'_>> for ZeroProgressParser {
   type Error = ParseError;
   type Output = char;
 
-  fn parse_next(&mut self, _input: &mut StrInput<'_>) -> PResult<Self::Output, Self::Error> {
+  fn parse_next(&mut self, _input: &mut StrInputStream<'_>) -> PResult<Self::Output, Self::Error> {
     Err(Fail::ZeroProgress)
   }
 }
@@ -186,7 +186,7 @@ impl Parser<StrInput<'_>> for ZeroProgressParser {
 #[test]
 fn optional_propagates_zero_progress() {
   let mut parser = ZeroProgressParser.optional();
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   let result = parser.parse_next(&mut input);
 
@@ -198,11 +198,11 @@ struct CustomError(u32);
 
 struct AlwaysSucceedNoConsume;
 
-impl Parser<StrInput<'_>> for AlwaysSucceedNoConsume {
+impl Parser<StrInputStream<'_>> for AlwaysSucceedNoConsume {
   type Error = CustomError;
   type Output = ();
 
-  fn parse_next(&mut self, _input: &mut StrInput<'_>) -> PResult<Self::Output, Self::Error> {
+  fn parse_next(&mut self, _input: &mut StrInputStream<'_>) -> PResult<Self::Output, Self::Error> {
     Ok(())
   }
 }
@@ -210,7 +210,7 @@ impl Parser<StrInput<'_>> for AlwaysSucceedNoConsume {
 #[test]
 fn many0_works_with_non_string_error_type() {
   let mut parser = AlwaysSucceedNoConsume.many0();
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   let result = parser.parse_next(&mut input);
 

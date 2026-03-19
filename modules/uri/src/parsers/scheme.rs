@@ -1,11 +1,11 @@
 use oni_comb_parser::error::ParseError;
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::prelude::*;
 
 // scheme = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
-pub fn scheme<'a>() -> impl Parser<StrInput<'a>, Output = &'a str, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'a>| {
+pub fn scheme<'a>() -> impl Parser<StrInputStream<'a>, Output = &'a str, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'a>| {
     let cp = input.checkpoint();
     let mut head = satisfy(|c: char| c.is_ascii_alphabetic());
     head.parse_next(input)?;

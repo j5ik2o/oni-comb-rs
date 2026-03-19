@@ -3,9 +3,9 @@ use alloc::string::String;
 
 use crate::error::{ExpectError, Expected, ParseError};
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
-use crate::str_input::StrInput;
+use crate::str_input_stream::StrInputStream;
 
 /// 4桁の16進数を読んで u32 を返すヘルパー。
 fn parse_hex4(chars: &mut core::str::Chars<'_>, consumed: &mut usize, pos: usize) -> PResult<u32, ParseError> {
@@ -35,12 +35,12 @@ pub fn quoted_string() -> QuotedString {
   QuotedString
 }
 
-impl<'a> Parser<StrInput<'a>> for QuotedString {
+impl<'a> Parser<StrInputStream<'a>> for QuotedString {
   type Error = ParseError;
   type Output = Cow<'a, str>;
 
   #[inline]
-  fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<Cow<'a, str>, ParseError> {
+  fn parse_next(&mut self, input: &mut StrInputStream<'a>) -> PResult<Cow<'a, str>, ParseError> {
     let pos = input.offset();
     let remaining = input.as_str();
     let bytes = remaining.as_bytes();

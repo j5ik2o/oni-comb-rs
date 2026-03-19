@@ -1,8 +1,8 @@
 use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
-use crate::str_input::StrInput;
+use crate::str_input_stream::StrInputStream;
 
 pub struct Tag(&'static str);
 
@@ -10,12 +10,12 @@ pub fn tag(s: &'static str) -> Tag {
   Tag(s)
 }
 
-impl<'a> Parser<StrInput<'a>> for Tag {
-  type Error = <StrInput<'a> as Input>::Error;
+impl<'a> Parser<StrInputStream<'a>> for Tag {
+  type Error = <StrInputStream<'a> as InputStream>::Error;
   type Output = &'static str;
 
   #[inline]
-  fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<Self::Output, Self::Error> {
+  fn parse_next(&mut self, input: &mut StrInputStream<'a>) -> PResult<Self::Output, Self::Error> {
     let pos = input.offset();
     let remaining = input.remaining();
     if remaining.starts_with(self.0) {

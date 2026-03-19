@@ -1,5 +1,5 @@
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
 pub struct SepByFold0<P, S, B, F> {
@@ -11,7 +11,7 @@ pub struct SepByFold0<P, S, B, F> {
 
 impl<I, P, S, B, F, Acc> Parser<I> for SepByFold0<P, S, B, F>
 where
-  I: Input,
+  I: InputStream,
   P: Parser<I>,
   S: Parser<I, Error = P::Error>,
   B: FnMut() -> Acc,
@@ -69,7 +69,7 @@ pub struct SepByFold1<P, S, B, F> {
 
 impl<I, P, S, B, F, Acc> Parser<I> for SepByFold1<P, S, B, F>
 where
-  I: Input,
+  I: InputStream,
   P: Parser<I>,
   S: Parser<I, Error = P::Error>,
   B: FnMut() -> Acc,

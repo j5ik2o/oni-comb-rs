@@ -1,6 +1,6 @@
 use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::fail::{Fail, PResult};
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
@@ -9,7 +9,7 @@ use crate::cron_expr::CronExpr;
 
 // --- 数値パーサー ---
 
-fn uint8_parser<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseError> {
+fn uint8_parser<'a>() -> impl Parser<StrInputStream<'a>, Output = u8, Error = ParseError> {
   take_while1(|c: char| c.is_ascii_digit())
     .map_res(|s: &str| s.parse::<u8>(), "integer 0-255")
     .attempt()
@@ -17,8 +17,8 @@ fn uint8_parser<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseErr
 
 // --- バリデーション付き数値パーサー ---
 
-fn ranged_uint8<'a>(min: u8, max: u8) -> impl Parser<StrInput<'a>, Output = u8, Error = ParseError> {
-  fn_parser(move |input: &mut StrInput<'_>| {
+fn ranged_uint8<'a>(min: u8, max: u8) -> impl Parser<StrInputStream<'a>, Output = u8, Error = ParseError> {
+  fn_parser(move |input: &mut StrInputStream<'_>| {
     let pos = input.offset();
     let cp = input.checkpoint();
     let mut p = take_while1(|c: char| c.is_ascii_digit());
@@ -38,7 +38,7 @@ fn ranged_uint8<'a>(min: u8, max: u8) -> impl Parser<StrInput<'a>, Output = u8, 
 
 // --- 曜日テキストパーサー ---
 
-fn dow_text<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseError> {
+fn dow_text<'a>() -> impl Parser<StrInputStream<'a>, Output = u8, Error = ParseError> {
   tag("SUN")
     .map(|_| 1u8)
     .or(tag("MON").map(|_| 2u8))
@@ -51,12 +51,12 @@ fn dow_text<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseError> 
 
 // --- 式ビルダー ---
 
-fn asterisk<'a>() -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
+fn asterisk<'a>() -> impl Parser<StrInputStream<'a>, Output = CronExpr, Error = ParseError> {
   tag("*").map(|_| CronExpr::AnyValue)
 }
 
-fn nonzero_uint8<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'_>| {
+fn nonzero_uint8<'a>() -> impl Parser<StrInputStream<'a>, Output = u8, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'_>| {
     let pos = input.offset();
     let cp = input.checkpoint();
     let mut p = uint8_parser();
@@ -72,16 +72,16 @@ fn nonzero_uint8<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseEr
   })
 }
 
-fn any_step<'a>() -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
+fn any_step<'a>() -> impl Parser<StrInputStream<'a>, Output = CronExpr, Error = ParseError> {
   tag("*/").zip_right(nonzero_uint8()).map(CronExpr::AnyStep)
 }
 
-fn step_suffix<'a>() -> impl Parser<StrInput<'a>, Output = u8, Error = ParseError> {
+fn step_suffix<'a>() -> impl Parser<StrInputStream<'a>, Output = u8, Error = ParseError> {
   tag("/").zip_right(nonzero_uint8())
 }
 
-fn range_expr<'a>(min: u8, max: u8) -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
-  fn_parser(move |input: &mut StrInput<'_>| {
+fn range_expr<'a>(min: u8, max: u8) -> impl Parser<StrInputStream<'a>, Output = CronExpr, Error = ParseError> {
+  fn_parser(move |input: &mut StrInputStream<'_>| {
     let mut val = ranged_uint8(min, max);
     let from = val.parse_next(input)?;
     let mut dash = tag("-");
@@ -93,21 +93,21 @@ fn range_expr<'a>(min: u8, max: u8) -> impl Parser<StrInput<'a>, Output = CronEx
   })
 }
 
-fn value_expr<'a>(min: u8, max: u8) -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
+fn value_expr<'a>(min: u8, max: u8) -> impl Parser<StrInputStream<'a>, Output = CronExpr, Error = ParseError> {
   ranged_uint8(min, max).map(CronExpr::Value)
 }
 
-fn last_value<'a>() -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
+fn last_value<'a>() -> impl Parser<StrInputStream<'a>, Output = CronExpr, Error = ParseError> {
   tag("L").map(|_| CronExpr::LastValue)
 }
 
 // --- フィールド式 ---
 
-fn field_expr<'a>(min: u8, max: u8) -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
-  fn_parser(move |input: &mut StrInput<'_>| {
+fn field_expr<'a>(min: u8, max: u8) -> impl Parser<StrInputStream<'a>, Output = CronExpr, Error = ParseError> {
+  fn_parser(move |input: &mut StrInputStream<'_>| {
     // リストは内部でカンマ区切りのアイテムを解析
     // 各アイテムは range | any_step | asterisk | value
-    let item = |input: &mut StrInput<'_>| -> PResult<CronExpr, ParseError> {
+    let item = |input: &mut StrInputStream<'_>| -> PResult<CronExpr, ParseError> {
       // range (N-M or N-M/S)
       if let Ok(r) = range_expr(min, max).attempt().parse_next(input) {
         return Ok(r);
@@ -141,9 +141,9 @@ fn field_expr<'a>(min: u8, max: u8) -> impl Parser<StrInput<'a>, Output = CronEx
   })
 }
 
-fn dow_field_expr<'a>() -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
-  fn_parser(move |input: &mut StrInput<'_>| {
-    let dow_item = |input: &mut StrInput<'_>| -> PResult<CronExpr, ParseError> {
+fn dow_field_expr<'a>() -> impl Parser<StrInputStream<'a>, Output = CronExpr, Error = ParseError> {
+  fn_parser(move |input: &mut StrInputStream<'_>| {
+    let dow_item = |input: &mut StrInputStream<'_>| -> PResult<CronExpr, ParseError> {
       // L
       if let Ok(r) = last_value().attempt().parse_next(input) {
         return Ok(r);
@@ -186,9 +186,9 @@ fn dow_field_expr<'a>() -> impl Parser<StrInput<'a>, Output = CronExpr, Error = 
 
 // --- フル cron 式パーサー ---
 
-fn cron_expr<'a>() -> impl Parser<StrInput<'a>, Output = CronExpr, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'_>| {
-    let sp = |input: &mut StrInput<'_>| -> PResult<(), ParseError> {
+fn cron_expr<'a>() -> impl Parser<StrInputStream<'a>, Output = CronExpr, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'_>| {
+    let sp = |input: &mut StrInputStream<'_>| -> PResult<(), ParseError> {
       take_while1(|c: char| c == ' ').map(|_| ()).parse_next(input)
     };
 
@@ -219,7 +219,7 @@ pub struct CronParser;
 impl CronParser {
   pub fn parse(input: &str) -> Result<CronExpr, String> {
     let mut parser = cron_expr().zip_left(eof());
-    let mut str_input = StrInput::new(input);
+    let mut str_input = StrInputStream::new(input);
     parser.parse_next(&mut str_input).map_err(|e| format!("{:?}", e))
   }
 }

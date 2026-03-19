@@ -1,5 +1,5 @@
 use crate::fail::PResult;
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
 pub struct Peek<P> {
@@ -8,7 +8,7 @@ pub struct Peek<P> {
 
 impl<I, P> Parser<I> for Peek<P>
 where
-  I: Input,
+  I: InputStream,
   P: Parser<I>,
 {
   type Error = P::Error;

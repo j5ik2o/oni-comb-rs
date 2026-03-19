@@ -1,5 +1,5 @@
 use crate::fail::PResult;
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
 /// 関数ポインタを `Parser` としてラップする。
@@ -20,14 +20,14 @@ pub struct FnParser<F> {
 
 pub fn fn_parser<I, O, E, F>(f: F) -> FnParser<F>
 where
-  I: Input,
+  I: InputStream,
   F: FnMut(&mut I) -> PResult<O, E>, {
   FnParser { f }
 }
 
 impl<I, O, E, F> Parser<I> for FnParser<F>
 where
-  I: Input,
+  I: InputStream,
   F: FnMut(&mut I) -> PResult<O, E>,
 {
   type Error = E;

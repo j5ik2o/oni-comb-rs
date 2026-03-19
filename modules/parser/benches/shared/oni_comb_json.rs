@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::fail::{Fail, PResult};
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
@@ -19,12 +19,12 @@ pub(crate) enum Json<'a> {
 }
 
 #[inline]
-fn skip_ws<'a>(input: &mut StrInput<'a>) -> PResult<(), ParseError> {
+fn skip_ws<'a>(input: &mut StrInputStream<'a>) -> PResult<(), ParseError> {
   whitespace0().parse_next(input).map(|_| ())
 }
 
 #[inline]
-fn json_value_body<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
+fn json_value_body<'a>(input: &mut StrInputStream<'a>) -> PResult<Json<'a>, ParseError> {
   match input.peek_byte() {
     Some(b'n') => tag("null").map(|_| Json::Null).parse_next(input),
     Some(b't') => tag("true").map(|_| Json::Bool(true)).parse_next(input),
@@ -44,12 +44,12 @@ fn json_value_body<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError
   }
 }
 
-pub(crate) fn json_value<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
+pub(crate) fn json_value<'a>(input: &mut StrInputStream<'a>) -> PResult<Json<'a>, ParseError> {
   skip_ws(input)?;
   json_value_body(input)
 }
 
-fn json_array<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
+fn json_array<'a>(input: &mut StrInputStream<'a>) -> PResult<Json<'a>, ParseError> {
   char('[').parse_next(input)?;
   let mut items = Vec::new();
   skip_ws(input)?;
@@ -75,7 +75,7 @@ fn json_array<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
   Ok(Json::Array(items))
 }
 
-fn json_object<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
+fn json_object<'a>(input: &mut StrInputStream<'a>) -> PResult<Json<'a>, ParseError> {
   char('{').parse_next(input)?;
   let mut pairs = Vec::new();
   skip_ws(input)?;
@@ -101,7 +101,7 @@ fn json_object<'a>(input: &mut StrInput<'a>) -> PResult<Json<'a>, ParseError> {
   Ok(Json::Object(pairs))
 }
 
-fn json_member<'a>(input: &mut StrInput<'a>) -> PResult<(Cow<'a, str>, Json<'a>), ParseError> {
+fn json_member<'a>(input: &mut StrInputStream<'a>) -> PResult<(Cow<'a, str>, Json<'a>), ParseError> {
   let key = quoted_string().parse_next(input)?;
   skip_ws(input)?;
   char(':').parse_next(input)?;
@@ -111,13 +111,13 @@ fn json_member<'a>(input: &mut StrInput<'a>) -> PResult<(Cow<'a, str>, Json<'a>)
 }
 
 #[allow(dead_code)]
-pub(crate) fn json_parser<'a>() -> impl Parser<StrInput<'a>, Output = Json<'a>, Error = ParseError> {
+pub(crate) fn json_parser<'a>() -> impl Parser<StrInputStream<'a>, Output = Json<'a>, Error = ParseError> {
   fn_parser(json_value)
 }
 
 #[allow(dead_code)]
 pub(crate) fn parse_complete<'a>(src: &'a str) -> PResult<Json<'a>, ParseError> {
-  let mut input = StrInput::new(src);
+  let mut input = StrInputStream::new(src);
   let value = json_value(&mut input)?;
   skip_ws(&mut input)?;
   if input.is_eof() {

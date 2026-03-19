@@ -9,7 +9,7 @@ use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
 
-fn calc_parser() -> impl Parser<oni_comb_parser::str_input::StrInput<'static>, Output = i64, Error = ParseError> {
+fn calc_parser() -> impl Parser<oni_comb_parser::str_input_stream::StrInputStream<'static>, Output = i64, Error = ParseError> {
   recursive(|expr| {
     let ws_int = whitespace0().zip_right(integer()).zip_left(whitespace0());
     let atom = ws_int.or(
@@ -45,13 +45,13 @@ fn calc_parser() -> impl Parser<oni_comb_parser::str_input::StrInput<'static>, O
 
 #[test]
 fn single_integer() {
-  let mut input = StrInput::new("42");
+  let mut input = StrInputStream::new("42");
   assert_eq!(calc_parser().parse_next(&mut input).unwrap(), 42);
 }
 
 #[test]
 fn negative_integer() {
-  let mut input = StrInput::new("-7");
+  let mut input = StrInputStream::new("-7");
   assert_eq!(calc_parser().parse_next(&mut input).unwrap(), -7);
 }
 
@@ -59,26 +59,26 @@ fn negative_integer() {
 
 #[test]
 fn addition() {
-  let mut input = StrInput::new("1 + 2");
+  let mut input = StrInputStream::new("1 + 2");
   assert_eq!(calc_parser().parse_next(&mut input).unwrap(), 3);
 }
 
 #[test]
 fn subtraction() {
-  let mut input = StrInput::new("10 - 3");
+  let mut input = StrInputStream::new("10 - 3");
   assert_eq!(calc_parser().parse_next(&mut input).unwrap(), 7);
 }
 
 #[test]
 fn chained_addition() {
-  let mut input = StrInput::new("1 + 2 + 3");
+  let mut input = StrInputStream::new("1 + 2 + 3");
   assert_eq!(calc_parser().parse_next(&mut input).unwrap(), 6);
 }
 
 #[test]
 fn left_associative_subtraction() {
   // (10 - 3) - 2 = 5
-  let mut input = StrInput::new("10 - 3 - 2");
+  let mut input = StrInputStream::new("10 - 3 - 2");
   assert_eq!(calc_parser().parse_next(&mut input).unwrap(), 5);
 }
 
@@ -86,13 +86,13 @@ fn left_associative_subtraction() {
 
 #[test]
 fn multiplication() {
-  let mut input = StrInput::new("3 * 4");
+  let mut input = StrInputStream::new("3 * 4");
   assert_eq!(calc_parser().parse_next(&mut input).unwrap(), 12);
 }
 
 #[test]
 fn division() {
-  let mut input = StrInput::new("10 / 2");
+  let mut input = StrInputStream::new("10 / 2");
   assert_eq!(calc_parser().parse_next(&mut input).unwrap(), 5);
 }
 
@@ -101,14 +101,14 @@ fn division() {
 #[test]
 fn multiplication_before_addition() {
   // 1 + 2 * 3 = 1 + 6 = 7
-  let mut input = StrInput::new("1 + 2 * 3");
+  let mut input = StrInputStream::new("1 + 2 * 3");
   assert_eq!(calc_parser().parse_next(&mut input).unwrap(), 7);
 }
 
 #[test]
 fn complex_precedence() {
   // 2 + 3 * 4 - 1 = 2 + 12 - 1 = 13
-  let mut input = StrInput::new("2 + 3 * 4 - 1");
+  let mut input = StrInputStream::new("2 + 3 * 4 - 1");
   assert_eq!(calc_parser().parse_next(&mut input).unwrap(), 13);
 }
 
@@ -117,28 +117,28 @@ fn complex_precedence() {
 #[test]
 fn parentheses_override_precedence() {
   // (1 + 2) * 3 = 9
-  let mut input = StrInput::new("(1 + 2) * 3");
+  let mut input = StrInputStream::new("(1 + 2) * 3");
   assert_eq!(calc_parser().parse_next(&mut input).unwrap(), 9);
 }
 
 #[test]
 fn nested_parentheses() {
   // ((2 + 3)) * 4 = 20
-  let mut input = StrInput::new("((2 + 3)) * 4");
+  let mut input = StrInputStream::new("((2 + 3)) * 4");
   assert_eq!(calc_parser().parse_next(&mut input).unwrap(), 20);
 }
 
 #[test]
 fn complex_expression() {
   // 1 + 2 * (3 - 4) = 1 + 2 * (-1) = 1 + (-2) = -1
-  let mut input = StrInput::new("1 + 2 * (3 - 4)");
+  let mut input = StrInputStream::new("1 + 2 * (3 - 4)");
   assert_eq!(calc_parser().parse_next(&mut input).unwrap(), -1);
 }
 
 #[test]
 fn deeply_nested() {
   // (((1 + 2) * 3) - 4) / 5 = ((3 * 3) - 4) / 5 = (9 - 4) / 5 = 5 / 5 = 1
-  let mut input = StrInput::new("(((1 + 2) * 3) - 4) / 5");
+  let mut input = StrInputStream::new("(((1 + 2) * 3) - 4) / 5");
   assert_eq!(calc_parser().parse_next(&mut input).unwrap(), 1);
 }
 
@@ -146,12 +146,12 @@ fn deeply_nested() {
 
 #[test]
 fn no_spaces() {
-  let mut input = StrInput::new("1+2*3");
+  let mut input = StrInputStream::new("1+2*3");
   assert_eq!(calc_parser().parse_next(&mut input).unwrap(), 7);
 }
 
 #[test]
 fn extra_spaces() {
-  let mut input = StrInput::new("  1  +  2  *  3  ");
+  let mut input = StrInputStream::new("  1  +  2  *  3  ");
   assert_eq!(calc_parser().parse_next(&mut input).unwrap(), 7);
 }

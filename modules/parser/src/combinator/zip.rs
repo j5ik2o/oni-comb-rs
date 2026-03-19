@@ -1,5 +1,5 @@
 use crate::fail::PResult;
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
 pub struct Zip<P1, P2> {
@@ -9,7 +9,7 @@ pub struct Zip<P1, P2> {
 
 impl<I, P1, P2> Parser<I> for Zip<P1, P2>
 where
-  I: Input,
+  I: InputStream,
   P1: Parser<I>,
   P2: Parser<I, Error = P1::Error>,
 {

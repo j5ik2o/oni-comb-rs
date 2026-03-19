@@ -1,6 +1,6 @@
 use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::fail::Fail;
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
@@ -11,8 +11,8 @@ use crate::parsers::ipv4::ipv4_address;
 use crate::parsers::ipv6::ipv6_address;
 
 // IP-literal = "[" ( IPv6address / IPvFuture ) "]"
-fn ip_literal<'a>() -> impl Parser<StrInput<'a>, Output = Host<'a>, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'a>| {
+fn ip_literal<'a>() -> impl Parser<StrInputStream<'a>, Output = Host<'a>, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'a>| {
     tag("[").parse_next(input)?;
 
     // Try IPv6 first
@@ -50,8 +50,8 @@ fn ip_literal<'a>() -> impl Parser<StrInput<'a>, Output = Host<'a>, Error = Pars
 }
 
 // reg-name = *( unreserved / pct-encoded / sub-delims )
-fn reg_name<'a>() -> impl Parser<StrInput<'a>, Output = &'a str, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'a>| {
+fn reg_name<'a>() -> impl Parser<StrInputStream<'a>, Output = &'a str, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'a>| {
     let cp = input.checkpoint();
     loop {
       if pct_encoded().attempt().parse_next(input).is_ok() {
@@ -70,8 +70,8 @@ fn reg_name<'a>() -> impl Parser<StrInput<'a>, Output = &'a str, Error = ParseEr
 }
 
 // host = IP-literal / IPv4address / reg-name
-pub fn host<'a>() -> impl Parser<StrInput<'a>, Output = Host<'a>, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'a>| {
+pub fn host<'a>() -> impl Parser<StrInputStream<'a>, Output = Host<'a>, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'a>| {
     // IP-literal first (starts with '[')
     if let Ok(h) = ip_literal().attempt().parse_next(input) {
       return Ok(h);

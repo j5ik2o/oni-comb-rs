@@ -12,29 +12,29 @@ use crate::value::JsonValue;
 // ── Helpers ──────────────────────────────────────
 
 /// Wrap a parser with surrounding optional whitespace.
-fn ws<'a, P>(p: P) -> impl Parser<StrInput<'a>, Output = P::Output, Error = ParseError>
+fn ws<'a, P>(p: P) -> impl Parser<StrInputStream<'a>, Output = P::Output, Error = ParseError>
 where
-  P: Parser<StrInput<'a>, Error = ParseError>, {
+  P: Parser<StrInputStream<'a>, Error = ParseError>, {
   whitespace0().zip_right(p).zip_left(whitespace0())
 }
 
 // ── Primitives ──────────────────────────────────
 
-fn json_null<'a>() -> impl Parser<StrInput<'a>, Output = JsonValue<'a>, Error = ParseError> {
+fn json_null<'a>() -> impl Parser<StrInputStream<'a>, Output = JsonValue<'a>, Error = ParseError> {
   tag("null").map(|_| JsonValue::Null)
 }
 
-fn json_bool<'a>() -> impl Parser<StrInput<'a>, Output = JsonValue<'a>, Error = ParseError> {
+fn json_bool<'a>() -> impl Parser<StrInputStream<'a>, Output = JsonValue<'a>, Error = ParseError> {
   tag("true")
     .map(|_| JsonValue::Bool(true))
     .or(tag("false").map(|_| JsonValue::Bool(false)))
 }
 
-fn json_number<'a>() -> impl Parser<StrInput<'a>, Output = JsonValue<'a>, Error = ParseError> {
+fn json_number<'a>() -> impl Parser<StrInputStream<'a>, Output = JsonValue<'a>, Error = ParseError> {
   float().map(JsonValue::Number)
 }
 
-fn json_string_value<'a>() -> impl Parser<StrInput<'a>, Output = JsonValue<'a>, Error = ParseError> {
+fn json_string_value<'a>() -> impl Parser<StrInputStream<'a>, Output = JsonValue<'a>, Error = ParseError> {
   quoted_string().map(JsonValue::String)
 }
 
@@ -43,7 +43,7 @@ fn json_string_value<'a>() -> impl Parser<StrInput<'a>, Output = JsonValue<'a>, 
 /// Build the complete JSON value parser using `recursive()` for self-referential
 /// array/object definitions. All parsing is expressed as pure combinator pipelines
 /// with no manual `parse_next` calls or mutable input manipulation.
-fn build_json_value_parser<'a>() -> impl Parser<StrInput<'a>, Output = JsonValue<'a>, Error = ParseError> {
+fn build_json_value_parser<'a>() -> impl Parser<StrInputStream<'a>, Output = JsonValue<'a>, Error = ParseError> {
   recursive(|value| {
     // ── array: '[' ws (value (',' ws value)*)? ws ']' ──
     let array = char('[')
@@ -78,12 +78,12 @@ fn build_json_value_parser<'a>() -> impl Parser<StrInput<'a>, Output = JsonValue
 // ── Public API ──────────────────────────────────
 
 /// JSON value parser (does not require EOF).
-pub fn json_value<'a>() -> impl Parser<StrInput<'a>, Output = JsonValue<'a>, Error = ParseError> {
+pub fn json_value<'a>() -> impl Parser<StrInputStream<'a>, Output = JsonValue<'a>, Error = ParseError> {
   build_json_value_parser()
 }
 
 /// Complete JSON parser (value + optional whitespace + EOF).
-pub fn json<'a>() -> impl Parser<StrInput<'a>, Output = JsonValue<'a>, Error = ParseError> {
+pub fn json<'a>() -> impl Parser<StrInputStream<'a>, Output = JsonValue<'a>, Error = ParseError> {
   build_json_value_parser().zip_left(eof())
 }
 
@@ -97,7 +97,7 @@ fn fail_to_error(e: Fail<ParseError>) -> ParseError {
 
 /// Parse a JSON string, returning the parsed value or an error.
 pub fn parse(src: &str) -> Result<JsonValue<'_>, ParseError> {
-  let mut input = StrInput::new(src);
+  let mut input = StrInputStream::new(src);
   json()
     .parse_next(&mut input)
     .map_err(|e| fail_to_error(e).fill_location_from_src(src))
@@ -105,7 +105,7 @@ pub fn parse(src: &str) -> Result<JsonValue<'_>, ParseError> {
 
 /// Parse a JSON string, returning the value without requiring EOF.
 pub fn parse_value(src: &str) -> Result<JsonValue<'_>, ParseError> {
-  let mut input = StrInput::new(src);
+  let mut input = StrInputStream::new(src);
   json_value()
     .parse_next(&mut input)
     .map_err(|e| fail_to_error(e).fill_location_from_src(src))

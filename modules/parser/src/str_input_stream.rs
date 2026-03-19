@@ -1,4 +1,4 @@
-use crate::input::Input;
+use crate::input_stream::InputStream;
 
 #[derive(Debug, Clone, Copy)]
 pub struct StrCheckpoint {
@@ -28,7 +28,7 @@ impl Ord for StrCheckpoint {
   }
 }
 
-pub struct StrInput<'a> {
+pub struct StrInputStream<'a> {
   src: &'a str,
   offset: usize,
   line: usize,
@@ -39,7 +39,7 @@ pub struct StrInput<'a> {
   line_start: usize,
 }
 
-impl<'a> StrInput<'a> {
+impl<'a> StrInputStream<'a> {
   pub fn new(src: &'a str) -> Self {
     Self {
       src,
@@ -79,7 +79,7 @@ impl<'a> StrInput<'a> {
   }
 }
 
-impl<'a> Input for StrInput<'a> {
+impl<'a> InputStream for StrInputStream<'a> {
   type Checkpoint = StrCheckpoint;
   #[cfg(feature = "alloc")]
   type Error = crate::error::ParseError;

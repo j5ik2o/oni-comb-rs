@@ -1,16 +1,16 @@
 use oni_comb_parser::fail::Fail;
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::char;
-use oni_comb_parser::str_input::StrInput;
+use oni_comb_parser::str_input_stream::StrInputStream;
 
 // --- many0_into ---
 
 #[test]
 fn many0_into_vec_collects() {
   let mut parser = char('a').many0_into(Vec::new());
-  let mut input = StrInput::new("aaab");
+  let mut input = StrInputStream::new("aaab");
 
   let result = parser.parse_next(&mut input);
 
@@ -21,7 +21,7 @@ fn many0_into_vec_collects() {
 #[test]
 fn many0_into_empty_returns_empty_container() {
   let mut parser = char('a').many0_into(Vec::new());
-  let mut input = StrInput::new("xyz");
+  let mut input = StrInputStream::new("xyz");
 
   let result = parser.parse_next(&mut input);
 
@@ -33,7 +33,7 @@ fn many0_into_empty_returns_empty_container() {
 fn many0_into_propagates_cut() {
   let item = char('a').zip(char('b').cut());
   let mut parser = item.many0_into(Vec::new());
-  let mut input = StrInput::new("abac");
+  let mut input = StrInputStream::new("abac");
 
   let result = parser.parse_next(&mut input);
 
@@ -45,7 +45,7 @@ fn many0_into_propagates_cut() {
 #[test]
 fn many1_into_vec_collects() {
   let mut parser = char('a').many1_into(Vec::new());
-  let mut input = StrInput::new("aaab");
+  let mut input = StrInputStream::new("aaab");
 
   let result = parser.parse_next(&mut input);
 
@@ -56,7 +56,7 @@ fn many1_into_vec_collects() {
 #[test]
 fn many1_into_zero_elements_is_error() {
   let mut parser = char('a').many1_into(Vec::new());
-  let mut input = StrInput::new("xyz");
+  let mut input = StrInputStream::new("xyz");
 
   let result = parser.parse_next(&mut input);
 
@@ -68,7 +68,7 @@ fn many1_into_zero_elements_is_error() {
 #[test]
 fn sep_by0_into_vec_collects() {
   let mut parser = char('a').sep_by0_into(char(','), Vec::new());
-  let mut input = StrInput::new("a,a,a!");
+  let mut input = StrInputStream::new("a,a,a!");
 
   let result = parser.parse_next(&mut input);
 
@@ -79,7 +79,7 @@ fn sep_by0_into_vec_collects() {
 #[test]
 fn sep_by0_into_empty_returns_empty_container() {
   let mut parser = char('a').sep_by0_into(char(','), Vec::new());
-  let mut input = StrInput::new("xyz");
+  let mut input = StrInputStream::new("xyz");
 
   let result = parser.parse_next(&mut input);
 
@@ -92,7 +92,7 @@ fn sep_by0_into_empty_returns_empty_container() {
 #[test]
 fn sep_by1_into_vec_collects() {
   let mut parser = char('a').sep_by1_into(char(','), Vec::new());
-  let mut input = StrInput::new("a,a,a!");
+  let mut input = StrInputStream::new("a,a,a!");
 
   let result = parser.parse_next(&mut input);
 
@@ -103,7 +103,7 @@ fn sep_by1_into_vec_collects() {
 #[test]
 fn sep_by1_into_zero_elements_is_error() {
   let mut parser = char('a').sep_by1_into(char(','), Vec::new());
-  let mut input = StrInput::new("xyz");
+  let mut input = StrInputStream::new("xyz");
 
   let result = parser.parse_next(&mut input);
 
@@ -128,7 +128,7 @@ impl Extend<char> for Counter {
 #[test]
 fn many0_into_custom_extend_type() {
   let mut parser = char('a').many0_into(Counter { count: 0 });
-  let mut input = StrInput::new("aaab");
+  let mut input = StrInputStream::new("aaab");
 
   let result = parser.parse_next(&mut input);
 
@@ -138,7 +138,7 @@ fn many0_into_custom_extend_type() {
 #[test]
 fn sep_by0_into_custom_extend_type() {
   let mut parser = char('a').sep_by0_into(char(','), Counter { count: 0 });
-  let mut input = StrInput::new("a,a,a!");
+  let mut input = StrInputStream::new("a,a,a!");
 
   let result = parser.parse_next(&mut input);
 

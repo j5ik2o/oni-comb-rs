@@ -1,5 +1,5 @@
 use oni_comb_parser::fail::Fail;
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
@@ -7,7 +7,7 @@ use oni_comb_parser::prelude::*;
 #[test]
 fn many1_collects_one_element() {
   let mut parser = char('a').many1();
-  let mut input = StrInput::new("ab");
+  let mut input = StrInputStream::new("ab");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), vec!['a']);
   assert_eq!(input.offset(), 1);
@@ -16,7 +16,7 @@ fn many1_collects_one_element() {
 #[test]
 fn many1_collects_multiple_elements() {
   let mut parser = char('a').many1();
-  let mut input = StrInput::new("aaab");
+  let mut input = StrInputStream::new("aaab");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), vec!['a', 'a', 'a']);
   assert_eq!(input.offset(), 3);
@@ -25,7 +25,7 @@ fn many1_collects_multiple_elements() {
 #[test]
 fn many1_fails_on_zero_elements() {
   let mut parser = char('a').many1();
-  let mut input = StrInput::new("bbb");
+  let mut input = StrInputStream::new("bbb");
 
   assert!(matches!(parser.parse_next(&mut input), Err(Fail::Backtrack(_))));
   assert_eq!(input.offset(), 0);
@@ -34,7 +34,7 @@ fn many1_fails_on_zero_elements() {
 #[test]
 fn many1_propagates_cut() {
   let mut parser = char('a').cut().many1();
-  let mut input = StrInput::new("bbb");
+  let mut input = StrInputStream::new("bbb");
 
   assert!(matches!(parser.parse_next(&mut input), Err(Fail::Cut(_))));
 }
@@ -42,7 +42,7 @@ fn many1_propagates_cut() {
 #[test]
 fn many1_with_tag() {
   let mut parser = tag("ab").many1();
-  let mut input = StrInput::new("ababc");
+  let mut input = StrInputStream::new("ababc");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), vec!["ab", "ab"]);
   assert_eq!(input.offset(), 4);

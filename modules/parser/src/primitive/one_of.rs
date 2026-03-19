@@ -2,22 +2,22 @@ use core::marker::PhantomData;
 
 use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
-pub struct OneOf<'s, I: Input> {
+pub struct OneOf<'s, I: InputStream> {
   set: &'s [I::Token],
   _marker: PhantomData<fn(&mut I)>,
 }
 
-pub fn one_of<'s, I: Input>(set: &'s [I::Token]) -> OneOf<'s, I> {
+pub fn one_of<'s, I: InputStream>(set: &'s [I::Token]) -> OneOf<'s, I> {
   OneOf {
     set,
     _marker: PhantomData,
   }
 }
 
-impl<'s, I: Input> Parser<I> for OneOf<'s, I> {
+impl<'s, I: InputStream> Parser<I> for OneOf<'s, I> {
   type Error = I::Error;
   type Output = I::Token;
 

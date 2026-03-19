@@ -2,18 +2,18 @@ use core::marker::PhantomData;
 
 use crate::error::ExpectError;
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
 /// Input 型とタグスライス型の関係を定義するトレイト。
 /// StrInput と &str、ByteInput と &[u8] のペアで実装される。
-pub trait InputSeq<'a, T: ?Sized>: Input {
+pub trait InputSeq<'a, T: ?Sized>: InputStream {
   fn starts_with(&self, tag: &T) -> bool;
   fn advance_by(&mut self, tag: &T);
   fn tag_to_expected(tag: &'static T) -> crate::error::Expected;
 }
 
-impl<'a> InputSeq<'a, str> for crate::str_input::StrInput<'a> {
+impl<'a> InputSeq<'a, str> for crate::str_input_stream::StrInputStream<'a> {
   #[inline]
   fn starts_with(&self, tag: &str) -> bool {
     self.remaining().starts_with(tag)
@@ -30,7 +30,7 @@ impl<'a> InputSeq<'a, str> for crate::str_input::StrInput<'a> {
   }
 }
 
-impl<'a> InputSeq<'a, [u8]> for crate::byte_input::ByteInput<'a> {
+impl<'a> InputSeq<'a, [u8]> for crate::byte_input_stream::ByteInputStream<'a> {
   #[inline]
   fn starts_with(&self, tag: &[u8]) -> bool {
     self.remaining().starts_with(tag)

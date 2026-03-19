@@ -4,15 +4,15 @@
 //! 配列・オブジェクトの値にネストした配列・オブジェクトは含まない。
 
 use oni_comb_parser::error::ParseError;
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
 
 /// 空白をスキップするトークンラッパー
-fn ws<P>(p: P) -> impl Parser<StrInput<'static>, Output = P::Output, Error = ParseError>
+fn ws<P>(p: P) -> impl Parser<StrInputStream<'static>, Output = P::Output, Error = ParseError>
 where
-  P: Parser<StrInput<'static>, Error = ParseError>, {
+  P: Parser<StrInputStream<'static>, Error = ParseError>, {
   whitespace0().zip_right(p).zip_left(whitespace0())
 }
 
@@ -28,7 +28,7 @@ enum JsonValue {
 }
 
 /// プリミティブ値パーサー (null | bool | int | string)
-fn json_primitive() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
+fn json_primitive() -> impl Parser<StrInputStream<'static>, Output = JsonValue, Error = ParseError> {
   let null = tag("null").map(|_| JsonValue::Null);
   let bool_true = tag("true").map(|_| JsonValue::Bool(true));
   let bool_false = tag("false").map(|_| JsonValue::Bool(false));
@@ -39,7 +39,7 @@ fn json_primitive() -> impl Parser<StrInput<'static>, Output = JsonValue, Error 
 }
 
 /// 配列パーサー (値はプリミティブのみ)
-fn json_array() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
+fn json_array() -> impl Parser<StrInputStream<'static>, Output = JsonValue, Error = ParseError> {
   ws(char('['))
     .zip_right(ws(json_primitive()).sep_by0(ws(char(','))))
     .zip_left(ws(char(']')))
@@ -47,7 +47,7 @@ fn json_array() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = Pa
 }
 
 /// オブジェクトパーサー (値はプリミティブのみ)
-fn json_object() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
+fn json_object() -> impl Parser<StrInputStream<'static>, Output = JsonValue, Error = ParseError> {
   let pair = ws(quoted_string())
     .map(|s| s.into_owned())
     .zip_left(ws(char(':')))
@@ -60,7 +60,7 @@ fn json_object() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = P
 }
 
 /// トップレベルの JSON 値パーサー (1 段ネスト)
-fn json_value() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
+fn json_value() -> impl Parser<StrInputStream<'static>, Output = JsonValue, Error = ParseError> {
   json_primitive().or(json_array()).or(json_object())
 }
 
@@ -68,37 +68,37 @@ fn json_value() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = Pa
 
 #[test]
 fn parse_null() {
-  let mut input = StrInput::new("null");
+  let mut input = StrInputStream::new("null");
   assert_eq!(json_value().parse_next(&mut input).unwrap(), JsonValue::Null);
 }
 
 #[test]
 fn parse_true() {
-  let mut input = StrInput::new("true");
+  let mut input = StrInputStream::new("true");
   assert_eq!(json_value().parse_next(&mut input).unwrap(), JsonValue::Bool(true));
 }
 
 #[test]
 fn parse_false() {
-  let mut input = StrInput::new("false");
+  let mut input = StrInputStream::new("false");
   assert_eq!(json_value().parse_next(&mut input).unwrap(), JsonValue::Bool(false));
 }
 
 #[test]
 fn parse_integer() {
-  let mut input = StrInput::new("42");
+  let mut input = StrInputStream::new("42");
   assert_eq!(json_value().parse_next(&mut input).unwrap(), JsonValue::Int(42));
 }
 
 #[test]
 fn parse_negative_integer() {
-  let mut input = StrInput::new("-7");
+  let mut input = StrInputStream::new("-7");
   assert_eq!(json_value().parse_next(&mut input).unwrap(), JsonValue::Int(-7));
 }
 
 #[test]
 fn parse_string() {
-  let mut input = StrInput::new("\"hello\"");
+  let mut input = StrInputStream::new("\"hello\"");
   assert_eq!(
     json_value().parse_next(&mut input).unwrap(),
     JsonValue::Str("hello".to_string())
@@ -107,7 +107,7 @@ fn parse_string() {
 
 #[test]
 fn parse_string_with_escapes() {
-  let mut input = StrInput::new(r#""hello\nworld""#);
+  let mut input = StrInputStream::new(r#""hello\nworld""#);
   assert_eq!(
     json_value().parse_next(&mut input).unwrap(),
     JsonValue::Str("hello\nworld".to_string())
@@ -116,13 +116,13 @@ fn parse_string_with_escapes() {
 
 #[test]
 fn parse_empty_array() {
-  let mut input = StrInput::new("[]");
+  let mut input = StrInputStream::new("[]");
   assert_eq!(json_value().parse_next(&mut input).unwrap(), JsonValue::Array(vec![]));
 }
 
 #[test]
 fn parse_array_of_ints() {
-  let mut input = StrInput::new("[1, 2, 3]");
+  let mut input = StrInputStream::new("[1, 2, 3]");
   assert_eq!(
     json_value().parse_next(&mut input).unwrap(),
     JsonValue::Array(vec![JsonValue::Int(1), JsonValue::Int(2), JsonValue::Int(3),])
@@ -131,7 +131,7 @@ fn parse_array_of_ints() {
 
 #[test]
 fn parse_array_of_mixed() {
-  let mut input = StrInput::new(r#"[1, "two", true, null]"#);
+  let mut input = StrInputStream::new(r#"[1, "two", true, null]"#);
   assert_eq!(
     json_value().parse_next(&mut input).unwrap(),
     JsonValue::Array(vec![
@@ -145,13 +145,13 @@ fn parse_array_of_mixed() {
 
 #[test]
 fn parse_empty_object() {
-  let mut input = StrInput::new("{}");
+  let mut input = StrInputStream::new("{}");
   assert_eq!(json_value().parse_next(&mut input).unwrap(), JsonValue::Object(vec![]));
 }
 
 #[test]
 fn parse_object() {
-  let mut input = StrInput::new(r#"{"name": "oni-comb", "version": 2, "active": true}"#);
+  let mut input = StrInputStream::new(r#"{"name": "oni-comb", "version": 2, "active": true}"#);
   assert_eq!(
     json_value().parse_next(&mut input).unwrap(),
     JsonValue::Object(vec![
@@ -168,7 +168,7 @@ fn parse_object_with_whitespace() {
         "key" : "value" ,
         "num" : 42
     }"#;
-  let mut input = StrInput::new(input_str);
+  let mut input = StrInputStream::new(input_str);
   assert_eq!(
     json_value().parse_next(&mut input).unwrap(),
     JsonValue::Object(vec![
@@ -180,7 +180,7 @@ fn parse_object_with_whitespace() {
 
 #[test]
 fn parse_consumes_correct_amount() {
-  let mut input = StrInput::new("[1, 2] rest");
+  let mut input = StrInputStream::new("[1, 2] rest");
   let result = json_value().parse_next(&mut input).unwrap();
   assert_eq!(result, JsonValue::Array(vec![JsonValue::Int(1), JsonValue::Int(2)]));
   assert_eq!(input.remaining(), "rest");

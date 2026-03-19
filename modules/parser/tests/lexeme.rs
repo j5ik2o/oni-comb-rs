@@ -1,11 +1,11 @@
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::prelude::*;
 
 #[test]
 fn lexeme_consumes_trailing_whitespace() {
   let mut parser = lexeme(tag("hello"));
-  let mut input = StrInput::new("hello   world");
+  let mut input = StrInputStream::new("hello   world");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "hello");
   assert_eq!(input.offset(), 8); // "hello" + "   "
@@ -15,7 +15,7 @@ fn lexeme_consumes_trailing_whitespace() {
 #[test]
 fn lexeme_works_without_trailing_whitespace() {
   let mut parser = lexeme(tag("hello"));
-  let mut input = StrInput::new("helloworld");
+  let mut input = StrInputStream::new("helloworld");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "hello");
   assert_eq!(input.offset(), 5);
@@ -24,7 +24,7 @@ fn lexeme_works_without_trailing_whitespace() {
 #[test]
 fn lexeme_with_integer() {
   let mut parser = lexeme(integer());
-  let mut input = StrInput::new("42  +");
+  let mut input = StrInputStream::new("42  +");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), 42);
   assert_eq!(input.remaining(), "+");
@@ -34,7 +34,7 @@ fn lexeme_with_integer() {
 fn lexeme_chain_for_tokens() {
   // "1 + 2" をトークンとしてパース
   let mut parser = lexeme(integer()).zip_left(lexeme(char('+'))).zip(lexeme(integer()));
-  let mut input = StrInput::new("1 + 2");
+  let mut input = StrInputStream::new("1 + 2");
 
   let (a, b) = parser.parse_next(&mut input).unwrap();
   assert_eq!(a, 1);
@@ -44,7 +44,7 @@ fn lexeme_chain_for_tokens() {
 #[test]
 fn lexeme_with_tabs_and_newlines() {
   let mut parser = lexeme(tag("key"));
-  let mut input = StrInput::new("key\t\n  value");
+  let mut input = StrInputStream::new("key\t\n  value");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "key");
   assert_eq!(input.remaining(), "value");

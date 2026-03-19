@@ -21,14 +21,14 @@ use context::ParseContext;
 
 /// Parse a single YAML document.
 pub fn parse(src: &str) -> Result<YamlValue, ParseError> {
-  let mut input = StrInput::new(src);
+  let mut input = StrInputStream::new(src);
   let mut ctx = ParseContext::new();
   document::yaml_document(&mut input, &mut ctx).map_err(|e| fail_to_error(e).fill_location_from_src(src))
 }
 
 /// Parse multiple YAML documents from a single input.
 pub fn parse_documents(src: &str) -> Result<Vec<YamlValue>, ParseError> {
-  let mut input = StrInput::new(src);
+  let mut input = StrInputStream::new(src);
   let mut ctx = ParseContext::new();
   document::yaml_documents(&mut input, &mut ctx).map_err(|e| fail_to_error(e).fill_location_from_src(src))
 }

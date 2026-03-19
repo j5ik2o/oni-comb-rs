@@ -2,7 +2,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
 pub struct SepBy0<P, S> {
@@ -12,7 +12,7 @@ pub struct SepBy0<P, S> {
 
 impl<I, P, S> Parser<I> for SepBy0<P, S>
 where
-  I: Input,
+  I: InputStream,
   P: Parser<I>,
   S: Parser<I, Error = P::Error>,
 {
@@ -66,7 +66,7 @@ pub struct SepBy1<P, S> {
 
 impl<I, P, S> Parser<I> for SepBy1<P, S>
 where
-  I: Input,
+  I: InputStream,
   P: Parser<I>,
   S: Parser<I, Error = P::Error>,
 {

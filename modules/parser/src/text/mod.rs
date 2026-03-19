@@ -17,9 +17,9 @@ pub mod whitespace;
 pub mod eof {
   pub use crate::primitive::eof::{eof, Eof};
 
-  use crate::str_input::StrInput;
+  use crate::str_input_stream::StrInputStream;
 
-  pub fn str_eof<'a>() -> Eof<StrInput<'a>> {
+  pub fn str_eof<'a>() -> Eof<StrInputStream<'a>> {
     eof()
   }
 }
@@ -27,9 +27,9 @@ pub mod eof {
 pub mod satisfy {
   pub use crate::primitive::satisfy::{satisfy, Satisfy};
 
-  use crate::str_input::StrInput;
+  use crate::str_input_stream::StrInputStream;
 
-  pub fn str_satisfy<'a, F: FnMut(char) -> bool>(f: F) -> Satisfy<F, StrInput<'a>> {
+  pub fn str_satisfy<'a, F: FnMut(char) -> bool>(f: F) -> Satisfy<F, StrInputStream<'a>> {
     satisfy(f)
   }
 }

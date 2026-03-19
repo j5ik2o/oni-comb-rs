@@ -11,7 +11,7 @@ A parser-monad combinator library for Rust. The core crate of [oni-comb-rs](../.
 - **Zero-cost combinator composition** — Applicative combinators are concrete types on the stack, zero heap allocation
 - **Backtrack / Cut error control** — `or` recovers from `Backtrack`; `Cut` propagates. `attempt` / `cut` to control
 - **Structured errors** — `ParseError` with position, expected tokens, and `.context()` labels
-- **Generic Input trait** — `StrInput<'a>` for `&str`, `ByteInput<'a>` for `&[u8]`
+- **Generic InputStream trait** — `StrInputStream<'a>` for `&str`, `ByteInputStream<'a>` for `&[u8]`
 - **`no_std` support** — `#![no_std]` with `alloc`
 
 ## Performance
@@ -29,11 +29,11 @@ use oni_comb_parser::prelude::*;
 
 // Match 'a' or 'b'
 let mut parser = char('a').or(char('b'));
-let mut input = StrInput::new("b");
+let mut input = StrInputStream::new("b");
 assert_eq!(parser.parse_next(&mut input).unwrap(), 'b');
 
 // Identifier: letter/_ followed by alphanumeric/_
-let mut input = StrInput::new("foo_123");
+let mut input = StrInputStream::new("foo_123");
 let (head, tail) = satisfy(|c: char| c.is_ascii_alphabetic() || c == '_')
     .zip(take_while0(|c: char| c.is_ascii_alphanumeric() || c == '_'))
     .parse_next(&mut input)
@@ -44,7 +44,7 @@ assert_eq!(tail, "oo_123");
 // Integer
 let mut int_parser = take_while1(|c: char| c.is_ascii_digit())
     .map(|s: &str| s.parse::<u64>().unwrap());
-let mut input = StrInput::new("42");
+let mut input = StrInputStream::new("42");
 assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 ```
 
@@ -97,8 +97,8 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 
 | Type | Token | Slice | Use Case |
 |------|-------|-------|----------|
-| `StrInput<'a>` | `char` | `&'a str` | Text parsing (default) |
-| `ByteInput<'a>` | `u8` | `&'a [u8]` | Binary protocol parsing |
+| `StrInputStream<'a>` | `char` | `&'a str` | Text parsing (default) |
+| `ByteInputStream<'a>` | `u8` | `&'a [u8]` | Binary protocol parsing |
 
 ## Build & Test
 

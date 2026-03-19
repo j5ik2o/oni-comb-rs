@@ -13,10 +13,10 @@ use crate::parsers::scheme::scheme;
 
 // hier-part = "//" authority path-abempty / path-absolute / path-rootless / path-empty
 // URI = scheme ":" hier-part [ "?" query ] [ "#" fragment ]
-fn uri_parser<'a>() -> impl Parser<StrInput<'a>, Output = Uri<'a>, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'a>| {
+fn uri_parser<'a>() -> impl Parser<StrInputStream<'a>, Output = Uri<'a>, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'a>| {
     // scheme ":" (optional: attempt to parse scheme + colon)
-    let s = fn_parser(|input: &mut StrInput<'a>| {
+    let s = fn_parser(|input: &mut StrInputStream<'a>| {
       let s = scheme().parse_next(input)?;
       tag(":").parse_next(input)?;
       Ok(s)
@@ -74,6 +74,6 @@ fn uri_parser<'a>() -> impl Parser<StrInput<'a>, Output = Uri<'a>, Error = Parse
 
 pub fn parse_uri(input: &str) -> Result<Uri<'_>, String> {
   let mut parser = uri_parser().zip_left(eof());
-  let mut str_input = StrInput::new(input);
+  let mut str_input = StrInputStream::new(input);
   parser.parse_next(&mut str_input).map_err(|e| format!("{:?}", e))
 }

@@ -7,9 +7,9 @@ use regex_automata::{Anchored, Input as ReInput};
 
 use crate::error::{ExpectError, Expected, ParseError};
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
-use crate::str_input::StrInput;
+use crate::str_input_stream::StrInputStream;
 
 /// Error returned when a regex pattern fails to compile.
 #[derive(Debug)]
@@ -69,12 +69,12 @@ pub fn regex(pattern: &str) -> Result<RegexParser, RegexBuildError> {
   Ok(RegexParser { re })
 }
 
-impl<'a> Parser<StrInput<'a>> for RegexParser {
+impl<'a> Parser<StrInputStream<'a>> for RegexParser {
   type Error = ParseError;
   type Output = &'a str;
 
   #[inline]
-  fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<&'a str, ParseError> {
+  fn parse_next(&mut self, input: &mut StrInputStream<'a>) -> PResult<&'a str, ParseError> {
     let pos = input.offset();
     let remaining = input.remaining();
     let re_input = ReInput::new(remaining).anchored(Anchored::Yes);

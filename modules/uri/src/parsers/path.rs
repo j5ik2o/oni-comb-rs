@@ -1,5 +1,5 @@
 use oni_comb_parser::error::{ExpectError, Expected, ParseError};
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
@@ -8,8 +8,8 @@ use crate::models::path::Path;
 use crate::parsers::common::pchar;
 
 // segment = *pchar
-fn segment<'a>() -> impl Parser<StrInput<'a>, Output = &'a str, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'a>| {
+fn segment<'a>() -> impl Parser<StrInputStream<'a>, Output = &'a str, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'a>| {
     let cp = input.checkpoint();
     while pchar().attempt().parse_next(input).is_ok() {}
     Ok(input.slice_since(cp))
@@ -17,8 +17,8 @@ fn segment<'a>() -> impl Parser<StrInput<'a>, Output = &'a str, Error = ParseErr
 }
 
 // segment-nz = 1*pchar
-fn segment_nz<'a>() -> impl Parser<StrInput<'a>, Output = &'a str, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'a>| {
+fn segment_nz<'a>() -> impl Parser<StrInputStream<'a>, Output = &'a str, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'a>| {
     let cp = input.checkpoint();
     let _pos = input.offset();
     pchar().parse_next(input)?;
@@ -28,11 +28,11 @@ fn segment_nz<'a>() -> impl Parser<StrInput<'a>, Output = &'a str, Error = Parse
 }
 
 // segment-nz-nc = 1*( unreserved / pct-encoded / sub-delims / "@" ) — no ":"
-fn segment_nz_nc<'a>() -> impl Parser<StrInput<'a>, Output = &'a str, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'a>| {
+fn segment_nz_nc<'a>() -> impl Parser<StrInputStream<'a>, Output = &'a str, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'a>| {
     let cp = input.checkpoint();
     let pos = input.offset();
-    let ok = |input: &mut StrInput<'a>| -> bool {
+    let ok = |input: &mut StrInputStream<'a>| -> bool {
       if crate::parsers::common::pct_encoded()
         .attempt()
         .parse_next(input)
@@ -63,8 +63,8 @@ fn segment_nz_nc<'a>() -> impl Parser<StrInput<'a>, Output = &'a str, Error = Pa
 }
 
 // path-abempty = *( "/" segment )
-pub fn path_abempty<'a>() -> impl Parser<StrInput<'a>, Output = Path<'a>, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'a>| {
+pub fn path_abempty<'a>() -> impl Parser<StrInputStream<'a>, Output = Path<'a>, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'a>| {
     let mut segs = Vec::new();
     while tag("/").attempt().parse_next(input).is_ok() {
       let seg = segment().parse_next(input)?;
@@ -79,8 +79,8 @@ pub fn path_abempty<'a>() -> impl Parser<StrInput<'a>, Output = Path<'a>, Error 
 }
 
 // path-absolute = "/" [ segment-nz *( "/" segment ) ]
-pub fn path_absolute<'a>() -> impl Parser<StrInput<'a>, Output = Path<'a>, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'a>| {
+pub fn path_absolute<'a>() -> impl Parser<StrInputStream<'a>, Output = Path<'a>, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'a>| {
     tag("/").parse_next(input)?;
     let mut segs = Vec::new();
     if let Ok(first) = segment_nz().attempt().parse_next(input) {
@@ -95,8 +95,8 @@ pub fn path_absolute<'a>() -> impl Parser<StrInput<'a>, Output = Path<'a>, Error
 }
 
 // path-rootless = segment-nz *( "/" segment )
-pub fn path_rootless<'a>() -> impl Parser<StrInput<'a>, Output = Path<'a>, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'a>| {
+pub fn path_rootless<'a>() -> impl Parser<StrInputStream<'a>, Output = Path<'a>, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'a>| {
     let first = segment_nz().parse_next(input)?;
     let mut segs = vec![first];
     while tag("/").attempt().parse_next(input).is_ok() {
@@ -108,8 +108,8 @@ pub fn path_rootless<'a>() -> impl Parser<StrInput<'a>, Output = Path<'a>, Error
 }
 
 // path-noscheme = segment-nz-nc *( "/" segment )
-pub fn path_noscheme<'a>() -> impl Parser<StrInput<'a>, Output = Path<'a>, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'a>| {
+pub fn path_noscheme<'a>() -> impl Parser<StrInputStream<'a>, Output = Path<'a>, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'a>| {
     let first = segment_nz_nc().parse_next(input)?;
     let mut segs = vec![first];
     while tag("/").attempt().parse_next(input).is_ok() {

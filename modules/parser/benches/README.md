@@ -179,7 +179,8 @@ Same-machine rerun on March 18, 2026 using the same 107KB JSON file (100 samples
 - Leading-byte dispatch via `peek_byte` (eliminates `or` chain linear scanning)
 - Zero-copy strings via `quoted_string` (unescaped strings use `&str` slices)
 - Zero-copy number parsing via `take_while1`
-- ASCII fast-path token access in `StrInput`
+- ASCII fast-path token access in `StrInputStream`
+
 - Consume-then-reset generic primitives (`satisfy` / `take_while*` / `one_of` / `none_of`) that avoid `peek_token()` + `next_token()` double decoding
 
 ### Heap Allocation Measurement (dhat-rs)
@@ -258,9 +259,9 @@ The tables below are historical snapshots captured during earlier optimization s
 1. **`recursive()` is still heavy**: A single integer in the arithmetic benchmark takes ~151ns (`fn_parser` would be ~3ns). The vtable cost remains for cases where `recursive()` is needed (when `fn` recursion isn't structurally feasible).
 2. **`flat_map` is still costlier than the best parsers**: same-type branches improved to 5.7 / 5.5 / 4.1ns, but still trail winnow and nom; heterogeneous boxed branches are now near winnow, but nom remains far ahead.
 
-### Generic Input Refactoring Effect (Input trait generification)
+### Generic InputStream Refactoring Effect (InputStream trait generification)
 
-Introduced `Token`/`Slice` associated types to `Input` trait and moved `satisfy`, `take_while0/1`, `take`, `take_while_n_m`, `eof` to generic `primitive/` module. Also added `ByteInput<'a>` for `&[u8]` parsing.
+Introduced `Token`/`Slice` associated types to `InputStream` trait and moved `satisfy`, `take_while0/1`, `take`, `take_while_n_m`, `eof` to generic `primitive/` module. Also added `ByteInputStream<'a>` for `&[u8]` parsing.
 
 **Impact on token-level parsers using generic primitives (`satisfy` + `take_while0`):**
 
@@ -274,9 +275,9 @@ Introduced `Token`/`Slice` associated types to `Input` trait and moved `satisfy`
 | integer `"42"` (2B) | 3.6 ns | 8.8 ns | +144% | Per-token overhead |
 | integer `"9999999"` (7B) | 8.2 ns | 20.3 ns | +148% | Per-token overhead |
 
-**Root cause**: The old `text/` implementations iterated `remaining.chars()` once and called `advance(consumed)` at the end. The generic `primitive/` implementations call `peek_token()` + `next_token()` per token, each of which recomputes `&self.src[self.offset..]` and calls `.chars().next()`. This is the cost of genericity — the `Input` trait cannot expose a batch character iterator.
+**Root cause**: The old `text/` implementations iterated `remaining.chars()` once and called `advance(consumed)` at the end. The generic `primitive/` implementations call `peek_token()` + `next_token()` per token, each of which recomputes `&self.src[self.offset..]` and calls `.chars().next()`. This is the cost of genericity — the `InputStream` trait cannot expose a batch character iterator.
 
-**Later recovery (March 18, 2026 fast-path pass)**: the generic path now avoids most of that regression for ASCII-heavy inputs by adding an ASCII fast path to `StrInput` and switching generic primitives from `peek_token()` + `next_token()` to `next_token()` + `reset()` on mismatch. Current means are now much closer to the old text-specific implementations: identifier `"foo_bar_123"` is 18.6ns and integer `"184467...615"` is 20.0ns.
+**Later recovery (March 18, 2026 fast-path pass)**: the generic path now avoids most of that regression for ASCII-heavy inputs by adding an ASCII fast path to `StrInputStream` and switching generic primitives from `peek_token()` + `next_token()` to `next_token()` + `reset()` on mismatch. Current means are now much closer to the old text-specific implementations: identifier `"foo_bar_123"` is 18.6ns and integer `"184467...615"` is 20.0ns.
 
 **Unaffected workloads** (use `as_str().chars()` directly or `fn_parser`):
 

@@ -9,7 +9,7 @@ use oni_comb_parser::prelude::*;
 #[test]
 fn error_position_at_start() {
   let mut parser = char('a');
-  let mut input = StrInput::new("xyz");
+  let mut input = StrInputStream::new("xyz");
 
   match parser.parse_next(&mut input) {
     Err(Fail::Backtrack(e)) => {
@@ -23,7 +23,7 @@ fn error_position_at_start() {
 #[test]
 fn error_position_after_consumed() {
   let mut parser = tag("ab").zip(char('c'));
-  let mut input = StrInput::new("abx");
+  let mut input = StrInputStream::new("abx");
 
   match parser.parse_next(&mut input) {
     Err(Fail::Backtrack(e)) => {
@@ -39,7 +39,7 @@ fn error_position_after_consumed() {
 #[test]
 fn or_merges_expected_at_same_position() {
   let mut parser = char('a').or(char('b')).or(char('c'));
-  let mut input = StrInput::new("x");
+  let mut input = StrInputStream::new("x");
 
   match parser.parse_next(&mut input) {
     Err(Fail::Backtrack(e)) => {
@@ -58,7 +58,7 @@ fn or_keeps_deeper_position() {
   // tag("cd") fails at position 0
   // merged result should keep position 1 (deeper)
   let mut parser = tag("ab").attempt().or(tag("cd"));
-  let mut input = StrInput::new("ax");
+  let mut input = StrInputStream::new("ax");
 
   match parser.parse_next(&mut input) {
     Err(Fail::Backtrack(e)) => {
@@ -76,7 +76,7 @@ fn or_keeps_deeper_position() {
 #[test]
 fn context_adds_label_to_backtrack() {
   let mut parser = char('a').context("my_rule");
-  let mut input = StrInput::new("x");
+  let mut input = StrInputStream::new("x");
 
   match parser.parse_next(&mut input) {
     Err(Fail::Backtrack(e)) => {
@@ -89,7 +89,7 @@ fn context_adds_label_to_backtrack() {
 #[test]
 fn context_adds_label_to_cut() {
   let mut parser = char('a').cut().context("my_rule");
-  let mut input = StrInput::new("x");
+  let mut input = StrInputStream::new("x");
 
   match parser.parse_next(&mut input) {
     Err(Fail::Cut(e)) => {
@@ -104,7 +104,7 @@ fn nested_context_stacks() {
   let inner = char('a').context("inner");
   let outer = inner.context("outer");
   let mut parser = outer;
-  let mut input = StrInput::new("x");
+  let mut input = StrInputStream::new("x");
 
   match parser.parse_next(&mut input) {
     Err(Fail::Backtrack(e)) => {
@@ -117,7 +117,7 @@ fn nested_context_stacks() {
 #[test]
 fn context_does_not_affect_success() {
   let mut parser = char('a').context("my_rule");
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), 'a');
 }

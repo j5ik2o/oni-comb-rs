@@ -2,9 +2,9 @@
 use alloc::boxed::Box;
 
 use crate::fail::PResult;
-use crate::input::Input;
+use crate::input_stream::InputStream;
 
-pub trait Parser<I: Input> {
+pub trait Parser<I: InputStream> {
   type Output;
   type Error;
 
@@ -12,7 +12,7 @@ pub trait Parser<I: Input> {
 }
 
 #[cfg(feature = "alloc")]
-impl<I: Input, P: Parser<I> + ?Sized> Parser<I> for Box<P> {
+impl<I: InputStream, P: Parser<I> + ?Sized> Parser<I> for Box<P> {
   type Error = P::Error;
   type Output = P::Output;
 

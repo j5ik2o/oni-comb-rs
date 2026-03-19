@@ -1,8 +1,8 @@
 use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
-use crate::str_input::StrInput;
+use crate::str_input_stream::StrInputStream;
 
 pub struct Float;
 
@@ -15,12 +15,12 @@ pub fn float() -> Float {
 /// int    = "0" | ( digit1-9 *digit )
 /// frac   = "." 1*digit
 /// exp    = ("e" | "E") ["+" | "-"] 1*digit
-impl<'a> Parser<StrInput<'a>> for Float {
-  type Error = <StrInput<'a> as Input>::Error;
+impl<'a> Parser<StrInputStream<'a>> for Float {
+  type Error = <StrInputStream<'a> as InputStream>::Error;
   type Output = f64;
 
   #[inline]
-  fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<f64, Self::Error> {
+  fn parse_next(&mut self, input: &mut StrInputStream<'a>) -> PResult<f64, Self::Error> {
     let pos = input.offset();
     let remaining = input.as_str();
     let bytes = remaining.as_bytes();

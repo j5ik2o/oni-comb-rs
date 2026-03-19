@@ -14,19 +14,19 @@ use crate::combinator::zip::Zip;
 use crate::combinator::zip_left::ZipLeft;
 use crate::combinator::zip_right::ZipRight;
 use crate::error::{ExpectError, MergeError};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
 /// 演算子オーバーロードを有効にするラッパー型。
-pub struct Ops<P, I: Input>(pub P, PhantomData<fn(&mut I)>);
+pub struct Ops<P, I: InputStream>(pub P, PhantomData<fn(&mut I)>);
 
-impl<P, I: Input> Ops<P, I> {
+impl<P, I: InputStream> Ops<P, I> {
   pub fn new(parser: P) -> Self {
     Ops(parser, PhantomData)
   }
 }
 
-impl<I: Input, P: Parser<I>> Parser<I> for Ops<P, I> {
+impl<I: InputStream, P: Parser<I>> Parser<I> for Ops<P, I> {
   type Error = P::Error;
   type Output = P::Output;
 
@@ -39,7 +39,7 @@ impl<I: Input, P: Parser<I>> Parser<I> for Ops<P, I> {
 // Add: Ops<P1> + Ops<P2> → Ops<Zip<P1, P2>>
 impl<I, P1, P2> ops::Add<Ops<P2, I>> for Ops<P1, I>
 where
-  I: Input,
+  I: InputStream,
   P1: Parser<I>,
   P2: Parser<I, Error = P1::Error>,
 {
@@ -56,7 +56,7 @@ where
 // Sub: Ops<P1> - Ops<P2> → Ops<ZipLeft<P1, P2>>
 impl<I, P1, P2> ops::Sub<Ops<P2, I>> for Ops<P1, I>
 where
-  I: Input,
+  I: InputStream,
   P1: Parser<I>,
   P2: Parser<I, Error = P1::Error>,
 {
@@ -73,7 +73,7 @@ where
 // Mul: Ops<P1> * Ops<P2> → Ops<ZipRight<P1, P2>>
 impl<I, P1, P2> ops::Mul<Ops<P2, I>> for Ops<P1, I>
 where
-  I: Input,
+  I: InputStream,
   P1: Parser<I>,
   P2: Parser<I, Error = P1::Error>,
 {
@@ -90,7 +90,7 @@ where
 // BitOr: Ops<P1> | Ops<P2> → Ops<Or<P1, P2>>
 impl<I, P1, P2> ops::BitOr<Ops<P2, I>> for Ops<P1, I>
 where
-  I: Input,
+  I: InputStream,
   P1: Parser<I>,
   P1::Error: MergeError,
   P2: Parser<I, Output = P1::Output, Error = P1::Error>,
@@ -108,7 +108,7 @@ where
 // Not: !Ops<P> → Ops<Not<P>>
 impl<I, P> ops::Not for Ops<P, I>
 where
-  I: Input,
+  I: InputStream,
   P: Parser<I>,
   P::Error: ExpectError,
 {
@@ -122,7 +122,7 @@ where
 // Neg: -Ops<P> → Ops<Peek<P>>
 impl<I, P> ops::Neg for Ops<P, I>
 where
-  I: Input,
+  I: InputStream,
   P: Parser<I>,
 {
   type Output = Ops<Peek<P>, I>;
@@ -135,7 +135,7 @@ where
 // Shr: Ops<P> >> F → Ops<FlatMap<P, F>>
 impl<I, P, F2, P2> ops::Shr<F2> for Ops<P, I>
 where
-  I: Input,
+  I: InputStream,
   P: Parser<I>,
   P2: Parser<I, Error = P::Error>,
   F2: FnMut(P::Output) -> P2,

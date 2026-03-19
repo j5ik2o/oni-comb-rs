@@ -1,14 +1,14 @@
 use std::borrow::Cow;
 
 use oni_comb_parser::fail::Fail;
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::prelude::*;
 
 #[test]
 fn empty_string() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new("\"\"");
+  let mut input = StrInputStream::new("\"\"");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "");
   assert_eq!(input.offset(), 2);
@@ -17,7 +17,7 @@ fn empty_string() {
 #[test]
 fn simple_string() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new("\"hello\"");
+  let mut input = StrInputStream::new("\"hello\"");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "hello");
 }
@@ -25,7 +25,7 @@ fn simple_string() {
 #[test]
 fn simple_string_is_borrowed() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new("\"hello\"");
+  let mut input = StrInputStream::new("\"hello\"");
 
   assert!(matches!(parser.parse_next(&mut input).unwrap(), Cow::Borrowed("hello")));
 }
@@ -33,7 +33,7 @@ fn simple_string_is_borrowed() {
 #[test]
 fn string_with_remaining() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new("\"hello\" world");
+  let mut input = StrInputStream::new("\"hello\" world");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "hello");
   assert_eq!(input.offset(), 7);
@@ -44,7 +44,7 @@ fn string_with_remaining() {
 #[test]
 fn escape_quote() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new(r#""say \"hi\"""#);
+  let mut input = StrInputStream::new(r#""say \"hi\"""#);
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "say \"hi\"");
 }
@@ -52,7 +52,7 @@ fn escape_quote() {
 #[test]
 fn escaped_string_is_owned() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new(r#""say \"hi\"""#);
+  let mut input = StrInputStream::new(r#""say \"hi\"""#);
 
   assert!(matches!(
     parser.parse_next(&mut input).unwrap(),
@@ -63,7 +63,7 @@ fn escaped_string_is_owned() {
 #[test]
 fn escape_backslash() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new(r#""a\\b""#);
+  let mut input = StrInputStream::new(r#""a\\b""#);
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "a\\b");
 }
@@ -71,7 +71,7 @@ fn escape_backslash() {
 #[test]
 fn escape_slash() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new(r#""a\/b""#);
+  let mut input = StrInputStream::new(r#""a\/b""#);
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "a/b");
 }
@@ -79,7 +79,7 @@ fn escape_slash() {
 #[test]
 fn escape_newline_tab() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new(r#""a\n\tb""#);
+  let mut input = StrInputStream::new(r#""a\n\tb""#);
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "a\n\tb");
 }
@@ -87,7 +87,7 @@ fn escape_newline_tab() {
 #[test]
 fn escape_carriage_return() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new(r#""a\rb""#);
+  let mut input = StrInputStream::new(r#""a\rb""#);
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "a\rb");
 }
@@ -95,7 +95,7 @@ fn escape_carriage_return() {
 #[test]
 fn escape_backspace_formfeed() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new(r#""a\b\fb""#);
+  let mut input = StrInputStream::new(r#""a\b\fb""#);
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "a\u{0008}\u{000C}b");
 }
@@ -103,7 +103,7 @@ fn escape_backspace_formfeed() {
 #[test]
 fn escape_unicode() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new(r#""\u0041""#); // U+0041 = 'A'
+  let mut input = StrInputStream::new(r#""\u0041""#); // U+0041 = 'A'
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "A");
 }
@@ -111,7 +111,7 @@ fn escape_unicode() {
 #[test]
 fn escape_unicode_japanese() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new(r#""\u3042""#); // U+3042 = 'あ'
+  let mut input = StrInputStream::new(r#""\u3042""#); // U+3042 = 'あ'
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "あ");
 }
@@ -119,7 +119,7 @@ fn escape_unicode_japanese() {
 #[test]
 fn escape_unicode_mixed() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new(r#""hello\u0020world""#);
+  let mut input = StrInputStream::new(r#""hello\u0020world""#);
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "hello world");
 }
@@ -129,7 +129,7 @@ fn escape_unicode_mixed() {
 #[test]
 fn not_a_string() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new("hello");
+  let mut input = StrInputStream::new("hello");
 
   assert!(matches!(parser.parse_next(&mut input), Err(Fail::Backtrack(_))));
   assert_eq!(input.offset(), 0);
@@ -138,7 +138,7 @@ fn not_a_string() {
 #[test]
 fn unterminated_string_is_cut() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new("\"hello");
+  let mut input = StrInputStream::new("\"hello");
 
   assert!(matches!(parser.parse_next(&mut input), Err(Fail::Cut(_))));
 }
@@ -146,7 +146,7 @@ fn unterminated_string_is_cut() {
 #[test]
 fn invalid_escape_is_cut() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new(r#""\x""#);
+  let mut input = StrInputStream::new(r#""\x""#);
 
   assert!(matches!(parser.parse_next(&mut input), Err(Fail::Cut(_))));
 }
@@ -154,7 +154,7 @@ fn invalid_escape_is_cut() {
 #[test]
 fn incomplete_unicode_escape_is_cut() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new(r#""\u00""#);
+  let mut input = StrInputStream::new(r#""\u00""#);
 
   assert!(matches!(parser.parse_next(&mut input), Err(Fail::Cut(_))));
 }
@@ -162,7 +162,7 @@ fn incomplete_unicode_escape_is_cut() {
 #[test]
 fn surrogate_pair_emoji() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new(r#""\uD83D\uDE00""#);
+  let mut input = StrInputStream::new(r#""\uD83D\uDE00""#);
   let result = parser.parse_next(&mut input).unwrap();
   assert_eq!(result, Cow::<str>::Owned("😀".to_string()));
 }
@@ -170,7 +170,7 @@ fn surrogate_pair_emoji() {
 #[test]
 fn surrogate_pair_musical_symbol() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new(r#""\uD834\uDD1E""#);
+  let mut input = StrInputStream::new(r#""\uD834\uDD1E""#);
   let result = parser.parse_next(&mut input).unwrap();
   assert_eq!(result, Cow::<str>::Owned("𝄞".to_string()));
 }
@@ -178,13 +178,13 @@ fn surrogate_pair_musical_symbol() {
 #[test]
 fn lone_high_surrogate_is_error() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new(r#""\uD83D""#);
+  let mut input = StrInputStream::new(r#""\uD83D""#);
   assert!(matches!(parser.parse_next(&mut input), Err(Fail::Cut(_))));
 }
 
 #[test]
 fn lone_low_surrogate_is_error() {
   let mut parser = quoted_string();
-  let mut input = StrInput::new(r#""\uDE00""#);
+  let mut input = StrInputStream::new(r#""\uDE00""#);
   assert!(matches!(parser.parse_next(&mut input), Err(Fail::Cut(_))));
 }

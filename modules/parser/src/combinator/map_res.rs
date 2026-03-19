@@ -1,6 +1,6 @@
 use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
 pub struct MapRes<P, F> {
@@ -11,7 +11,7 @@ pub struct MapRes<P, F> {
 
 impl<I, P, F, O2, E2> Parser<I> for MapRes<P, F>
 where
-  I: Input,
+  I: InputStream,
   P: Parser<I>,
   P::Error: ExpectError,
   F: FnMut(P::Output) -> Result<O2, E2>,

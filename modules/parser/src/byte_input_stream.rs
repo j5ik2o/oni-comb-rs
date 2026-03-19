@@ -1,4 +1,4 @@
-use crate::input::Input;
+use crate::input_stream::InputStream;
 
 #[derive(Debug, Clone, Copy)]
 pub struct ByteCheckpoint {
@@ -28,7 +28,7 @@ impl Ord for ByteCheckpoint {
   }
 }
 
-pub struct ByteInput<'a> {
+pub struct ByteInputStream<'a> {
   src: &'a [u8],
   offset: usize,
   line: usize,
@@ -36,7 +36,7 @@ pub struct ByteInput<'a> {
   line_start: usize,
 }
 
-impl<'a> ByteInput<'a> {
+impl<'a> ByteInputStream<'a> {
   pub fn new(src: &'a [u8]) -> Self {
     Self {
       src,
@@ -72,7 +72,7 @@ impl<'a> ByteInput<'a> {
   }
 }
 
-impl<'a> Input for ByteInput<'a> {
+impl<'a> InputStream for ByteInputStream<'a> {
   type Checkpoint = ByteCheckpoint;
   #[cfg(feature = "alloc")]
   type Error = crate::error::ParseError;

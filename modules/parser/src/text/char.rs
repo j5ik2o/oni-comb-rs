@@ -1,8 +1,8 @@
 use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
-use crate::str_input::StrInput;
+use crate::str_input_stream::StrInputStream;
 
 pub struct Char(char);
 
@@ -10,12 +10,12 @@ pub fn char(c: char) -> Char {
   Char(c)
 }
 
-impl<'a> Parser<StrInput<'a>> for Char {
-  type Error = <StrInput<'a> as Input>::Error;
+impl<'a> Parser<StrInputStream<'a>> for Char {
+  type Error = <StrInputStream<'a> as InputStream>::Error;
   type Output = char;
 
   #[inline]
-  fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<Self::Output, Self::Error> {
+  fn parse_next(&mut self, input: &mut StrInputStream<'a>) -> PResult<Self::Output, Self::Error> {
     let pos = input.offset();
     let remaining = input.remaining();
     match remaining.chars().next() {

@@ -1,5 +1,5 @@
 use crate::fail::PResult;
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
 pub struct Collect<P> {
@@ -8,7 +8,7 @@ pub struct Collect<P> {
 
 impl<I, P> Parser<I> for Collect<P>
 where
-  I: Input,
+  I: InputStream,
   P: Parser<I>,
 {
   type Error = P::Error;

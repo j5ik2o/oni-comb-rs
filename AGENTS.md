@@ -30,8 +30,8 @@ Cargo workspace 構成。現在のメンバーは `parser` クレートのみ。
 ### コア型の階層
 
 ```
-Input (trait)          -- 入力ストリーム抽象。Checkpoint による巻き戻しを提供
-  └─ StrInput          -- &str 向け実装。Checkpoint = usize (byte offset)
+InputStream (trait)    -- 入力ストリーム抽象。Checkpoint による巻き戻しを提供
+  └─ StrInputStream    -- &str 向け実装。Checkpoint = usize (byte offset)
 
 Parser (trait)         -- parse_next(&mut self, &mut I) -> PResult<O, E>
   └─ ParserExt (trait) -- map/zip/zip_left/zip_right/or/attempt/cut/optional/many0/many1/sep_by0/sep_by1/chainl1/chainr1/flat_map/and_then のメソッドチェーン
@@ -44,8 +44,8 @@ PResult<T, E>          -- Result<T, Fail<E>>
 
 | モジュール | 役割 |
 |-----------|------|
-| `input.rs` | `Input` トレイト（`Checkpoint`, `Slice`, `reset`, `is_eof`） |
-| `str_input.rs` | `StrInput<'a>` — `&str` 向け `Input` 実装 |
+| `input_stream.rs` | `InputStream` トレイト（`Checkpoint`, `Slice`, `reset`, `is_eof`） |
+| `str_input_stream.rs` | `StrInputStream<'a>` — `&str` 向け `InputStream` 実装 |
 | `parser.rs` | `Parser<I>` トレイト（`Output`, `Error`, `parse_next`） |
 | `parser_ext.rs` | `ParserExt<I>` — 全 `Parser` に自動実装されるコンビネータメソッド |
 | `fail.rs` | `Fail<E>` enum と `PResult` 型エイリアス |
@@ -94,7 +94,7 @@ flat_map 再帰ではなく専用ループで実装する。
 
 | # | 名前 | 実装対象 | まだやらない | 完了条件 |
 |---|------|----------|-------------|---------|
-| 1 | Core | `Input`, `Span`, `Fail`, `PResult`, `Parser`, `ParserExt`, `StrInput` | regex, cache, bytes, recursive helper | `or/attempt/cut` の単体テストが通る |
+| 1 | Core | `InputStream`, `Span`, `Fail`, `PResult`, `Parser`, `ParserExt`, `StrInputStream` | regex, cache, bytes, recursive helper | `or/attempt/cut` の単体テストが通る |
 | 2 | Primitive | `eof`, `char`, `tag`, `satisfy`, `take_while0/1`, `peek` | unicode category, regex, bytes | identifier/integer parser が組める |
 | 3 | Combinators | `map`, `zip`, `zip_left`, `zip_right`, `between`, `optional`, `many0/1`, `sep_by0/1`, `chainl1`, `chainr1`, `flat_map`/`and_then` | — | expression parser と CSV/JSON subset の骨格が書ける |
 | 4 | Text module | whitespace, ascii token, identifier, integer, quoted string | bytes 共通化 | JSON subset と URI tokenizer が動く |

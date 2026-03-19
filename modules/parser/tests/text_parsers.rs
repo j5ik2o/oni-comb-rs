@@ -1,5 +1,5 @@
 use oni_comb_parser::fail::Fail;
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::prelude::*;
 
@@ -8,7 +8,7 @@ use oni_comb_parser::prelude::*;
 #[test]
 fn whitespace0_matches_spaces() {
   let mut parser = whitespace0();
-  let mut input = StrInput::new("   abc");
+  let mut input = StrInputStream::new("   abc");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "   ");
   assert_eq!(input.offset(), 3);
@@ -17,7 +17,7 @@ fn whitespace0_matches_spaces() {
 #[test]
 fn whitespace0_matches_empty() {
   let mut parser = whitespace0();
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "");
   assert_eq!(input.offset(), 0);
@@ -26,7 +26,7 @@ fn whitespace0_matches_empty() {
 #[test]
 fn whitespace0_matches_mixed() {
   let mut parser = whitespace0();
-  let mut input = StrInput::new(" \t\n\rabc");
+  let mut input = StrInputStream::new(" \t\n\rabc");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), " \t\n\r");
   assert_eq!(input.offset(), 4);
@@ -35,7 +35,7 @@ fn whitespace0_matches_mixed() {
 #[test]
 fn whitespace1_matches_spaces() {
   let mut parser = whitespace1();
-  let mut input = StrInput::new("  abc");
+  let mut input = StrInputStream::new("  abc");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "  ");
 }
@@ -43,7 +43,7 @@ fn whitespace1_matches_spaces() {
 #[test]
 fn whitespace1_fails_on_no_whitespace() {
   let mut parser = whitespace1();
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   assert!(matches!(parser.parse_next(&mut input), Err(Fail::Backtrack(_))));
 }
@@ -53,7 +53,7 @@ fn whitespace1_fails_on_no_whitespace() {
 #[test]
 fn identifier_simple() {
   let mut parser = identifier();
-  let mut input = StrInput::new("foo bar");
+  let mut input = StrInputStream::new("foo bar");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "foo");
   assert_eq!(input.offset(), 3);
@@ -62,7 +62,7 @@ fn identifier_simple() {
 #[test]
 fn identifier_with_underscore_prefix() {
   let mut parser = identifier();
-  let mut input = StrInput::new("_private");
+  let mut input = StrInputStream::new("_private");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "_private");
 }
@@ -70,7 +70,7 @@ fn identifier_with_underscore_prefix() {
 #[test]
 fn identifier_with_digits() {
   let mut parser = identifier();
-  let mut input = StrInput::new("foo_bar_123!");
+  let mut input = StrInputStream::new("foo_bar_123!");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "foo_bar_123");
   assert_eq!(input.offset(), 11);
@@ -79,7 +79,7 @@ fn identifier_with_digits() {
 #[test]
 fn identifier_single_char() {
   let mut parser = identifier();
-  let mut input = StrInput::new("x");
+  let mut input = StrInputStream::new("x");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "x");
 }
@@ -87,7 +87,7 @@ fn identifier_single_char() {
 #[test]
 fn identifier_fails_on_digit_start() {
   let mut parser = identifier();
-  let mut input = StrInput::new("123abc");
+  let mut input = StrInputStream::new("123abc");
 
   assert!(matches!(parser.parse_next(&mut input), Err(Fail::Backtrack(_))));
   assert_eq!(input.offset(), 0);
@@ -96,7 +96,7 @@ fn identifier_fails_on_digit_start() {
 #[test]
 fn identifier_fails_on_empty() {
   let mut parser = identifier();
-  let mut input = StrInput::new("");
+  let mut input = StrInputStream::new("");
 
   assert!(matches!(parser.parse_next(&mut input), Err(Fail::Backtrack(_))));
 }
@@ -106,7 +106,7 @@ fn identifier_fails_on_empty() {
 #[test]
 fn integer_positive() {
   let mut parser = integer();
-  let mut input = StrInput::new("42abc");
+  let mut input = StrInputStream::new("42abc");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), 42);
   assert_eq!(input.offset(), 2);
@@ -115,7 +115,7 @@ fn integer_positive() {
 #[test]
 fn integer_negative() {
   let mut parser = integer();
-  let mut input = StrInput::new("-7 ");
+  let mut input = StrInputStream::new("-7 ");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), -7);
   assert_eq!(input.offset(), 2);
@@ -124,7 +124,7 @@ fn integer_negative() {
 #[test]
 fn integer_zero() {
   let mut parser = integer();
-  let mut input = StrInput::new("0");
+  let mut input = StrInputStream::new("0");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), 0);
 }
@@ -132,7 +132,7 @@ fn integer_zero() {
 #[test]
 fn integer_large() {
   let mut parser = integer();
-  let mut input = StrInput::new("9999999");
+  let mut input = StrInputStream::new("9999999");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), 9999999);
 }
@@ -140,7 +140,7 @@ fn integer_large() {
 #[test]
 fn integer_fails_on_non_digit() {
   let mut parser = integer();
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   assert!(matches!(parser.parse_next(&mut input), Err(Fail::Backtrack(_))));
 }
@@ -148,7 +148,7 @@ fn integer_fails_on_non_digit() {
 #[test]
 fn integer_fails_on_lone_minus() {
   let mut parser = integer();
-  let mut input = StrInput::new("-abc");
+  let mut input = StrInputStream::new("-abc");
 
   assert!(matches!(parser.parse_next(&mut input), Err(Fail::Backtrack(_))));
   assert_eq!(input.offset(), 0);

@@ -2,22 +2,22 @@ use core::marker::PhantomData;
 
 use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
-pub struct Guard<F, I: Input> {
+pub struct Guard<F, I: InputStream> {
   pred: F,
   _marker: PhantomData<fn(&mut I)>,
 }
 
-pub fn guard<I: Input, F: Fn(&I) -> bool>(pred: F) -> Guard<F, I> {
+pub fn guard<I: InputStream, F: Fn(&I) -> bool>(pred: F) -> Guard<F, I> {
   Guard {
     pred,
     _marker: PhantomData,
   }
 }
 
-impl<I: Input, F> Parser<I> for Guard<F, I>
+impl<I: InputStream, F> Parser<I> for Guard<F, I>
 where
   F: Fn(&I) -> bool,
 {

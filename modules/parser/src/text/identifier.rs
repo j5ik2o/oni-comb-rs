@@ -1,8 +1,8 @@
 use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
-use crate::str_input::StrInput;
+use crate::str_input_stream::StrInputStream;
 
 pub struct Identifier;
 
@@ -10,12 +10,12 @@ pub fn identifier() -> Identifier {
   Identifier
 }
 
-impl<'a> Parser<StrInput<'a>> for Identifier {
-  type Error = <StrInput<'a> as Input>::Error;
+impl<'a> Parser<StrInputStream<'a>> for Identifier {
+  type Error = <StrInputStream<'a> as InputStream>::Error;
   type Output = &'a str;
 
   #[inline]
-  fn parse_next(&mut self, input: &mut StrInput<'a>) -> PResult<&'a str, Self::Error> {
+  fn parse_next(&mut self, input: &mut StrInputStream<'a>) -> PResult<&'a str, Self::Error> {
     let pos = input.offset();
     let remaining = input.as_str();
     let mut chars = remaining.chars();

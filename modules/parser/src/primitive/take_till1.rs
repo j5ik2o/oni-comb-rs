@@ -2,16 +2,16 @@ use core::marker::PhantomData;
 
 use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
-pub struct TakeTill1<F, I: Input>(F, PhantomData<fn(&mut I)>);
+pub struct TakeTill1<F, I: InputStream>(F, PhantomData<fn(&mut I)>);
 
-pub fn take_till1<I: Input, F: FnMut(I::Token) -> bool>(f: F) -> TakeTill1<F, I> {
+pub fn take_till1<I: InputStream, F: FnMut(I::Token) -> bool>(f: F) -> TakeTill1<F, I> {
   TakeTill1(f, PhantomData)
 }
 
-impl<I: Input, F> Parser<I> for TakeTill1<F, I>
+impl<I: InputStream, F> Parser<I> for TakeTill1<F, I>
 where
   F: FnMut(I::Token) -> bool,
 {

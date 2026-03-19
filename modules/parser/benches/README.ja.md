@@ -179,7 +179,7 @@ cargo bench -p oni-comb-parser --bench alloc_count
 - `peek_byte` による先頭バイト分岐（`or` チェーンの線形スキャンを排除）
 - `quoted_string` によるゼロコピー文字列（エスケープなし文字列は `&str` スライス）
 - `take_while1` による数値パースのゼロコピー化
-- `StrInput` の ASCII fast path
+- `StrInputStream` の ASCII fast path
 - `satisfy` / `take_while*` / `one_of` / `none_of` の consume-then-reset 化による二重デコード削減
 
 ### ヒープアロケーション計測（dhat-rs）
@@ -258,9 +258,9 @@ dhat: At t-end:  0 bytes in 0 blocks
 1. **`recursive()` は依然として重い**: 四則演算ベンチの単一整数で ~151ns（`fn_parser` なら ~3ns）。`recursive()` が必要なケース（文法構造上 `fn` で書けない場合）では vtable コストが残る。
 2. **`flat_map` はまだ最速勢より重い**: 同一型分岐は 5.7 / 5.5 / 4.1ns まで改善したが、winnow / nom にはまだ差がある。異種型 boxed 分岐は winnow にかなり近づいたが、nom との差は大きい。
 
-### Generic Input リファクタリングの影響（Input トレイトジェネリック化）
+### Generic InputStream リファクタリングの影響（InputStream トレイトジェネリック化）
 
-`Input` トレイトに `Token`/`Slice` associated type を追加し、`satisfy`, `take_while0/1`, `take`, `take_while_n_m`, `eof` をジェネリックな `primitive/` モジュールに移動。`ByteInput<'a>`（`&[u8]` パース用）も新規追加。
+`InputStream` トレイトに `Token`/`Slice` associated type を追加し、`satisfy`, `take_while0/1`, `take`, `take_while_n_m`, `eof` をジェネリックな `primitive/` モジュールに移動。`ByteInputStream<'a>`（`&[u8]` パース用）も新規追加。
 
 **ジェネリック primitive を使うトークンレベルパーサーへの影響（`satisfy` + `take_while0`）:**
 
@@ -274,9 +274,9 @@ dhat: At t-end:  0 bytes in 0 blocks
 | integer `"42"` (2B) | 3.6 ns | 8.8 ns | +144% | トークン毎オーバーヘッド |
 | integer `"9999999"` (7B) | 8.2 ns | 20.3 ns | +148% | トークン毎オーバーヘッド |
 
-**原因**: 旧 `text/` 実装は `remaining.chars()` で1回イテレーションし最後に `advance(consumed)` を呼んでいた。ジェネリック `primitive/` 実装はトークン毎に `peek_token()` + `next_token()` を呼び、各呼び出しで `&self.src[self.offset..]` の再計算と `.chars().next()` が発生する。これはジェネリシティのコストであり、`Input` トレイトではバッチ文字イテレーターを公開できない。
+**原因**: 旧 `text/` 実装は `remaining.chars()` で1回イテレーションし最後に `advance(consumed)` を呼んでいた。ジェネリック `primitive/` 実装はトークン毎に `peek_token()` + `next_token()` を呼び、各呼び出しで `&self.src[self.offset..]` の再計算と `.chars().next()` が発生する。これはジェネリシティのコストであり、`InputStream` トレイトではバッチ文字イテレーターを公開できない。
 
-**その後の回復（2026-03-18 fast path パス）**: `StrInput` への ASCII fast path 追加と、generic primitive の `peek_token()` + `next_token()` を `next_token()` + mismatch 時 `reset()` に置き換えたことで、この回帰の大半を ASCII 中心ワークロードでは回収した。現在の mean は identifier `"foo_bar_123"` が 18.6ns、integer `"184467...615"` が 20.0ns まで戻っている。
+**その後の回復（2026-03-18 fast path パス）**: `StrInputStream` への ASCII fast path 追加と、generic primitive の `peek_token()` + `next_token()` を `next_token()` + mismatch 時 `reset()` に置き換えたことで、この回帰の大半を ASCII 中心ワークロードでは回収した。現在の mean は identifier `"foo_bar_123"` が 18.6ns、integer `"184467...615"` が 20.0ns まで戻っている。
 
 **影響なしのワークロード**（`as_str().chars()` 直接使用または `fn_parser`）:
 

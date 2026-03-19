@@ -2,16 +2,16 @@ use core::marker::PhantomData;
 
 use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
-pub struct Eof<I: Input>(PhantomData<fn(&mut I)>);
+pub struct Eof<I: InputStream>(PhantomData<fn(&mut I)>);
 
-pub fn eof<I: Input>() -> Eof<I> {
+pub fn eof<I: InputStream>() -> Eof<I> {
   Eof(PhantomData)
 }
 
-impl<I: Input> Parser<I> for Eof<I> {
+impl<I: InputStream> Parser<I> for Eof<I> {
   type Error = I::Error;
   type Output = ();
 

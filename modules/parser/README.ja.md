@@ -11,7 +11,7 @@
 - **ゼロコストなコンビネータ合成** — Applicative コンビネータは具象型でスタック上に構築、ヒープアロケーションゼロ
 - **Backtrack / Cut エラー制御** — `or` は `Backtrack` のみリカバリ。`Cut` は伝播。`attempt` / `cut` で制御
 - **構造化エラー** — `ParseError`（位置・期待トークン・`.context()` ラベル）
-- **ジェネリック Input トレイト** — `StrInput<'a>`（`&str`）、`ByteInput<'a>`（`&[u8]`）
+- **ジェネリック InputStream トレイト** — `StrInputStream<'a>`（`&str`）、`ByteInputStream<'a>`（`&[u8]`）
 - **`no_std` 対応** — `#![no_std]` + `alloc`
 
 ## パフォーマンス
@@ -29,11 +29,11 @@ use oni_comb_parser::prelude::*;
 
 // 'a' または 'b' にマッチ
 let mut parser = char('a').or(char('b'));
-let mut input = StrInput::new("b");
+let mut input = StrInputStream::new("b");
 assert_eq!(parser.parse_next(&mut input).unwrap(), 'b');
 
 // 識別子: 先頭が英字/_, 以降は英数字/_
-let mut input = StrInput::new("foo_123");
+let mut input = StrInputStream::new("foo_123");
 let (head, tail) = satisfy(|c: char| c.is_ascii_alphabetic() || c == '_')
     .zip(take_while0(|c: char| c.is_ascii_alphanumeric() || c == '_'))
     .parse_next(&mut input)
@@ -44,7 +44,7 @@ assert_eq!(tail, "oo_123");
 // 整数
 let mut int_parser = take_while1(|c: char| c.is_ascii_digit())
     .map(|s: &str| s.parse::<u64>().unwrap());
-let mut input = StrInput::new("42");
+let mut input = StrInputStream::new("42");
 assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 ```
 
@@ -96,8 +96,8 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 
 | 型 | Token | Slice | 用途 |
 |----|-------|-------|------|
-| `StrInput<'a>` | `char` | `&'a str` | テキストパース（デフォルト） |
-| `ByteInput<'a>` | `u8` | `&'a [u8]` | バイナリプロトコルパース |
+| `StrInputStream<'a>` | `char` | `&'a str` | テキストパース（デフォルト） |
+| `ByteInputStream<'a>` | `u8` | `&'a [u8]` | バイナリプロトコルパース |
 
 ## ビルド・テスト
 

@@ -1,5 +1,5 @@
 use oni_comb_parser::error::{ExpectError, Expected, ParseError};
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
@@ -13,8 +13,8 @@ fn is_sub_delim(c: char) -> bool {
 }
 
 // pct-encoded = "%" HEXDIG HEXDIG
-pub fn pct_encoded<'a>() -> impl Parser<StrInput<'a>, Output = &'a str, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'a>| {
+pub fn pct_encoded<'a>() -> impl Parser<StrInputStream<'a>, Output = &'a str, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'a>| {
     let cp = input.checkpoint();
     let mut pct = tag("%");
     pct.parse_next(input)?;
@@ -27,18 +27,18 @@ pub fn pct_encoded<'a>() -> impl Parser<StrInput<'a>, Output = &'a str, Error = 
 }
 
 // unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~"
-pub fn unreserved_char<'a>() -> impl Parser<StrInput<'a>, Output = char, Error = ParseError> {
+pub fn unreserved_char<'a>() -> impl Parser<StrInputStream<'a>, Output = char, Error = ParseError> {
   satisfy(is_unreserved)
 }
 
 // sub-delims
-pub fn sub_delim_char<'a>() -> impl Parser<StrInput<'a>, Output = char, Error = ParseError> {
+pub fn sub_delim_char<'a>() -> impl Parser<StrInputStream<'a>, Output = char, Error = ParseError> {
   satisfy(is_sub_delim)
 }
 
 // pchar = unreserved / pct-encoded / sub-delims / ":" / "@"
-pub fn pchar<'a>() -> impl Parser<StrInput<'a>, Output = &'a str, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'a>| {
+pub fn pchar<'a>() -> impl Parser<StrInputStream<'a>, Output = &'a str, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'a>| {
     let cp = input.checkpoint();
     if pct_encoded().attempt().parse_next(input).is_ok() {
       return Ok(input.slice_since(cp));

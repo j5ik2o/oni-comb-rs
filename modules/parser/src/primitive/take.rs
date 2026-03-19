@@ -2,22 +2,22 @@ use core::marker::PhantomData;
 
 use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
-pub struct Take<I: Input> {
+pub struct Take<I: InputStream> {
   n: usize,
   _marker: PhantomData<fn(&mut I)>,
 }
 
-pub fn take<I: Input>(n: usize) -> Take<I> {
+pub fn take<I: InputStream>(n: usize) -> Take<I> {
   Take {
     n,
     _marker: PhantomData,
   }
 }
 
-impl<I: Input> Parser<I> for Take<I> {
+impl<I: InputStream> Parser<I> for Take<I> {
   type Error = I::Error;
   type Output = I::Slice;
 

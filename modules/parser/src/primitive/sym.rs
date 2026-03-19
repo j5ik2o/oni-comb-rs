@@ -2,22 +2,22 @@ use core::marker::PhantomData;
 
 use crate::error::ExpectError;
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
-pub struct Sym<I: Input> {
+pub struct Sym<I: InputStream> {
   token: I::Token,
   _marker: PhantomData<fn(&mut I)>,
 }
 
-pub fn sym<I: Input>(token: I::Token) -> Sym<I> {
+pub fn sym<I: InputStream>(token: I::Token) -> Sym<I> {
   Sym {
     token,
     _marker: PhantomData,
   }
 }
 
-impl<I: Input> Parser<I> for Sym<I>
+impl<I: InputStream> Parser<I> for Sym<I>
 where
   I::Token: SymExpected,
 {

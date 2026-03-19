@@ -1,6 +1,6 @@
 use oni_comb_parser::error::ParseError;
 use oni_comb_parser::fail::PResult;
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::prelude::*;
 
 use crate::block::block_value;
@@ -8,7 +8,7 @@ use crate::common::{at_document_marker, skip_ws_and_comments};
 use crate::context::ParseContext;
 use crate::value::YamlValue;
 
-pub(crate) fn yaml_document<'a>(input: &mut StrInput<'a>, ctx: &mut ParseContext) -> PResult<YamlValue, ParseError> {
+pub(crate) fn yaml_document<'a>(input: &mut StrInputStream<'a>, ctx: &mut ParseContext) -> PResult<YamlValue, ParseError> {
   skip_ws_and_comments(input)?;
 
   if at_document_marker(input) == Some("---") {
@@ -39,7 +39,7 @@ pub(crate) fn yaml_document<'a>(input: &mut StrInput<'a>, ctx: &mut ParseContext
 }
 
 pub(crate) fn yaml_documents<'a>(
-  input: &mut StrInput<'a>,
+  input: &mut StrInputStream<'a>,
   ctx: &mut ParseContext,
 ) -> PResult<Vec<YamlValue>, ParseError> {
   let mut docs = Vec::new();

@@ -6,7 +6,7 @@ use std::net::Ipv6Addr;
 
 /// Parse IPv6 address per RFC 3986.
 /// Collects hex digits, ':', and '.' then delegates to std::net::Ipv6Addr.
-pub fn ipv6_address<'a>() -> impl Parser<StrInput<'a>, Output = Ipv6Addr, Error = ParseError> {
+pub fn ipv6_address<'a>() -> impl Parser<StrInputStream<'a>, Output = Ipv6Addr, Error = ParseError> {
   take_while1(|c: char| c.is_ascii_hexdigit() || c == ':' || c == '.')
     .map_res(|s: &str| s.parse::<Ipv6Addr>(), "IPv6address")
     .attempt()

@@ -2,7 +2,7 @@
 
 ## 1. line_start (byte) と column (char) の単位不整合
 
-**影響範囲**: `StrInput::advance`, `ByteInput::advance`, `StrCheckpoint`, `ByteCheckpoint`
+**影響範囲**: `StrInputStream::advance`, `ByteInputStream::advance`, `StrCheckpoint`, `ByteCheckpoint`
 
 **概要**:
 `column` は char (codepoint) 単位で数えるが、`line_start` はバイトオフセットで管理している。
@@ -26,10 +26,10 @@
 パーサーコンビネータの設計思想に反する。
 
 **根本原因**:
-`Input` 型 (`StrInput`) がパース状態を含んでいないため、追加状態を外部引数で渡す必要がある。
+`InputStream` 型 (`StrInputStream`) がパース状態を含んでいないため、追加状態を外部引数で渡す必要がある。
 
 **本質的な解決**:
-`yaml-input-redesign` で `YamlInput` 型を導入し、`StrInput` + `ParseContext` + インデントスタック
+`yaml-input-redesign` で `YamlInput` 型を導入し、`StrInputStream` + `ParseContext` + インデントスタック
 を一体化する。全パーサーを `fn() -> impl Parser<YamlInput, ...>` 形式にし、
 コンビネータパイプラインで記述可能にする。
 
@@ -40,7 +40,7 @@
 **影響範囲**: `ParseError::from_expected`, 全コンビネータのエラー生成
 
 **概要**:
-`Input` トレイトに `line()`/`column()` を追加し、`ParseError` に `line`/`column` フィールドを
+`InputStream` トレイトに `line()`/`column()` を追加し、`ParseError` に `line`/`column` フィールドを
 追加したが、`from_expected` は `position: usize` しか受け取らず、常に `line: 0, column: 0` で
 生成される。エラーに行/列情報が含まれない。
 
@@ -55,7 +55,7 @@
 
 **本質的な解決**:
 `ExpectError` トレイトのシグネチャを `fn from_expected(input: &I, expected: Expected) -> Self`
-に変更し、エラー生成時点で `Input` から行/列を取得する。これは parser クレート全体の
+に変更し、エラー生成時点で `InputStream` から行/列を取得する。これは parser クレート全体の
 破壊的変更になるため、`yaml-input-redesign` と合わせて計画的に実施する。
 
 ## 4. YAML タグのパースが未統合

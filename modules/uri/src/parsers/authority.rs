@@ -1,6 +1,6 @@
 use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::fail::Fail;
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
@@ -11,8 +11,8 @@ use crate::parsers::common::pct_encoded;
 use crate::parsers::host::host;
 
 // userinfo = *( unreserved / pct-encoded / sub-delims / ":" )
-fn user_info<'a>() -> impl Parser<StrInput<'a>, Output = UserInfo<'a>, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'a>| {
+fn user_info<'a>() -> impl Parser<StrInputStream<'a>, Output = UserInfo<'a>, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'a>| {
     let cp = input.checkpoint();
     loop {
       if pct_encoded().attempt().parse_next(input).is_ok() {
@@ -47,8 +47,8 @@ fn user_info<'a>() -> impl Parser<StrInput<'a>, Output = UserInfo<'a>, Error = P
 
 // port = *DIGIT (RFC 3986: zero or more digits after ':')
 // Returns Some(u16) if digits present, None if empty port (e.g., "host:")
-fn port<'a>() -> impl Parser<StrInput<'a>, Output = Option<u16>, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'a>| {
+fn port<'a>() -> impl Parser<StrInputStream<'a>, Output = Option<u16>, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'a>| {
     let pos = input.offset();
     let cp = input.checkpoint();
     tag(":").parse_next(input)?;
@@ -71,8 +71,8 @@ fn port<'a>() -> impl Parser<StrInput<'a>, Output = Option<u16>, Error = ParseEr
 }
 
 // authority = [ userinfo "@" ] host [ ":" port ]
-pub fn authority<'a>() -> impl Parser<StrInput<'a>, Output = Authority<'a>, Error = ParseError> {
-  fn_parser(|input: &mut StrInput<'a>| {
+pub fn authority<'a>() -> impl Parser<StrInputStream<'a>, Output = Authority<'a>, Error = ParseError> {
+  fn_parser(|input: &mut StrInputStream<'a>| {
     let ui = user_info().attempt().parse_next(input).ok();
     let h = host().parse_next(input)?;
     let p = port().attempt().parse_next(input).ok().flatten();

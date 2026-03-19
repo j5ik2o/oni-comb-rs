@@ -1,5 +1,5 @@
 use oni_comb_parser::fail::Fail;
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
@@ -11,16 +11,16 @@ fn recursive_simple_parentheses() {
   // value = "x" | "(" value ")"
   let value = recursive(|value| tag("x").or(between(tag("("), value, tag(")"))));
 
-  let mut input = StrInput::new("x");
+  let mut input = StrInputStream::new("x");
   assert_eq!(value.clone().parse_next(&mut input).unwrap(), "x");
 
-  let mut input = StrInput::new("(x)");
+  let mut input = StrInputStream::new("(x)");
   assert_eq!(value.clone().parse_next(&mut input).unwrap(), "x");
 
-  let mut input = StrInput::new("((x))");
+  let mut input = StrInputStream::new("((x))");
   assert_eq!(value.clone().parse_next(&mut input).unwrap(), "x");
 
-  let mut input = StrInput::new("(((x)))");
+  let mut input = StrInputStream::new("(((x)))");
   assert_eq!(value.clone().parse_next(&mut input).unwrap(), "x");
 }
 
@@ -28,7 +28,7 @@ fn recursive_simple_parentheses() {
 fn recursive_fail_propagation() {
   let value = recursive(|value| tag("x").or(between(tag("("), value, tag(")"))));
 
-  let mut input = StrInput::new("y");
+  let mut input = StrInputStream::new("y");
   assert!(matches!(value.clone().parse_next(&mut input), Err(Fail::Backtrack(_))));
   assert_eq!(input.offset(), 0);
 }
@@ -37,7 +37,7 @@ fn recursive_fail_propagation() {
 fn recursive_unclosed_paren() {
   let value = recursive(|value| tag("x").or(tag("(").zip_right(value).zip_left(tag(")").cut())));
 
-  let mut input = StrInput::new("(x");
+  let mut input = StrInputStream::new("(x");
   // "(" 消費 → "x" 成功 → ")" が見つからず Cut
   assert!(matches!(value.clone().parse_next(&mut input), Err(Fail::Cut(_))));
 }
@@ -51,13 +51,13 @@ fn recursive_with_map() {
     base.or(nested)
   });
 
-  let mut input = StrInput::new("x");
+  let mut input = StrInputStream::new("x");
   assert_eq!(depth.clone().parse_next(&mut input).unwrap(), 0);
 
-  let mut input = StrInput::new("(x)");
+  let mut input = StrInputStream::new("(x)");
   assert_eq!(depth.clone().parse_next(&mut input).unwrap(), 1);
 
-  let mut input = StrInput::new("(((x)))");
+  let mut input = StrInputStream::new("(((x)))");
   assert_eq!(depth.clone().parse_next(&mut input).unwrap(), 3);
 }
 
@@ -75,6 +75,6 @@ fn recursive_nested_list() {
     int.or(list)
   });
 
-  let mut input = StrInput::new("[1,[2,3],4]");
+  let mut input = StrInputStream::new("[1,[2,3],4]");
   assert_eq!(value.clone().parse_next(&mut input).unwrap(), "[1,[2,3],4]");
 }

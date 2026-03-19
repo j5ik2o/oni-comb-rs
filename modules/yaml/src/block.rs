@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::fail::{Fail, PResult};
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::prelude::*;
 
@@ -20,7 +20,7 @@ use crate::scalar::yaml_scalar;
 use crate::value::YamlValue;
 
 /// Parse an optional anchor prefix (&name) and return the anchor name.
-fn parse_anchor_prefix<'a>(input: &mut StrInput<'a>) -> PResult<Option<String>, ParseError> {
+fn parse_anchor_prefix<'a>(input: &mut StrInputStream<'a>) -> PResult<Option<String>, ParseError> {
   if input.peek_byte() != Some(b'&') {
     return Ok(None);
   }
@@ -42,7 +42,7 @@ fn parse_anchor_prefix<'a>(input: &mut StrInput<'a>) -> PResult<Option<String>, 
 }
 
 /// Parse an alias (*name) and resolve it from the context.
-fn parse_alias<'a>(input: &mut StrInput<'a>, ctx: &ParseContext) -> PResult<YamlValue, ParseError> {
+fn parse_alias<'a>(input: &mut StrInputStream<'a>, ctx: &ParseContext) -> PResult<YamlValue, ParseError> {
   let pos = input.offset();
   input.next_token(); // consume '*'
   let remaining = input.remaining();
@@ -68,7 +68,7 @@ fn parse_alias<'a>(input: &mut StrInput<'a>, ctx: &ParseContext) -> PResult<Yaml
 
 /// Parse a block value at the given minimum indent level.
 pub(crate) fn block_value<'a>(
-  input: &mut StrInput<'a>,
+  input: &mut StrInputStream<'a>,
   min_indent: usize,
   ctx: &mut ParseContext,
 ) -> PResult<YamlValue, ParseError> {
@@ -122,7 +122,7 @@ pub(crate) fn block_value<'a>(
   Ok(value)
 }
 
-fn is_block_seq_indicator<'a>(input: &StrInput<'a>) -> bool {
+fn is_block_seq_indicator<'a>(input: &StrInputStream<'a>) -> bool {
   let remaining = input.remaining();
   let bytes = remaining.as_bytes();
   (bytes.len() >= 2 && bytes[0] == b'-' && (bytes[1] == b' ' || bytes[1] == b'\n'))
@@ -130,7 +130,7 @@ fn is_block_seq_indicator<'a>(input: &StrInput<'a>) -> bool {
 }
 
 fn block_sequence<'a>(
-  input: &mut StrInput<'a>,
+  input: &mut StrInputStream<'a>,
   min_indent: usize,
   ctx: &mut ParseContext,
 ) -> PResult<YamlValue, ParseError> {
@@ -172,7 +172,7 @@ fn block_sequence<'a>(
 }
 
 fn try_block_mapping<'a>(
-  input: &mut StrInput<'a>,
+  input: &mut StrInputStream<'a>,
   map_indent: usize,
   ctx: &mut ParseContext,
 ) -> PResult<YamlValue, ParseError> {
@@ -234,7 +234,7 @@ fn try_block_mapping<'a>(
   Ok(YamlValue::Mapping(pairs))
 }
 
-fn parse_mapping_key<'a>(input: &mut StrInput<'a>) -> PResult<String, ParseError> {
+fn parse_mapping_key<'a>(input: &mut StrInputStream<'a>) -> PResult<String, ParseError> {
   match input.peek_byte() {
     Some(b'"') | Some(b'\'') => match yaml_scalar(input)? {
       YamlValue::String(s) => Ok(s),

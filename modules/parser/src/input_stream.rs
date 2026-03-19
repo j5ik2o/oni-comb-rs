@@ -1,6 +1,6 @@
 use crate::error::ExpectError;
 
-pub trait Input {
+pub trait InputStream {
   type Token: Copy + Eq;
   type Slice;
   type Checkpoint: Copy + Eq + Ord;

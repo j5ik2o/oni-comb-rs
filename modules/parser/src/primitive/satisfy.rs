@@ -2,16 +2,16 @@ use core::marker::PhantomData;
 
 use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
-pub struct Satisfy<F, I: Input>(F, PhantomData<fn(&mut I)>);
+pub struct Satisfy<F, I: InputStream>(F, PhantomData<fn(&mut I)>);
 
-pub fn satisfy<I: Input, F: FnMut(I::Token) -> bool>(f: F) -> Satisfy<F, I> {
+pub fn satisfy<I: InputStream, F: FnMut(I::Token) -> bool>(f: F) -> Satisfy<F, I> {
   Satisfy(f, PhantomData)
 }
 
-impl<I: Input, F> Parser<I> for Satisfy<F, I>
+impl<I: InputStream, F> Parser<I> for Satisfy<F, I>
 where
   F: FnMut(I::Token) -> bool,
 {

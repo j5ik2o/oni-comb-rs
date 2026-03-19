@@ -1,6 +1,6 @@
 use oni_comb_parser::error::ParseError;
 use oni_comb_parser::fail::Fail;
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
@@ -14,7 +14,7 @@ fn flat_map_succeeds_when_both_succeed() {
     '2' => tag("two"),
     _ => tag("other"),
   });
-  let mut input = StrInput::new("1one");
+  let mut input = StrInputStream::new("1one");
   assert_eq!(parser.parse_next(&mut input).unwrap(), "one");
   assert_eq!(input.offset(), 4);
 }
@@ -23,7 +23,7 @@ fn flat_map_succeeds_when_both_succeed() {
 #[test]
 fn flat_map_fails_when_first_backtracks() {
   let mut parser = char('x').flat_map(|_| tag("rest"));
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   let result = parser.parse_next(&mut input);
   assert!(matches!(result, Err(Fail::Backtrack(_))));
@@ -34,7 +34,7 @@ fn flat_map_fails_when_first_backtracks() {
 #[test]
 fn flat_map_propagates_cut_from_first() {
   let mut parser = char('x').cut().flat_map(|_| tag("rest"));
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   let result = parser.parse_next(&mut input);
   assert!(matches!(result, Err(Fail::Cut(_))));
@@ -44,7 +44,7 @@ fn flat_map_propagates_cut_from_first() {
 #[test]
 fn flat_map_propagates_failure_from_second() {
   let mut parser = char('a').flat_map(|_| tag("xyz"));
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   let result = parser.parse_next(&mut input);
   assert!(matches!(result, Err(Fail::Backtrack(_))));
@@ -55,7 +55,7 @@ fn flat_map_propagates_failure_from_second() {
 #[test]
 fn flat_map_propagates_cut_from_second() {
   let mut parser = char('a').flat_map(|_| tag("xyz").cut());
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   let result = parser.parse_next(&mut input);
   assert!(matches!(result, Err(Fail::Cut(_))));
@@ -70,7 +70,7 @@ fn flat_map_same_type_branches_no_box() {
     _ => tag("?"),
   });
 
-  let mut input = StrInput::new("2two");
+  let mut input = StrInputStream::new("2two");
   assert_eq!(parser.parse_next(&mut input).unwrap(), "two");
   assert_eq!(input.offset(), 4);
 }
@@ -79,7 +79,7 @@ fn flat_map_same_type_branches_no_box() {
 #[test]
 fn flat_map_box_dyn_heterogeneous_branches() {
   let mut parser = satisfy(|c: char| c == 'c' || c == 't').flat_map(
-    |c| -> Box<dyn Parser<oni_comb_parser::str_input::StrInput<'_>, Output = &str, Error = ParseError>> {
+    |c| -> Box<dyn Parser<oni_comb_parser::str_input_stream::StrInputStream<'_>, Output = &str, Error = ParseError>> {
       match c {
         'c' => Box::new(tag("har")),
         _ => Box::new(take_while1(|c: char| c.is_ascii_digit())),
@@ -87,10 +87,10 @@ fn flat_map_box_dyn_heterogeneous_branches() {
     },
   );
 
-  let mut input1 = StrInput::new("char");
+  let mut input1 = StrInputStream::new("char");
   assert_eq!(parser.parse_next(&mut input1).unwrap(), "har");
 
-  let mut input2 = StrInput::new("t123");
+  let mut input2 = StrInputStream::new("t123");
   assert_eq!(parser.parse_next(&mut input2).unwrap(), "123");
 }
 
@@ -99,7 +99,7 @@ fn flat_map_box_dyn_heterogeneous_branches() {
 fn flat_map_inside_attempt_downgrades_cut() {
   let inner = char('a').flat_map(|_| tag("xyz").cut());
   let mut parser = inner.attempt();
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   let result = parser.parse_next(&mut input);
   assert!(matches!(result, Err(Fail::Backtrack(_))));
@@ -110,7 +110,7 @@ fn flat_map_inside_attempt_downgrades_cut() {
 #[test]
 fn flat_map_result_can_be_mapped() {
   let mut parser = char('a').flat_map(|_| tag("bc")).map(|s: &str| s.to_uppercase());
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "BC");
 }
@@ -121,7 +121,7 @@ fn flat_map_inside_or() {
   let left = char('x').flat_map(|_| tag("yy"));
   let right = tag("abc");
   let mut parser = left.or(right);
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "abc");
   assert_eq!(input.offset(), 3);

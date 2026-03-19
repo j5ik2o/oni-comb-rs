@@ -3,12 +3,12 @@ use alloc::rc::Rc;
 use core::cell::UnsafeCell;
 
 use crate::fail::PResult;
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
 type DynParser<'a, I, O, E> = dyn Parser<I, Output = O, Error = E> + 'a;
 
-struct RecursiveInner<'a, I: Input, O, E> {
+struct RecursiveInner<'a, I: InputStream, O, E> {
   inner: UnsafeCell<Option<Box<DynParser<'a, I, O, E>>>>,
 }
 
@@ -16,11 +16,11 @@ struct RecursiveInner<'a, I: Input, O, E> {
 ///
 /// 再帰の結び目だけ `Box<dyn Parser>` + `Rc` で型消去し、
 /// 非再帰部分は具象型を維持する。
-pub struct Recursive<'a, I: Input, O, E> {
+pub struct Recursive<'a, I: InputStream, O, E> {
   shared: Rc<RecursiveInner<'a, I, O, E>>,
 }
 
-impl<'a, I: Input, O, E> Clone for Recursive<'a, I, O, E> {
+impl<'a, I: InputStream, O, E> Clone for Recursive<'a, I, O, E> {
   fn clone(&self) -> Self {
     Recursive {
       shared: Rc::clone(&self.shared),
@@ -28,7 +28,7 @@ impl<'a, I: Input, O, E> Clone for Recursive<'a, I, O, E> {
   }
 }
 
-impl<'a, I: Input, O, E> Parser<I> for Recursive<'a, I, O, E> {
+impl<'a, I: InputStream, O, E> Parser<I> for Recursive<'a, I, O, E> {
   type Error = E;
   type Output = O;
 
@@ -61,7 +61,7 @@ impl<'a, I: Input, O, E> Parser<I> for Recursive<'a, I, O, E> {
 /// ```
 pub fn recursive<'a, I, O, E, F, P>(f: F) -> Recursive<'a, I, O, E>
 where
-  I: Input,
+  I: InputStream,
   F: FnOnce(Recursive<'a, I, O, E>) -> P,
   P: Parser<I, Output = O, Error = E> + 'a, {
   let rec = Recursive {

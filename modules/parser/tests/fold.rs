@@ -1,16 +1,16 @@
 use oni_comb_parser::fail::Fail;
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::{char, tag};
-use oni_comb_parser::str_input::StrInput;
+use oni_comb_parser::str_input_stream::StrInputStream;
 
 // --- many0_fold ---
 
 #[test]
 fn many0_fold_zero_elements_returns_init() {
   let mut parser = char('a').many0_fold(|| 0usize, |acc, _| acc + 1);
-  let mut input = StrInput::new("xyz");
+  let mut input = StrInputStream::new("xyz");
 
   let result = parser.parse_next(&mut input);
 
@@ -21,7 +21,7 @@ fn many0_fold_zero_elements_returns_init() {
 #[test]
 fn many0_fold_multiple_elements() {
   let mut parser = char('a').many0_fold(|| 0usize, |acc, _| acc + 1);
-  let mut input = StrInput::new("aaab");
+  let mut input = StrInputStream::new("aaab");
 
   let result = parser.parse_next(&mut input);
 
@@ -35,7 +35,7 @@ fn many0_fold_accumulates_values() {
     acc.push(c);
     acc
   });
-  let mut input = StrInput::new("abba!");
+  let mut input = StrInputStream::new("abba!");
 
   let result = parser.parse_next(&mut input);
 
@@ -47,7 +47,7 @@ fn many0_fold_accumulates_values() {
 fn many0_fold_propagates_cut() {
   let item = char('a').zip(char('b').cut());
   let mut parser = item.many0_fold(|| 0usize, |acc, _| acc + 1);
-  let mut input = StrInput::new("abac");
+  let mut input = StrInputStream::new("abac");
 
   let result = parser.parse_next(&mut input);
 
@@ -57,7 +57,7 @@ fn many0_fold_propagates_cut() {
 #[test]
 fn many0_fold_detects_zero_progress() {
   let mut parser = tag("").many0_fold(|| 0usize, |acc, _| acc + 1);
-  let mut input = StrInput::new("anything");
+  let mut input = StrInputStream::new("anything");
 
   let result = parser.parse_next(&mut input);
 
@@ -67,7 +67,7 @@ fn many0_fold_detects_zero_progress() {
 #[test]
 fn many0_fold_empty_input() {
   let mut parser = char('a').many0_fold(|| 0usize, |acc, _| acc + 1);
-  let mut input = StrInput::new("");
+  let mut input = StrInputStream::new("");
 
   let result = parser.parse_next(&mut input);
 
@@ -79,7 +79,7 @@ fn many0_fold_empty_input() {
 #[test]
 fn many1_fold_one_element() {
   let mut parser = char('a').many1_fold(|| 0usize, |acc, _| acc + 1);
-  let mut input = StrInput::new("ab");
+  let mut input = StrInputStream::new("ab");
 
   let result = parser.parse_next(&mut input);
 
@@ -90,7 +90,7 @@ fn many1_fold_one_element() {
 #[test]
 fn many1_fold_multiple_elements() {
   let mut parser = char('a').many1_fold(|| 0usize, |acc, _| acc + 1);
-  let mut input = StrInput::new("aaab");
+  let mut input = StrInputStream::new("aaab");
 
   let result = parser.parse_next(&mut input);
 
@@ -101,7 +101,7 @@ fn many1_fold_multiple_elements() {
 #[test]
 fn many1_fold_zero_elements_is_error() {
   let mut parser = char('a').many1_fold(|| 0usize, |acc, _| acc + 1);
-  let mut input = StrInput::new("xyz");
+  let mut input = StrInputStream::new("xyz");
 
   let result = parser.parse_next(&mut input);
 
@@ -112,7 +112,7 @@ fn many1_fold_zero_elements_is_error() {
 fn many1_fold_propagates_cut() {
   let item = char('a').zip(char('b').cut());
   let mut parser = item.many1_fold(|| 0usize, |acc, _| acc + 1);
-  let mut input = StrInput::new("abac");
+  let mut input = StrInputStream::new("abac");
 
   let result = parser.parse_next(&mut input);
 
@@ -124,7 +124,7 @@ fn many1_fold_propagates_cut() {
 #[test]
 fn sep_by0_fold_zero_elements_returns_init() {
   let mut parser = char('a').sep_by0_fold(char(','), || 0usize, |acc, _| acc + 1);
-  let mut input = StrInput::new("xyz");
+  let mut input = StrInputStream::new("xyz");
 
   let result = parser.parse_next(&mut input);
 
@@ -135,7 +135,7 @@ fn sep_by0_fold_zero_elements_returns_init() {
 #[test]
 fn sep_by0_fold_multiple_elements() {
   let mut parser = char('a').sep_by0_fold(char(','), || 0usize, |acc, _| acc + 1);
-  let mut input = StrInput::new("a,a,a!");
+  let mut input = StrInputStream::new("a,a,a!");
 
   let result = parser.parse_next(&mut input);
 
@@ -146,7 +146,7 @@ fn sep_by0_fold_multiple_elements() {
 #[test]
 fn sep_by0_fold_rejects_trailing_separator() {
   let mut parser = char('a').sep_by0_fold(char(','), || 0usize, |acc, _| acc + 1);
-  let mut input = StrInput::new("a,a,");
+  let mut input = StrInputStream::new("a,a,");
 
   let result = parser.parse_next(&mut input);
 
@@ -158,7 +158,7 @@ fn sep_by0_fold_rejects_trailing_separator() {
 fn sep_by0_fold_propagates_cut() {
   let item = char('a').zip(char('b').cut()).map(|(a, b)| (a, b));
   let mut parser = item.sep_by0_fold(char(','), || 0usize, |acc, _| acc + 1);
-  let mut input = StrInput::new("ab,ac");
+  let mut input = StrInputStream::new("ab,ac");
 
   let result = parser.parse_next(&mut input);
 
@@ -170,7 +170,7 @@ fn sep_by0_fold_propagates_cut() {
 #[test]
 fn sep_by1_fold_zero_elements_is_error() {
   let mut parser = char('a').sep_by1_fold(char(','), || 0usize, |acc, _| acc + 1);
-  let mut input = StrInput::new("xyz");
+  let mut input = StrInputStream::new("xyz");
 
   let result = parser.parse_next(&mut input);
 
@@ -180,7 +180,7 @@ fn sep_by1_fold_zero_elements_is_error() {
 #[test]
 fn sep_by1_fold_one_element() {
   let mut parser = char('a').sep_by1_fold(char(','), || 0usize, |acc, _| acc + 1);
-  let mut input = StrInput::new("a!");
+  let mut input = StrInputStream::new("a!");
 
   let result = parser.parse_next(&mut input);
 
@@ -191,7 +191,7 @@ fn sep_by1_fold_one_element() {
 #[test]
 fn sep_by1_fold_multiple_elements() {
   let mut parser = char('a').sep_by1_fold(char(','), || 0usize, |acc, _| acc + 1);
-  let mut input = StrInput::new("a,a,a!");
+  let mut input = StrInputStream::new("a,a,a!");
 
   let result = parser.parse_next(&mut input);
 

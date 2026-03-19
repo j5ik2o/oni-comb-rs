@@ -1,24 +1,24 @@
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::prelude::*;
 
 #[test]
 fn initial_state() {
-  let input = StrInput::new("hello");
+  let input = StrInputStream::new("hello");
   assert_eq!(input.line(), 1);
   assert_eq!(input.column(), 1);
 }
 
 #[test]
 fn initial_state_byte() {
-  let input = ByteInput::new(b"hello");
+  let input = ByteInputStream::new(b"hello");
   assert_eq!(input.line(), 1);
   assert_eq!(input.column(), 1);
 }
 
 #[test]
 fn column_increments_per_char() {
-  let mut input = StrInput::new("abc");
+  let mut input = StrInputStream::new("abc");
   input.next_token(); // a
   input.next_token(); // b
   assert_eq!(input.line(), 1);
@@ -27,7 +27,7 @@ fn column_increments_per_char() {
 
 #[test]
 fn newline_increments_line() {
-  let mut input = StrInput::new("ab\ncd");
+  let mut input = StrInputStream::new("ab\ncd");
   input.next_token(); // a
   input.next_token(); // b
   input.next_token(); // \n
@@ -37,7 +37,7 @@ fn newline_increments_line() {
 
 #[test]
 fn column_after_newline() {
-  let mut input = StrInput::new("ab\ncd");
+  let mut input = StrInputStream::new("ab\ncd");
   input.next_token(); // a
   input.next_token(); // b
   input.next_token(); // \n
@@ -48,7 +48,7 @@ fn column_after_newline() {
 
 #[test]
 fn multiple_lines() {
-  let mut input = StrInput::new("a\nb\nc");
+  let mut input = StrInputStream::new("a\nb\nc");
   for _ in 0..5 {
     input.next_token();
   }
@@ -58,7 +58,7 @@ fn multiple_lines() {
 
 #[test]
 fn multibyte_char_counts_as_one_column() {
-  let mut input = StrInput::new("café");
+  let mut input = StrInputStream::new("café");
   input.next_token(); // c
   input.next_token(); // a
   input.next_token(); // f
@@ -69,7 +69,7 @@ fn multibyte_char_counts_as_one_column() {
 
 #[test]
 fn byte_input_column_is_byte_unit() {
-  let mut input = ByteInput::new(b"abcd");
+  let mut input = ByteInputStream::new(b"abcd");
   input.next_token(); // a
   input.next_token(); // b
   assert_eq!(input.column(), 3);
@@ -77,7 +77,7 @@ fn byte_input_column_is_byte_unit() {
 
 #[test]
 fn byte_input_newline() {
-  let mut input = ByteInput::new(b"ab\ncd");
+  let mut input = ByteInputStream::new(b"ab\ncd");
   input.next_token(); // a
   input.next_token(); // b
   input.next_token(); // \n
@@ -89,7 +89,7 @@ fn byte_input_newline() {
 
 #[test]
 fn parser_updates_line_column() {
-  let mut input = StrInput::new("ab\ncd");
+  let mut input = StrInputStream::new("ab\ncd");
   tag("ab").parse_next(&mut input).unwrap();
   assert_eq!(input.line(), 1);
   assert_eq!(input.column(), 3);
@@ -97,7 +97,7 @@ fn parser_updates_line_column() {
 
 #[test]
 fn checkpoint_reset_restores_line_column() {
-  let mut input = StrInput::new("ab\ncd");
+  let mut input = StrInputStream::new("ab\ncd");
   input.next_token(); // a
   input.next_token(); // b
   let cp = input.checkpoint();
@@ -117,7 +117,7 @@ fn checkpoint_reset_restores_line_column() {
 
 #[test]
 fn checkpoint_ord_compares_by_offset() {
-  let mut input = StrInput::new("abcdef");
+  let mut input = StrInputStream::new("abcdef");
   input.next_token();
   input.next_token();
   input.next_token();

@@ -18,13 +18,13 @@ enum JsonValue {
   Object(Vec<(String, JsonValue)>),
 }
 
-fn trailing_ws<P>(p: P) -> impl Parser<StrInput<'static>, Output = P::Output, Error = ParseError>
+fn trailing_ws<P>(p: P) -> impl Parser<StrInputStream<'static>, Output = P::Output, Error = ParseError>
 where
-  P: Parser<StrInput<'static>, Error = ParseError>, {
+  P: Parser<StrInputStream<'static>, Error = ParseError>, {
   p.zip_left(whitespace0())
 }
 
-fn json_primitive() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
+fn json_primitive() -> impl Parser<StrInputStream<'static>, Output = JsonValue, Error = ParseError> {
   let null = tag("null").map(|_| JsonValue::Null);
   let bool_true = tag("true").map(|_| JsonValue::Bool(true));
   let bool_false = tag("false").map(|_| JsonValue::Bool(false));
@@ -33,7 +33,7 @@ fn json_primitive() -> impl Parser<StrInput<'static>, Output = JsonValue, Error 
   null.or(bool_true).or(bool_false).or(int).or(string)
 }
 
-fn json_array() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
+fn json_array() -> impl Parser<StrInputStream<'static>, Output = JsonValue, Error = ParseError> {
   let comma = char(',').zip_left(whitespace0());
 
   trailing_ws(char('['))
@@ -42,7 +42,7 @@ fn json_array() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = Pa
     .map(JsonValue::Array)
 }
 
-fn json_object() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
+fn json_object() -> impl Parser<StrInputStream<'static>, Output = JsonValue, Error = ParseError> {
   let colon = char(':').zip_left(whitespace0());
   let comma = char(',').zip_left(whitespace0());
   let pair = trailing_ws(quoted_string())
@@ -55,7 +55,7 @@ fn json_object() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = P
     .map(JsonValue::Object)
 }
 
-fn json_value() -> impl Parser<StrInput<'static>, Output = JsonValue, Error = ParseError> {
+fn json_value() -> impl Parser<StrInputStream<'static>, Output = JsonValue, Error = ParseError> {
   whitespace0()
     .zip_right(json_primitive().or(json_array()).or(json_object()))
     .zip_left(whitespace0())
@@ -75,7 +75,7 @@ const JSON_INPUTS: &[(&str, &str)] = &[
 ];
 
 fn parse_json(input: &'static str) -> Result<JsonValue, oni_comb_parser::fail::Fail<ParseError>> {
-  let mut inp = StrInput::new(input);
+  let mut inp = StrInputStream::new(input);
   json_value().parse_next(&mut inp)
 }
 
@@ -95,7 +95,7 @@ pub fn register(c: &mut Criterion) {
     group.throughput(Throughput::Bytes(input.len() as u64));
     group.bench_with_input(BenchmarkId::new("oni-comb", name), input, |b, input| {
       b.iter(|| {
-        let mut inp = StrInput::new(black_box(input));
+        let mut inp = StrInputStream::new(black_box(input));
         json_value().parse_next(&mut inp)
       })
     });

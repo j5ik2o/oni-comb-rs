@@ -27,10 +27,10 @@ use crate::combinator::sep_by_fold::{SepByFold0, SepByFold1};
 use crate::combinator::zip::Zip;
 use crate::combinator::zip_left::ZipLeft;
 use crate::combinator::zip_right::ZipRight;
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
-pub trait ParserExt<I: Input>: Parser<I> + Sized {
+pub trait ParserExt<I: InputStream>: Parser<I> + Sized {
   fn map<F, O2>(self, f: F) -> Map<Self, F>
   where
     F: FnMut(Self::Output) -> O2, {
@@ -308,4 +308,4 @@ pub trait ParserExt<I: Input>: Parser<I> + Sized {
   }
 }
 
-impl<I: Input, P: Parser<I> + Sized> ParserExt<I> for P {}
+impl<I: InputStream, P: Parser<I> + Sized> ParserExt<I> for P {}

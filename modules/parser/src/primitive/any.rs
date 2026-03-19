@@ -2,16 +2,16 @@ use core::marker::PhantomData;
 
 use crate::error::{ExpectError, Expected};
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
-pub struct Any<I: Input>(PhantomData<fn(&mut I)>);
+pub struct Any<I: InputStream>(PhantomData<fn(&mut I)>);
 
-pub fn any<I: Input>() -> Any<I> {
+pub fn any<I: InputStream>() -> Any<I> {
   Any(PhantomData)
 }
 
-impl<I: Input> Parser<I> for Any<I> {
+impl<I: InputStream> Parser<I> for Any<I> {
   type Error = I::Error;
   type Output = I::Token;
 

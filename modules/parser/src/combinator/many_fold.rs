@@ -1,5 +1,5 @@
 use crate::fail::{Fail, PResult};
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
 pub struct ManyFold<P, B, F> {
@@ -10,7 +10,7 @@ pub struct ManyFold<P, B, F> {
 
 impl<I, P, B, F, Acc> Parser<I> for ManyFold<P, B, F>
 where
-  I: Input,
+  I: InputStream,
   P: Parser<I>,
   B: FnMut() -> Acc,
   F: FnMut(Acc, P::Output) -> Acc,

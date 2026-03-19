@@ -381,7 +381,7 @@ fn bench_json_full(c: &mut Criterion) {
 
   group.bench_function("oni-comb", |b| {
     b.iter(|| {
-      let mut input = StrInput::new(black_box(JSON_STR));
+      let mut input = StrInputStream::new(black_box(JSON_STR));
       black_box(oni_comb_json::json_parser().parse_next(&mut input).unwrap())
     })
   });

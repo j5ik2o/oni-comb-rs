@@ -1,11 +1,11 @@
 use oni_comb_parser::error::ParseError;
 use oni_comb_parser::fail::Fail;
-use oni_comb_parser::input::Input;
+use oni_comb_parser::input_stream::InputStream;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::prelude::*;
 
 fn single_quote_string(
-) -> impl Parser<oni_comb_parser::str_input::StrInput<'static>, Output = String, Error = ParseError> {
+) -> impl Parser<oni_comb_parser::str_input_stream::StrInputStream<'static>, Output = String, Error = ParseError> {
   escaped('\'', '\'', '\\', |c| match c {
     '\'' => Some('\''),
     '\\' => Some('\\'),
@@ -18,7 +18,7 @@ fn single_quote_string(
 #[test]
 fn escaped_simple() {
   let mut parser = single_quote_string();
-  let mut input = StrInput::new("'hello'");
+  let mut input = StrInputStream::new("'hello'");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "hello");
   assert_eq!(input.offset(), 7);
@@ -27,7 +27,7 @@ fn escaped_simple() {
 #[test]
 fn escaped_empty() {
   let mut parser = single_quote_string();
-  let mut input = StrInput::new("''");
+  let mut input = StrInputStream::new("''");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "");
 }
@@ -35,7 +35,7 @@ fn escaped_empty() {
 #[test]
 fn escaped_with_escape_sequences() {
   let mut parser = single_quote_string();
-  let mut input = StrInput::new(r"'it\'s a\ntest'");
+  let mut input = StrInputStream::new(r"'it\'s a\ntest'");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "it's a\ntest");
 }
@@ -43,7 +43,7 @@ fn escaped_with_escape_sequences() {
 #[test]
 fn escaped_backslash() {
   let mut parser = single_quote_string();
-  let mut input = StrInput::new(r"'a\\b'");
+  let mut input = StrInputStream::new(r"'a\\b'");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "a\\b");
 }
@@ -51,7 +51,7 @@ fn escaped_backslash() {
 #[test]
 fn escaped_no_open_delimiter() {
   let mut parser = single_quote_string();
-  let mut input = StrInput::new("hello");
+  let mut input = StrInputStream::new("hello");
 
   assert!(matches!(parser.parse_next(&mut input), Err(Fail::Backtrack(_))));
   assert_eq!(input.offset(), 0);
@@ -60,7 +60,7 @@ fn escaped_no_open_delimiter() {
 #[test]
 fn escaped_unterminated_is_cut() {
   let mut parser = single_quote_string();
-  let mut input = StrInput::new("'hello");
+  let mut input = StrInputStream::new("'hello");
 
   assert!(matches!(parser.parse_next(&mut input), Err(Fail::Cut(_))));
 }
@@ -68,7 +68,7 @@ fn escaped_unterminated_is_cut() {
 #[test]
 fn escaped_invalid_escape_is_cut() {
   let mut parser = single_quote_string();
-  let mut input = StrInput::new(r"'hello\x'");
+  let mut input = StrInputStream::new(r"'hello\x'");
 
   assert!(matches!(parser.parse_next(&mut input), Err(Fail::Cut(_))));
 }
@@ -81,7 +81,7 @@ fn escaped_custom_delimiters() {
     '`' => Some('`'),
     _ => None,
   });
-  let mut input = StrInput::new("`a$`b$$c`");
+  let mut input = StrInputStream::new("`a$`b$$c`");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "a`b$c");
 }
@@ -89,7 +89,7 @@ fn escaped_custom_delimiters() {
 #[test]
 fn escaped_with_remaining_input() {
   let mut parser = single_quote_string();
-  let mut input = StrInput::new("'hello' world");
+  let mut input = StrInputStream::new("'hello' world");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), "hello");
   assert_eq!(input.remaining(), " world");

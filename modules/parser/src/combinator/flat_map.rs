@@ -1,5 +1,5 @@
 use crate::fail::PResult;
-use crate::input::Input;
+use crate::input_stream::InputStream;
 use crate::parser::Parser;
 
 pub struct FlatMap<P, F> {
@@ -9,7 +9,7 @@ pub struct FlatMap<P, F> {
 
 impl<I, P, F, P2> Parser<I> for FlatMap<P, F>
 where
-  I: Input,
+  I: InputStream,
   P: Parser<I>,
   P2: Parser<I, Error = P::Error>,
   F: FnMut(P::Output) -> P2,

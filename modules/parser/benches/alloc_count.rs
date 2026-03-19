@@ -13,14 +13,14 @@ fn parse_identifier_no_alloc(s: &str) -> Option<(char, &str)> {
   let head = satisfy(|c: char| c.is_ascii_alphabetic() || c == '_');
   let tail = take_while0(|c: char| c.is_ascii_alphanumeric() || c == '_');
   let mut parser = head.zip(tail);
-  let mut input = StrInput::new(s);
+  let mut input = StrInputStream::new(s);
   parser.parse_next(&mut input).ok()
 }
 
 /// take_while1 は &str を返すのでアロケーション不要。
 fn parse_integer_no_alloc(s: &str) -> Option<&str> {
   let mut parser = take_while1(|c: char| c.is_ascii_digit());
-  let mut input = StrInput::new(s);
+  let mut input = StrInputStream::new(s);
   parser.parse_next(&mut input).ok()
 }
 
@@ -32,7 +32,7 @@ fn parse_flat_map_same_type_no_alloc(s: &str) -> Option<&str> {
     '3' => tag("three"),
     _ => tag(""),
   });
-  let mut input = StrInput::new(s);
+  let mut input = StrInputStream::new(s);
   parser.parse_next(&mut input).ok()
 }
 
@@ -64,6 +64,6 @@ fn main() {
   }
 
   // ── JSON フルパース（Vec のみアロケーション） ──
-  let mut input = StrInput::new(JSON_STR);
+  let mut input = StrInputStream::new(JSON_STR);
   let _ = oni_comb_json::json_value(&mut input).unwrap();
 }
