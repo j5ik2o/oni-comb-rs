@@ -126,14 +126,14 @@ fn context_does_not_affect_success() {
 
 #[test]
 fn display_simple_error() {
-  let e: ParseError = ExpectError::from_expected(5, Expected::Char('x'));
+  let e: ParseError = ExpectError::from_expected_with_location(5, 0, 0, Expected::Char('x'));
   assert_eq!(e.to_string(), "parse error at position 5: expected 'x'");
 }
 
 #[test]
 fn display_merged_error() {
-  let e1: ParseError = ExpectError::from_expected(0, Expected::Char('a'));
-  let e2: ParseError = ExpectError::from_expected(0, Expected::Char('b'));
+  let e1: ParseError = ExpectError::from_expected_with_location(0, 0, 0, Expected::Char('a'));
+  let e2: ParseError = ExpectError::from_expected_with_location(0, 0, 0, Expected::Char('b'));
   let merged = oni_comb_parser::error::MergeError::merge(e1, e2);
   let s = merged.to_string();
   assert!(s.contains("'a'"));
@@ -142,7 +142,7 @@ fn display_merged_error() {
 
 #[test]
 fn display_error_with_context() {
-  let mut e: ParseError = ExpectError::from_expected(3, Expected::Tag("true"));
+  let mut e: ParseError = ExpectError::from_expected_with_location(3, 0, 0, Expected::Tag("true"));
   e.context = vec!["value", "array"];
   // context is displayed in reverse (outer first)
   let s = e.to_string();
