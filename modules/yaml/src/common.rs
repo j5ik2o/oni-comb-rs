@@ -40,6 +40,30 @@ pub(crate) fn skip_ws_and_comments<'a>(input: &mut StrInput<'a>) -> PResult<(), 
   Ok(())
 }
 
+/// Check if the input is at a YAML document marker (`---` or `...`).
+/// Returns the marker string if found, or `None`.
+/// The marker must be followed by EOF, newline, space, or carriage return.
+pub(crate) fn at_document_marker<'a>(input: &StrInput<'a>) -> Option<&'static str> {
+  let remaining = input.remaining();
+  if remaining.starts_with("---")
+    && (remaining.len() == 3
+      || remaining.as_bytes()[3] == b'\n'
+      || remaining.as_bytes()[3] == b' '
+      || remaining.as_bytes()[3] == b'\r')
+  {
+    Some("---")
+  } else if remaining.starts_with("...")
+    && (remaining.len() == 3
+      || remaining.as_bytes()[3] == b'\n'
+      || remaining.as_bytes()[3] == b' '
+      || remaining.as_bytes()[3] == b'\r')
+  {
+    Some("...")
+  } else {
+    None
+  }
+}
+
 /// Get the current indentation level (column - 1 for 0-based).
 ///
 /// **Important:** This function only returns a meaningful indentation value

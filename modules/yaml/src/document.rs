@@ -4,30 +4,9 @@ use oni_comb_parser::input::Input;
 use oni_comb_parser::prelude::*;
 
 use crate::block::block_value;
-use crate::common::skip_ws_and_comments;
+use crate::common::{at_document_marker, skip_ws_and_comments};
 use crate::context::ParseContext;
 use crate::value::YamlValue;
-
-fn at_document_marker<'a>(input: &StrInput<'a>) -> Option<&'static str> {
-  let remaining = input.remaining();
-  if remaining.starts_with("---")
-    && (remaining.len() == 3
-      || remaining.as_bytes()[3] == b'\n'
-      || remaining.as_bytes()[3] == b' '
-      || remaining.as_bytes()[3] == b'\r')
-  {
-    Some("---")
-  } else if remaining.starts_with("...")
-    && (remaining.len() == 3
-      || remaining.as_bytes()[3] == b'\n'
-      || remaining.as_bytes()[3] == b' '
-      || remaining.as_bytes()[3] == b'\r')
-  {
-    Some("...")
-  } else {
-    None
-  }
-}
 
 pub(crate) fn yaml_document<'a>(input: &mut StrInput<'a>, ctx: &mut ParseContext) -> PResult<YamlValue, ParseError> {
   skip_ws_and_comments(input)?;

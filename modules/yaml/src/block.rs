@@ -6,21 +6,12 @@ use oni_comb_parser::input::Input;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::prelude::*;
 
-use crate::common::{current_indent, skip_inline_ws, skip_ws_and_comments};
+use crate::common::{at_document_marker, current_indent, skip_inline_ws, skip_ws_and_comments};
 use crate::context::ParseContext;
 use crate::flow::flow_value;
 use crate::multiline::block_scalar;
 use crate::scalar::yaml_scalar;
 use crate::value::YamlValue;
-
-fn at_document_marker<'a>(input: &StrInput<'a>) -> bool {
-  let remaining = input.remaining();
-  (remaining.starts_with("---") || remaining.starts_with("..."))
-    && (remaining.len() == 3
-      || remaining.as_bytes().get(3).copied() == Some(b'\n')
-      || remaining.as_bytes().get(3).copied() == Some(b' ')
-      || remaining.as_bytes().get(3).copied() == Some(b'\r'))
-}
 
 /// Parse an optional anchor prefix (&name) and return the anchor name.
 fn parse_anchor_prefix<'a>(input: &mut StrInput<'a>) -> PResult<Option<String>, ParseError> {
@@ -153,7 +144,7 @@ fn block_sequence<'a>(
       break;
     }
 
-    if at_document_marker(input) || input.peek_byte() != Some(b'-') {
+    if at_document_marker(input).is_some() || input.peek_byte() != Some(b'-') {
       break;
     }
 
@@ -183,7 +174,7 @@ fn try_block_mapping<'a>(
 
   loop {
     let cur_indent = current_indent(input);
-    if cur_indent != map_indent || at_document_marker(input) {
+    if cur_indent != map_indent || at_document_marker(input).is_some() {
       break;
     }
 
