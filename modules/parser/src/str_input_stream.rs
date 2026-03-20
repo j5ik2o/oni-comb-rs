@@ -1,5 +1,5 @@
-use crate::input_stream::InputStream;
 use crate::input_position::InputPosition;
+use crate::input_stream::InputStream;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 struct ParserState {

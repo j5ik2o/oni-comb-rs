@@ -29,10 +29,10 @@ impl<'a> TestInput<'a> {
 }
 
 impl<'a> InputStream for TestInput<'a> {
-  type Token = u8;
-  type Slice = &'a [u8];
   type Checkpoint = TestCheckpoint;
   type Error = MinimalError;
+  type Slice = &'a [u8];
+  type Token = u8;
 
   fn next_token(&mut self) -> Option<Self::Token> {
     let token = self.peek_token()?;
@@ -94,8 +94,8 @@ struct MutateThenBacktrack {
 }
 
 impl Parser<TestInput<'_>> for MutateThenBacktrack {
-  type Output = u8;
   type Error = MinimalError;
+  type Output = u8;
 
   fn parse_next(&mut self, input: &mut TestInput<'_>) -> PResult<u8, Self::Error> {
     input.state = self.state;
@@ -111,8 +111,8 @@ struct MutateThenCut {
 }
 
 impl Parser<TestInput<'_>> for MutateThenCut {
-  type Output = ();
   type Error = MinimalError;
+  type Output = ();
 
   fn parse_next(&mut self, input: &mut TestInput<'_>) -> PResult<Self::Output, Self::Error> {
     input.state = self.state;
@@ -128,8 +128,8 @@ struct AssertStateAndConsume {
 }
 
 impl Parser<TestInput<'_>> for AssertStateAndConsume {
-  type Output = u8;
   type Error = MinimalError;
+  type Output = u8;
 
   fn parse_next(&mut self, input: &mut TestInput<'_>) -> PResult<Self::Output, Self::Error> {
     assert_eq!(input.state, self.expected_state);
@@ -142,8 +142,8 @@ impl Parser<TestInput<'_>> for AssertStateAndConsume {
 struct StatefulManyA;
 
 impl Parser<TestInput<'_>> for StatefulManyA {
-  type Output = u8;
   type Error = MinimalError;
+  type Output = u8;
 
   fn parse_next(&mut self, input: &mut TestInput<'_>) -> PResult<Self::Output, Self::Error> {
     input.state = input.state.saturating_add(1);
@@ -163,8 +163,8 @@ impl Parser<TestInput<'_>> for StatefulManyA {
 struct StatefulItem;
 
 impl Parser<TestInput<'_>> for StatefulItem {
-  type Output = u8;
   type Error = MinimalError;
+  type Output = u8;
 
   fn parse_next(&mut self, input: &mut TestInput<'_>) -> PResult<Self::Output, Self::Error> {
     input.state = input.state.saturating_add(1);
@@ -184,8 +184,8 @@ impl Parser<TestInput<'_>> for StatefulItem {
 struct StatefulComma;
 
 impl Parser<TestInput<'_>> for StatefulComma {
-  type Output = u8;
   type Error = MinimalError;
+  type Output = u8;
 
   fn parse_next(&mut self, input: &mut TestInput<'_>) -> PResult<Self::Output, Self::Error> {
     input.state = input.state.saturating_add(10);

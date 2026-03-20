@@ -81,14 +81,12 @@ impl<'a> Parser<StrInputStream<'a>> for Float {
     }
 
     let s = &remaining[..i];
-    let value = s
-      .parse::<f64>()
-      .map_err(|_| {
-        Fail::Backtrack(Self::Error::from_position(
-          input.position(),
-          Expected::Description("number"),
-        ))
-      })?;
+    let value = s.parse::<f64>().map_err(|_| {
+      Fail::Backtrack(Self::Error::from_position(
+        input.position(),
+        Expected::Description("number"),
+      ))
+    })?;
     input.advance(i);
     Ok(value)
   }

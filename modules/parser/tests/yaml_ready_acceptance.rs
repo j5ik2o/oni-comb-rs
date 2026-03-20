@@ -180,10 +180,10 @@ impl<'a> YamlReadyInput<'a> {
 }
 
 impl<'a> InputStream for YamlReadyInput<'a> {
-  type Token = char;
-  type Slice = &'a str;
   type Checkpoint = YamlCheckpoint;
   type Error = ParseError;
+  type Slice = &'a str;
+  type Token = char;
 
   fn next_token(&mut self) -> Option<Self::Token> {
     self.inner.next_token()
@@ -266,8 +266,8 @@ impl<'a, P> Parser<YamlReadyInput<'a>> for WithExpectedIndent<P>
 where
   P: Parser<YamlReadyInput<'a>, Error = ParseError>,
 {
-  type Output = P::Output;
   type Error = ParseError;
+  type Output = P::Output;
 
   fn parse_next(&mut self, input: &mut YamlReadyInput<'a>) -> Result<Self::Output, Fail<Self::Error>> {
     let saved_stack = input.state;
@@ -292,8 +292,8 @@ impl<'a, P> Parser<YamlReadyInput<'a>> for WithFlow<P>
 where
   P: Parser<YamlReadyInput<'a>, Error = ParseError>,
 {
-  type Output = P::Output;
   type Error = ParseError;
+  type Output = P::Output;
 
   fn parse_next(&mut self, input: &mut YamlReadyInput<'a>) -> Result<Self::Output, Fail<Self::Error>> {
     let saved_flow = input.state.flow_level;
@@ -318,8 +318,8 @@ impl<'a, P> Parser<YamlReadyInput<'a>> for WithSimpleKeyAllowed<P>
 where
   P: Parser<YamlReadyInput<'a>, Error = ParseError>,
 {
-  type Output = P::Output;
   type Error = ParseError;
+  type Output = P::Output;
 
   fn parse_next(&mut self, input: &mut YamlReadyInput<'a>) -> Result<Self::Output, Fail<Self::Error>> {
     let saved = input.state.simple_key_allowed;
@@ -340,8 +340,8 @@ fn active_indent(reason: &'static str) -> ActiveIndent {
 }
 
 impl<'a> Parser<YamlReadyInput<'a>> for ActiveIndent {
-  type Output = ();
   type Error = ParseError;
+  type Output = ();
 
   fn parse_next(&mut self, input: &mut YamlReadyInput<'a>) -> Result<(), Fail<ParseError>> {
     let cp = input.checkpoint();
@@ -368,8 +368,8 @@ fn flow_plain_scalar() -> FlowPlainScalar {
 }
 
 impl<'a> Parser<YamlReadyInput<'a>> for FlowPlainScalar {
-  type Output = &'a str;
   type Error = ParseError;
+  type Output = &'a str;
 
   fn parse_next(&mut self, input: &mut YamlReadyInput<'a>) -> Result<&'a str, Fail<ParseError>> {
     let cp = input.checkpoint();
@@ -456,11 +456,10 @@ fn indented_mapping_line<'a>(reason: &'static str) -> impl Parser<YamlReadyInput
     .discard()
 }
 
-fn indented_key_only_line<'a>(reason: &'static str) -> impl Parser<YamlReadyInput<'a>, Output = (), Error = ParseError> {
-  active_indent(reason)
-    .zip_right(word())
-    .zip_left(seq(":\n"))
-    .discard()
+fn indented_key_only_line<'a>(
+  reason: &'static str,
+) -> impl Parser<YamlReadyInput<'a>, Output = (), Error = ParseError> {
+  active_indent(reason).zip_right(word()).zip_left(seq(":\n")).discard()
 }
 
 fn indented_block_line<'a>(reason: &'static str) -> impl Parser<YamlReadyInput<'a>, Output = (), Error = ParseError> {
@@ -482,10 +481,7 @@ fn flow_value<'a>() -> impl Parser<YamlReadyInput<'a>, Output = (), Error = Pars
 }
 
 fn flow_entry<'a>() -> impl Parser<YamlReadyInput<'a>, Output = (), Error = ParseError> {
-  flow_plain_scalar()
-    .zip_left(seq(": "))
-    .zip(flow_value())
-    .discard()
+  flow_plain_scalar().zip_left(seq(": ")).zip(flow_value()).discard()
 }
 
 fn flow_mapping<'a>() -> impl Parser<YamlReadyInput<'a>, Output = (), Error = ParseError> {
@@ -497,8 +493,7 @@ fn flow_mapping<'a>() -> impl Parser<YamlReadyInput<'a>, Output = (), Error = Pa
 
 fn run_acceptance_case<'a, P>(case: LitmusGrammarCase, mut parser: P)
 where
-  P: Parser<YamlReadyInput<'a>, Output = (), Error = ParseError>,
-{
+  P: Parser<YamlReadyInput<'a>, Output = (), Error = ParseError>, {
   let mut input = YamlReadyInput::new(case.input);
   match (case.outcome, parser.parse_next(&mut input)) {
     (ExpectedOutcome::Accept, Ok(())) => {}

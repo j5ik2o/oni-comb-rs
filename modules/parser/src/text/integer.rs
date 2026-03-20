@@ -42,14 +42,12 @@ impl<'a> Parser<StrInputStream<'a>> for Integer {
     }
 
     let s = &remaining[..consumed];
-    let value = s
-      .parse::<i64>()
-      .map_err(|_| {
-        Fail::Backtrack(Self::Error::from_position(
-          input.position(),
-          Expected::Description("integer"),
-        ))
-      })?;
+    let value = s.parse::<i64>().map_err(|_| {
+      Fail::Backtrack(Self::Error::from_position(
+        input.position(),
+        Expected::Description("integer"),
+      ))
+    })?;
     input.advance(consumed);
     Ok(value)
   }
