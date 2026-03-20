@@ -4,25 +4,5 @@ concurrency: 1
 base_branch: main
 submodules: all
 
-# ペルソナ別プロバイダー・モデル指定
-persona_providers:
-  planner:
-    provider: codex
-    model: gpt-5.4
-  coder:
-    provider: codex
-    model: gpt-5.4
-  qa-reviewer:
-    provider: codex
-    model: gpt-5.4
-  architecture-reviewer:
-    provider: codex
-    model: gpt-5.4
-  ai-antipattern-reviewer:
-    provider: codex
-    model: gpt-5.4
-  supervisor:
-    provider: codex
-    model: gpt-5.4
 
 

@@ -41,3 +41,6 @@ status_line = ["current-dir", "git-branch"]
 
 [projects."/Users/j5ik2o/Sources/j5ik2o.github.com/j5ik2o/oni-comb-rs"]
 trust_level = "trusted"
+
+[notice]
+hide_rate_limit_model_nudge = true

@@ -1,14 +1,22 @@
 ## ADDED Requirements
 
 ### Requirement: 下流 grammar 実装は public combinator のメソッドチェインだけで記述できなければならない
-parser モジュールは、layout-sensitive grammar を下流クレート側で public combinator のメソッドチェインのみで記述できなければならない。下流 grammar 実装では `parse_next` の直呼び、`checkpoint/reset` の直呼び、戻り値破棄、入力状態を読んだ手書き分岐を必要としてはならない。
+parser モジュールは、layout-sensitive grammar を下流クレート側で public combinator のメソッドチェインのみで記述できなければならない (MUST)。下流 grammar 実装では `parse_next` の直呼び、`checkpoint/reset` の直呼び、戻り値破棄、入力状態を読んだ手書き分岐を必要としてはならない。`fn_parser` は parser capability の不足を補う手段として使ってはならず、宣言的実装が先に成立した後に同値な振る舞いを保った局所最適化としてのみ使ってよい。
 
 #### Scenario: litmus grammar が命令型 escape hatch なしで記述できる
 - **WHEN** parser モジュールだけを使って YAML 風の litmus grammar 群を実装する
-- **THEN** 下流 grammar 実装には `parse_next` 直呼び、`checkpoint/reset` 直呼び、戻り値破棄が現れない
+- **THEN** 下流 grammar 実装には `parse_next` 直呼び、`checkpoint/reset` 直呼び、戻り値破棄、`fn_parser` による escape hatch が現れない
+
+#### Scenario: `fn_parser` は capability 実現の代替手段ではない
+- **WHEN** litmus grammar の成立前に `fn_parser` で layout-sensitive grammar を実装しようとする
+- **THEN** その実装は `YAML-ready` 判定の根拠として扱ってはならない
+
+#### Scenario: `fn_parser` は局所最適化としてのみ許可される
+- **WHEN** 同じ grammar に対して public combinator だけの宣言的実装が先に存在し、その後で性能上の根拠を伴って一部を `fn_parser` に置き換える
+- **THEN** `fn_parser` の利用は `YAML-ready` 契約違反ではなく、optimization escape hatch として扱われる
 
 ### Requirement: YAML-ready 判定は litmus grammar 群で検証されなければならない
-parser モジュールは、YAML クレート本体ではなく litmus grammar 群で `YAML-ready` を検証しなければならない。litmus grammar には少なくとも block list、indent nesting、flow/block 切替、multiline block、document boundary、indent error を含めなければならない。
+parser モジュールは、YAML クレート本体ではなく litmus grammar 群で `YAML-ready` を検証しなければならない (MUST)。litmus grammar には少なくとも block list、indent nesting、flow/block 切替、multiline block、block scalar header、document boundary、simple-key gating、simple-key backtrack、flow plain scalar boundary、indent error を含めなければならない。
 
 #### Scenario: block list grammar
 - **WHEN** 行頭でのみ `- item` を受理する litmus grammar を parser モジュールだけで記述する
@@ -26,9 +34,25 @@ parser モジュールは、YAML クレート本体ではなく litmus grammar �
 - **WHEN** `|` / `>` に相当する multiline block litmus grammar を parser モジュールだけで記述する
 - **THEN** grammar はインデント付きの継続行を手動 `parse_next` なしで表現できる
 
+#### Scenario: block scalar header grammar
+- **WHEN** chomping indicator や indentation indicator を伴う block scalar header litmus grammar を parser モジュールだけで記述する
+- **THEN** grammar は header の分岐とその後の block 本体の取り扱いを public combinator だけで表現できる
+
 #### Scenario: document boundary grammar
 - **WHEN** `---` / `...` に相当する document boundary litmus grammar を parser モジュールだけで記述する
 - **THEN** grammar は document 開始と終了を public combinator だけで表現できる
+
+#### Scenario: simple-key gating grammar
+- **WHEN** simple-key 可否のような scoped boolean flag を使う litmus grammar を parser モジュールだけで記述する
+- **THEN** grammar は flag の判定と一時更新を public combinator だけで表現できる
+
+#### Scenario: simple-key backtrack grammar
+- **WHEN** 左枝が simple-key 可否のような scoped boolean flag を更新した後に失敗し、右枝へ分岐する litmus grammar を parser モジュールだけで記述する
+- **THEN** grammar は flag の巻き戻しと分岐選択を手動 state 管理なしで public combinator だけで表現できる
+
+#### Scenario: flow plain scalar boundary grammar
+- **WHEN** flow context において plain scalar が `,`、`]`、`}`、`:` 境界で停止する litmus grammar を parser モジュールだけで記述する
+- **THEN** grammar は flow delimiter と scalar の停止条件を手書き分岐なしで public combinator だけで表現できる
 
 #### Scenario: indent error grammar
 - **WHEN** 期待インデントを満たさない入力を litmus grammar に与える
