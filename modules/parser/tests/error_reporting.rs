@@ -1,5 +1,6 @@
 use oni_comb_parser::error::{ExpectError, Expected, ParseError};
 use oni_comb_parser::fail::Fail;
+use oni_comb_parser::input_position::InputPosition;
 use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
@@ -14,6 +15,8 @@ fn error_position_at_start() {
   match parser.parse_next(&mut input) {
     Err(Fail::Backtrack(e)) => {
       assert_eq!(e.position, 0);
+      assert_eq!(e.line, 1);
+      assert_eq!(e.column, 1);
       assert_eq!(e.expected, vec![Expected::Char('a')]);
     }
     other => panic!("expected Backtrack, got {:?}", other),
@@ -28,6 +31,8 @@ fn error_position_after_consumed() {
   match parser.parse_next(&mut input) {
     Err(Fail::Backtrack(e)) => {
       assert_eq!(e.position, 2); // "ab" consumed, error at 'x'
+      assert_eq!(e.line, 1);
+      assert_eq!(e.column, 3);
       assert_eq!(e.expected, vec![Expected::Char('c')]);
     }
     other => panic!("expected Backtrack, got {:?}", other),
@@ -126,14 +131,14 @@ fn context_does_not_affect_success() {
 
 #[test]
 fn display_simple_error() {
-  let e: ParseError = ExpectError::from_expected(5, Expected::Char('x'));
-  assert_eq!(e.to_string(), "parse error at position 5: expected 'x'");
+  let e: ParseError = ExpectError::from_position(InputPosition::new(5, 2, 3, 3), Expected::Char('x'));
+  assert_eq!(e.to_string(), "parse error at line 2:3: expected 'x'");
 }
 
 #[test]
 fn display_merged_error() {
-  let e1: ParseError = ExpectError::from_expected(0, Expected::Char('a'));
-  let e2: ParseError = ExpectError::from_expected(0, Expected::Char('b'));
+  let e1: ParseError = ExpectError::from_position(InputPosition::new(0, 1, 1, 0), Expected::Char('a'));
+  let e2: ParseError = ExpectError::from_position(InputPosition::new(0, 1, 1, 0), Expected::Char('b'));
   let merged = oni_comb_parser::error::MergeError::merge(e1, e2);
   let s = merged.to_string();
   assert!(s.contains("'a'"));
@@ -142,11 +147,11 @@ fn display_merged_error() {
 
 #[test]
 fn display_error_with_context() {
-  let mut e: ParseError = ExpectError::from_expected(3, Expected::Tag("true"));
+  let mut e: ParseError = ExpectError::from_position(InputPosition::new(3, 1, 4, 0), Expected::Tag("true"));
   e.context = vec!["value", "array"];
   // context is displayed in reverse (outer first)
   let s = e.to_string();
-  assert!(s.contains("position 3"));
+  assert!(s.contains("line 1:4"));
   assert!(s.contains("\"true\""));
   assert!(s.contains("array > value"));
 }

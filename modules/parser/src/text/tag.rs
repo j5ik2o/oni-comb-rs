@@ -16,13 +16,15 @@ impl<'a> Parser<StrInputStream<'a>> for Tag {
 
   #[inline]
   fn parse_next(&mut self, input: &mut StrInputStream<'a>) -> PResult<Self::Output, Self::Error> {
-    let pos = input.offset();
     let remaining = input.remaining();
     if remaining.starts_with(self.0) {
       input.advance(self.0.len());
       Ok(self.0)
     } else {
-      Err(Fail::Backtrack(Self::Error::from_expected(pos, Expected::Tag(self.0))))
+      Err(Fail::Backtrack(Self::Error::from_position(
+        input.position(),
+        Expected::Tag(self.0),
+      )))
     }
   }
 }

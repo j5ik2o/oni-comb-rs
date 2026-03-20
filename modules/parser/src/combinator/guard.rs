@@ -29,8 +29,8 @@ where
     if (self.pred)(input) {
       Ok(())
     } else {
-      Err(Fail::Backtrack(I::Error::from_expected(
-        input.offset(),
+      Err(Fail::Backtrack(I::Error::from_position(
+        input.position(),
         Expected::Description("guard condition"),
       )))
     }

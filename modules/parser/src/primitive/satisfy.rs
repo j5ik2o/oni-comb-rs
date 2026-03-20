@@ -20,19 +20,18 @@ where
 
   #[inline]
   fn parse_next(&mut self, input: &mut I) -> PResult<I::Token, I::Error> {
-    let pos = input.offset();
     let cp = input.checkpoint();
     match input.next_token() {
       Some(t) if (self.0)(t) => Ok(t),
       Some(_) => {
         input.reset(cp);
-        Err(Fail::Backtrack(I::Error::from_expected(
-          pos,
+        Err(Fail::Backtrack(I::Error::from_position(
+          input.position(),
           Expected::Description("satisfy"),
         )))
       }
-      None => Err(Fail::Backtrack(I::Error::from_expected(
-        pos,
+      None => Err(Fail::Backtrack(I::Error::from_position(
+        input.position(),
         Expected::Description("satisfy"),
       ))),
     }

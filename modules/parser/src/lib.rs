@@ -6,6 +6,7 @@ pub mod byte_input_stream;
 pub mod combinator;
 pub mod error;
 pub mod fail;
+pub mod input_position;
 pub mod input_stream;
 pub mod ops;
 pub mod parser;

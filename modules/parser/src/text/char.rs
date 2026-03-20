@@ -16,14 +16,16 @@ impl<'a> Parser<StrInputStream<'a>> for Char {
 
   #[inline]
   fn parse_next(&mut self, input: &mut StrInputStream<'a>) -> PResult<Self::Output, Self::Error> {
-    let pos = input.offset();
     let remaining = input.remaining();
     match remaining.chars().next() {
       Some(c) if c == self.0 => {
         input.advance(c.len_utf8());
         Ok(c)
       }
-      _ => Err(Fail::Backtrack(Self::Error::from_expected(pos, Expected::Char(self.0)))),
+      _ => Err(Fail::Backtrack(Self::Error::from_position(
+        input.position(),
+        Expected::Char(self.0),
+      ))),
     }
   }
 }

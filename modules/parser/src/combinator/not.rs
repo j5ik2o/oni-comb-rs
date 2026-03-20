@@ -19,12 +19,11 @@ where
   #[inline]
   fn parse_next(&mut self, input: &mut I) -> PResult<(), P::Error> {
     let cp = input.checkpoint();
-    let pos = input.offset();
     match self.parser.parse_next(input) {
       Ok(_) => {
         input.reset(cp);
-        Err(Fail::Backtrack(P::Error::from_expected(
-          pos,
+        Err(Fail::Backtrack(P::Error::from_position(
+          input.position(),
           Expected::Description("not"),
         )))
       }

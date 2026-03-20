@@ -26,15 +26,20 @@ where
 
   #[inline]
   fn parse_next(&mut self, input: &mut I) -> PResult<I::Token, I::Error> {
-    let pos = input.offset();
     let cp = input.checkpoint();
     match input.next_token() {
       Some(t) if t == self.token => Ok(t),
       Some(_) => {
         input.reset(cp);
-        Err(Fail::Backtrack(I::Error::from_expected(pos, self.token.to_expected())))
+        Err(Fail::Backtrack(I::Error::from_position(
+          input.position(),
+          self.token.to_expected(),
+        )))
       }
-      None => Err(Fail::Backtrack(I::Error::from_expected(pos, self.token.to_expected()))),
+      None => Err(Fail::Backtrack(I::Error::from_position(
+        input.position(),
+        self.token.to_expected(),
+      ))),
     }
   }
 }

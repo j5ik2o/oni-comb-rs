@@ -1,4 +1,12 @@
 use crate::input_stream::InputStream;
+use crate::input_position::InputPosition;
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+struct ParserState {
+  indent_depth: u8,
+  context_depth: u8,
+  flags: u64,
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct ByteCheckpoint {
@@ -6,6 +14,7 @@ pub struct ByteCheckpoint {
   pub line: usize,
   pub column: usize,
   pub line_start: usize,
+  state: ParserState,
 }
 
 impl PartialEq for ByteCheckpoint {
@@ -34,6 +43,9 @@ pub struct ByteInputStream<'a> {
   line: usize,
   column: usize,
   line_start: usize,
+  /// Parser-core state that participates in checkpoint/reset.
+  /// Downstream semantic data is intentionally excluded from this snapshot.
+  state: ParserState,
 }
 
 impl<'a> ByteInputStream<'a> {
@@ -44,6 +56,7 @@ impl<'a> ByteInputStream<'a> {
       line: 1,
       column: 1,
       line_start: 0,
+      state: ParserState::default(),
     }
   }
 
@@ -113,6 +126,7 @@ impl<'a> InputStream for ByteInputStream<'a> {
       line: self.line,
       column: self.column,
       line_start: self.line_start,
+      state: self.state,
     }
   }
 
@@ -121,6 +135,7 @@ impl<'a> InputStream for ByteInputStream<'a> {
     self.line = cp.line;
     self.column = cp.column;
     self.line_start = cp.line_start;
+    self.state = cp.state;
   }
 
   fn offset(&self) -> usize {
@@ -141,5 +156,45 @@ impl<'a> InputStream for ByteInputStream<'a> {
 
   fn column(&self) -> usize {
     self.column
+  }
+
+  fn line_start(&self) -> usize {
+    self.line_start
+  }
+
+  fn position_after(&self, consumed: usize) -> InputPosition {
+    let start = self.offset;
+    let end = start + consumed;
+    let slice = &self.src[start..end];
+    let mut position = self.position();
+    for (relative_offset, b) in slice.iter().enumerate() {
+      if *b == b'\n' {
+        position.line += 1;
+        position.column = 1;
+        position.line_start = start + relative_offset + 1;
+      } else {
+        position.column += 1;
+      }
+    }
+    position.offset = end;
+    position
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn checkpoint_restores_internal_parser_state() {
+    let mut input = ByteInputStream::new(b"abc");
+    let cp = input.checkpoint();
+    input.state.indent_depth = 1;
+    input.state.context_depth = 4;
+    input.state.flags = 0b11;
+
+    input.reset(cp);
+
+    assert_eq!(input.state, ParserState::default());
   }
 }

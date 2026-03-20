@@ -23,13 +23,12 @@ impl<I: InputStream> Parser<I> for Take<I> {
 
   #[inline]
   fn parse_next(&mut self, input: &mut I) -> PResult<I::Slice, I::Error> {
-    let pos = input.offset();
     let cp = input.checkpoint();
     for _ in 0..self.n {
       if input.next_token().is_none() {
         input.reset(cp);
-        return Err(Fail::Backtrack(I::Error::from_expected(
-          pos,
+        return Err(Fail::Backtrack(I::Error::from_position(
+          input.position(),
           Expected::Description("enough input"),
         )));
       }

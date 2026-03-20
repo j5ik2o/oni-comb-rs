@@ -33,6 +33,7 @@ fn newline_increments_line() {
   input.next_token(); // \n
   assert_eq!(input.line(), 2);
   assert_eq!(input.column(), 1);
+  assert_eq!(input.line_start(), 3);
 }
 
 #[test]
@@ -108,11 +109,13 @@ fn checkpoint_reset_restores_line_column() {
   input.next_token(); // c
   assert_eq!(input.line(), 2);
   assert_eq!(input.column(), 2);
+  assert_eq!(input.line_start(), 3);
 
   input.reset(cp);
   assert_eq!(input.line(), 1);
   assert_eq!(input.column(), 3);
   assert_eq!(input.offset(), 2);
+  assert_eq!(input.line_start(), 0);
 }
 
 #[test]
@@ -126,4 +129,17 @@ fn checkpoint_ord_compares_by_offset() {
   input.next_token();
   let cp2 = input.checkpoint(); // offset=5
   assert!(cp2 > cp1);
+}
+
+#[test]
+fn line_start_is_a_line_anchor_not_a_column() {
+  let mut input = StrInputStream::new("é\nz");
+  input.next_token(); // é
+  assert_eq!(input.column(), 2);
+  assert_eq!(input.line_start(), 0);
+
+  input.next_token(); // \n
+  assert_eq!(input.line(), 2);
+  assert_eq!(input.column(), 1);
+  assert_eq!(input.line_start(), 3);
 }

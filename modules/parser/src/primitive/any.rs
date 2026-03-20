@@ -17,11 +17,10 @@ impl<I: InputStream> Parser<I> for Any<I> {
 
   #[inline]
   fn parse_next(&mut self, input: &mut I) -> PResult<I::Token, I::Error> {
-    let pos = input.offset();
     match input.next_token() {
       Some(t) => Ok(t),
-      None => Err(Fail::Backtrack(I::Error::from_expected(
-        pos,
+      None => Err(Fail::Backtrack(I::Error::from_position(
+        input.position(),
         Expected::Description("any token"),
       ))),
     }

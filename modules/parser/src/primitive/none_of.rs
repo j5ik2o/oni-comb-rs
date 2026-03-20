@@ -23,19 +23,18 @@ impl<'s, I: InputStream> Parser<I> for NoneOf<'s, I> {
 
   #[inline]
   fn parse_next(&mut self, input: &mut I) -> PResult<I::Token, I::Error> {
-    let pos = input.offset();
     let cp = input.checkpoint();
     match input.next_token() {
       Some(t) if !self.set.contains(&t) => Ok(t),
       Some(_) => {
         input.reset(cp);
-        Err(Fail::Backtrack(I::Error::from_expected(
-          pos,
+        Err(Fail::Backtrack(I::Error::from_position(
+          input.position(),
           Expected::Description("none of set"),
         )))
       }
-      None => Err(Fail::Backtrack(I::Error::from_expected(
-        pos,
+      None => Err(Fail::Backtrack(I::Error::from_position(
+        input.position(),
         Expected::Description("none of set"),
       ))),
     }
