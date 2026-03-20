@@ -70,13 +70,12 @@ where
 
   #[inline]
   fn parse_next(&mut self, input: &mut I) -> PResult<&'static T, I::Error> {
-    let pos = input.offset();
     if input.starts_with(self.tag) {
       input.advance_by(self.tag);
       Ok(self.tag)
     } else {
-      Err(Fail::Backtrack(I::Error::from_expected(
-        pos,
+      Err(Fail::Backtrack(I::Error::from_position(
+        input.position(),
         I::tag_to_expected(self.tag),
       )))
     }

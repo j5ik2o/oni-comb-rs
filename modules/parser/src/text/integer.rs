@@ -16,7 +16,6 @@ impl<'a> Parser<StrInputStream<'a>> for Integer {
 
   #[inline]
   fn parse_next(&mut self, input: &mut StrInputStream<'a>) -> PResult<i64, Self::Error> {
-    let pos = input.offset();
     let remaining = input.as_str();
     let mut consumed = 0;
 
@@ -36,16 +35,19 @@ impl<'a> Parser<StrInputStream<'a>> for Integer {
     }
 
     if consumed == digit_start {
-      return Err(Fail::Backtrack(Self::Error::from_expected(
-        pos,
+      return Err(Fail::Backtrack(Self::Error::from_position(
+        input.position(),
         Expected::Description("integer"),
       )));
     }
 
     let s = &remaining[..consumed];
-    let value = s
-      .parse::<i64>()
-      .map_err(|_| Fail::Backtrack(Self::Error::from_expected(pos, Expected::Description("integer"))))?;
+    let value = s.parse::<i64>().map_err(|_| {
+      Fail::Backtrack(Self::Error::from_position(
+        input.position(),
+        Expected::Description("integer"),
+      ))
+    })?;
     input.advance(consumed);
     Ok(value)
   }

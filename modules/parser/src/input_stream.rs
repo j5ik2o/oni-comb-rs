@@ -1,4 +1,5 @@
 use crate::error::ExpectError;
+use crate::input_position::InputPosition;
 
 pub trait InputStream {
   type Token: Copy + Eq;
@@ -23,4 +24,14 @@ pub trait InputStream {
   fn line(&self) -> usize;
   /// 現在の列番号 (1-origin)。Token 単位で数える。
   fn column(&self) -> usize;
+  /// 現在行の先頭を指す byte anchor。
+  fn line_start(&self) -> usize;
+
+  /// 現在位置の責務を明示したスナップショット。
+  fn position(&self) -> InputPosition {
+    InputPosition::new(self.offset(), self.line(), self.column(), self.line_start())
+  }
+
+  /// 現在位置から `consumed` byte 進めた位置を、入力を消費せずに計算する。
+  fn position_after(&self, consumed: usize) -> InputPosition;
 }

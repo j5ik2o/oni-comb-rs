@@ -21,7 +21,6 @@ impl<'a> Parser<StrInputStream<'a>> for Float {
 
   #[inline]
   fn parse_next(&mut self, input: &mut StrInputStream<'a>) -> PResult<f64, Self::Error> {
-    let pos = input.offset();
     let remaining = input.as_str();
     let bytes = remaining.as_bytes();
     let len = bytes.len();
@@ -34,8 +33,8 @@ impl<'a> Parser<StrInputStream<'a>> for Float {
 
     // int part (required)
     if i >= len || !bytes[i].is_ascii_digit() {
-      return Err(Fail::Backtrack(Self::Error::from_expected(
-        pos,
+      return Err(Fail::Backtrack(Self::Error::from_position(
+        input.position(),
         Expected::Description("number"),
       )));
     }
@@ -82,9 +81,12 @@ impl<'a> Parser<StrInputStream<'a>> for Float {
     }
 
     let s = &remaining[..i];
-    let value = s
-      .parse::<f64>()
-      .map_err(|_| Fail::Backtrack(Self::Error::from_expected(pos, Expected::Description("number"))))?;
+    let value = s.parse::<f64>().map_err(|_| {
+      Fail::Backtrack(Self::Error::from_position(
+        input.position(),
+        Expected::Description("number"),
+      ))
+    })?;
     input.advance(i);
     Ok(value)
   }

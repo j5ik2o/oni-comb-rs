@@ -33,7 +33,6 @@ where
 
   #[inline]
   fn parse_next(&mut self, input: &mut StrInputStream<'a>) -> PResult<String, ParseError> {
-    let pos = input.offset();
     let remaining = input.as_str();
     let mut chars = remaining.chars();
 
@@ -41,8 +40,8 @@ where
     match chars.next() {
       Some(c) if c == self.open => {}
       _ => {
-        return Err(Fail::Backtrack(ParseError::from_expected(
-          pos,
+        return Err(Fail::Backtrack(ParseError::from_position(
+          input.position(),
           Expected::Char(self.open),
         )));
       }
@@ -66,16 +65,16 @@ where
               match (self.handler)(next) {
                 Some(replacement) => result.push(replacement),
                 None => {
-                  return Err(Fail::Cut(ParseError::from_expected(
-                    pos + consumed - next.len_utf8(),
+                  return Err(Fail::Cut(ParseError::from_position(
+                    input.position_after(consumed - next.len_utf8()),
                     Expected::Description("valid escape sequence"),
                   )));
                 }
               }
             }
             None => {
-              return Err(Fail::Cut(ParseError::from_expected(
-                pos + consumed,
+              return Err(Fail::Cut(ParseError::from_position(
+                input.position_after(consumed),
                 Expected::Description("escape character"),
               )));
             }
@@ -86,8 +85,8 @@ where
           result.push(c);
         }
         None => {
-          return Err(Fail::Cut(ParseError::from_expected(
-            pos + consumed,
+          return Err(Fail::Cut(ParseError::from_position(
+            input.position_after(consumed),
             Expected::Char(self.close),
           )));
         }

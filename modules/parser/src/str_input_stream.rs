@@ -1,4 +1,12 @@
+use crate::input_position::InputPosition;
 use crate::input_stream::InputStream;
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+struct ParserState {
+  indent_depth: u8,
+  context_depth: u8,
+  flags: u64,
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct StrCheckpoint {
@@ -6,6 +14,7 @@ pub struct StrCheckpoint {
   pub line: usize,
   pub column: usize,
   pub line_start: usize,
+  state: ParserState,
 }
 
 impl PartialEq for StrCheckpoint {
@@ -37,6 +46,9 @@ pub struct StrInputStream<'a> {
   /// for O(1) reset. Reserved for future error reporting (e.g. extracting
   /// the full line text around an error position).
   line_start: usize,
+  /// Parser-core state that participates in checkpoint/reset.
+  /// Downstream semantic data is intentionally excluded from this snapshot.
+  state: ParserState,
 }
 
 impl<'a> StrInputStream<'a> {
@@ -47,6 +59,7 @@ impl<'a> StrInputStream<'a> {
       line: 1,
       column: 1,
       line_start: 0,
+      state: ParserState::default(),
     }
   }
 
@@ -132,6 +145,7 @@ impl<'a> InputStream for StrInputStream<'a> {
       line: self.line,
       column: self.column,
       line_start: self.line_start,
+      state: self.state,
     }
   }
 
@@ -140,6 +154,7 @@ impl<'a> InputStream for StrInputStream<'a> {
     self.line = checkpoint.line;
     self.column = checkpoint.column;
     self.line_start = checkpoint.line_start;
+    self.state = checkpoint.state;
   }
 
   fn offset(&self) -> usize {
@@ -160,5 +175,45 @@ impl<'a> InputStream for StrInputStream<'a> {
 
   fn column(&self) -> usize {
     self.column
+  }
+
+  fn line_start(&self) -> usize {
+    self.line_start
+  }
+
+  fn position_after(&self, consumed: usize) -> InputPosition {
+    let start = self.offset;
+    let end = start + consumed;
+    let slice = &self.src[start..end];
+    let mut position = self.position();
+    for (relative_offset, c) in slice.char_indices() {
+      if c == '\n' {
+        position.line += 1;
+        position.column = 1;
+        position.line_start = start + relative_offset + c.len_utf8();
+      } else {
+        position.column += 1;
+      }
+    }
+    position.offset = end;
+    position
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn checkpoint_restores_internal_parser_state() {
+    let mut input = StrInputStream::new("abc");
+    let cp = input.checkpoint();
+    input.state.indent_depth = 3;
+    input.state.context_depth = 2;
+    input.state.flags = 0b101;
+
+    input.reset(cp);
+
+    assert_eq!(input.state, ParserState::default());
   }
 }

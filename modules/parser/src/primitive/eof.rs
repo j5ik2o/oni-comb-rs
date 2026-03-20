@@ -20,7 +20,10 @@ impl<I: InputStream> Parser<I> for Eof<I> {
     if input.is_eof() {
       Ok(())
     } else {
-      Err(Fail::Backtrack(I::Error::from_expected(input.offset(), Expected::Eof)))
+      Err(Fail::Backtrack(I::Error::from_position(
+        input.position(),
+        Expected::Eof,
+      )))
     }
   }
 }

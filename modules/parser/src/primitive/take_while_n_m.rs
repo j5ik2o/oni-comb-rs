@@ -30,7 +30,6 @@ where
 
   #[inline]
   fn parse_next(&mut self, input: &mut I) -> PResult<I::Slice, I::Error> {
-    let pos = input.offset();
     let cp = input.checkpoint();
     let mut count = 0;
     while count < self.max {
@@ -48,8 +47,8 @@ where
     }
     if count < self.min {
       input.reset(cp);
-      return Err(Fail::Backtrack(I::Error::from_expected(
-        pos,
+      return Err(Fail::Backtrack(I::Error::from_position(
+        input.position(),
         Expected::Description("not enough matching tokens"),
       )));
     }

@@ -16,15 +16,14 @@ impl<'a> Parser<StrInputStream<'a>> for Identifier {
 
   #[inline]
   fn parse_next(&mut self, input: &mut StrInputStream<'a>) -> PResult<&'a str, Self::Error> {
-    let pos = input.offset();
     let remaining = input.as_str();
     let mut chars = remaining.chars();
 
     match chars.next() {
       Some(c) if c.is_ascii_alphabetic() || c == '_' => {}
       _ => {
-        return Err(Fail::Backtrack(Self::Error::from_expected(
-          pos,
+        return Err(Fail::Backtrack(Self::Error::from_position(
+          input.position(),
           Expected::Description("identifier"),
         )));
       }

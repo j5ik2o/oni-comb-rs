@@ -75,7 +75,6 @@ impl<'a> Parser<StrInputStream<'a>> for RegexParser {
 
   #[inline]
   fn parse_next(&mut self, input: &mut StrInputStream<'a>) -> PResult<&'a str, ParseError> {
-    let pos = input.offset();
     let remaining = input.remaining();
     let re_input = ReInput::new(remaining).anchored(Anchored::Yes);
     match self.re.find(re_input) {
@@ -84,8 +83,8 @@ impl<'a> Parser<StrInputStream<'a>> for RegexParser {
         input.advance(m.len());
         Ok(matched)
       }
-      None => Err(Fail::Backtrack(ParseError::from_expected(
-        pos,
+      None => Err(Fail::Backtrack(ParseError::from_position(
+        input.position(),
         Expected::Description("regex match"),
       ))),
     }

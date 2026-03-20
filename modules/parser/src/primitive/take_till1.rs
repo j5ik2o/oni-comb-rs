@@ -20,7 +20,6 @@ where
 
   #[inline]
   fn parse_next(&mut self, input: &mut I) -> PResult<I::Slice, I::Error> {
-    let pos = input.offset();
     let cp = input.checkpoint();
     while let Some(t) = input.peek_token() {
       if (self.0)(t) {
@@ -30,8 +29,8 @@ where
       }
     }
     if input.checkpoint() == cp {
-      return Err(Fail::Backtrack(I::Error::from_expected(
-        pos,
+      return Err(Fail::Backtrack(I::Error::from_position(
+        input.position(),
         Expected::Description("at least one non-matching token"),
       )));
     }

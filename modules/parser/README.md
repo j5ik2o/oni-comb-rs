@@ -100,6 +100,15 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 | `StrInputStream<'a>` | `char` | `&'a str` | Text parsing (default) |
 | `ByteInputStream<'a>` | `u8` | `&'a [u8]` | Binary protocol parsing |
 
+## YAML-ready Status
+
+`oni-comb-parser` now satisfies the `yaml-ready-parser` acceptance contract at the parser-module level.
+
+- The executable contract lives in `modules/parser/tests/yaml_ready_acceptance.rs`
+- The litmus grammars cover block list, indent nesting, flow/block switching, multiline block, block scalar header, document boundary, simple-key gating, simple-key backtrack, flow plain scalar boundary, and indent error
+- The contract is satisfied without introducing a YAML-specific Layout API into `modules/parser`
+- Downstream YAML work is expected to compose the existing parser/core capabilities rather than patch capability gaps with direct `parse_next`, direct `checkpoint/reset`, or `fn_parser`
+
 ## Build & Test
 
 ```bash

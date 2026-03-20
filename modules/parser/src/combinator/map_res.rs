@@ -21,12 +21,11 @@ where
 
   #[inline]
   fn parse_next(&mut self, input: &mut I) -> PResult<Self::Output, Self::Error> {
-    let pos = input.offset();
     let v = self.parser.parse_next(input)?;
     match (self.f)(v) {
       Ok(o) => Ok(o),
-      Err(_) => Err(Fail::Backtrack(Self::Error::from_expected(
-        pos,
+      Err(_) => Err(Fail::Backtrack(Self::Error::from_position(
+        input.position(),
         Expected::Description(self.label),
       ))),
     }

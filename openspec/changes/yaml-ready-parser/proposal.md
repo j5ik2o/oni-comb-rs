@@ -1,0 +1,41 @@
+## Why
+
+oni-comb-parser は JSON などの直列的な文法には十分使えるが、YAML 1.2 のような layout-sensitive grammar を combinator として自然に記述できる保証がまだない。YAML 実装を先に始めると、下流クレート側で `parse_next`、`checkpoint/reset`、戻り値破棄、手動状態管理、`fn_parser` の濫用で parser core の不足を埋める設計破綻が起きるため、まず parser モジュール単体の `YAML-ready` 条件を定義し、その条件を満たすように設計を鍛え直す必要がある。
+
+## What Changes
+
+- YAML パーサーはまだ実装しない。代わりに parser モジュール単体に対する `YAML-ready` の受け入れ条件を定義する
+- top-level の下流 grammar 定義では `parse_next` 直呼び、`checkpoint/reset` 直呼び、戻り値破棄を禁止し、まず public combinator のメソッドチェインと downstream 側 helper の組み合わせで文法を記述できることを契約にする
+- `fn_parser` は parser capability の不足を補う escape hatch としては許可しない。宣言的実装が先に成立した後、局所的な性能最適化としてのみ条件付きで許可する
+- layout-sensitive grammar に必要な parser capability を定義する。対象には layout context、checkpoint 対象、行頭/インデント/flow-block 文脈観測、scoped boolean flag、位置情報と診断モデルを含む
+- YAML 本体の代わりに、YAML 実装に必要な能力を検証する litmus grammar 群を定義し、parser モジュール単体の acceptance criteria とする。特に simple-key rollback、flow plain scalar boundary、block scalar header のような命令型に逃げやすい難所を含める
+- **BREAKING**: 既存の位置情報モデルとエラーモデルは、`YAML-ready` 条件を満たすために責務・単位・生成タイミングの再設計対象にする
+
+## Capabilities
+
+### New Capabilities
+- `yaml-ready-parser`: parser モジュール単体が layout-sensitive grammar を public combinator だけで記述できることを定義する
+- `layout-sensitive-parsing`: 行頭、インデント、flow/block 文脈、scoped boolean flag、checkpoint 可能な layout context を扱う parser capability を定義する
+
+### Modified Capabilities
+- `line-column-tracking`: line/column/line_start/span の責務と単位を、YAML-ready の位置情報モデルに合わせて見直す
+- `expect-error-trait`: エラー生成時点で位置情報と文脈を取得できるよう要件を見直す
+- `yaml-parser`: `yaml-ready-parser` 通過後に着手可能な downstream capability として前提条件を明示する
+
+## Impact
+
+- `modules/parser`: InputStream、Checkpoint、error model、public combinator 設計、テスト方針の再設計対象
+- `docs/known-issues.md`: `line_start` 問題だけでなく、checkpoint 可能な layout context 欠如を主要論点として整理し直す必要がある
+- `openspec/specs/line-column-tracking/spec.md`: 位置情報の責務・単位・公開契約の変更が必要
+- `openspec/specs/expect-error-trait/spec.md`: エラー生成 API の変更が必要
+- `openspec/specs/yaml-parser/spec.md`: readiness gate と downstream 実装方針の明文化が必要
+- `fn_parser` の位置づけ: capability 実現手段ではなく、宣言的実装成立後の optimization escape hatch として運用ルールを明文化する必要がある
+- 将来の `modules/yaml`: parser readiness 通過後に初めて着手する対象
+
+## Current Status
+
+- `modules/parser/tests/yaml_ready_acceptance.rs` で定義した litmus grammar 群が、parser モジュール単体で通過している
+- 検証対象には block list、indent nesting、flow/block switching、multiline block、block scalar header、document boundary、simple-key gating、simple-key backtrack、flow plain scalar boundary、indent error を含む
+- litmus grammar 実装は `fn_parser` に依存せず、top-level grammar での `parse_next` / `checkpoint/reset` 直呼びを readiness の根拠にしていない
+- `modules/parser` には YAML 専用の Layout API を追加せず、既存の parser/core capability の組み合わせで `YAML-ready` を満たした
+- `fn_parser` はこの change では導入しておらず、将来導入する場合も宣言的実装の先行成立と性能根拠の review を前提とする
