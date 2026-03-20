@@ -5,7 +5,7 @@ oni-comb-parser は JSON などの直列的な文法には十分使えるが、Y
 ## What Changes
 
 - YAML パーサーはまだ実装しない。代わりに parser モジュール単体に対する `YAML-ready` の受け入れ条件を定義する
-- 下流 grammar 実装では `parse_next` 直呼び、`checkpoint/reset` 直呼び、戻り値破棄を禁止し、まず public combinator のメソッドチェインのみで文法を記述できることを契約にする
+- top-level の下流 grammar 定義では `parse_next` 直呼び、`checkpoint/reset` 直呼び、戻り値破棄を禁止し、まず public combinator のメソッドチェインと downstream 側 helper の組み合わせで文法を記述できることを契約にする
 - `fn_parser` は parser capability の不足を補う escape hatch としては許可しない。宣言的実装が先に成立した後、局所的な性能最適化としてのみ条件付きで許可する
 - layout-sensitive grammar に必要な parser capability を定義する。対象には layout context、checkpoint 対象、行頭/インデント/flow-block 文脈観測、scoped boolean flag、位置情報と診断モデルを含む
 - YAML 本体の代わりに、YAML 実装に必要な能力を検証する litmus grammar 群を定義し、parser モジュール単体の acceptance criteria とする。特に simple-key rollback、flow plain scalar boundary、block scalar header のような命令型に逃げやすい難所を含める
@@ -31,3 +31,11 @@ oni-comb-parser は JSON などの直列的な文法には十分使えるが、Y
 - `openspec/specs/yaml-parser/spec.md`: readiness gate と downstream 実装方針の明文化が必要
 - `fn_parser` の位置づけ: capability 実現手段ではなく、宣言的実装成立後の optimization escape hatch として運用ルールを明文化する必要がある
 - 将来の `modules/yaml`: parser readiness 通過後に初めて着手する対象
+
+## Current Status
+
+- `modules/parser/tests/yaml_ready_acceptance.rs` で定義した litmus grammar 群が、parser モジュール単体で通過している
+- 検証対象には block list、indent nesting、flow/block switching、multiline block、block scalar header、document boundary、simple-key gating、simple-key backtrack、flow plain scalar boundary、indent error を含む
+- litmus grammar 実装は `fn_parser` に依存せず、top-level grammar での `parse_next` / `checkpoint/reset` 直呼びを readiness の根拠にしていない
+- `modules/parser` には YAML 専用の Layout API を追加せず、既存の parser/core capability の組み合わせで `YAML-ready` を満たした
+- `fn_parser` はこの change では導入しておらず、将来導入する場合も宣言的実装の先行成立と性能根拠の review を前提とする

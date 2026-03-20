@@ -99,6 +99,15 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 | `StrInputStream<'a>` | `char` | `&'a str` | テキストパース（デフォルト） |
 | `ByteInputStream<'a>` | `u8` | `&'a [u8]` | バイナリプロトコルパース |
 
+## YAML-ready の現状
+
+`oni-comb-parser` は、parser モジュール単体として `yaml-ready-parser` の受け入れ契約を満たした状態になりました。
+
+- 実行可能な受け入れ契約は `modules/parser/tests/yaml_ready_acceptance.rs` にあります
+- litmus grammar は block list、indent nesting、flow/block switching、multiline block、block scalar header、document boundary、simple-key gating、simple-key backtrack、flow plain scalar boundary、indent error を含みます
+- この契約は `modules/parser` に YAML 専用の Layout API を追加せずに満たしています
+- 将来の YAML 実装は、既存の parser/core capability の組み合わせで進める前提であり、`parse_next` 直呼び、`checkpoint/reset` 直呼び、`fn_parser` による不足補完を前提にしません
+
 ## ビルド・テスト
 
 ```bash

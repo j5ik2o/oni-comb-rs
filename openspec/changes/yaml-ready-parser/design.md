@@ -37,7 +37,9 @@
 
 ### D2. 下流 grammar 実装では命令型 escape hatch を原則禁止し、`fn_parser` は最適化用途に限定する
 
-parser core の基盤コンビネータ実装を除き、下流 grammar 実装では `parse_next` 直呼び、`checkpoint/reset` 直呼び、戻り値破棄、入力状態を読んだ手書き if/else 分岐を禁止する。grammar 記述は、まず public combinator のメソッドチェインだけで完結することを要求する。`fn_parser` は parser capability の不足を補う escape hatch としては使わず、同値な宣言的実装が先に存在する箇所の局所最適化に限って使う。
+parser core の基盤コンビネータ実装を除き、top-level の下流 grammar 記述では `parse_next` 直呼び、`checkpoint/reset` 直呼び、戻り値破棄、入力状態を読んだ手書き if/else 分岐を禁止する。grammar 記述は、まず public combinator のメソッドチェインと下流所有 helper parser の組み合わせで完結することを要求する。
+
+ここでいう helper parser は、既存の公開契約（`InputStream` / `Checkpoint`、位置情報 API、error model、既存 combinator）を組み合わせて downstream 側の stateful adaptation をカプセル化する小さな補助実装を指す。helper の内部で `Parser` / `InputStream` を直接扱うことは許容するが、その命令型処理を top-level grammar 定義へ漏らしてはならない。`fn_parser` は parser capability の不足を補う escape hatch としては使わず、同値な宣言的実装が先に存在する箇所の局所最適化に限って使う。
 
 **代替案:**
 - YAML クレートだけ特例で `parse_next` を許可する
@@ -69,54 +71,45 @@ backtrack の対象に含めるのは `input state` と `checkpointable layout s
 - 一方で layout state を checkpoint 対象から外すと `or` / `attempt` で文脈破損が起きる
 - YAML 固有の意味解釈を parse 後フェーズへ送ることで、parser core は汎用 capability に集中できる
 
-### D4. YAML 必要機能を汎用機能に分解して parser core に提供する
+### D4. YAML 必要機能は既存の公開契約と downstream 側の合成でまず実証する
 
-YAML パーサー実装で必要な機能をそのまま parser core に搭載するのではなく、汎用的な機能に分解して提供する。各 grammar クレートは汎用コンビネータを組み合わせて必要な機能を実現する。
+YAML パーサー実装で必要な機能を、そのまま parser core の新 API として搭載する前に、既存の公開契約でどこまで表現できるかをまず実証する。ここでいう公開契約には `InputStream` / `Checkpoint`、位置情報 API、error model、既存 combinator、および下流クレートが独自 `InputStream` を実装して state を所有できる拡張点を含む。
 
-**分解マッピング:**
+`YAML-ready` 判定に必要なのは YAML 専用 Layout API の有無ではなく、下流 grammar が parser モジュールの既存公開契約を組み合わせて必要な振る舞いを記述できることである。litmus grammar で表現不能なケースが再現した場合にのみ、その不足を YAML 非依存の最小 generic capability として抽出する。
 
-| YAML 必要機能 | 汎用機能 | 用途例 |
-|--------------|---------|--------|
-| flow_level (flow/block nesting) | ContextStack<T> | YAML: Flow/Block, JSON: Object/Array, 任意: 括弧種別 |
-| indent_stack (期待インデント) | IndentStack | YAML, Python, Haskell, Makefile |
-| simple_key_allowed | FlagSet<F> | YAML: `SimpleKeyAllowed`, 任意: scoped boolean state |
-| 行頭判定 | Position Query | 全 layout-sensitive grammar |
-| インデント判定 | at_indent(n) | 全インデントベース言語 |
+**分解マッピング（現時点の実証形）:**
+
+| YAML 必要機能 | まず使う公開契約 | 用途例 |
+|--------------|------------------|--------|
+| flow/block nesting | checkpoint 可能な下流所有 state + 既存 combinator | YAML, JSON, 任意の括弧文脈 |
+| 期待インデント | `line_start` / `column` / checkpoint 可能な下流所有 state | YAML, Python, Haskell, Makefile |
+| simple_key_allowed | checkpoint 可能な下流所有 state + `or` / `attempt` | 任意の scoped boolean state |
+| 行頭判定 | `offset` / `line_start` などの位置情報 API | 全 layout-sensitive grammar |
+| 位置付き診断 | `ParseError`, `ExpectError`, context 付与 | 全 layout-sensitive grammar |
 
 **代替案:**
 - YAML 特化の flow_level, simple_key_allowed 等を直接 core に実装する
-- guard(Fn) だけで表現し、複雑な述語を下流に書かせる
+- 不足の再現を待たず、仮説ベースで generic API を先回り追加する
 
 **理由:**
-- parser core は YAML を知らず、YAML は core の汎用機能を組み合わせるだけで実装できる
-- 同じ core で Python, Haskell, Makefile 等の layout-sensitive grammar も書ける
-- guard は観測しかできず、flag を含む layout state の遷移や巻き戻しを表現できない
+- parser core は YAML を知らず、YAML は core の既存公開契約と downstream 側 helper を組み合わせるだけで実装できることを先に示すべきである
+- 同じ土台で Python, Haskell, Makefile 等の layout-sensitive grammar も書ける
+- litmus grammar が既存契約で成立している段階では、新 API の追加は YAGNI になりやすい
 
-### D5. layout-aware 汎用コンビネータを提供する
+### D5. 新しい layout-aware primitive / combinator は不足が再現した場合に限り追加を検討する
 
-汎用機能を使うコンビネータを parser core に提供する。
+この change では、layout-aware な振る舞いを parser core の新しい public API として先に固定しない。まずは downstream 側の合成で litmus grammar が成立するかを受け入れ条件とし、既存公開契約だけでは表現不能なケースが残ったときに限り、YAML 非依存の最小 generic primitive / combinator を検討する。
 
-**データ構造:**
-- `IndentStack`: 固定長インデントスタック（Copy, Default）
-- `ContextStack<T>`: 汎用コンテキストスタック（Copy, Default）
-- `FlagSet<F>`: 任意の boolean flag を保持する checkpoint 可能な集合
-
-**コンビネータ:**
-- `at_line_start()`: 行頭でのみ成功
-- `at_indent(min)`: 現在列 >= min なら成功
-- `push_indent(indent, parser)`: インデントを push して parser 実行、終了時に pop
-- `in_context(ctx, parser)`: コンテキストに入って parser 実行、終了時に exit
-- `flag_is(flag, value)`: 指定 flag が現在値 `value` のとき成功
-- `with_flag(flag, value, parser)`: 指定 flag を一時的に `value` に設定して parser 実行
+将来 generic 追加を検討する場合でも、候補は `at_line_start()`, `at_indent(min)`, `with_flag(...)` のような汎用名に限り、YAML 固有語彙を parser core に持ち込まない。
 
 **代替案:**
-- 各 grammar クレートで独自にコンビネータを実装する
-- 低レベル API だけ提供し、コンビネータは提供しない
+- litmus grammar の結果にかかわらず、layout-aware combinator を先に public API 化する
+- すべての layout-aware ロジックを下流クレート専用 helper に閉じ込め、parser core 側の不足を永続的に放置する
 
 **理由:**
-- コンビネータレベルで提供することで、下流 grammar 実装での命令型コードを防げる
-- generic flag capability を first-class にすることで、`simple_key_allowed` のような条件付き文脈を宣言的に扱える
-- Checkpoint との連携（自動巻き戻し）を正しく実装できる
+- 先行 API 追加は、今回の「Layout API は作らない」という方針と衝突する
+- 一方で本当に表現不能なケースが出た場合は、最小 generic 追加で parser core の責務不足を補える余地は残しておくべきである
+- `modules/parser/tests/yaml_ready_acceptance.rs` の litmus grammar は、現時点では新しい Layout API なしで、top-level grammar を declarative に保ったまま成立している
 
 ### D6. error model は生成時点で location/context を持つ
 
@@ -154,13 +147,20 @@ YAML パーサー実装で必要な機能をそのまま parser core に搭載�
 
 1. `YAML-ready` の acceptance criteria と litmus grammar を spec として固定する
 2. 既存の位置情報 spec と error spec を delta spec で更新する
-3. 汎用 layout 機能（IndentStack, ContextStack, FlagSet, Position Query）の API を設計で確定する
-4. 汎用コンビネータ（at_line_start, at_indent, push_indent, in_context, flag_is, with_flag）の API を設計で確定する
-5. その後に初めて parser モジュールの実装タスクへ進む
-6. litmus grammar が汎用コンビネータだけで記述できた段階で、YAML クレート着手の可否を再判定する
+3. 行頭判定、期待インデント判定、flow/block 文脈判定、boolean flag 判定を、既存公開契約と downstream 側の合成でどう実現するかを設計に反映する
+4. litmus grammar で表現不能なケースが残る場合に限り、YAML 非依存の最小 generic primitive / combinator の追加要否を評価する
+5. 追加が必要な場合にのみ、parser モジュールの最小実装タスクへ進む
+6. litmus grammar が既存契約または必要最小限の generic 追加で記述できた段階で、YAML クレート着手の可否を再判定する
 
 ## Open Questions
 
-- `IndentStack`, `ContextStack<T>` を `InputStream` トレイトの associated type にするか、具象型として提供するか
+- 将来 generic 追加が必要になった場合、state carrier を `InputStream` トレイトの associated type にするか、下流側 helper / wrapper に留めるか
 - layout state のデフォルト値を持たせるか、grammar クレート側で初期化を強制するか
 - `position()` や span 抽出 API をどこまで public contract に含めるか
+
+## Readiness Result
+
+- `modules/parser/tests/yaml_ready_acceptance.rs` の litmus grammar 群を parser モジュール単体で通過したため、この change の `YAML-ready` 判定は YAML 実装着手ではなく acceptance test により充足された
+- 実証は YAML 専用の Layout API を `modules/parser` に導入せず、checkpoint 可能な state、位置情報、エラーモデル、既存 combinator、および downstream 側 helper の組み合わせで行っている
+- downstream YAML 実装は、この change で整えた parser/core capability を組み合わせる前提で着手できる
+- この change では litmus grammar 実装に `fn_parser` を導入していないため、`fn_parser` は capability 実現手段として使われていない。将来導入する場合でも、宣言的実装が先に存在し、性能根拠が確認できる場合に限る

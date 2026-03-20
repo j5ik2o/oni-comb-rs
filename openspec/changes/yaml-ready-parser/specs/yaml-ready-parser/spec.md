@@ -1,11 +1,15 @@
 ## ADDED Requirements
 
-### Requirement: 下流 grammar 実装は public combinator のメソッドチェインだけで記述できなければならない
-parser モジュールは、layout-sensitive grammar を下流クレート側で public combinator のメソッドチェインのみで記述できなければならない (MUST)。下流 grammar 実装では `parse_next` の直呼び、`checkpoint/reset` の直呼び、戻り値破棄、入力状態を読んだ手書き分岐を必要としてはならない。`fn_parser` は parser capability の不足を補う手段として使ってはならず、宣言的実装が先に成立した後に同値な振る舞いを保った局所最適化としてのみ使ってよい。
+### Requirement: litmus grammar の公開面は declarative でなければならない
+parser モジュールは、layout-sensitive grammar の top-level litmus grammar 定義を、下流クレート側で public combinator のメソッドチェインと下流所有 helper parser の組み合わせで記述できなければならない (MUST)。top-level litmus grammar 定義では `parse_next` の直呼び、`checkpoint/reset` の直呼び、戻り値破棄、入力状態を読んだ手書き分岐を必要としてはならない。一方で、既存の公開契約を組み合わせるための下流所有 helper parser / `InputStream` wrapper が内部実装として `Parser` / `InputStream` を直接扱うことまでは禁止しない。`fn_parser` は parser capability の不足を補う手段として使ってはならず、宣言的実装が先に成立した後に同値な振る舞いを保った局所最適化としてのみ使ってよい。
 
 #### Scenario: litmus grammar が命令型 escape hatch なしで記述できる
 - **WHEN** parser モジュールだけを使って YAML 風の litmus grammar 群を実装する
-- **THEN** 下流 grammar 実装には `parse_next` 直呼び、`checkpoint/reset` 直呼び、戻り値破棄、`fn_parser` による escape hatch が現れない
+- **THEN** top-level litmus grammar 定義には `parse_next` 直呼び、`checkpoint/reset` 直呼び、戻り値破棄、`fn_parser` による escape hatch が現れない
+
+#### Scenario: 下流 helper parser は公開契約の合成をカプセル化できる
+- **WHEN** 下流クレートが checkpoint 可能な state や位置情報 API を使う helper parser / `InputStream` wrapper を定義する
+- **THEN** その helper は parser モジュールの既存公開契約の上に構築され、top-level litmus grammar は引き続き declarative に記述できる
 
 #### Scenario: `fn_parser` は capability 実現の代替手段ではない
 - **WHEN** litmus grammar の成立前に `fn_parser` で layout-sensitive grammar を実装しようとする
