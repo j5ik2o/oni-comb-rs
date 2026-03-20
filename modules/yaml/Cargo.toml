@@ -1,0 +1,9 @@
+[package]
+name = "oni-comb-yaml"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "MVP YAML parser built on oni-comb-parser"
+
+[dependencies]
+oni-comb-parser = { path = "../parser" }
