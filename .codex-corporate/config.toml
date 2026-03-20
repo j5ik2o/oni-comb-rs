@@ -8,7 +8,6 @@ developer_instructions = """
 実装を開始する場合、Planモードで提示した計画内容を、mdファイルへ書き出すこと。
 計画が存在しない場合はこの指示は無視して構わない。
 """
-service_tier = "fast"
 model_context_window= 1000000
 model_auto_compact_token_limit = 950000
 
