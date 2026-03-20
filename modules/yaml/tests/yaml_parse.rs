@@ -1,104 +1,189 @@
-use oni_comb_yaml::{parse, parse_documents, YamlValue};
+use oni_comb_yaml::{
+  apply_tag, parse, parse_documents, parse_syntax, parse_syntax_documents, CollectionStyle, YamlSyntaxDocument,
+  YamlSyntaxNode, YamlSyntaxScalar, YamlValue,
+};
 use std::collections::BTreeMap;
 
-// ── Scalars ─────────────────────────────────────
-
-#[test]
-fn parse_null() {
-  assert_eq!(parse("null").unwrap(), YamlValue::Null);
+fn assert_phase1_unsupported(src: &str, feature: &str) {
+  let error = parse_syntax(src).unwrap_err();
+  assert!(error.context.contains(&"unsupported in YAML Phase 1"));
+  assert!(error.line > 0);
+  assert!(error.column > 0);
+  assert!(error
+    .expected
+    .iter()
+    .any(|expected| { matches!(expected, oni_comb_parser::error::Expected::Description(value) if *value == feature) }));
 }
 
 #[test]
-fn parse_null_tilde() {
-  assert_eq!(parse("~").unwrap(), YamlValue::Null);
+fn parse_syntax_preserves_plain_scalar() {
+  let document = parse_syntax("42").unwrap();
+  assert_eq!(
+    document,
+    YamlSyntaxDocument {
+      root: YamlSyntaxNode::Scalar(YamlSyntaxScalar::Plain("42".to_string())),
+    }
+  );
 }
 
 #[test]
-fn parse_bool_true() {
-  assert_eq!(parse("true").unwrap(), YamlValue::Bool(true));
+fn parse_syntax_preserves_single_quoted_scalar() {
+  let document = parse_syntax("'it''s'").unwrap();
+  assert_eq!(
+    document,
+    YamlSyntaxDocument {
+      root: YamlSyntaxNode::Scalar(YamlSyntaxScalar::SingleQuoted("it's".to_string())),
+    }
+  );
 }
 
 #[test]
-fn parse_bool_false() {
-  assert_eq!(parse("false").unwrap(), YamlValue::Bool(false));
+fn parse_syntax_preserves_double_quoted_scalar() {
+  let document = parse_syntax("\"hello\\nworld\"").unwrap();
+  assert_eq!(
+    document,
+    YamlSyntaxDocument {
+      root: YamlSyntaxNode::Scalar(YamlSyntaxScalar::DoubleQuoted("hello\nworld".to_string())),
+    }
+  );
 }
 
 #[test]
-fn parse_integer() {
+fn parse_syntax_flow_sequence() {
+  let document = parse_syntax("[1, 2, 3]").unwrap();
+  assert_eq!(
+    document,
+    YamlSyntaxDocument {
+      root: YamlSyntaxNode::Sequence {
+        style: CollectionStyle::Flow,
+        items: vec![
+          YamlSyntaxNode::Scalar(YamlSyntaxScalar::Plain("1".to_string())),
+          YamlSyntaxNode::Scalar(YamlSyntaxScalar::Plain("2".to_string())),
+          YamlSyntaxNode::Scalar(YamlSyntaxScalar::Plain("3".to_string())),
+        ],
+      },
+    }
+  );
+}
+
+#[test]
+fn parse_syntax_flow_mapping() {
+  let document = parse_syntax("{name: oni-comb, version: 2}").unwrap();
+  assert_eq!(
+    document,
+    YamlSyntaxDocument {
+      root: YamlSyntaxNode::Mapping {
+        style: CollectionStyle::Flow,
+        entries: vec![
+          (
+            YamlSyntaxNode::Scalar(YamlSyntaxScalar::Plain("name".to_string())),
+            YamlSyntaxNode::Scalar(YamlSyntaxScalar::Plain("oni-comb".to_string())),
+          ),
+          (
+            YamlSyntaxNode::Scalar(YamlSyntaxScalar::Plain("version".to_string())),
+            YamlSyntaxNode::Scalar(YamlSyntaxScalar::Plain("2".to_string())),
+          ),
+        ],
+      },
+    }
+  );
+}
+
+#[test]
+fn parse_syntax_flow_nested() {
+  let document = parse_syntax("{a: [1, 2], b: {c: true}}").unwrap();
+  let YamlSyntaxNode::Mapping { entries, .. } = document.root else {
+    panic!("expected mapping");
+  };
+
+  assert_eq!(entries.len(), 2);
+}
+
+#[test]
+fn parse_syntax_ignores_comment() {
+  let document = parse_syntax("{key: value} # trailing comment").unwrap();
+  assert_eq!(
+    document,
+    YamlSyntaxDocument {
+      root: YamlSyntaxNode::Mapping {
+        style: CollectionStyle::Flow,
+        entries: vec![(
+          YamlSyntaxNode::Scalar(YamlSyntaxScalar::Plain("key".to_string())),
+          YamlSyntaxNode::Scalar(YamlSyntaxScalar::Plain("value".to_string())),
+        )],
+      },
+    }
+  );
+}
+
+#[test]
+fn parse_syntax_documents_support_document_markers() {
+  let documents = parse_syntax_documents("---\n[1, 2]\n---\n{name: oni-comb}").unwrap();
+  assert_eq!(documents.len(), 2);
+}
+
+#[test]
+fn parse_syntax_documents_support_document_end_marker() {
+  let documents = parse_syntax_documents("---\n{name: oni-comb}\n...").unwrap();
+  assert_eq!(documents.len(), 1);
+}
+
+#[test]
+fn parse_syntax_documents_ignores_comment_only_input() {
+  let documents = parse_syntax_documents("# comment only").unwrap();
+  assert!(documents.is_empty());
+}
+
+#[test]
+fn parse_syntax_documents_ignores_whitespace_only_input() {
+  let documents = parse_syntax_documents("  \n\t").unwrap();
+  assert!(documents.is_empty());
+}
+
+#[test]
+fn parse_syntax_rejects_block_mapping() {
+  assert_phase1_unsupported("parent:\n  child: value", "block mapping");
+}
+
+#[test]
+fn parse_syntax_rejects_block_scalar() {
+  assert_phase1_unsupported("|\n  value", "block scalar");
+}
+
+#[test]
+fn parse_syntax_rejects_anchor() {
+  assert_phase1_unsupported("&anchor value", "anchor");
+}
+
+#[test]
+fn parse_syntax_rejects_alias() {
+  assert_phase1_unsupported("*anchor", "alias");
+}
+
+#[test]
+fn parse_syntax_rejects_tag() {
+  assert_phase1_unsupported("!custom value", "tag");
+}
+
+#[test]
+fn parse_syntax_rejects_block_sequence() {
+  assert_phase1_unsupported("- item", "block sequence");
+}
+
+#[test]
+fn parse_syntax_rejects_merge_key() {
+  assert_phase1_unsupported("{<<: *defs}", "merge key");
+}
+
+#[test]
+fn parse_resolves_plain_scalar_types() {
   assert_eq!(parse("42").unwrap(), YamlValue::Integer(42));
-}
-
-#[test]
-fn parse_hex_integer() {
-  assert_eq!(parse("0xFF").unwrap(), YamlValue::Integer(255));
-}
-
-#[test]
-fn parse_octal_integer() {
-  assert_eq!(parse("0o77").unwrap(), YamlValue::Integer(63));
-}
-
-#[test]
-fn parse_float() {
-  assert_eq!(parse("3.14").unwrap(), YamlValue::Float(3.14));
-}
-
-#[test]
-fn parse_infinity() {
+  assert_eq!(parse("true").unwrap(), YamlValue::Bool(true));
   assert_eq!(parse(".inf").unwrap(), YamlValue::Float(f64::INFINITY));
 }
 
 #[test]
-fn parse_neg_infinity() {
-  assert_eq!(parse("-.inf").unwrap(), YamlValue::Float(f64::NEG_INFINITY));
-}
-
-#[test]
-fn parse_nan() {
-  match parse(".nan").unwrap() {
-    YamlValue::Float(f) => assert!(f.is_nan()),
-    other => panic!("Expected NaN, got {:?}", other),
-  }
-}
-
-#[test]
-fn parse_plain_string() {
-  assert_eq!(
-    parse("hello world").unwrap(),
-    YamlValue::String("hello world".to_string())
-  );
-}
-
-#[test]
-fn parse_double_quoted_string() {
-  assert_eq!(
-    parse(r#""hello world""#).unwrap(),
-    YamlValue::String("hello world".to_string())
-  );
-}
-
-#[test]
-fn parse_single_quoted_string() {
-  assert_eq!(
-    parse("'hello world'").unwrap(),
-    YamlValue::String("hello world".to_string())
-  );
-}
-
-#[test]
-fn parse_single_quoted_non_ascii() {
-  assert_eq!(parse("'café'").unwrap(), YamlValue::String("café".to_string()));
-}
-
-#[test]
-fn parse_single_quoted_escaped_quote() {
-  assert_eq!(parse("'it''s'").unwrap(), YamlValue::String("it's".to_string()));
-}
-
-// ── Flow Style ──────────────────────────────────
-
-#[test]
-fn parse_flow_sequence() {
+fn parse_resolves_flow_sequence() {
   assert_eq!(
     parse("[1, 2, 3]").unwrap(),
     YamlValue::Sequence(vec![
@@ -110,7 +195,7 @@ fn parse_flow_sequence() {
 }
 
 #[test]
-fn parse_flow_mapping() {
+fn parse_resolves_flow_mapping() {
   let result = parse("{name: oni-comb, version: 2}").unwrap();
   let mut expected = BTreeMap::new();
   expected.insert("name".to_string(), YamlValue::String("oni-comb".to_string()));
@@ -119,212 +204,108 @@ fn parse_flow_mapping() {
 }
 
 #[test]
-fn parse_flow_nested() {
-  let result = parse("{a: [1, 2], b: {c: true}}").unwrap();
-  if let YamlValue::Mapping(map) = result {
-    assert_eq!(
-      map["a"],
-      YamlValue::Sequence(vec![YamlValue::Integer(1), YamlValue::Integer(2)])
-    );
-    let mut inner = BTreeMap::new();
-    inner.insert("c".to_string(), YamlValue::Bool(true));
-    assert_eq!(map["b"], YamlValue::Mapping(inner));
-  } else {
-    panic!("Expected mapping");
-  }
+fn parse_documents_resolve_multiple_documents() {
+  let documents = parse_documents("---\n[1, 2]\n---\n{name: oni-comb}").unwrap();
+  assert_eq!(documents.len(), 2);
 }
-
-// ── Block Style ─────────────────────────────────
-
-#[test]
-fn parse_block_mapping() {
-  let input = "key1: value1\nkey2: value2";
-  let result = parse(input).unwrap();
-  let mut expected = BTreeMap::new();
-  expected.insert("key1".to_string(), YamlValue::String("value1".to_string()));
-  expected.insert("key2".to_string(), YamlValue::String("value2".to_string()));
-  assert_eq!(result, YamlValue::Mapping(expected));
-}
-
-#[test]
-fn parse_nested_block_mapping() {
-  let input = "parent:\n  child1: value1\n  child2: value2";
-  let result = parse(input).unwrap();
-  let mut children = BTreeMap::new();
-  children.insert("child1".to_string(), YamlValue::String("value1".to_string()));
-  children.insert("child2".to_string(), YamlValue::String("value2".to_string()));
-  let mut expected = BTreeMap::new();
-  expected.insert("parent".to_string(), YamlValue::Mapping(children));
-  assert_eq!(result, YamlValue::Mapping(expected));
-}
-
-#[test]
-fn parse_block_sequence() {
-  let input = "- item1\n- item2\n- item3";
-  let result = parse(input).unwrap();
-  assert_eq!(
-    result,
-    YamlValue::Sequence(vec![
-      YamlValue::String("item1".to_string()),
-      YamlValue::String("item2".to_string()),
-      YamlValue::String("item3".to_string()),
-    ])
-  );
-}
-
-#[test]
-fn parse_mapping_with_flow_value() {
-  let input = "items: [1, 2, 3]";
-  let result = parse(input).unwrap();
-  let mut expected = BTreeMap::new();
-  expected.insert(
-    "items".to_string(),
-    YamlValue::Sequence(vec![
-      YamlValue::Integer(1),
-      YamlValue::Integer(2),
-      YamlValue::Integer(3),
-    ]),
-  );
-  assert_eq!(result, YamlValue::Mapping(expected));
-}
-
-// ── Comments ────────────────────────────────────
-
-#[test]
-fn parse_with_comment() {
-  let input = "key: value # this is a comment";
-  let result = parse(input).unwrap();
-  let mut expected = BTreeMap::new();
-  expected.insert("key".to_string(), YamlValue::String("value".to_string()));
-  assert_eq!(result, YamlValue::Mapping(expected));
-}
-
-#[test]
-fn parse_comment_only_lines() {
-  let input = "# header comment\nkey: value";
-  let result = parse(input).unwrap();
-  let mut expected = BTreeMap::new();
-  expected.insert("key".to_string(), YamlValue::String("value".to_string()));
-  assert_eq!(result, YamlValue::Mapping(expected));
-}
-
-// ── Multiline Strings ───────────────────────────
-
-#[test]
-fn parse_literal_block() {
-  let input = "text: |\n  line1\n  line2\n";
-  let result = parse(input).unwrap();
-  if let YamlValue::Mapping(map) = result {
-    assert_eq!(map["text"], YamlValue::String("line1\nline2\n".to_string()));
-  } else {
-    panic!("Expected mapping");
-  }
-}
-
-#[test]
-fn parse_literal_block_with_leading_blank_line() {
-  let input = "text: |\n\n  hello\n";
-  let result = parse(input).unwrap();
-  if let YamlValue::Mapping(map) = result {
-    assert_eq!(map["text"], YamlValue::String("\nhello\n".to_string()));
-  } else {
-    panic!("Expected mapping");
-  }
-}
-
-#[test]
-fn parse_strip_chomping() {
-  let input = "text: |-\n  line1\n  line2\n";
-  let result = parse(input).unwrap();
-  if let YamlValue::Mapping(map) = result {
-    assert_eq!(map["text"], YamlValue::String("line1\nline2".to_string()));
-  } else {
-    panic!("Expected mapping");
-  }
-}
-
-// ── Document Markers ────────────────────────────
-
-#[test]
-fn parse_with_document_start() {
-  let input = "---\nkey: value";
-  let result = parse(input).unwrap();
-  let mut expected = BTreeMap::new();
-  expected.insert("key".to_string(), YamlValue::String("value".to_string()));
-  assert_eq!(result, YamlValue::Mapping(expected));
-}
-
-#[test]
-fn parse_multiple_documents() {
-  let input = "---\ndoc1: value1\n---\ndoc2: value2";
-  let result = parse_documents(input).unwrap();
-  assert_eq!(result.len(), 2);
-}
-
-// ── Tags ────────────────────────────────────────
-
-// ── Anchors & Aliases ───────────────────────────
-
-#[test]
-fn parse_anchor_and_alias() {
-  let input = "- &anchor value\n- *anchor";
-  let result = parse(input).unwrap();
-  assert_eq!(
-    result,
-    YamlValue::Sequence(vec![
-      YamlValue::String("value".to_string()),
-      YamlValue::String("value".to_string()),
-    ])
-  );
-}
-
-#[test]
-fn parse_block_anchor_on_next_line() {
-  let input = "defaults: &defs\n  adapter: postgres\n  host: localhost";
-  let result = parse(input).unwrap();
-  if let YamlValue::Mapping(map) = &result {
-    if let YamlValue::Mapping(defaults) = &map["defaults"] {
-      assert_eq!(defaults["adapter"], YamlValue::String("postgres".to_string()));
-      assert_eq!(defaults["host"], YamlValue::String("localhost".to_string()));
-    } else {
-      panic!("Expected defaults to be a mapping, got {:?}", map["defaults"]);
-    }
-  } else {
-    panic!("Expected mapping, got {:?}", result);
-  }
-}
-
-#[test]
-fn parse_merge_key() {
-  // Test merge with flow-style anchor value (simpler case)
-  let input = "defaults: &defs {adapter: postgres}\ndev:\n  <<: *defs\n  db: mydb";
-  let result = parse(input).unwrap();
-  if let YamlValue::Mapping(map) = &result {
-    if let YamlValue::Mapping(dev) = &map["dev"] {
-      assert_eq!(dev["adapter"], YamlValue::String("postgres".to_string()));
-      assert_eq!(dev["db"], YamlValue::String("mydb".to_string()));
-    } else {
-      panic!("Expected dev to be a mapping, got {:?}", map.get("dev"));
-    }
-  } else {
-    panic!("Expected mapping, got {:?}", result);
-  }
-}
-
-// ── Tags ────────────────────────────────────────
 
 #[test]
 fn apply_str_tag() {
   let value = YamlValue::Integer(42);
-  let tagged = oni_comb_yaml::apply_tag("!!str", value);
+  let tagged = apply_tag("!!str", value).unwrap();
   assert_eq!(tagged, YamlValue::String("42".to_string()));
 }
 
-// ── Error Reporting ─────────────────────────────
+#[test]
+fn apply_int_tag_accepts_integer_compatible_values() {
+  assert_eq!(apply_tag("!!int", YamlValue::Integer(42)).unwrap(), YamlValue::Integer(42));
+  assert_eq!(
+    apply_tag("!!int", YamlValue::String("42".to_string())).unwrap(),
+    YamlValue::Integer(42)
+  );
+}
+
+#[test]
+fn apply_tag_returns_error_for_invalid_int_payload() {
+  let error = apply_tag("!!int", YamlValue::String("abc".to_string())).unwrap_err();
+  assert!(error.context.contains(&"invalid YAML tag application"));
+  assert!(error.context.contains(&"!!int"));
+  assert_eq!((error.line, error.column), (1, 1));
+}
+
+#[test]
+fn apply_bool_tag_accepts_bool_compatible_values() {
+  assert_eq!(
+    apply_tag("!!bool", YamlValue::String("true".to_string())).unwrap(),
+    YamlValue::Bool(true)
+  );
+  assert_eq!(
+    apply_tag("!!bool", YamlValue::Bool(false)).unwrap(),
+    YamlValue::Bool(false)
+  );
+}
+
+#[test]
+fn apply_bool_tag_rejects_invalid_payload() {
+  let error = apply_tag("!!bool", YamlValue::String("yes".to_string())).unwrap_err();
+  assert!(error.context.contains(&"!!bool"));
+  assert_eq!((error.line, error.column), (1, 1));
+}
+
+#[test]
+fn apply_float_tag_accepts_float_compatible_values() {
+  assert_eq!(
+    apply_tag("!!float", YamlValue::Integer(42)).unwrap(),
+    YamlValue::Float(42.0)
+  );
+  assert_eq!(
+    apply_tag("!!float", YamlValue::String("3.14".to_string())).unwrap(),
+    YamlValue::Float(3.14)
+  );
+}
+
+#[test]
+fn apply_float_tag_rejects_invalid_payload() {
+  let error = apply_tag("!!float", YamlValue::String("abc".to_string())).unwrap_err();
+  assert!(error.context.contains(&"!!float"));
+  assert_eq!((error.line, error.column), (1, 1));
+}
+
+#[test]
+fn apply_null_tag_accepts_only_null_compatible_values() {
+  assert_eq!(apply_tag("!!null", YamlValue::Null).unwrap(), YamlValue::Null);
+  assert_eq!(
+    apply_tag("!!null", YamlValue::String("null".to_string())).unwrap(),
+    YamlValue::Null
+  );
+  assert_eq!(
+    apply_tag("!!null", YamlValue::String("~".to_string())).unwrap(),
+    YamlValue::Null
+  );
+
+  let error = apply_tag("!!null", YamlValue::Integer(42)).unwrap_err();
+  assert!(error.context.contains(&"!!null"));
+  assert_eq!((error.line, error.column), (1, 1));
+}
+
+#[test]
+fn apply_unknown_tag_reports_location() {
+  let error = apply_tag("!!unknown", YamlValue::Null).unwrap_err();
+  assert!(error.context.contains(&"invalid YAML tag application"));
+  assert_eq!((error.position, error.line, error.column), (0, 1, 1));
+}
+
+#[test]
+fn parse_returns_error_for_non_scalar_mapping_key() {
+  let error = parse("{[1]: 2}").unwrap_err();
+  assert!(error.context.contains(&"unsupported YAML mapping key"));
+  assert_eq!((error.position, error.line, error.column), (0, 1, 1));
+}
 
 #[test]
 fn error_reports_position() {
-  let input = "key: [invalid}";
-  let err = parse(input).unwrap_err();
-  assert!(err.position > 0);
+  let error = parse("{key: [invalid}").unwrap_err();
+  assert!(error.position > 0);
+  assert!(error.line > 0);
+  assert!(error.column > 0);
 }

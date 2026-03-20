@@ -7,3 +7,6 @@ description = "YAML 1.2 parser built on oni-comb-parser"
 
 [dependencies]
 oni-comb-parser = { path = "../parser" }
+
+[dev-dependencies]
+trybuild = "1"

@@ -124,7 +124,8 @@ fn byte_attempt_rewinds() {
 
 #[test]
 fn byte_sep_by0() {
-  let mut p = satisfy::<ByteInputStream, _>(|b: u8| b.is_ascii_digit()).sep_by0(satisfy::<ByteInputStream, _>(|b: u8| b == b','));
+  let mut p =
+    satisfy::<ByteInputStream, _>(|b: u8| b.is_ascii_digit()).sep_by0(satisfy::<ByteInputStream, _>(|b: u8| b == b','));
   let mut input = ByteInputStream::new(b"1,2,3!");
   let result = p.parse_next(&mut input).unwrap();
   assert_eq!(result, vec![b'1', b'2', b'3']);

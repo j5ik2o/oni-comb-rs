@@ -13,27 +13,29 @@
 - `line_start` は Checkpoint の保存・復元にしか使われておらず、行テキスト抽出機能は未実装
 
 **本質的な解決**:
-`yaml-input-redesign` で `YamlInput` を導入する際に、`line_start` の用途を明確化し、
+YAML の block syntax を本格的に扱う段階で `line_start` の用途を明確化し、
 必要なら char 単位に統一するか、バイト単位のまま「行テキスト抽出専用」と明確に分離する。
 
-## 2. YAML パーサーの手続き的スタイル
+## 2. YAML block syntax の indentation 制御は未評価
 
-**影響範囲**: `modules/yaml/src/` 全体 (`block.rs`, `flow.rs`, `document.rs`)
+**影響範囲**: `modules/yaml/src/syntax_parser/mod.rs`, `modules/yaml/src/syntax_parser/parser.rs`, `modules/yaml/src/syntax_parser/cursor.rs`, `modules/yaml/src/syntax_parser/scalar.rs`
 
 **概要**:
-`ParseContext` (アンカーマップ) と `min_indent` を関数引数で引き回しており、
-`Parser` トレイトに乗らない。結果、`parse_next` の戻り値を捨てる手続き的コードが蔓延している。
-パーサーコンビネータの設計思想に反する。
+現在の YAML syntax parser は `SyntaxParser { src, pos }` によるローカルなカーソル実装であり、
+Phase 1 の対象である flow subset と document marker には十分だった。一方で block mapping /
+block sequence / block scalar の indentation 制御はまだ未実装であり、parser core 拡張が本当に必要かは
+Phase 2 の試作結果で判断する必要がある。
 
-**根本原因**:
-`InputStream` 型 (`StrInputStream`) がパース状態を含んでいないため、追加状態を外部引数で渡す必要がある。
+**現時点の評価**:
+- Gate A の観点では、まだ `oni-comb-parser` 本体の拡張を入れる段階ではない
+- まずは `SyntaxParser` 内で indentation 引数や補助メソッドを追加し、YAML モジュール内で block syntax を試作する
+- その試作が不自然な `fn_parser` 依存や parser 内部状態の要求に発展した場合だけ、core 拡張を再評価する
 
 **本質的な解決**:
-`yaml-input-redesign` で `YamlInput` 型を導入し、`StrInputStream` + `ParseContext` + インデントスタック
-を一体化する。全パーサーを `fn() -> impl Parser<YamlInput, ...>` 形式にし、
-コンビネータパイプラインで記述可能にする。
-
-参照: `openspec/changes/yaml-input-redesign/`
+Phase 2 の試作結果をもとに判断する。`SyntaxParser` のローカル実装で block syntax を自然に保てるなら、
+parser core は拡張しない。逆に indentation の引き回しや再帰表現が破綻した場合は、
+`docs/yaml-parser-roadmap.md` の Gate A / Phase 5 に沿って parameterized recursion や
+indentation-aware error support を検討する。
 
 ## 3. ParseError の line/column が自動で埋まらない
 
@@ -56,19 +58,22 @@
 **本質的な解決**:
 `ExpectError` トレイトのシグネチャを `fn from_expected(input: &I, expected: Expected) -> Self`
 に変更し、エラー生成時点で `InputStream` から行/列を取得する。これは parser クレート全体の
-破壊的変更になるため、`yaml-input-redesign` と合わせて計画的に実施する。
+破壊的変更になるため、parser core を見直す段階で計画的に実施する。
 
 ## 4. YAML タグのパースが未統合
 
-**影響範囲**: `modules/yaml/src/tag.rs`
+**影響範囲**: `modules/yaml/src/syntax_parser/`, `modules/yaml/src/lib.rs`
 
 **概要**:
-`parse_tag` 関数は実装済みだが `#[allow(dead_code)]` でパースパイプラインに統合されていない。
-`!!str 42` のようなタグ付きスカラーはパース時に認識されず、`apply_tag` による手動後処理が必要。
+Phase 1 の syntax parser は tag 構文自体を対象外としており、`!!str 42` のような
+タグ付きスカラーは `parse_syntax` / `parse` のどちらでも認識されない。
+現状の `apply_tag` は、既に得られた `YamlValue` に対して手動で Core Schema タグを適用する補助 API に留まる。
 
 **暫定対応**:
 `apply_tag` を公開 API として提供し、ユーザーがパース後に手動で型変換できるようにしている。
+不正なタグ適用は panic ではなく `Result` のエラーとして返す。
 
 **本質的な解決**:
-`yaml-input-redesign` で全パーサーをパイプラインに書き直す際に、`save_anchor` と同様の
-パターンで `with_tag(value_parser)` コンビネータを導入し、パース時にタグを認識・適用する。
+tag syntax と resolver の統合フェーズで、syntax parser が tag を構文要素として保持し、
+resolver 側で意味解決できる形に接続する。必要ならその段階で `with_tag(value_parser)` 相当の
+補助 API を YAML モジュール内に追加する。

@@ -9,7 +9,8 @@ use oni_comb_parser::parser::Parser;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
 
-fn calc_parser() -> impl Parser<oni_comb_parser::str_input_stream::StrInputStream<'static>, Output = i64, Error = ParseError> {
+fn calc_parser(
+) -> impl Parser<oni_comb_parser::str_input_stream::StrInputStream<'static>, Output = i64, Error = ParseError> {
   recursive(|expr| {
     let ws_int = whitespace0().zip_right(integer()).zip_left(whitespace0());
     let atom = ws_int.or(
