@@ -106,7 +106,10 @@ fn parse_ignores_line_comment() {
 fn parse_preserves_hash_without_preceding_space_in_block_scalar() {
   assert_eq!(
     parse("color: #ff0000\nlabel: foo#bar").unwrap(),
-    mapping(vec![(string("color"), string("#ff0000")), (string("label"), string("foo#bar"))])
+    mapping(vec![
+      (string("color"), string("#ff0000")),
+      (string("label"), string("foo#bar"))
+    ])
   );
 }
 
@@ -122,7 +125,10 @@ fn parse_preserves_hash_without_preceding_space_in_keys() {
 fn parse_preserves_hash_without_preceding_space_in_flow_mapping() {
   assert_eq!(
     parse("{foo#bar: baz, color: #ff0000}").unwrap(),
-    mapping(vec![(string("foo#bar"), string("baz")), (string("color"), string("#ff0000"))])
+    mapping(vec![
+      (string("foo#bar"), string("baz")),
+      (string("color"), string("#ff0000"))
+    ])
   );
 }
 

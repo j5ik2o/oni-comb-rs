@@ -157,8 +157,7 @@ fn flow_key<'a>() -> BoxParser<'a, YamlValue<'a>> {
   boxed(
     quoted_scalar()
       .or(
-        take_till1(|c: char| matches!(c, ':' | ',' | ']' | '}' | '\n'))
-          .map_res(classify_plain_scalar, "YAML flow key"),
+        take_till1(|c: char| matches!(c, ':' | ',' | ']' | '}' | '\n')).map_res(classify_plain_scalar, "YAML flow key"),
       )
       .context("YAML key"),
   )
@@ -278,7 +277,9 @@ fn block_mapping_entry_at<'a>(indent: usize) -> BoxParser<'a, (YamlValue<'a>, Ya
       .zip_right(plain_key())
       .zip_left(spaces0().zip_right(char(':')))
       .flat_map(move |key| {
-        let nested = spaces0().zip_left(char('\n').peek()).zip_right(nested_block_value_at(indent).cut());
+        let nested = spaces0()
+          .zip_left(char('\n').peek())
+          .zip_right(nested_block_value_at(indent).cut());
         let inline = spaces1().zip_right(block_inline_value()).zip_left(line_end_or_eof());
 
         boxed(
