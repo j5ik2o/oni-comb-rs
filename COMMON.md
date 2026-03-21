@@ -116,18 +116,22 @@ flat_map 再帰ではなく専用ループで実装する。
 - **観測項目**: throughput（Criterion）、allocation count（`dhat-rs`）
 - **計測マシン**: Mac mini (Mac16,11), Apple M4 Pro (14 cores: 10P + 4E), 64 GB RAM, macOS 26.3.1, arm64
 - **最適化サイクル**: ParseError 導入（~12%）+ `#[inline]`（~17%）+ ゼロコピー＋fn再帰（~77%）で累計 ~83% 改善
-- **107KB JSON フルベンチ（100 サンプル、pom を含む）**:
+- **107KB JSON フルベンチ（`json_full`, 100 サンプル、2026-03-18 再計測）**:
 
 | ライブラリ | Mean | Throughput (mean, MiB/s) |
 |-----------|------|-------------------------|
-| oni-comb | 203.7 µs | 501.1 |
-| **winnow** | **180.7 µs** | **564.8** |
-| nom | 260.5 µs | 391.8 |
-| chumsky | 490.0 µs | 208.3 |
-| pom | 7.33 ms | 13.9 |
+| **oni-comb** | **109.5 µs** | **932.1** |
+| winnow | 178.7 µs | 571.3 |
+| nom | 282.8 µs | 360.9 |
+| chumsky | 561.0 µs | 181.9 |
+| pom | 7.69 ms | 13.3 |
 
-- **知見**: 2026-03-18 の再計測では `winnow` 1.0.0 が JSON フルベンチの首位。oni-comb はそれでも nom の 1.28 倍、chumsky の 2.41 倍、pom の 36.0 倍のスループットを維持する。flat_map 同一型は引き続き zip とゼロコスト同等。token レベルでは `winnow` / `nom` が優位で、例えば 11B identifier は oni-comb 39.2ns に対し winnow 19.8ns / nom 32.7ns。詳細は `modules/parser/benches/README.md` を参照
-- **Generic InputStream リファクタリングの影響**: `primitive/` のジェネリックパーサー（`satisfy`, `take_while0/1`）は `peek_token`+`next_token` の per-token オーバーヘッドにより、長い入力で 40-150% の退行あり（例: identifier 28B で 44→82 ns）。`text/` の専用パーサー（`identifier`, `integer` 等）は `as_str().chars()` 直接使用のため影響なし。JSON/arithmetic マクロベンチも変化なし
+- **知見**:
+  - 2026-03-18 の `json_full` 再計測では oni-comb が首位で、`winnow` 1.0.0 の 1.63 倍、nom の 2.58 倍、chumsky の 5.12 倍、pom の 70.2 倍のスループットに到達した
+  - 一方で 2026-03-21 の `comparison` 再計測では token 系は依然 competitive だが、same-type `flat_map` と JSON subset は前回スナップショットより悪化した
+  - `zip ≒ flat_map` という構造的傾向は維持されているが、現在の same-type `flat_map` は `"1one"` で 10.6ns と、以前の ~5ns 台より重い
+  - 11B identifier は oni-comb 20.0ns / winnow 20.5ns / nom 33.3ns、20B integer は oni-comb 22.8ns / winnow 22.7ns / nom 22.5ns で、generic token parser はまだ競争力がある
+- **Generic InputStream リファクタリングの影響**: 初期の generic primitive 化では `peek_token`+`next_token` の per-token オーバーヘッドにより長い入力で大きな退行があったが、その後の ASCII fast path と consume-then-reset 化で多くを回収した。現在の token ベンチは以前より厳しい再計測結果ではあるものの、旧「identifier 28B で 80ns 台」の状態からは回復している。詳細は `modules/parser/benches/README.md` を参照
 - **アロケーション**: パーサーコンビネータインフラはゼロアロケーション。JSON フルパースのアロケーション（743 blocks / 336KB）は全て AST 構築（`Vec` grow + エスケープ文字列 `Cow::Owned`）に起因
 
 ## 設計メモ: `no_std` core-only 層
