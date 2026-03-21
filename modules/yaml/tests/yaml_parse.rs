@@ -65,6 +65,14 @@ fn parse_block_mapping_with_four_space_nested_block_sequence() {
 }
 
 #[test]
+fn parse_top_level_block_sequence_item_with_colon_as_sequence() {
+  assert_eq!(
+    parse("- name: milk\n- eggs\n").unwrap(),
+    sequence(vec![string("name: milk"), string("eggs")])
+  );
+}
+
+#[test]
 fn parse_flow_sequence_inside_block_mapping() {
   assert_eq!(
     parse("items: [one, two]\nnested:\n  key: value\n").unwrap(),

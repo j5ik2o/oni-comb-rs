@@ -119,7 +119,7 @@ fn plain_key<'a>() -> BoxParser<'a, YamlValue<'a>> {
 }
 
 fn not_flow_start<'a>() -> BoxParser<'a, ()> {
-  boxed(char('{').or(char('[')).not())
+  boxed(seq("- ").not().zip_right(char('{').or(char('[')).not()))
 }
 
 fn block_plain_scalar<'a>() -> BoxParser<'a, YamlValue<'a>> {
