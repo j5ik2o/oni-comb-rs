@@ -116,18 +116,18 @@ flat_map 再帰ではなく専用ループで実装する。
 - **観測項目**: throughput（Criterion）、allocation count（`dhat-rs`）
 - **計測マシン**: Mac mini (Mac16,11), Apple M4 Pro (14 cores: 10P + 4E), 64 GB RAM, macOS 26.3.1, arm64
 - **最適化サイクル**: ParseError 導入（~12%）+ `#[inline]`（~17%）+ ゼロコピー＋fn再帰（~77%）で累計 ~83% 改善
-- **107KB JSON フルベンチ（`json_full`, 100 サンプル、2026-03-18 再計測）**:
+- **107KB JSON フルベンチ（`json_full`, 100 サンプル、2026-03-21 再計測）**:
 
 | ライブラリ | Mean | Throughput (mean, MiB/s) |
 |-----------|------|-------------------------|
-| **oni-comb** | **109.5 µs** | **932.1** |
-| winnow | 178.7 µs | 571.3 |
-| nom | 282.8 µs | 360.9 |
-| chumsky | 561.0 µs | 181.9 |
-| pom | 7.69 ms | 13.3 |
+| oni-comb | 238.7 µs | 427.7 |
+| **winnow** | **175.0 µs** | **583.3** |
+| nom | 283.2 µs | 360.5 |
+| chumsky | 508.7 µs | 200.6 |
+| pom | 7.63 ms | 13.4 |
 
 - **知見**:
-  - 2026-03-18 の `json_full` 再計測では oni-comb が首位で、`winnow` 1.0.0 の 1.63 倍、nom の 2.58 倍、chumsky の 5.12 倍、pom の 70.2 倍のスループットに到達した
+  - 2026-03-21 の `json_full` 再計測では `winnow` が首位で、oni-comb は `winnow` の 0.73 倍のスループットだった。一方で nom の 1.19 倍、chumsky の 2.13 倍、pom の 32.0 倍は維持している
   - 一方で 2026-03-21 の `comparison` 再計測では token 系は依然 competitive だが、same-type `flat_map` と JSON subset は前回スナップショットより悪化した
   - `zip ≒ flat_map` という構造的傾向は維持されているが、現在の same-type `flat_map` は `"1one"` で 10.6ns と、以前の ~5ns 台より重い
   - 11B identifier は oni-comb 20.0ns / winnow 20.5ns / nom 33.3ns、20B integer は oni-comb 22.8ns / winnow 22.7ns / nom 22.5ns で、generic token parser はまだ競争力がある

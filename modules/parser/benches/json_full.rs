@@ -4,11 +4,13 @@
 use std::hint::black_box;
 
 use criterion::{criterion_group, criterion_main, Criterion, Throughput};
-use oni_comb_parser::parser::Parser;
-use oni_comb_parser::prelude::*;
 
-#[path = "shared/oni_comb_json.rs"]
+#[allow(dead_code)]
+#[path = "../../json/src/parser.rs"]
 mod oni_comb_json;
+#[allow(dead_code)]
+#[path = "../../json/src/value.rs"]
+mod value;
 
 // ── winnow JSON パーサー ─────────────────────
 
@@ -368,10 +370,10 @@ static JSON_BYTES: &[u8] = include_bytes!("data/sample.json");
 fn bench_json_full(c: &mut Criterion) {
   // 正しくパースできることを確認
   assert_eq!(
-    oni_comb_json::parse_complete(r#"{"a":[1,2],"b":{"c":true}}"#).unwrap(),
-    oni_comb_json::parse_complete(r#" { "a" : [ 1 , 2 ] , "b" : { "c" : true } } "#).unwrap()
+    oni_comb_json::parse(r#"{"a":[1,2],"b":{"c":true}}"#).unwrap(),
+    oni_comb_json::parse(r#" { "a" : [ 1 , 2 ] , "b" : { "c" : true } } "#).unwrap()
   );
-  assert!(oni_comb_json::parse_complete(JSON_STR).is_ok());
+  assert!(oni_comb_json::parse(JSON_STR).is_ok());
   assert!(winnow_json::parse(JSON_BYTES).is_ok());
   assert!(nom_json::parse(JSON_BYTES).is_ok());
   assert!(chumsky_json::parse(JSON_STR).is_some());
@@ -380,10 +382,7 @@ fn bench_json_full(c: &mut Criterion) {
   group.throughput(Throughput::Bytes(JSON_BYTES.len() as u64));
 
   group.bench_function("oni-comb", |b| {
-    b.iter(|| {
-      let mut input = StrInputStream::new(black_box(JSON_STR));
-      black_box(oni_comb_json::json_parser().parse_next(&mut input).unwrap())
-    })
+    b.iter(|| black_box(oni_comb_json::parse(black_box(JSON_STR)).unwrap()))
   });
 
   group.bench_function("winnow", |b| {

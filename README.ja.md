@@ -247,23 +247,23 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 
 ### JSON フルベンチ（107KB）
 
-2026-03-18 に同一マシンで再計測（100 サンプル）。ベンチ基準の `winnow` も 0.7 から 1.0.0 に更新済み。
+2026-03-21 に同一マシンで再計測（100 サンプル）。
 計測マシン: Mac mini (Mac16,11), Apple M4 Pro (14 cores: 10P + 4E), 64 GB RAM, macOS 26.3.1, arm64.
 
 | ライブラリ | Mean | Throughput (mean, MiB/s) |
 |-----------|------|-------------------------|
-| **oni-comb** | **109.5 µs** | **932.1** |
-| winnow | 178.7 µs | 571.3 |
-| nom | 282.8 µs | 360.9 |
-| chumsky | 561.0 µs | 181.9 |
-| pom | 7.69 ms | 13.3 |
+| oni-comb | 238.7 µs | 427.7 |
+| **winnow** | **175.0 µs** | **583.3** |
+| nom | 283.2 µs | 360.5 |
+| chumsky | 508.7 µs | 200.6 |
+| pom | 7.63 ms | 13.4 |
 
-今回の再計測では oni-comb が JSON フルベンチ首位をさらに広げた。`winnow` 1.0.0 の 1.63 倍、nom の 2.58 倍、chumsky の 5.12 倍、pom の 70.2 倍のスループットに到達している。
+今回の再計測では JSON フルベンチの首位は `winnow` になった。oni-comb は nom の 1.19 倍、chumsky の 2.13 倍、pom の 32.0 倍のスループットを維持しているが、`winnow` 1.0.0 比では 0.73 倍にとどまる。
 
 ### 特性まとめ
 
-- **oni-comb が JSON フルのマクロベンチ首位をさらに広げた** — 932.1 MiB/s、winnow は 571.3 MiB/s
-- **oni-comb は JSON フルで nom / chumsky / pom に大差** — nom の 2.58 倍、chumsky の 5.12 倍、pom の 70.2 倍
+- **JSON フルのマクロベンチ首位は `winnow`** — 583.3 MiB/s、oni-comb は 427.7 MiB/s
+- **oni-comb は JSON フルで nom / chumsky / pom を上回る** — nom の 1.19 倍、chumsky の 2.13 倍、pom の 32.0 倍
 - **generic identifier / integer は依然 competitive だが、今回の `comparison` 再計測では差が詰まった** — 11B identifier では winnow に近く、20B integer では winnow / nom とほぼ同水準
 - **chumsky 0.12 で大幅改善** — 短い identifier は今も oni-comb に近い（`"x"`: 16.6ns vs 14.6ns）が、中〜長入力では依然差がある（`"foo_bar_123"`: 85.0ns vs 20.0ns）
 - **flat_map が現時点の最大の microbenchmark ギャップ** — とくに同一型分岐で winnow / nom に差がある

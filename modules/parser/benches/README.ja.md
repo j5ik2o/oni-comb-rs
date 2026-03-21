@@ -165,17 +165,17 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 この節は `cargo bench -p oni-comb-parser --bench json_full` の結果。
 
-2026-03-18 に同一マシンで 107KB JSON ファイルを再計測（100 サンプル）。`winnow` のベンチ依存も 0.7 から 1.0.0 に更新済み。
+2026-03-21 に同一マシンで 107KB JSON ファイルを再計測（100 サンプル）。
 
 | ライブラリ | Mean | Throughput (mean, MiB/s) |
 |-----------|------|-------------------------|
-| **oni-comb** | **109.5 µs** | **932.1** |
-| winnow | 178.7 µs | 571.3 |
-| nom | 282.8 µs | 360.9 |
-| chumsky | 561.0 µs | 181.9 |
-| pom | 7.69 ms | 13.3 |
+| oni-comb | 238.7 µs | 427.7 |
+| **winnow** | **175.0 µs** | **583.3** |
+| nom | 283.2 µs | 360.5 |
+| chumsky | 508.7 µs | 200.6 |
+| pom | 7.63 ms | 13.4 |
 
-**今回の再計測では oni-comb が JSON フルベンチの首位をさらに広げた。`winnow` 1.0.0 の 1.63 倍、nom の 2.58 倍、chumsky の 5.12 倍、pom の 70.2 倍のスループットに到達している。** subset ベンチは mixed だったが、107KB の実運用寄り JSON では whitespace-boundary 整理が効いており、tiny primitive より object-heavy な実入力で重複走査削減の効果が大きいことを示している。この順位を支えているのは、従来の設計要素に加えて次の最適化:
+**今回の再計測では JSON フルベンチの首位は `winnow` になった。oni-comb は nom の 1.19 倍、chumsky の 2.13 倍、pom の 32.0 倍のスループットを維持しているが、`winnow` 1.0.0 比では 0.73 倍にとどまる。** 現在の順位でも、oni-comb 側の優位性は次の設計要素に支えられているが、107KB の実運用寄り JSON では以前のマクロベンチ首位は維持できていない:
 - `fn_parser` による関数再帰（`recursive()` の `Box<dyn Parser>` vtable を排除）
 - `peek_byte` による先頭バイト分岐（`or` チェーンの線形スキャンを排除）
 - `quoted_string` によるゼロコピー文字列（エスケープなし文字列は `&str` スライス）
@@ -303,11 +303,11 @@ dhat: At t-end:  0 bytes in 0 blocks
 
 ## 総合評価
 
-- **oni-comb がマクロベンチ首位をさらに広げた** — 107KB JSON 再計測で 932.1 MiB/s、winnow は 571.3 MiB/s
-- **oni-comb は JSON フルで nom / chumsky / pom に大差を付けた** — nom の 2.58 倍、chumsky の 5.12 倍、pom の 70.2 倍
+- **マクロベンチの首位は `winnow`** — 107KB JSON 再計測で 583.3 MiB/s、oni-comb は 427.7 MiB/s
+- **oni-comb は JSON フルで nom / chumsky / pom を上回る** — nom の 1.19 倍、chumsky の 2.13 倍、pom の 32.0 倍
 - **generic token パーサーは依然 competitive だが、今回の再計測は前回より厳しい** — identifier 11B: oni-comb 20.0ns vs winnow 20.5ns / nom 33.3ns、integer 20B: oni-comb 22.8ns vs winnow 22.7ns / nom 22.5ns
 - **chumsky 0.12 は旧版より大幅改善したまま** — 短い identifier は今も oni-comb と近い（`"x"`: 16.6ns vs 14.6ns）が、中〜長入力ではなお差がある（`"foo_bar_123"`: 85.0ns vs 20.0ns）
 - **flat_map は依然として最速勢に差がある** — とくに同一型分岐（`"1one"`: oni-comb 10.6ns vs winnow 2.4ns / nom 2.6ns）
 - **zip と flat_map は同レンジに収まる** — 具象コンビネータ型設計の妥当性を確認
-- **今回の `comparison` 再計測では JSON subset 全体が悪化した** — object-heavy ケースも含めて (`object`: ~704ns, `object_large`: ~1.46µs) 後退しており、full JSON の強さは 2026-03-18 の別 rerun に依存している
+- **今回の `comparison` 再計測では JSON subset 全体が悪化し、新しい `json_full` 再計測でも以前のマクロベンチ首位は消えた** — subset の object-heavy ケース (`object`: ~704ns, `object_large`: ~1.46µs) だけでなく、107KB 実入力でも `winnow` が上回っている
 - **Applicative コンビネータでヒープアロケーションゼロ**

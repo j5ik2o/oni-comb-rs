@@ -108,15 +108,17 @@ flat_map 再帰ではなく専用ループで実装する。
 - **workload**: identifier/integer、flat_map 同一型/異種型、zip vs flat_map、JSON subset、四則演算+括弧、107KB JSON フル
 - **観測項目**: throughput（Criterion）、allocation count（`dhat-rs`）
 - **最適化サイクル**: ParseError 導入（~12%）+ `#[inline]`（~17%）+ ゼロコピー＋fn再帰（~77%）で累計 ~83% 改善
-- **107KB JSON フルベンチ（100 サンプル）**:
+- **107KB JSON フルベンチ（`json_full`, 100 サンプル、2026-03-21 再計測）**:
 
-| ライブラリ | Mean | Median | p90 | p95 | StdDev | Throughput (mean) |
-|-----------|------|--------|-----|-----|--------|-------------------|
-| **oni-comb** | **109.6 µs** | **109.4 µs** | **112.7 µs** | **113.8 µs** | **2.10 µs** | **977 MB/s** |
-| winnow | 159.3 µs | 159.8 µs | 161.8 µs | 162.3 µs | 2.46 µs | 672 MB/s |
-| nom | 283.2 µs | 282.7 µs | 286.6 µs | 287.9 µs | 2.26 µs | 378 MB/s |
+| ライブラリ | Mean | Throughput (mean, MiB/s) |
+|-----------|------|-------------------------|
+| oni-comb | 238.7 µs | 427.7 |
+| **winnow** | **175.0 µs** | **583.3** |
+| nom | 283.2 µs | 360.5 |
+| chumsky | 508.7 µs | 200.6 |
+| pom | 7.63 ms | 13.4 |
 
-- **知見**: winnow の 1.45 倍のスループット（mean 基準）。token レベルでは winnow と同等〜90%。nom を中〜長入力で上回る。flat_map 同一型は zip とゼロコスト同等。詳細は `modules/parser/benches/README.md` を参照
+- **知見**: 2026-03-21 の `json_full` 再計測では `winnow` が首位で、oni-comb は `winnow` の 0.73 倍のスループットだった。一方で nom の 1.19 倍、chumsky の 2.13 倍、pom の 32.0 倍は維持している。token レベルではまだ competitive なケースもあるが、same-type `flat_map` と JSON subset は前回スナップショットより悪化している。詳細は `modules/parser/benches/README.md` を参照
 - **アロケーション**: パーサーコンビネータインフラはゼロアロケーション。JSON フルパースのアロケーション（743 blocks / 336KB）は全て AST 構築（`Vec` grow + エスケープ文字列 `Cow::Owned`）に起因
 
 ## 設計メモ: `no_std` core-only 層

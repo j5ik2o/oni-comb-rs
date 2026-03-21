@@ -165,17 +165,17 @@ The full JSON section later in this document remains the separate `json_full` re
 
 This section corresponds to `cargo bench -p oni-comb-parser --bench json_full`.
 
-Same-machine rerun on March 18, 2026 using the same 107KB JSON file (100 samples), after updating the benchmark dependency from `winnow` 0.7 to 1.0.0.
+Same-machine rerun on March 21, 2026 using the same 107KB JSON file (100 samples).
 
 | Library | Mean | Throughput (mean, MiB/s) |
 |---------|------|-------------------------|
-| **oni-comb** | **109.5 µs** | **932.1** |
-| winnow | 178.7 µs | 571.3 |
-| nom | 282.8 µs | 360.9 |
-| chumsky | 561.0 µs | 181.9 |
-| pom | 7.69 ms | 13.3 |
+| oni-comb | 238.7 µs | 427.7 |
+| **winnow** | **175.0 µs** | **583.3** |
+| nom | 283.2 µs | 360.5 |
+| chumsky | 508.7 µs | 200.6 |
+| pom | 7.63 ms | 13.4 |
 
-**On this rerun, oni-comb extends its full-JSON lead further. It reaches 1.63x the throughput of `winnow` 1.0.0, 2.58x that of nom, 5.12x that of chumsky, and 70.2x that of pom (mean basis).** Even though the subset benchmark is mixed, the realistic 107KB payload benefits from the whitespace-boundary cleanup, which suggests the reduced repeated scans matter more on object-heavy real inputs than on tiny primitive cases. The current ranking still reflects the same oni-comb design wins:
+**On this rerun, `winnow` leads the full-JSON benchmark. oni-comb still reaches 1.19x the throughput of nom, 2.13x that of chumsky, and 32.0x that of pom, but only 0.73x of `winnow` 1.0.0 (mean basis).** The current ranking still reflects the same oni-comb design wins, but the latest realistic 107KB payload no longer preserves the earlier macro-benchmark lead:
 - Function recursion via `fn_parser` (eliminates `recursive()`'s `Box<dyn Parser>` vtable)
 - Leading-byte dispatch via `peek_byte` (eliminates `or` chain linear scanning)
 - Zero-copy strings via `quoted_string` (unescaped strings use `&str` slices)
@@ -304,11 +304,11 @@ Introduced `Token`/`Slice` associated types to `InputStream` trait and moved `sa
 
 ## Overall Assessment
 
-- **oni-comb now leads the macro benchmark by a wider margin** — 932.1 MiB/s on the 107KB JSON rerun, ahead of winnow's 571.3 MiB/s
-- **oni-comb is comfortably ahead of nom / chumsky / pom on full JSON** — 2.58x faster than nom, 5.12x faster than chumsky, and 70.2x faster than pom
+- **`winnow` now leads the macro benchmark** — 583.3 MiB/s on the 107KB JSON rerun, while oni-comb reaches 427.7 MiB/s
+- **oni-comb still stays ahead of nom / chumsky / pom on full JSON** — 1.19x faster than nom, 2.13x faster than chumsky, and 32.0x faster than pom
 - **Token-level generic parsers remain competitive, but the latest rerun is less flattering than the previous snapshot** — identifier 11B: oni-comb 20.0ns vs winnow 20.5ns / nom 33.3ns; integer 20B: oni-comb 22.8ns vs winnow 22.7ns / nom 22.5ns
 - **chumsky 0.12 remains dramatically better than older releases** — short identifiers are still in the same ballpark as oni-comb (`"x"`: 16.6ns vs 14.6ns), but medium/long inputs still trail substantially (`"foo_bar_123"`: 85.0ns vs 20.0ns)
 - **flat_map still has a measurable gap to the best parsers** — especially same-type branch dispatch (`"1one"`: oni-comb 10.6ns vs winnow 2.4ns / nom 2.6ns)
 - **zip and flat_map stay in the same envelope** — validates the concrete combinator type design without a structural flat_map penalty
-- **The latest `comparison` rerun regressed across JSON subset** — including object-heavy cases (`object`: ~704ns, `object_large`: ~1.46µs), even though the separate March 18 full-JSON rerun still points in the right macro direction
+- **The latest `comparison` rerun regressed across JSON subset, and the new `json_full` rerun no longer shows the earlier macro lead** — object-heavy cases are still slower in subset (`object`: ~704ns, `object_large`: ~1.46µs), and the realistic 107KB payload now trails `winnow`
 - **Zero heap allocation for Applicative combinators**

@@ -4,8 +4,12 @@ static ALLOC: dhat::Alloc = dhat::Alloc;
 use oni_comb_parser::parser_ext::ParserExt;
 use oni_comb_parser::prelude::*;
 
-#[path = "shared/oni_comb_json.rs"]
+#[allow(dead_code)]
+#[path = "../../json/src/parser.rs"]
 mod oni_comb_json;
+#[allow(dead_code)]
+#[path = "../../json/src/value.rs"]
+mod value;
 
 /// コンビネータ合成のみを測定するため、String 構築を行わない identifier パーサー。
 /// satisfy + take_while0 の .zip() で (char, &str) を返す。
@@ -42,8 +46,8 @@ fn main() {
   let compact = r#"{"a":[1,2],"b":{"c":true}}"#;
   let spaced = r#" { "a" : [ 1 , 2 ] , "b" : { "c" : true } } "#;
   assert_eq!(
-    oni_comb_json::parse_complete(compact).unwrap(),
-    oni_comb_json::parse_complete(spaced).unwrap()
+    oni_comb_json::parse(compact).unwrap(),
+    oni_comb_json::parse(spaced).unwrap()
   );
 
   let _profiler = dhat::Profiler::new_heap();
@@ -64,6 +68,5 @@ fn main() {
   }
 
   // ── JSON フルパース（Vec のみアロケーション） ──
-  let mut input = StrInputStream::new(JSON_STR);
-  let _ = oni_comb_json::json_value(&mut input).unwrap();
+  let _ = oni_comb_json::parse(JSON_STR).unwrap();
 }
