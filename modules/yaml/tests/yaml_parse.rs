@@ -103,6 +103,30 @@ fn parse_ignores_line_comment() {
 }
 
 #[test]
+fn parse_preserves_hash_without_preceding_space_in_block_scalar() {
+  assert_eq!(
+    parse("color: #ff0000\nlabel: foo#bar").unwrap(),
+    mapping(vec![(string("color"), string("#ff0000")), (string("label"), string("foo#bar"))])
+  );
+}
+
+#[test]
+fn parse_preserves_hash_without_preceding_space_in_keys() {
+  assert_eq!(
+    parse("foo#bar: baz").unwrap(),
+    mapping(vec![(string("foo#bar"), string("baz"))])
+  );
+}
+
+#[test]
+fn parse_preserves_hash_without_preceding_space_in_flow_mapping() {
+  assert_eq!(
+    parse("{foo#bar: baz, color: #ff0000}").unwrap(),
+    mapping(vec![(string("foo#bar"), string("baz")), (string("color"), string("#ff0000"))])
+  );
+}
+
+#[test]
 fn parse_ignores_comment_after_closed_flow_value() {
   assert_eq!(
     parse("items: [one, two] # comment").unwrap(),
