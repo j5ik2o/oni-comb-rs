@@ -25,8 +25,7 @@ unsafe fn no_drop(_: *mut ()) {}
 
 unsafe fn parse_boxed<I: InputStream, O, E, P>(data: *mut (), input: &mut I) -> PResult<O, E>
 where
-  P: Parser<I, Output = O, Error = E>,
-{
+  P: Parser<I, Output = O, Error = E>, {
   // SAFETY: `data` points to the boxed parser stored in `RecursiveInner`.
   // Re-entrant recursive calls intentionally go through the same parser object,
   // matching the previous `UnsafeCell<Box<dyn Parser>>` design.
@@ -59,8 +58,7 @@ impl<I: InputStream, O, E> RecursiveOwner<I, O, E> {
 
   unsafe fn initialize<P>(&self, parser: P)
   where
-    P: Parser<I, Output = O, Error = E>,
-  {
+    P: Parser<I, Output = O, Error = E>, {
     let runtime = unsafe { &mut *self.runtime.get() };
     let boxed = Box::new(parser);
     runtime.data = Box::into_raw(boxed) as *mut ();
@@ -151,8 +149,7 @@ pub fn recursive<'a, I, O, E, F, P>(f: F) -> Recursive<'a, I, O, E>
 where
   I: InputStream,
   F: FnOnce(Recursive<'a, I, O, E>) -> P,
-  P: Parser<I, Output = O, Error = E> + 'a,
-{
+  P: Parser<I, Output = O, Error = E> + 'a, {
   let owner = Rc::new(RecursiveOwner::new());
   let runtime_ptr = unsafe { NonNull::new_unchecked(owner.runtime.get()) };
   let self_ref = Recursive::new_ref(runtime_ptr);

@@ -62,8 +62,7 @@ pub fn predictive_choice<'a, I: InputStream, O>() -> PredictiveChoice<'a, I, O> 
 impl<'a, I: InputStream, O> PredictiveChoice<'a, I, O> {
   pub fn when_byte<P>(mut self, byte: u8, parser: P) -> Self
   where
-    P: Parser<I, Output = O, Error = I::Error> + 'a,
-  {
+    P: Parser<I, Output = O, Error = I::Error> + 'a, {
     self.branches.push(ByteBranch {
       matcher: ByteMatcher::Exact(byte),
       parser: Box::new(parser),
@@ -73,8 +72,7 @@ impl<'a, I: InputStream, O> PredictiveChoice<'a, I, O> {
 
   pub fn when_predicate<P>(mut self, predicate: fn(u8) -> bool, parser: P) -> Self
   where
-    P: Parser<I, Output = O, Error = I::Error> + 'a,
-  {
+    P: Parser<I, Output = O, Error = I::Error> + 'a, {
     self.branches.push(ByteBranch {
       matcher: ByteMatcher::Predicate(predicate),
       parser: Box::new(parser),

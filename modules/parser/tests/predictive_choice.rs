@@ -80,8 +80,7 @@ fn predictive_choice_propagates_selected_branch_cut() {
 
 #[test]
 fn predictive_choice_supports_predicate_branch_for_numbers() {
-  let mut parser =
-    predictive_choice::<StrInputStream<'_>, i64>().when_predicate(is_number_start, integer());
+  let mut parser = predictive_choice::<StrInputStream<'_>, i64>().when_predicate(is_number_start, integer());
   let mut input = StrInputStream::new("-42");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), -42);
@@ -91,7 +90,10 @@ fn predictive_choice_supports_predicate_branch_for_numbers() {
 fn predictive_choice_works_with_byte_input() {
   let mut parser = predictive_choice::<ByteInputStream<'_>, &[u8]>()
     .when_byte(b'n', seq::<ByteInputStream<'_>, [u8]>(&b"null"[..]))
-    .when_predicate(is_number_start, take_while1::<ByteInputStream<'_>, _>(|b: u8| b.is_ascii_digit()));
+    .when_predicate(
+      is_number_start,
+      take_while1::<ByteInputStream<'_>, _>(|b: u8| b.is_ascii_digit()),
+    );
   let mut input = ByteInputStream::new(b"null");
 
   assert_eq!(parser.parse_next(&mut input).unwrap(), b"null");
