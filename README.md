@@ -252,18 +252,18 @@ Measurement machine: Mac mini (Mac16,11), Apple M4 Pro (14 cores: 10P + 4E), 64 
 
 | Library | Mean | Throughput (mean, MiB/s) |
 |---------|------|-------------------------|
-| oni-comb | 671.7 µs | 152.0 |
-| **winnow** | **176.0 µs** | **580.0** |
-| nom | 286.1 µs | 356.8 |
-| chumsky | 493.9 µs | 206.7 |
-| pom | 7.88 ms | 13.0 |
+| oni-comb | 300.5 µs | 339.6 |
+| **winnow** | **174.9 µs** | **583.7** |
+| nom | 284.0 µs | 359.4 |
+| chumsky | 560.4 µs | 182.2 |
+| pom | 7,532 µs | 13.6 |
 
-On this rerun, `winnow` still leads the full-JSON benchmark, followed by `nom` and `chumsky`. oni-comb improves to 152.0 MiB/s after the latest `take_while*` hot-path cleanup and remains well ahead of `pom`, but the realistic 107KB payload is still slower than the top three parsers.
+On this rerun, `winnow` still leads the full-JSON benchmark, with `nom` next. oni-comb climbs to 339.6 MiB/s after the predictive-choice pass and now sits close to `nom`, clearly ahead of `chumsky` and `pom`.
 
 ### Summary
 
-- **`winnow` still leads the full-JSON macro benchmark** — 580.0 MiB/s, with `nom` at 356.8 MiB/s and `chumsky` at 206.7 MiB/s; oni-comb now reaches 152.0 MiB/s
-- **The latest `take_while*` hot-path cleanup recovered JSON throughput** — subset inputs improved to `null`: 16.5ns and object-heavy cases to ~661ns / ~1.38µs, while the 107KB full-JSON run improved to 671.7µs
+- **`winnow` still leads the full-JSON macro benchmark** — 583.7 MiB/s, with `nom` at 359.4 MiB/s; oni-comb now reaches 339.6 MiB/s and has moved well ahead of `chumsky` / `pom`
+- **Predictive choice is the highest-ROI macro optimization so far** — the 107KB full-JSON run is now about 300.5µs while keeping the grammar declarative
 - **Generic identifier / integer parsers remain competitive, but the latest `comparison` rerun is tighter** — oni-comb is still close to winnow on the 11B identifier and effectively tied with winnow / nom on the 20B integer case
 - **chumsky 0.12 dramatically improved** — short identifiers are still in the same ballpark as oni-comb (`"x"`: 16.6ns vs 14.6ns), but medium/long inputs still trail substantially (`"foo_bar_123"`: 85.0ns vs 20.0ns)
 - **flat_map remains the clearest microbenchmark gap** — especially same-type branch dispatch against winnow / nom

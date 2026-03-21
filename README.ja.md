@@ -252,18 +252,18 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 
 | ライブラリ | Mean | Throughput (mean, MiB/s) |
 |-----------|------|-------------------------|
-| oni-comb | 671.7 µs | 152.0 |
-| **winnow** | **176.0 µs** | **580.0** |
-| nom | 286.1 µs | 356.8 |
-| chumsky | 493.9 µs | 206.7 |
-| pom | 7.88 ms | 13.0 |
+| oni-comb | 300.5 µs | 339.6 |
+| **winnow** | **174.9 µs** | **583.7** |
+| nom | 284.0 µs | 359.4 |
+| chumsky | 560.4 µs | 182.2 |
+| pom | 7,532 µs | 13.6 |
 
-今回の再計測でも JSON フルベンチの首位は `winnow` で、続いて `nom`、`chumsky` が並ぶ。oni-comb は最新の `take_while*` ホットパス整理で 152.0 MiB/s まで改善し `pom` は大きく上回るが、107KB の実運用寄り JSON ではまだ上位 3 実装より遅い。
+今回の再計測でも JSON フルベンチの首位は `winnow` で、続いて `nom`。oni-comb は predictive-choice 適用で 339.6 MiB/s まで伸び、`nom` と近いレンジまで回復し、`chumsky` / `pom` は明確に上回った。
 
 ### 特性まとめ
 
-- **JSON フルのマクロベンチ首位は引き続き `winnow`** — 580.0 MiB/s、`nom` は 356.8 MiB/s、`chumsky` は 206.7 MiB/s、oni-comb は 152.0 MiB/s
-- **最新の `take_while*` ホットパス整理で JSON 系は回復** — subset は `null`: 16.5ns、object-heavy ケースは ~661ns / ~1.38µs、107KB full JSON も 671.7µs まで改善
+- **JSON フルのマクロベンチ首位は引き続き `winnow`** — 583.7 MiB/s、`nom` は 359.4 MiB/s、oni-comb は 339.6 MiB/s まで伸び、`chumsky` / `pom` を大きく上回った
+- **predictive choice は今のところ最も ROI が高いマクロ最適化** — 107KB full JSON は約 300.5µs まで短縮しつつ、文法の declarative 性を維持した
 - **generic identifier / integer は依然 competitive だが、今回の `comparison` 再計測では差が詰まった** — 11B identifier では winnow に近く、20B integer では winnow / nom とほぼ同水準
 - **chumsky 0.12 で大幅改善** — 短い identifier は今も oni-comb に近い（`"x"`: 16.6ns vs 14.6ns）が、中〜長入力では依然差がある（`"foo_bar_123"`: 85.0ns vs 20.0ns）
 - **flat_map が現時点の最大の microbenchmark ギャップ** — とくに同一型分岐で winnow / nom に差がある
