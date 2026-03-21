@@ -203,14 +203,18 @@ fn flow_value<'a>() -> impl Parser<StrInputStream<'a>, Output = YamlValue<'a>, E
   })
 }
 
-fn block_inline_value<'a>() -> BoxParser<'a, YamlValue<'a>> {
+fn inline_value_with_context<'a>(context: &'static str) -> BoxParser<'a, YamlValue<'a>> {
   boxed(
     flow_mapping_with(flow_value())
       .or(flow_sequence_with(flow_value()))
       .or(quoted_scalar())
       .or(block_plain_scalar())
-      .context("YAML inline value"),
+      .context(context),
   )
+}
+
+fn block_inline_value<'a>() -> BoxParser<'a, YamlValue<'a>> {
+  inline_value_with_context("YAML inline value")
 }
 
 fn block_scalar_line_at<'a>(indent: usize) -> BoxParser<'a, YamlValue<'a>> {
@@ -240,6 +244,22 @@ fn block_sequence_at<'a>(indent: usize) -> BoxParser<'a, YamlValue<'a>> {
   )
 }
 
+fn nested_block_value_at<'a>(parent_indent: usize) -> BoxParser<'a, YamlValue<'a>> {
+  boxed(
+    char('\n')
+      .zip_right(take_while1(|c: char| c == ' ').peek())
+      .flat_map(move |spaces: &'a str| {
+        let child_indent = spaces.len();
+        boxed(
+          guard(move |_input: &StrInputStream<'_>| child_indent > parent_indent)
+            .context("expected deeper indentation")
+            .zip_right(block_value_at(child_indent)),
+        )
+      })
+      .context("YAML nested block value"),
+  )
+}
+
 fn block_mapping_entry_at<'a>(indent: usize) -> BoxParser<'a, (YamlValue<'a>, YamlValue<'a>)> {
   boxed(
     exact_indent(indent)
@@ -249,7 +269,8 @@ fn block_mapping_entry_at<'a>(indent: usize) -> BoxParser<'a, (YamlValue<'a>, Ya
       .flat_map(move |key| {
         let nested = spaces0()
           .zip_right(line_comment().optional())
-          .zip_right(char('\n').zip_right(block_value_at(indent + 2).cut()));
+          .zip_left(char('\n').peek())
+          .zip_right(nested_block_value_at(indent).cut());
         let inline = spaces1().zip_right(block_inline_value()).zip_left(line_end_or_eof());
 
         boxed(
@@ -282,13 +303,7 @@ fn block_value_at<'a>(indent: usize) -> BoxParser<'a, YamlValue<'a>> {
 }
 
 fn top_inline_value<'a>() -> BoxParser<'a, YamlValue<'a>> {
-  boxed(
-    flow_mapping_with(flow_value())
-      .or(flow_sequence_with(flow_value()))
-      .or(quoted_scalar())
-      .or(block_plain_scalar())
-      .context("YAML value"),
-  )
+  inline_value_with_context("YAML value")
 }
 
 /// YAML value parser (does not require EOF).
