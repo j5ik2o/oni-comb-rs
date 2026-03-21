@@ -17,8 +17,8 @@ fn float_negative() {
 
 #[test]
 fn float_decimal() {
-  let mut input = StrInputStream::new("3.14");
-  assert_eq!(float().parse_next(&mut input).unwrap(), 3.14);
+  let mut input = StrInputStream::new("12.34");
+  assert_eq!(float().parse_next(&mut input).unwrap(), 12.34);
 }
 
 #[test]

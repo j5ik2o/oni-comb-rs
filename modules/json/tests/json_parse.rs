@@ -32,7 +32,7 @@ fn parse_negative_integer() {
 
 #[test]
 fn parse_float() {
-  assert_eq!(parse("3.14").unwrap(), JsonValue::Number(3.14));
+  assert_eq!(parse("12.34").unwrap(), JsonValue::Number(12.34));
 }
 
 #[test]

@@ -35,8 +35,7 @@ fn bitor_is_or() {
 #[test]
 fn not_op_is_negative_lookahead() {
   let mut input = StrInputStream::new("bc");
-  let result = (!sym('a').ops()).parse_next(&mut input).unwrap();
-  assert_eq!(result, ());
+  (!sym('a').ops()).parse_next(&mut input).unwrap();
   assert_eq!(input.remaining(), "bc");
 }
 
