@@ -183,8 +183,6 @@ Same-machine rerun on March 21, 2026 using the same 107KB JSON file (100 samples
 - ASCII fast-path token access in `StrInputStream`
 - Lower-overhead generic `take_while*` loops that avoid per-token checkpoint/reset churn in whitespace and separator handling
 
-The intermediate `improve-recursive-runtime` rerun reached about **685.7 µs / 148.9 MiB/s**; the later predictive-choice pass cut that roughly in half again to **300.5 µs / 339.6 MiB/s**, which confirms that recursive runtime overhead was only part of the macro bottleneck story.
-
 ### Heap Allocation Measurement (dhat-rs)
 
 #### Token Workload
@@ -217,44 +215,6 @@ Allocation source breakdown:
 - `Vec<Json>` / `Vec<(Cow, Json)>` — array/object element collection (unavoidable)
 - `Cow::Owned` — only for escaped strings (unescaped strings use `Cow::Borrowed(&str)` for zero-copy)
 - `fn_parser`, `tag`, `char`, `whitespace0`, `take_while1`, `quoted_string` (fast path), `peek_byte` — all zero-allocation
-
-## Optimization Cycle Record
-
-The tables below are historical snapshots captured during earlier optimization steps. They explain where speedups came from, but they are not directly comparable to the March 21, 2026 rerun above.
-
-### MS6 ParseError Introduction Effect (mean)
-
-| Workload | Old (String/format!) | New (ParseError) | Improvement |
-|----------|---------------------|-------------------|-------------|
-| flat_map "1one" | 8.3 ns | 7.3 ns | -12% |
-| flat_map "2two" | 7.8 ns | 7.3 ns | -6% |
-| flat_map "3three" | 6.9 ns | 6.0 ns | -13% |
-
-**Analysis**: The `format!` macro's `String` allocation code was hindering LLVM optimization. `ParseError::expected_char(pos, c)` only constructs a struct without using `format!`, reducing error-path code generation and also benefiting success-path inlining.
-
-### #[inline] Addition Effect (mean)
-
-| Workload | Old | New | Improvement |
-|----------|-----|-----|-------------|
-| identifier "x" (1B) | 18.4 ns | 14.9 ns | -19% |
-| identifier "foo" (3B) | 19.6 ns | 17.8 ns | -9% |
-| identifier "_private" (8B) | 26.2 ns | 25.1 ns | -4% |
-| flat_map "1one" | 7.3 ns | 6.1 ns | -16% |
-| flat_map "2two" | 7.3 ns | 6.2 ns | -15% |
-| flat_map "3three" | 6.0 ns | 4.8 ns | -20% |
-
-**Analysis**: Added `#[inline]` to all `parse_next` implementations. Shorter inputs benefit more (15-20% improvement). Identifier "x" now matches winnow (14.9 vs 15.2 ns). Cross-crate inlining was promoted, allowing LLVM to eliminate function call overhead.
-
-### Zero-Copy + fn Recursion + Byte Dispatch Effect (mean)
-
-| Step | oni-comb | Throughput | Improvement |
-|------|----------|-----------|-------------|
-| Before (recursive + or chain) | 640 µs | 159 MB/s | — |
-| + `quoted_string` zero-copy | 486 µs | 210 MB/s | -24% |
-| + number zero-copy | 477 µs | 214 MB/s | -2% |
-| + `fn_parser` recursion + `peek_byte` dispatch | **109 µs** | **937 MB/s** | **-77%** |
-
-**Analysis**: The biggest impact came from `fn_parser` + `peek_byte` dispatch. `recursive()`'s `Box<dyn Parser>` vtable indirect calls were occurring tens of thousands of times across all JSON nodes, whereas `fn_parser` uses normal function calls (inlinable). `peek_byte` leading-byte dispatch also eliminated `or` chain checkpoint/reset cycles.
 
 ### Remaining Bottlenecks
 
@@ -306,7 +266,7 @@ Introduced `Token`/`Slice` associated types to `InputStream` trait and moved `sa
 ## Overall Assessment
 
 - **`winnow` still leads the macro benchmark** — 583.7 MiB/s on the 107KB JSON rerun, with `nom` at 359.4 MiB/s; oni-comb now reaches 339.6 MiB/s and has moved well ahead of `chumsky` / `pom`
-- **Predictive choice is the highest-ROI macro optimization so far** — the 107KB full-JSON run improved from the previous 685.7µs intermediate snapshot to about 300.5µs while keeping the grammar declarative
+- **Predictive choice is the highest-ROI macro optimization so far** — the 107KB full-JSON run is now about 300.5µs while keeping the grammar declarative
 - **Token-level generic parsers remain competitive, but the latest rerun is less flattering than the previous snapshot** — identifier 11B: oni-comb 20.0ns vs winnow 20.5ns / nom 33.3ns; integer 20B: oni-comb 22.8ns vs winnow 22.7ns / nom 22.5ns
 - **chumsky 0.12 remains dramatically better than older releases** — short identifiers are still in the same ballpark as oni-comb (`"x"`: 16.6ns vs 14.6ns), but medium/long inputs still trail substantially (`"foo_bar_123"`: 85.0ns vs 20.0ns)
 - **flat_map still has a measurable gap to the best parsers** — especially same-type branch dispatch (`"1one"`: oni-comb 10.6ns vs winnow 2.4ns / nom 2.6ns)

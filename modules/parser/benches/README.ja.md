@@ -183,8 +183,6 @@ cargo bench -p oni-comb-parser --bench alloc_count
 - `StrInputStream` の ASCII fast path
 - `take_while*` の generic ループから per-token checkpoint/reset を外し、空白・区切り処理のオーバーヘッドを減らしたこと
 
-`improve-recursive-runtime` の途中再計測では `json_full/oni-comb` は **約 685.7µs / 148.9 MiB/s** に留まっていたが、その後の predictive-choice 適用で **300.5µs / 339.6 MiB/s** までさらに半減した。JSON フルの主因は `recursive()` だけでなく、value dispatch の `or` 連鎖にも強くあったことが確認できた。
-
 ### ヒープアロケーション計測（dhat-rs）
 
 #### Token ワークロード
@@ -217,44 +215,6 @@ dhat: At t-end:  0 bytes in 0 blocks
 - `Vec<Json>` / `Vec<(Cow, Json)>` — 配列・オブジェクトの要素収集（不可避）
 - `Cow::Owned` — エスケープ付き文字列のみ（エスケープなし文字列は `Cow::Borrowed(&str)` でゼロコピー）
 - `fn_parser`、`tag`、`char`、`whitespace0`、`take_while1`、`quoted_string`（fast path）、`peek_byte` — 全てゼロアロケーション
-
-## 最適化サイクルの記録
-
-以下の表は過去の最適化ステップで取得した履歴値であり、上の 2026-03-21 再計測結果と直接比較するためのものではない。どこで速度改善が出たかを説明するための記録として残している。
-
-### MS6 ParseError 導入による効果（mean）
-
-| ワークロード | 旧 (String/format!) | 新 (ParseError) | 改善 |
-|-------------|--------------------|--------------------|------|
-| flat_map "1one" | 8.3 ns | 7.3 ns | -12% |
-| flat_map "2two" | 7.8 ns | 7.3 ns | -6% |
-| flat_map "3three" | 6.9 ns | 6.0 ns | -13% |
-
-**分析**: `format!` マクロによる `String` アロケーションコードが LLVM の最適化を妨げていた。`ParseError::expected_char(pos, c)` は構造体の構築のみで `format!` を使わないため、エラーパスのコード生成が軽量化され、成功パスのインライン化にも好影響を与えた。
-
-### #[inline] 追加による効果（mean）
-
-| ワークロード | 旧 | 新 | 改善 |
-|-------------|-----|-----|------|
-| identifier "x" (1B) | 18.4 ns | 14.9 ns | -19% |
-| identifier "foo" (3B) | 19.6 ns | 17.8 ns | -9% |
-| identifier "_private" (8B) | 26.2 ns | 25.1 ns | -4% |
-| flat_map "1one" | 7.3 ns | 6.1 ns | -16% |
-| flat_map "2two" | 7.3 ns | 6.2 ns | -15% |
-| flat_map "3three" | 6.0 ns | 4.8 ns | -20% |
-
-**分析**: 全 `parse_next` 実装に `#[inline]` を追加。短い入力ほど効果が大きい（15-20% 改善）。identifier "x" で winnow と同等（14.9 vs 15.2 ns）に到達。クレート境界を越えたインライン化が促進され、LLVM が関数呼び出しのオーバーヘッドを排除できるようになった。
-
-### ゼロコピー + fn 再帰 + バイト分岐による効果（mean）
-
-| ステップ | oni-comb | スループット | 改善 |
-|---------|----------|-------------|------|
-| Before（recursive + or チェーン） | 640 µs | 159 MB/s | — |
-| + `quoted_string` ゼロコピー | 486 µs | 210 MB/s | -24% |
-| + number ゼロコピー | 477 µs | 214 MB/s | -2% |
-| + `fn_parser` 再帰 + `peek_byte` 分岐 | **109 µs** | **937 MB/s** | **-77%** |
-
-**分析**: 最大の効果は `fn_parser` + `peek_byte` 分岐。`recursive()` の `Box<dyn Parser>` vtable 間接呼び出しが全 JSON ノードで数万回発生していたのに対し、`fn_parser` は通常の関数呼び出し（インライン化可能）。`peek_byte` による先頭バイト分岐で `or` チェーンの checkpoint/reset サイクルも排除。
 
 ### 残存するボトルネック
 
@@ -306,7 +266,7 @@ dhat: At t-end:  0 bytes in 0 blocks
 ## 総合評価
 
 - **マクロベンチの首位は引き続き `winnow`** — 107KB JSON 再計測で 583.7 MiB/s、`nom` は 359.4 MiB/s、oni-comb は 339.6 MiB/s まで伸び、`chumsky` / `pom` を大きく上回った
-- **predictive choice は今のところ最も ROI が高いマクロ最適化** — 107KB full JSON は直前の 685.7µs スナップショットから約 300.5µs まで短縮しつつ、文法の declarative 性を維持した
+- **predictive choice は今のところ最も ROI が高いマクロ最適化** — 107KB full JSON は約 300.5µs まで短縮しつつ、文法の declarative 性を維持した
 - **generic token パーサーは依然 competitive だが、今回の再計測は前回より厳しい** — identifier 11B: oni-comb 20.0ns vs winnow 20.5ns / nom 33.3ns、integer 20B: oni-comb 22.8ns vs winnow 22.7ns / nom 22.5ns
 - **chumsky 0.12 は旧版より大幅改善したまま** — 短い identifier は今も oni-comb と近い（`"x"`: 16.6ns vs 14.6ns）が、中〜長入力ではなお差がある（`"foo_bar_123"`: 85.0ns vs 20.0ns）
 - **flat_map は依然として最速勢に差がある** — とくに同一型分岐（`"1one"`: oni-comb 10.6ns vs winnow 2.4ns / nom 2.6ns）
