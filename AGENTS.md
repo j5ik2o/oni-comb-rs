@@ -112,13 +112,13 @@ flat_map 再帰ではなく専用ループで実装する。
 
 | ライブラリ | Mean | Throughput (mean, MiB/s) |
 |-----------|------|-------------------------|
-| oni-comb | 238.7 µs | 427.7 |
-| **winnow** | **175.0 µs** | **583.3** |
-| nom | 283.2 µs | 360.5 |
-| chumsky | 508.7 µs | 200.6 |
-| pom | 7.63 ms | 13.4 |
+| oni-comb | 671.7 µs | 152.0 |
+| **winnow** | **176.0 µs** | **580.0** |
+| nom | 286.1 µs | 356.8 |
+| chumsky | 493.9 µs | 206.7 |
+| pom | 7.88 ms | 13.0 |
 
-- **知見**: 2026-03-21 の `json_full` 再計測では `winnow` が首位で、oni-comb は `winnow` の 0.73 倍のスループットだった。一方で nom の 1.19 倍、chumsky の 2.13 倍、pom の 32.0 倍は維持している。token レベルではまだ competitive なケースもあるが、same-type `flat_map` と JSON subset は前回スナップショットより悪化している。詳細は `modules/parser/benches/README.md` を参照
+- **知見**: 2026-03-21 の `take_while*` ホットパス整理後の `json_full` 再計測では `winnow` が首位で、`nom` と `chumsky` も oni-comb を上回る。一方で oni-comb は `pom` より 11.7 倍速く、107KB JSON で 152.0 MiB/s まで回復した。同日の `comparison -- json` 再計測でも JSON subset は回復しており、`null` は 16.5ns、`object_large` は約 1.38µs まで改善した。詳細は `modules/parser/benches/README.md` を参照
 - **アロケーション**: パーサーコンビネータインフラはゼロアロケーション。JSON フルパースのアロケーション（743 blocks / 336KB）は全て AST 構築（`Vec` grow + エスケープ文字列 `Cow::Owned`）に起因
 
 ## 設計メモ: `no_std` core-only 層

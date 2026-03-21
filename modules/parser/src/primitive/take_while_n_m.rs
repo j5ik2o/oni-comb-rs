@@ -33,16 +33,12 @@ where
     let cp = input.checkpoint();
     let mut count = 0;
     while count < self.max {
-      let item_cp = input.checkpoint();
-      match input.next_token() {
+      match input.peek_token() {
         Some(t) if (self.f)(t) => {
+          let _ = input.next_token();
           count += 1;
         }
-        Some(_) => {
-          input.reset(item_cp);
-          break;
-        }
-        None => break,
+        _ => break,
       }
     }
     if count < self.min {

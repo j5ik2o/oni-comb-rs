@@ -178,7 +178,7 @@ Comparison benchmarks against other libraries are included, using Criterion.rs.
 
 **oni-comb-rs positioning**: Combines winnow/nom-level zero-cost performance with chumsky-level method chain ergonomics. The only library that also provides the Monad layer (`flat_map`) along with `chainl1`/`recursive()`.
 
-*The token / JSON subset / arithmetic figures below are from the March 21, 2026 rerun of `cargo bench -p oni-comb-parser --bench comparison`. All figures are Criterion **mean estimates** (100 samples, 95% confidence interval midpoint). The full JSON section remains the separate March 18, 2026 `json_full` rerun.*
+*The token / JSON subset / arithmetic figures below are from the March 21, 2026 reruns of `cargo bench -p oni-comb-parser --bench comparison` and `cargo bench -p oni-comb-parser --bench comparison -- json`. All figures are Criterion **mean estimates** (100 samples, 95% confidence interval midpoint). The full JSON section below is the separate March 21, 2026 `json_full` rerun after the latest `take_while*` hot-path cleanup.*
 
 ### Token Workload Results (Identifier) (mean)
 
@@ -230,11 +230,11 @@ The latest rerun is notably slower than the earlier March 18 snapshot. The remai
 
 | Input | Time |
 |-------|------|
-| `null` | 19.5 ns |
-| `42` | 93.9 ns |
-| `"hello world"` | 139.9 ns |
-| `[1, 2, 3]` | 530.9 ns |
-| `{"name":"oni-comb","version":2,"active":true}` | 704.0 ns |
+| `null` | 16.5 ns |
+| `42` | 89.7 ns |
+| `"hello world"` | 138.1 ns |
+| `[1, 2, 3]` | 505.2 ns |
+| `{"name":"oni-comb","version":2,"active":true}` | 661.3 ns |
 
 ### Arithmetic + Parentheses (oni-comb only, using recursive) (mean)
 
@@ -252,23 +252,22 @@ Measurement machine: Mac mini (Mac16,11), Apple M4 Pro (14 cores: 10P + 4E), 64 
 
 | Library | Mean | Throughput (mean, MiB/s) |
 |---------|------|-------------------------|
-| oni-comb | 238.7 µs | 427.7 |
-| **winnow** | **175.0 µs** | **583.3** |
-| nom | 283.2 µs | 360.5 |
-| chumsky | 508.7 µs | 200.6 |
-| pom | 7.63 ms | 13.4 |
+| oni-comb | 671.7 µs | 152.0 |
+| **winnow** | **176.0 µs** | **580.0** |
+| nom | 286.1 µs | 356.8 |
+| chumsky | 493.9 µs | 206.7 |
+| pom | 7.88 ms | 13.0 |
 
-On this rerun, `winnow` leads the full-JSON benchmark. oni-comb still delivers 1.19x the throughput of nom, 2.13x that of chumsky, and 32.0x that of pom, but only 0.73x of `winnow` 1.0.0.
+On this rerun, `winnow` still leads the full-JSON benchmark, followed by `nom` and `chumsky`. oni-comb improves to 152.0 MiB/s after the latest `take_while*` hot-path cleanup and remains well ahead of `pom`, but the realistic 107KB payload is still slower than the top three parsers.
 
 ### Summary
 
-- **`winnow` now leads the full-JSON macro benchmark** — 583.3 MiB/s vs oni-comb's 427.7 MiB/s
-- **oni-comb still stays ahead of nom, chumsky, and pom on full JSON** — 1.19x faster than nom, 2.13x faster than chumsky, and 32.0x faster than pom
+- **`winnow` still leads the full-JSON macro benchmark** — 580.0 MiB/s, with `nom` at 356.8 MiB/s and `chumsky` at 206.7 MiB/s; oni-comb now reaches 152.0 MiB/s
+- **The latest `take_while*` hot-path cleanup recovered JSON throughput** — subset inputs improved to `null`: 16.5ns and object-heavy cases to ~661ns / ~1.38µs, while the 107KB full-JSON run improved to 671.7µs
 - **Generic identifier / integer parsers remain competitive, but the latest `comparison` rerun is tighter** — oni-comb is still close to winnow on the 11B identifier and effectively tied with winnow / nom on the 20B integer case
 - **chumsky 0.12 dramatically improved** — short identifiers are still in the same ballpark as oni-comb (`"x"`: 16.6ns vs 14.6ns), but medium/long inputs still trail substantially (`"foo_bar_123"`: 85.0ns vs 20.0ns)
 - **flat_map remains the clearest microbenchmark gap** — especially same-type branch dispatch against winnow / nom
 - **zip ≒ flat_map (same type)** — concrete combinator types still keep monadic composition in the same performance envelope
-- **The latest `comparison` rerun regressed across JSON subset** — including object-heavy cases (~704ns / ~1.46µs), even though the separate March 18 full-JSON rerun still points in the right macro direction
 - **Zero heap allocation for Applicative / same-type flat_map** — verified 0 bytes / 0 blocks with dhat
 - See [`modules/parser/benches/README.md`](modules/parser/benches/README.md) for detailed analysis
 

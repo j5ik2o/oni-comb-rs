@@ -16,9 +16,9 @@
 
 ## パフォーマンス
 
-- **JSON フルベンチ再計測（2026-03-21）** — 107KB サンプルで `238.7 µs`、`427.7 MiB/s`。`winnow` (`175.0 µs`, `583.3 MiB/s`) には及ばないが、`nom` / `chumsky` / `pom` は上回る
+- **JSON フルベンチ再計測（2026-03-21）** — 107KB サンプルで `671.7 µs`、`152.0 MiB/s`。`winnow` / `nom` / `chumsky` には及ばないが、`pom` よりは 11.7 倍速い
 - **generic token パーサーは今回の `comparison` 再計測でも competitive** — identifier `"foo_bar_123"` が `20.0 ns`、integer `"184467...615"` が `22.8 ns`
-- **今回の `comparison` 再計測では subset JSON 全体が悪化** — object 寄りケースも含めて（`{"name":"oni-comb",...}`: `704.0 ns`, `{"a":1,...,"h":8}`: `1,459 ns`）後退した
+- **最新の JSON subset 再計測では `take_while*` ホットパス整理後に回復** — `null` が `16.5 ns`、`{"name":"oni-comb",...}` が `661.3 ns`、`{"a":1,...,"h":8}` が `1,379 ns`
 - **残るホットスポット** — 極小の分岐ディスパッチ系 microbenchmark では `flat_map` がまだ `winnow` / `nom` に劣る
 - 詳細は [ベンチマーク結果（英語）](benches/README.md) と [ベンチマーク結果（日本語）](benches/README.ja.md) を参照
 

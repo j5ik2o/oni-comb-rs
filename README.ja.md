@@ -178,7 +178,7 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 
 **oni-comb-rs の立ち位置**: winnow/nom 並みのゼロコスト性能と、chumsky 並みのメソッドチェーン体験を両立。さらに Monad 階層（`flat_map`）と `chainl1`/`recursive()` を提供する唯一のライブラリ。
 
-※ 以下の token / JSON subset / arithmetic の数値は、2026-03-21 に `cargo bench -p oni-comb-parser --bench comparison` を再実行して取得した Criterion 報告の **mean 推定値**（100 サンプル、95% 信頼区間中央）。JSON フル節だけは別ハーネス `json_full` による 2026-03-18 の再計測結果を維持している。
+※ 以下の token / JSON subset / arithmetic の数値は、2026-03-21 に `cargo bench -p oni-comb-parser --bench comparison` と `cargo bench -p oni-comb-parser --bench comparison -- json` を再実行して取得した Criterion 報告の **mean 推定値**（100 サンプル、95% 信頼区間中央）。JSON フル節は、同日の `take_while*` ホットパス整理後に別ハーネス `json_full` で再計測した結果。
 
 ### Token ワークロード結果（Identifier）（mean）
 
@@ -230,11 +230,11 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 
 | 入力 | 時間 |
 |------|------|
-| `null` | 19.5 ns |
-| `42` | 93.9 ns |
-| `"hello world"` | 139.9 ns |
-| `[1, 2, 3]` | 530.9 ns |
-| `{"name":"oni-comb","version":2,"active":true}` | 704.0 ns |
+| `null` | 16.5 ns |
+| `42` | 89.7 ns |
+| `"hello world"` | 138.1 ns |
+| `[1, 2, 3]` | 505.2 ns |
+| `{"name":"oni-comb","version":2,"active":true}` | 661.3 ns |
 
 ### 四則演算 + 括弧（oni-comb のみ、recursive 使用）（mean）
 
@@ -252,23 +252,22 @@ Criterion.rs による他ライブラリとの比較ベンチマークを同梱�
 
 | ライブラリ | Mean | Throughput (mean, MiB/s) |
 |-----------|------|-------------------------|
-| oni-comb | 238.7 µs | 427.7 |
-| **winnow** | **175.0 µs** | **583.3** |
-| nom | 283.2 µs | 360.5 |
-| chumsky | 508.7 µs | 200.6 |
-| pom | 7.63 ms | 13.4 |
+| oni-comb | 671.7 µs | 152.0 |
+| **winnow** | **176.0 µs** | **580.0** |
+| nom | 286.1 µs | 356.8 |
+| chumsky | 493.9 µs | 206.7 |
+| pom | 7.88 ms | 13.0 |
 
-今回の再計測では JSON フルベンチの首位は `winnow` になった。oni-comb は nom の 1.19 倍、chumsky の 2.13 倍、pom の 32.0 倍のスループットを維持しているが、`winnow` 1.0.0 比では 0.73 倍にとどまる。
+今回の再計測でも JSON フルベンチの首位は `winnow` で、続いて `nom`、`chumsky` が並ぶ。oni-comb は最新の `take_while*` ホットパス整理で 152.0 MiB/s まで改善し `pom` は大きく上回るが、107KB の実運用寄り JSON ではまだ上位 3 実装より遅い。
 
 ### 特性まとめ
 
-- **JSON フルのマクロベンチ首位は `winnow`** — 583.3 MiB/s、oni-comb は 427.7 MiB/s
-- **oni-comb は JSON フルで nom / chumsky / pom を上回る** — nom の 1.19 倍、chumsky の 2.13 倍、pom の 32.0 倍
+- **JSON フルのマクロベンチ首位は引き続き `winnow`** — 580.0 MiB/s、`nom` は 356.8 MiB/s、`chumsky` は 206.7 MiB/s、oni-comb は 152.0 MiB/s
+- **最新の `take_while*` ホットパス整理で JSON 系は回復** — subset は `null`: 16.5ns、object-heavy ケースは ~661ns / ~1.38µs、107KB full JSON も 671.7µs まで改善
 - **generic identifier / integer は依然 competitive だが、今回の `comparison` 再計測では差が詰まった** — 11B identifier では winnow に近く、20B integer では winnow / nom とほぼ同水準
 - **chumsky 0.12 で大幅改善** — 短い identifier は今も oni-comb に近い（`"x"`: 16.6ns vs 14.6ns）が、中〜長入力では依然差がある（`"foo_bar_123"`: 85.0ns vs 20.0ns）
 - **flat_map が現時点の最大の microbenchmark ギャップ** — とくに同一型分岐で winnow / nom に差がある
 - **zip ≒ flat_map（同一型）** — 具象コンビネータ型設計により両者は同じ性能レンジに収まる
-- **今回の `comparison` 再計測では JSON subset 全体が悪化** — object-heavy ケースも含めて (~704ns / ~1.46µs) 後退しており、full JSON の強さは別に回した 2026-03-18 rerun に依存している
 - **Applicative / flat_map 同一型でヒープアロケーションゼロ** — dhat で 0 bytes / 0 blocks 確認
 - 詳細な考察は [`modules/parser/benches/README.ja.md`](modules/parser/benches/README.ja.md) を参照
 

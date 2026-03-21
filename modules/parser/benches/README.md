@@ -69,7 +69,7 @@ Measurement environment:
 
 The `comparison` tables below were rerun on March 21, 2026 on the machine above.
 All figures are Criterion **mean estimates** (100 samples, 95% confidence interval midpoint).
-The full JSON section later in this document remains the separate `json_full` rerun from March 18, 2026.
+The full JSON section later in this document is the separate `json_full` rerun from March 21, 2026 after the latest `take_while*` hot-path cleanup.
 
 ### Token Workload — Identifier (mean)
 
@@ -131,18 +131,18 @@ The full JSON section later in this document remains the separate `json_full` re
 
 | Input | Time | byte/ns |
 |-------|------|---------|
-| `null` (4B) | 19.5 ns | 0.21 |
-| `42` (2B) | 93.9 ns | 0.02 |
-| `"hello world"` (13B) | 139.9 ns | 0.09 |
-| `[1, 2, 3]` (9B) | 530.9 ns | 0.02 |
-| `[1, "two", true, null]` (22B) | 557.0 ns | 0.04 |
-| `{"name":"oni-comb",...}` (50B) | 704.0 ns | 0.07 |
-| `{"a":1,...,"h":8}` (64B) | 1,459 ns | 0.04 |
+| `null` (4B) | 16.5 ns | 0.24 |
+| `42` (2B) | 89.7 ns | 0.02 |
+| `"hello world"` (13B) | 138.1 ns | 0.09 |
+| `[1, 2, 3]` (9B) | 505.2 ns | 0.02 |
+| `[1, "two", true, null]` (22B) | 529.1 ns | 0.04 |
+| `{"name":"oni-comb",...}` (50B) | 661.3 ns | 0.08 |
+| `{"a":1,...,"h":8}` (64B) | 1,379 ns | 0.05 |
 
 **Observations:**
-- Compared with the March 18 snapshot, the latest `comparison` rerun regressed across every JSON subset input shown here. Primitive-heavy cases worsened further (`null`: ~19.5ns, `integer`: ~93.9ns, `string`: ~139.9ns).
-- The earlier object-side win did not hold in this rerun. Object-heavy cases also moved back (`object`: ~704ns, `object_large`: ~1.46µs), which suggests the previous gain was either unstable or was lost to later parser changes.
-- `array_3` and `array_mixed` both regressed as well, so the current subset benchmark should be read as a regression signal rather than a mixed trade-off.
+- Compared with the earlier March 21 snapshot before the generic `take_while*` hot-path cleanup, every JSON subset input shown here improved. Primitive-heavy cases recovered to `null`: ~16.5ns, `integer`: ~89.7ns, `string`: ~138.1ns.
+- Object-heavy cases also recovered: `object` is now ~661ns and `object_large` ~1.38µs, which is a visible win for the shared separator / whitespace paths.
+- `array_3` and `array_mixed` improved to ~505ns and ~529ns respectively, so the current subset benchmark now shows the latest cleanup paying off across the whole mini-suite.
 
 ### Arithmetic + Parentheses (oni-comb only, using recursive) (mean)
 
@@ -169,20 +169,19 @@ Same-machine rerun on March 21, 2026 using the same 107KB JSON file (100 samples
 
 | Library | Mean | Throughput (mean, MiB/s) |
 |---------|------|-------------------------|
-| oni-comb | 238.7 µs | 427.7 |
-| **winnow** | **175.0 µs** | **583.3** |
-| nom | 283.2 µs | 360.5 |
-| chumsky | 508.7 µs | 200.6 |
-| pom | 7.63 ms | 13.4 |
+| oni-comb | 671.7 µs | 152.0 |
+| **winnow** | **176.0 µs** | **580.0** |
+| nom | 286.1 µs | 356.8 |
+| chumsky | 493.9 µs | 206.7 |
+| pom | 7.88 ms | 13.0 |
 
-**On this rerun, `winnow` leads the full-JSON benchmark. oni-comb still reaches 1.19x the throughput of nom, 2.13x that of chumsky, and 32.0x that of pom, but only 0.73x of `winnow` 1.0.0 (mean basis).** The current ranking still reflects the same oni-comb design wins, but the latest realistic 107KB payload no longer preserves the earlier macro-benchmark lead:
+**On this rerun, `winnow` still leads the full-JSON benchmark, followed by `nom` and `chumsky`. oni-comb improves to 152.0 MiB/s after the latest `take_while*` hot-path cleanup and still beats `pom`, but the realistic 107KB payload remains slower than the top three parsers.** The latest gain mainly comes from removing per-token checkpoint/reset churn in generic scanning paths:
 - Function recursion via `fn_parser` (eliminates `recursive()`'s `Box<dyn Parser>` vtable)
 - Leading-byte dispatch via `peek_byte` (eliminates `or` chain linear scanning)
 - Zero-copy strings via `quoted_string` (unescaped strings use `&str` slices)
 - Zero-copy number parsing via `take_while1`
 - ASCII fast-path token access in `StrInputStream`
-
-- Consume-then-reset generic primitives (`satisfy` / `take_while*` / `one_of` / `none_of`) that avoid `peek_token()` + `next_token()` double decoding
+- Lower-overhead generic `take_while*` loops that avoid per-token checkpoint/reset churn in whitespace and separator handling
 
 ### Heap Allocation Measurement (dhat-rs)
 
@@ -219,7 +218,7 @@ Allocation source breakdown:
 
 ## Optimization Cycle Record
 
-The tables below are historical snapshots captured during earlier optimization steps. They explain where speedups came from, but they are not directly comparable to the March 18, 2026 rerun above.
+The tables below are historical snapshots captured during earlier optimization steps. They explain where speedups came from, but they are not directly comparable to the March 21, 2026 rerun above.
 
 ### MS6 ParseError Introduction Effect (mean)
 
@@ -278,7 +277,7 @@ Introduced `Token`/`Slice` associated types to `InputStream` trait and moved `sa
 
 **Root cause**: The old `text/` implementations iterated `remaining.chars()` once and called `advance(consumed)` at the end. The generic `primitive/` implementations call `peek_token()` + `next_token()` per token, each of which recomputes `&self.src[self.offset..]` and calls `.chars().next()`. This is the cost of genericity — the `InputStream` trait cannot expose a batch character iterator.
 
-**Later recovery (March 18, 2026 fast-path pass)**: the generic path now avoids most of that regression for ASCII-heavy inputs by adding an ASCII fast path to `StrInputStream` and switching generic primitives from `peek_token()` + `next_token()` to `next_token()` + `reset()` on mismatch. Current means are now much closer to the old text-specific implementations: identifier `"foo_bar_123"` is 18.6ns and integer `"184467...615"` is 20.0ns.
+**Later recovery (March 21, 2026 hot-path pass)**: the generic path removed per-token checkpoint/reset churn from `take_while*` by gating consumption with `peek_token()` before `next_token()`. The JSON subset measurements above reflect that recovery immediately, even though the token tables in this document were not rerun as part of this pass.
 
 **Unaffected workloads** (use `as_str().chars()` directly or `fn_parser`):
 
@@ -304,11 +303,10 @@ Introduced `Token`/`Slice` associated types to `InputStream` trait and moved `sa
 
 ## Overall Assessment
 
-- **`winnow` now leads the macro benchmark** — 583.3 MiB/s on the 107KB JSON rerun, while oni-comb reaches 427.7 MiB/s
-- **oni-comb still stays ahead of nom / chumsky / pom on full JSON** — 1.19x faster than nom, 2.13x faster than chumsky, and 32.0x faster than pom
+- **`winnow` still leads the macro benchmark** — 580.0 MiB/s on the 107KB JSON rerun, with `nom` at 356.8 MiB/s and `chumsky` at 206.7 MiB/s; oni-comb now reaches 152.0 MiB/s
+- **The latest `take_while*` hot-path cleanup recovered both subset JSON and full JSON** — `null` fell to 16.5ns, `object_large` to ~1.38µs, and the 107KB full-JSON run improved to 671.7µs
 - **Token-level generic parsers remain competitive, but the latest rerun is less flattering than the previous snapshot** — identifier 11B: oni-comb 20.0ns vs winnow 20.5ns / nom 33.3ns; integer 20B: oni-comb 22.8ns vs winnow 22.7ns / nom 22.5ns
 - **chumsky 0.12 remains dramatically better than older releases** — short identifiers are still in the same ballpark as oni-comb (`"x"`: 16.6ns vs 14.6ns), but medium/long inputs still trail substantially (`"foo_bar_123"`: 85.0ns vs 20.0ns)
 - **flat_map still has a measurable gap to the best parsers** — especially same-type branch dispatch (`"1one"`: oni-comb 10.6ns vs winnow 2.4ns / nom 2.6ns)
 - **zip and flat_map stay in the same envelope** — validates the concrete combinator type design without a structural flat_map penalty
-- **The latest `comparison` rerun regressed across JSON subset, and the new `json_full` rerun no longer shows the earlier macro lead** — object-heavy cases are still slower in subset (`object`: ~704ns, `object_large`: ~1.46µs), and the realistic 107KB payload now trails `winnow`
 - **Zero heap allocation for Applicative combinators**

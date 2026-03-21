@@ -69,7 +69,7 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 以下の `comparison` テーブルは 2026-03-21 に上記マシンで再計測した結果。
 全数値は Criterion 報告の **mean 推定値**（100 サンプル、95% 信頼区間中央）。
-この文書後半の JSON フルベンチ節だけは、別ハーネス `json_full` による 2026-03-18 の再計測結果を維持している。
+この文書後半の JSON フルベンチ節は、2026-03-21 に `take_while*` ホットパス整理後の別ハーネス `json_full` で再計測した結果。
 
 ### Token ワークロード — Identifier（mean）
 
@@ -131,18 +131,18 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 | 入力 | 時間 | byte/ns |
 |------|------|---------|
-| `null` (4B) | 19.5 ns | 0.21 |
-| `42` (2B) | 93.9 ns | 0.02 |
-| `"hello world"` (13B) | 139.9 ns | 0.09 |
-| `[1, 2, 3]` (9B) | 530.9 ns | 0.02 |
-| `[1, "two", true, null]` (22B) | 557.0 ns | 0.04 |
-| `{"name":"oni-comb",...}` (50B) | 704.0 ns | 0.07 |
-| `{"a":1,...,"h":8}` (64B) | 1,459 ns | 0.04 |
+| `null` (4B) | 16.5 ns | 0.24 |
+| `42` (2B) | 89.7 ns | 0.02 |
+| `"hello world"` (13B) | 138.1 ns | 0.09 |
+| `[1, 2, 3]` (9B) | 505.2 ns | 0.02 |
+| `[1, "two", true, null]` (22B) | 529.1 ns | 0.04 |
+| `{"name":"oni-comb",...}` (50B) | 661.3 ns | 0.08 |
+| `{"a":1,...,"h":8}` (64B) | 1,379 ns | 0.05 |
 
 **所見:**
-- 2026-03-18 のスナップショットと比べると、今回の `comparison` 再計測では JSON subset の全ケースで悪化が見られた。primitive 寄りのケースはさらに悪化し、`null` は ~19.5ns、`integer` は ~93.9ns、`string` は ~139.9ns になった。
-- 以前見えていた object 側の改善も今回は維持されず、`object` は ~704ns、`object_large` は ~1.46µs まで戻っている。前回の改善は安定していなかったか、後続変更で失われた可能性が高い。
-- `array_3` と `array_mixed` も両方悪化しているため、現時点の subset ベンチは mixed というより regression signal と読むべき状況になっている。
+- generic `take_while*` のホットパス整理前に取った同日スナップショットと比べると、ここにある JSON subset の全ケースが改善した。primitive 寄りケースは `null`: ~16.5ns、`integer`: ~89.7ns、`string`: ~138.1ns まで回復している。
+- object-heavy ケースも回復し、`object` は ~661ns、`object_large` は ~1.38µs になった。共有される separator / whitespace path の改善がそのまま効いている。
+- `array_3` と `array_mixed` もそれぞれ ~505ns / ~529ns まで改善しており、今回の整理は mini-suite 全体に効いている。
 
 ### 四則演算 + 括弧（oni-comb のみ、recursive 使用）（mean）
 
@@ -169,19 +169,19 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 | ライブラリ | Mean | Throughput (mean, MiB/s) |
 |-----------|------|-------------------------|
-| oni-comb | 238.7 µs | 427.7 |
-| **winnow** | **175.0 µs** | **583.3** |
-| nom | 283.2 µs | 360.5 |
-| chumsky | 508.7 µs | 200.6 |
-| pom | 7.63 ms | 13.4 |
+| oni-comb | 671.7 µs | 152.0 |
+| **winnow** | **176.0 µs** | **580.0** |
+| nom | 286.1 µs | 356.8 |
+| chumsky | 493.9 µs | 206.7 |
+| pom | 7.88 ms | 13.0 |
 
-**今回の再計測では JSON フルベンチの首位は `winnow` になった。oni-comb は nom の 1.19 倍、chumsky の 2.13 倍、pom の 32.0 倍のスループットを維持しているが、`winnow` 1.0.0 比では 0.73 倍にとどまる。** 現在の順位でも、oni-comb 側の優位性は次の設計要素に支えられているが、107KB の実運用寄り JSON では以前のマクロベンチ首位は維持できていない:
+**今回の再計測でも JSON フルベンチの首位は `winnow` で、続いて `nom`、`chumsky` が並ぶ。oni-comb は最新の `take_while*` ホットパス整理で 152.0 MiB/s まで改善し `pom` は上回るが、107KB の実運用寄り JSON ではまだ上位 3 実装より遅い。** 今回の改善は主に generic scan path の per-token checkpoint/reset を減らした効果で、次の設計要素と組み合わさっている:
 - `fn_parser` による関数再帰（`recursive()` の `Box<dyn Parser>` vtable を排除）
 - `peek_byte` による先頭バイト分岐（`or` チェーンの線形スキャンを排除）
 - `quoted_string` によるゼロコピー文字列（エスケープなし文字列は `&str` スライス）
 - `take_while1` による数値パースのゼロコピー化
 - `StrInputStream` の ASCII fast path
-- `satisfy` / `take_while*` / `one_of` / `none_of` の consume-then-reset 化による二重デコード削減
+- `take_while*` の generic ループから per-token checkpoint/reset を外し、空白・区切り処理のオーバーヘッドを減らしたこと
 
 ### ヒープアロケーション計測（dhat-rs）
 
@@ -218,7 +218,7 @@ dhat: At t-end:  0 bytes in 0 blocks
 
 ## 最適化サイクルの記録
 
-以下の表は過去の最適化ステップで取得した履歴値であり、上の 2026-03-18 再計測結果と直接比較するためのものではない。どこで速度改善が出たかを説明するための記録として残している。
+以下の表は過去の最適化ステップで取得した履歴値であり、上の 2026-03-21 再計測結果と直接比較するためのものではない。どこで速度改善が出たかを説明するための記録として残している。
 
 ### MS6 ParseError 導入による効果（mean）
 
@@ -277,7 +277,7 @@ dhat: At t-end:  0 bytes in 0 blocks
 
 **原因**: 旧 `text/` 実装は `remaining.chars()` で1回イテレーションし最後に `advance(consumed)` を呼んでいた。ジェネリック `primitive/` 実装はトークン毎に `peek_token()` + `next_token()` を呼び、各呼び出しで `&self.src[self.offset..]` の再計算と `.chars().next()` が発生する。これはジェネリシティのコストであり、`InputStream` トレイトではバッチ文字イテレーターを公開できない。
 
-**その後の回復（2026-03-18 fast path パス）**: `StrInputStream` への ASCII fast path 追加と、generic primitive の `peek_token()` + `next_token()` を `next_token()` + mismatch 時 `reset()` に置き換えたことで、この回帰の大半を ASCII 中心ワークロードでは回収した。現在の mean は identifier `"foo_bar_123"` が 18.6ns、integer `"184467...615"` が 20.0ns まで戻っている。
+**その後の回復（2026-03-21 hot-path パス）**: generic `take_while*` から per-token checkpoint/reset を外し、`peek_token()` で判定してから `next_token()` で消費する形に戻したことで、上の JSON subset で見えていた退行をその場で回収した。なお、この更新では token 表そのものは再計測していない。
 
 **影響なしのワークロード**（`as_str().chars()` 直接使用または `fn_parser`）:
 
@@ -303,11 +303,10 @@ dhat: At t-end:  0 bytes in 0 blocks
 
 ## 総合評価
 
-- **マクロベンチの首位は `winnow`** — 107KB JSON 再計測で 583.3 MiB/s、oni-comb は 427.7 MiB/s
-- **oni-comb は JSON フルで nom / chumsky / pom を上回る** — nom の 1.19 倍、chumsky の 2.13 倍、pom の 32.0 倍
+- **マクロベンチの首位は引き続き `winnow`** — 107KB JSON 再計測で 580.0 MiB/s、`nom` は 356.8 MiB/s、`chumsky` は 206.7 MiB/s、oni-comb は 152.0 MiB/s
+- **最新の `take_while*` ホットパス整理で subset JSON と full JSON の両方が回復** — `null` は 16.5ns、`object_large` は ~1.38µs、107KB full JSON も 671.7µs まで改善
 - **generic token パーサーは依然 competitive だが、今回の再計測は前回より厳しい** — identifier 11B: oni-comb 20.0ns vs winnow 20.5ns / nom 33.3ns、integer 20B: oni-comb 22.8ns vs winnow 22.7ns / nom 22.5ns
 - **chumsky 0.12 は旧版より大幅改善したまま** — 短い identifier は今も oni-comb と近い（`"x"`: 16.6ns vs 14.6ns）が、中〜長入力ではなお差がある（`"foo_bar_123"`: 85.0ns vs 20.0ns）
 - **flat_map は依然として最速勢に差がある** — とくに同一型分岐（`"1one"`: oni-comb 10.6ns vs winnow 2.4ns / nom 2.6ns）
 - **zip と flat_map は同レンジに収まる** — 具象コンビネータ型設計の妥当性を確認
-- **今回の `comparison` 再計測では JSON subset 全体が悪化し、新しい `json_full` 再計測でも以前のマクロベンチ首位は消えた** — subset の object-heavy ケース (`object`: ~704ns, `object_large`: ~1.46µs) だけでなく、107KB 実入力でも `winnow` が上回っている
 - **Applicative コンビネータでヒープアロケーションゼロ**

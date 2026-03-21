@@ -20,16 +20,11 @@ where
   #[inline]
   fn parse_next(&mut self, input: &mut I) -> PResult<I::Slice, I::Error> {
     let cp = input.checkpoint();
-    loop {
-      let item_cp = input.checkpoint();
-      match input.next_token() {
-        Some(t) if (self.0)(t) => {}
-        Some(_) => {
-          input.reset(item_cp);
-          break;
-        }
-        None => break,
+    while let Some(t) = input.peek_token() {
+      if !(self.0)(t) {
+        break;
       }
+      let _ = input.next_token();
     }
     Ok(input.slice_since(cp))
   }
