@@ -67,37 +67,38 @@ cargo bench -p oni-comb-parser --bench alloc_count
 - macOS 26.3.1
 - Architecture: arm64
 
-以下は 2026-03-18 に上記マシンで再計測した結果（ベンチマーク基準の `winnow` を 1.0.0 に更新後）。
+以下の `comparison` テーブルは 2026-03-21 に上記マシンで再計測した結果。
 全数値は Criterion 報告の **mean 推定値**（100 サンプル、95% 信頼区間中央）。
+この文書後半の JSON フルベンチ節だけは、別ハーネス `json_full` による 2026-03-18 の再計測結果を維持している。
 
 ### Token ワークロード — Identifier（mean）
 
 | 入力 | oni-comb | winnow | nom | chumsky | pom |
 |------|----------|--------|-----|---------|-----|
-| `"x"` (1B) | 15.0 ns | 15.2 ns | 15.1 ns | 17.5 ns | 68.2 ns |
-| `"foo"` (3B) | 14.7 ns | 16.2 ns | 16.5 ns | 29.4 ns | 86.5 ns |
-| `"foo_bar_123"` (11B) | 18.6 ns | 20.3 ns | 33.2 ns | 86.9 ns | 202.0 ns |
-| `"_private"` (8B) | 18.2 ns | 19.7 ns | 29.3 ns | 60.1 ns | 146.4 ns |
-| `"longIdent..."` (28B) | 30.2 ns | 33.2 ns | 86.5 ns | 132.7 ns | 269.7 ns |
+| `"x"` (1B) | 14.6 ns | 15.5 ns | 14.0 ns | 16.6 ns | 67.7 ns |
+| `"foo"` (3B) | 15.4 ns | 15.9 ns | 15.7 ns | 27.5 ns | 84.3 ns |
+| `"foo_bar_123"` (11B) | 20.0 ns | 20.5 ns | 33.3 ns | 85.0 ns | 205.1 ns |
+| `"_private"` (8B) | 19.3 ns | 20.0 ns | 24.8 ns | 58.1 ns | 145.2 ns |
+| `"longIdent..."` (28B) | 33.8 ns | 33.6 ns | 83.1 ns | 133.4 ns | 272.5 ns |
 
 ### Token ワークロード — Integer（mean）
 
 | 入力 | oni-comb | winnow | nom | pom | chumsky |
 |------|----------|--------|-----|-----|---------|
-| `"0"` | 2.2 ns | 2.3 ns | 1.9 ns | 72.0 ns | 20.8 ns |
-| `"42"` | 2.6 ns | 2.8 ns | 2.8 ns | 70.8 ns | 20.7 ns |
-| `"9999999"` | 5.2 ns | 5.4 ns | 5.4 ns | 132.3 ns | 29.5 ns |
-| `"184467...615"` (20B) | 20.0 ns | 23.1 ns | 22.7 ns | 273.1 ns | 100.1 ns |
+| `"0"` | 2.3 ns | 2.1 ns | 2.0 ns | 69.0 ns | 21.1 ns |
+| `"42"` | 3.1 ns | 2.8 ns | 2.6 ns | 74.3 ns | 21.7 ns |
+| `"9999999"` | 6.8 ns | 6.2 ns | 5.2 ns | 133.0 ns | 29.6 ns |
+| `"184467...615"` (20B) | 22.8 ns | 22.7 ns | 22.5 ns | 252.5 ns | 95.1 ns |
 
 ### flat_map 同一型分岐（digit → tag）（mean）
 
 | ライブラリ | "1one" | "2two" | "3three" |
 |-----------|--------|--------|----------|
-| winnow | 2.6 ns | 2.6 ns | 2.7 ns |
-| nom | 3.2 ns | 2.7 ns | 2.4 ns |
-| **oni-comb** | **5.7 ns** | **5.5 ns** | **4.1 ns** |
-| chumsky | 72.8 ns | 51.9 ns | 51.5 ns |
-| pom | 76.2 ns | 69.0 ns | 95.0 ns |
+| winnow | 2.4 ns | 2.4 ns | 2.6 ns |
+| nom | 2.6 ns | 2.6 ns | 2.7 ns |
+| **oni-comb** | **10.6 ns** | **10.7 ns** | **10.4 ns** |
+| chumsky | 49.1 ns | 49.5 ns | 52.0 ns |
+| pom | 69.9 ns | 70.1 ns | 95.2 ns |
 
 **MS6 ParseError 導入の効果:**
 - 旧（format! ベース）: 8.3 / 7.8 / 6.9 ns
@@ -108,57 +109,57 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 | ライブラリ | "c:hello" | "i:42" |
 |-----------|-----------|--------|
-| nom | 4.6 ns | 2.8 ns |
-| winnow | 19.2 ns | 17.7 ns |
-| **oni-comb** | **20.7 ns** | **18.3 ns** |
-| chumsky | 41.4 ns | 24.2 ns |
-| pom | 307.5 ns | 114.2 ns |
+| nom | 3.7 ns | 2.7 ns |
+| winnow | 20.1 ns | 17.2 ns |
+| **oni-comb** | **24.2 ns** | **21.9 ns** |
+| chumsky | 25.8 ns | 18.7 ns |
+| pom | 166.3 ns | 109.5 ns |
 
 ### zip vs flat_map（oni-comb-rs 内部比較）（mean）
 
 | 入力 | zip | flat_map | 差分 |
 |------|-----|----------|------|
-| "x" | 2.3 ns | 1.9 ns | flat_map がやや速い |
-| "foo" | 2.7 ns | 2.5 ns | flat_map がやや速い |
-| "foo_bar_123" | 6.7 ns | 6.6 ns | ≈0% (誤差) |
-| "_private" | 5.3 ns | 6.3 ns | zip がやや速い |
-| "longIdent..." | 15.6 ns | 15.4 ns | ≈0% (誤差) |
+| "x" | 3.1 ns | 2.4 ns | flat_map が速い |
+| "foo" | 3.4 ns | 3.3 ns | ≈0% (誤差) |
+| "foo_bar_123" | 8.4 ns | 7.9 ns | flat_map がやや速い |
+| "_private" | 6.4 ns | 6.2 ns | ≈0% (誤差) |
+| "longIdent..." | 18.8 ns | 18.0 ns | flat_map がやや速い |
 
-**zip と flat_map（同一型）は、依然として同じ低 ns 台から十数 ns 台のレンジに収まる。** 具象コンビネータ型設計に、構造的な flat_map ペナルティは見られない。
+**zip と flat_map（同一型）は今回も同じレンジに収まっているが、ペア全体としては前回スナップショットより上振れた。** それでも、具象コンビネータ型設計に大きな構造的 flat_map ペナルティは見られない。
 
 ### JSON subset（oni-comb のみ）（mean）
 
 | 入力 | 時間 | byte/ns |
 |------|------|---------|
-| `null` (4B) | 11.5 ns | 0.35 |
-| `42` (2B) | 88.7 ns | 0.02 |
-| `"hello world"` (13B) | 129.1 ns | 0.10 |
-| `[1, 2, 3]` (9B) | 494.3 ns | 0.02 |
-| `[1, "two", true, null]` (22B) | 499.4 ns | 0.04 |
-| `{"name":"oni-comb",...}` (50B) | 596.5 ns | 0.08 |
-| `{"a":1,...,"h":8}` (64B) | 1,259 ns | 0.05 |
+| `null` (4B) | 19.5 ns | 0.21 |
+| `42` (2B) | 93.9 ns | 0.02 |
+| `"hello world"` (13B) | 139.9 ns | 0.09 |
+| `[1, 2, 3]` (9B) | 530.9 ns | 0.02 |
+| `[1, "two", true, null]` (22B) | 557.0 ns | 0.04 |
+| `{"name":"oni-comb",...}` (50B) | 704.0 ns | 0.07 |
+| `{"a":1,...,"h":8}` (64B) | 1,459 ns | 0.04 |
 
 **所見:**
-- 今回の whitespace-boundary リファクタリングは、小さい subset 入力では mixed な結果になった。primitive 寄りのケースは悪化しており、`null` は ~11.5ns、`integer` は ~88.7ns、`string` は ~129.1ns になった。新しい helper 構成のコンビネータオーバーヘッドが、このスケールでは効いていると考えられる。
-- 一方で object 寄りのケースは改善しており、`object` は ~596.5ns、`object_large` は ~1.26µs まで縮んだ。member 境界や delimiter まわりの重複空白走査を減らした効果が、要素数が増えるほど効いていると考えられる。
-- `array_mixed` はほぼ横ばいで、`array_3` はやや悪化した。subset ベンチ全体では一様な改善ではないが、object 系ホットパスの重みは下がった。
+- 2026-03-18 のスナップショットと比べると、今回の `comparison` 再計測では JSON subset の全ケースで悪化が見られた。primitive 寄りのケースはさらに悪化し、`null` は ~19.5ns、`integer` は ~93.9ns、`string` は ~139.9ns になった。
+- 以前見えていた object 側の改善も今回は維持されず、`object` は ~704ns、`object_large` は ~1.46µs まで戻っている。前回の改善は安定していなかったか、後続変更で失われた可能性が高い。
+- `array_3` と `array_mixed` も両方悪化しているため、現時点の subset ベンチは mixed というより regression signal と読むべき状況になっている。
 
 ### 四則演算 + 括弧（oni-comb のみ、recursive 使用）（mean）
 
 | 入力 | 時間 |
 |------|------|
-| `42` | 151 ns |
-| `1 + 2` | 240 ns |
-| `1 + 2 * 3` | 265 ns |
-| `(1 + 2) * 3` | 429 ns |
-| `1 + 2 * (3 - 4) + 5` | 618 ns |
-| `(((1 + 2) * 3) - 4) / 5` | 912 ns |
-| `1 + 2 + ... + 8` | 762 ns |
+| `42` | 166 ns |
+| `1 + 2` | 268 ns |
+| `1 + 2 * 3` | 299 ns |
+| `(1 + 2) * 3` | 487 ns |
+| `1 + 2 * (3 - 4) + 5` | 719 ns |
+| `(((1 + 2) * 3) - 4) / 5` | 1,044 ns |
+| `1 + 2 + ... + 8` | 862 ns |
 
 **所見:**
-- 単一整数で ~151ns は依然かなり重い。`recursive()` の `Rc<UnsafeCell<Box<dyn Parser>>>` 経由の間接呼び出し + `whitespace0` のオーバーヘッド。
-- 括弧のネストごとにおおむね ~180-200ns 追加されており、再帰 1 段の `Box<dyn Parser>` コストと整合する。
-- 8項の加算チェーンは ~0.76µs で横ばい。主ボトルネックは `chainl1` ループ自体ではない。
+- 単一整数で ~166ns は依然かなり重い。`recursive()` の `Rc<UnsafeCell<Box<dyn Parser>>>` 経由の間接呼び出し + `whitespace0` のオーバーヘッド。
+- 括弧のネストごとにおおむね ~200ns 追加されており、再帰 1 段の `Box<dyn Parser>` コストと整合する。
+- 8項の加算チェーンは ~0.86µs。主ボトルネックは引き続き `chainl1` ループ自体ではない。
 
 ### JSON フルベンチ（107KB sample.json）
 
@@ -304,9 +305,9 @@ dhat: At t-end:  0 bytes in 0 blocks
 
 - **oni-comb がマクロベンチ首位をさらに広げた** — 107KB JSON 再計測で 932.1 MiB/s、winnow は 571.3 MiB/s
 - **oni-comb は JSON フルで nom / chumsky / pom に大差を付けた** — nom の 2.58 倍、chumsky の 5.12 倍、pom の 70.2 倍
-- **generic token パーサーは、もはや以前ほどの弱点ではない** — identifier 11B: oni-comb 18.6ns vs winnow 20.3ns / nom 33.2ns、integer 20B: oni-comb 20.0ns vs winnow 23.1ns / nom 22.7ns
-- **chumsky 0.12 は旧版より大幅改善したまま** — 短い identifier は今も oni-comb と同じ桁にある（`"x"`: 17.5ns vs 15.0ns）が、中〜長入力ではなお差がある（`"foo_bar_123"`: 86.9ns vs 18.6ns）
-- **flat_map は依然として最速勢に差がある** — とくに同一型分岐（`"1one"`: oni-comb 5.7ns vs winnow 2.6ns / nom 3.2ns）
+- **generic token パーサーは依然 competitive だが、今回の再計測は前回より厳しい** — identifier 11B: oni-comb 20.0ns vs winnow 20.5ns / nom 33.3ns、integer 20B: oni-comb 22.8ns vs winnow 22.7ns / nom 22.5ns
+- **chumsky 0.12 は旧版より大幅改善したまま** — 短い identifier は今も oni-comb と近い（`"x"`: 16.6ns vs 14.6ns）が、中〜長入力ではなお差がある（`"foo_bar_123"`: 85.0ns vs 20.0ns）
+- **flat_map は依然として最速勢に差がある** — とくに同一型分岐（`"1one"`: oni-comb 10.6ns vs winnow 2.4ns / nom 2.6ns）
 - **zip と flat_map は同レンジに収まる** — 具象コンビネータ型設計の妥当性を確認
-- **今回の whitespace リファクタは JSON subset では mixed** — primitive 寄りケースは悪化したが、object-heavy ケースは改善し（`object_large`: ~1.26µs）、full JSON マクロベンチは前進した
+- **今回の `comparison` 再計測では JSON subset 全体が悪化した** — object-heavy ケースも含めて (`object`: ~704ns, `object_large`: ~1.46µs) 後退しており、full JSON の強さは 2026-03-18 の別 rerun に依存している
 - **Applicative コンビネータでヒープアロケーションゼロ**

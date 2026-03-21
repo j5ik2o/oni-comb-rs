@@ -178,25 +178,25 @@ Comparison benchmarks against other libraries are included, using Criterion.rs.
 
 **oni-comb-rs positioning**: Combines winnow/nom-level zero-cost performance with chumsky-level method chain ergonomics. The only library that also provides the Monad layer (`flat_map`) along with `chainl1`/`recursive()`.
 
-*All figures below are Criterion **mean estimates** (100 samples, 95% confidence interval midpoint).*
+*The token / JSON subset / arithmetic figures below are from the March 21, 2026 rerun of `cargo bench -p oni-comb-parser --bench comparison`. All figures are Criterion **mean estimates** (100 samples, 95% confidence interval midpoint). The full JSON section remains the separate March 18, 2026 `json_full` rerun.*
 
 ### Token Workload Results (Identifier) (mean)
 
-In the March 18, 2026 rerun, oni-comb recovers the generic identifier path enough to edge out `winnow` on the medium/long ASCII cases shown below, while chumsky 0.12 remains dramatically better than older releases but still trails on non-trivial inputs.
+In the March 21, 2026 rerun, oni-comb stays very close to `winnow` on the medium/long ASCII cases shown below, while chumsky 0.12 remains dramatically better than older releases but still trails on non-trivial inputs.
 
 | Input | oni-comb | winnow | nom | chumsky | pom |
 |-------|----------|--------|-----|---------|-----|
-| `"x"` (1B) | 15.0 ns | 15.2 ns | 15.1 ns | 17.5 ns | 68.2 ns |
-| `"foo_bar_123"` (11B) | 18.6 ns | 20.3 ns | 33.2 ns | 86.9 ns | 202.0 ns |
-| `"longIdentifier..."` (28B) | 30.2 ns | 33.2 ns | 86.5 ns | 132.7 ns | 269.7 ns |
+| `"x"` (1B) | 14.6 ns | 15.5 ns | 14.0 ns | 16.6 ns | 67.7 ns |
+| `"foo_bar_123"` (11B) | 20.0 ns | 20.5 ns | 33.3 ns | 85.0 ns | 205.1 ns |
+| `"longIdentifier..."` (28B) | 33.8 ns | 33.6 ns | 83.1 ns | 133.4 ns | 272.5 ns |
 
 ### Token Workload Results (Integer) (mean)
 
 | Input | oni-comb | winnow | nom | pom | chumsky |
 |-------|----------|--------|-----|-----|---------|
-| `"42"` (2B) | 2.6 ns | 2.8 ns | 2.8 ns | 70.8 ns | 20.7 ns |
-| `"9999999"` (7B) | 5.2 ns | 5.4 ns | 5.4 ns | 132.3 ns | 29.5 ns |
-| `"184467...615"` (20B) | 20.0 ns | 23.1 ns | 22.7 ns | 273.1 ns | 100.1 ns |
+| `"42"` (2B) | 3.1 ns | 2.8 ns | 2.6 ns | 74.3 ns | 21.7 ns |
+| `"9999999"` (7B) | 6.8 ns | 6.2 ns | 5.2 ns | 133.0 ns | 29.6 ns |
+| `"184467...615"` (20B) | 22.8 ns | 22.7 ns | 22.5 ns | 252.5 ns | 95.1 ns |
 
 ### flat_map Workload Results
 
@@ -204,17 +204,17 @@ In the March 18, 2026 rerun, oni-comb recovers the generic identifier path enoug
 
 | Input | oni-comb | winnow | nom | chumsky | pom |
 |-------|----------|--------|-----|---------|-----|
-| `"1one"` | 5.7 ns | 2.6 ns | 3.2 ns | 72.8 ns | 76.2 ns |
-| `"3three"` | 4.1 ns | 2.7 ns | 2.4 ns | 51.5 ns | 95.0 ns |
+| `"1one"` | 10.6 ns | 2.4 ns | 2.6 ns | 49.1 ns | 69.9 ns |
+| `"3three"` | 10.4 ns | 2.6 ns | 2.7 ns | 52.0 ns | 95.2 ns |
 
-Improved from the older 8ns class through ParseError cleanup, cross-crate inlining, and the later generic token fast-path pass. The remaining gap is now mostly branch-dispatch overhead.
+The latest rerun is notably slower than the earlier March 18 snapshot. The remaining gap is still mostly branch-dispatch overhead, but the current same-type flat_map path is back in the ~10ns class rather than the ~5ns class.
 
 #### Heterogeneous branch (`Box<dyn Parser>` / dynamic dispatch) (mean)
 
 | Input | oni-comb | winnow | nom\* | chumsky | pom |
 |-------|----------|--------|-------|---------|-----|
-| `"c:hello"` | 20.7 ns | 19.2 ns | 4.6 ns | 41.4 ns | 307.5 ns |
-| `"i:42"` | 18.3 ns | 17.7 ns | 2.8 ns | 24.2 ns | 114.2 ns |
+| `"c:hello"` | 24.2 ns | 20.1 ns | 3.7 ns | 25.8 ns | 166.3 ns |
+| `"i:42"` | 21.9 ns | 17.2 ns | 2.7 ns | 18.7 ns | 109.5 ns |
 
 \* nom's `Parser` trait is not dyn-compatible, so it uses manual two-stage parsing (no Box).
 
@@ -222,28 +222,28 @@ Improved from the older 8ns class through ParseError cleanup, cross-crate inlini
 
 | Input | zip | flat_map | Diff |
 |-------|-----|----------|------|
-| `"x"` | 2.3 ns | 1.9 ns | same envelope |
-| `"foo_bar_123"` | 6.7 ns | 6.6 ns | same envelope |
-| `"longIdentifier..."` | 15.6 ns | 15.4 ns | same envelope |
+| `"x"` | 3.1 ns | 2.4 ns | flat_map faster |
+| `"foo_bar_123"` | 8.4 ns | 7.9 ns | flat_map slightly faster |
+| `"longIdentifier..."` | 18.8 ns | 18.0 ns | flat_map slightly faster |
 
 ### JSON Subset (oni-comb only) (mean)
 
 | Input | Time |
 |-------|------|
-| `null` | 11.5 ns |
-| `42` | 88.7 ns |
-| `"hello world"` | 129.1 ns |
-| `[1, 2, 3]` | 494.3 ns |
-| `{"name":"oni-comb","version":2,"active":true}` | 596.5 ns |
+| `null` | 19.5 ns |
+| `42` | 93.9 ns |
+| `"hello world"` | 139.9 ns |
+| `[1, 2, 3]` | 530.9 ns |
+| `{"name":"oni-comb","version":2,"active":true}` | 704.0 ns |
 
 ### Arithmetic + Parentheses (oni-comb only, using recursive) (mean)
 
 | Input | Time |
 |-------|------|
-| `42` | 151 ns |
-| `1 + 2 * 3` | 265 ns |
-| `(1 + 2) * 3` | 429 ns |
-| `(((1 + 2) * 3) - 4) / 5` | 912 ns |
+| `42` | 166 ns |
+| `1 + 2 * 3` | 299 ns |
+| `(1 + 2) * 3` | 487 ns |
+| `(((1 + 2) * 3) - 4) / 5` | 1,044 ns |
 
 ### Full JSON Benchmark (107KB)
 
@@ -264,11 +264,11 @@ On this rerun, oni-comb widens the full-JSON benchmark lead further. It delivers
 
 - **oni-comb now leads the full-JSON macro benchmark by a wider margin** — 932.1 MiB/s vs winnow's 571.3 MiB/s
 - **oni-comb stays well ahead of nom, chumsky, and pom on full JSON** — 2.58x faster than nom, 5.12x faster than chumsky, and 70.2x faster than pom
-- **Generic identifier / integer parsers are no longer the clearest remaining gap** — the current rerun puts oni-comb ahead of winnow on the 11B identifier and 20B integer cases shown above
-- **chumsky 0.12 dramatically improved** — short identifiers are still in the same ballpark as oni-comb, but medium/long inputs still trail substantially
+- **Generic identifier / integer parsers remain competitive, but the latest `comparison` rerun is tighter** — oni-comb is still close to winnow on the 11B identifier and effectively tied with winnow / nom on the 20B integer case
+- **chumsky 0.12 dramatically improved** — short identifiers are still in the same ballpark as oni-comb (`"x"`: 16.6ns vs 14.6ns), but medium/long inputs still trail substantially (`"foo_bar_123"`: 85.0ns vs 20.0ns)
 - **flat_map remains the clearest microbenchmark gap** — especially same-type branch dispatch against winnow / nom
 - **zip ≒ flat_map (same type)** — concrete combinator types still keep monadic composition in the same performance envelope
-- **The whitespace refactor is mixed on JSON subset** — primitive-heavy cases regressed, but object parsing improved to ~596.5ns and full JSON moved in the right direction
+- **The latest `comparison` rerun regressed across JSON subset** — including object-heavy cases (~704ns / ~1.46µs), even though the separate March 18 full-JSON rerun still points in the right macro direction
 - **Zero heap allocation for Applicative / same-type flat_map** — verified 0 bytes / 0 blocks with dhat
 - See [`modules/parser/benches/README.md`](modules/parser/benches/README.md) for detailed analysis
 

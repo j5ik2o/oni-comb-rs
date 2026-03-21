@@ -17,8 +17,8 @@ A parser-monad combinator library for Rust. The core crate of [oni-comb-rs](../.
 ## Performance
 
 - **Full JSON benchmark lead (March 18, 2026 rerun)** — `109.5 µs`, `932.1 MiB/s` on the 107KB sample, ahead of `winnow` (`178.7 µs`, `571.3 MiB/s`)
-- **Generic token parsers recovered** — identifier `"foo_bar_123"` is `18.6 ns`, integer `"184467...615"` is `20.0 ns`
-- **Whitespace refactor result is mixed on subset JSON** — primitive-heavy cases regressed, but object-heavy cases improved and full JSON got faster
+- **Generic token parsers remain competitive in the latest `comparison` rerun** — identifier `"foo_bar_123"` is `20.0 ns`, while integer `"184467...615"` is `22.8 ns`
+- **Latest `comparison` rerun regressed across subset JSON** — including object-heavy cases (`{"name":"oni-comb",...}`: `704.0 ns`, `{"a":1,...,"h":8}`: `1,459 ns`)
 - **Remaining hotspot** — `flat_map` still trails `winnow` / `nom` on the smallest branch-dispatch microbenchmarks
 - See [benchmark details](benches/README.md) and [Japanese benchmark notes](benches/README.ja.md)
 
