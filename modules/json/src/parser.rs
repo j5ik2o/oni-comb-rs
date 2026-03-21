@@ -18,6 +18,14 @@ where
   whitespace0().zip_right(p).zip_left(whitespace0())
 }
 
+fn comma<'a>() -> impl Parser<StrInputStream<'a>, Output = char, Error = ParseError> {
+  whitespace0().zip_right(char(',')).zip_left(whitespace0())
+}
+
+fn colon<'a>() -> impl Parser<StrInputStream<'a>, Output = char, Error = ParseError> {
+  whitespace0().zip_right(char(':')).zip_left(whitespace0())
+}
+
 // ── Primitives ──────────────────────────────────
 
 fn json_null<'a>() -> impl Parser<StrInputStream<'a>, Output = JsonValue<'a>, Error = ParseError> {
@@ -47,31 +55,33 @@ fn build_json_value_parser<'a>() -> impl Parser<StrInputStream<'a>, Output = Jso
   recursive(|value| {
     // ── array: '[' ws (value (',' ws value)*)? ws ']' ──
     let array = char('[')
-      .zip_right(ws(value.clone()).sep_by0(ws(char(','))))
-      .zip_left(ws(char(']')).cut())
+      .zip_right(whitespace0())
+      .zip_right(value.clone().sep_by0(comma()))
+      .zip_left(whitespace0())
+      .zip_left(char(']').cut())
       .map(JsonValue::Array);
 
     // ── member: string ws ':' ws value ──
-    let member = quoted_string().zip_left(ws(char(':')).cut()).zip(ws(value));
+    let member = quoted_string().zip_left(colon().cut()).zip(value.clone());
 
     // ── object: '{' ws (member (',' ws member)*)? ws '}' ──
     let object = char('{')
-      .zip_right(ws(member).sep_by0(ws(char(','))))
-      .zip_left(ws(char('}')).cut())
+      .zip_right(whitespace0())
+      .zip_right(member.sep_by0(comma()))
+      .zip_left(whitespace0())
+      .zip_left(char('}').cut())
       .map(|pairs: Vec<(Cow<'a, str>, JsonValue<'a>)>| {
         JsonValue::Object(pairs.into_iter().collect::<BTreeMap<_, _>>())
       });
 
     // ── value: ws (null | bool | number | string | array | object) ──
-    ws(
-      json_null()
-        .or(json_bool())
-        .or(json_number())
-        .or(json_string_value())
-        .or(array)
-        .or(object)
-        .context("JSON value"),
-    )
+    json_null()
+      .or(json_bool())
+      .or(json_number())
+      .or(json_string_value())
+      .or(array)
+      .or(object)
+      .context("JSON value")
   })
 }
 
@@ -79,12 +89,12 @@ fn build_json_value_parser<'a>() -> impl Parser<StrInputStream<'a>, Output = Jso
 
 /// JSON value parser (does not require EOF).
 pub fn json_value<'a>() -> impl Parser<StrInputStream<'a>, Output = JsonValue<'a>, Error = ParseError> {
-  build_json_value_parser()
+  ws(build_json_value_parser())
 }
 
 /// Complete JSON parser (value + optional whitespace + EOF).
 pub fn json<'a>() -> impl Parser<StrInputStream<'a>, Output = JsonValue<'a>, Error = ParseError> {
-  build_json_value_parser().zip_left(eof())
+  ws(build_json_value_parser()).zip_left(eof())
 }
 
 fn fail_to_error(e: Fail<ParseError>) -> ParseError {

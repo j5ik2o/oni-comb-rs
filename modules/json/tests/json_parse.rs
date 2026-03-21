@@ -94,6 +94,14 @@ fn parse_array_of_ints() {
 }
 
 #[test]
+fn parse_array_with_flexible_whitespace() {
+  assert_eq!(
+    parse("[ 1 , 2 ]").unwrap(),
+    JsonValue::Array(vec![JsonValue::Number(1.0), JsonValue::Number(2.0)])
+  );
+}
+
+#[test]
 fn parse_array_mixed() {
   let result = parse(r#"[1, "two", true, null]"#).unwrap();
   assert_eq!(
@@ -155,6 +163,17 @@ fn parse_with_surrounding_whitespace() {
     m.insert(Cow::Borrowed("a"), JsonValue::Number(1.0));
     JsonValue::Object(m)
   });
+}
+
+#[test]
+fn parse_nested_whitespace_in_object_and_array() {
+  let result = parse(r#"{ "a" : [ 1 , 2 ] }"#).unwrap();
+  let mut expected = BTreeMap::new();
+  expected.insert(
+    Cow::Borrowed("a"),
+    JsonValue::Array(vec![JsonValue::Number(1.0), JsonValue::Number(2.0)]),
+  );
+  assert_eq!(result, JsonValue::Object(expected));
 }
 
 #[test]
