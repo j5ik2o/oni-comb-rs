@@ -32,18 +32,16 @@ fn json_null<'a>() -> impl Parser<StrInputStream<'a>, Output = JsonValue<'a>, Er
   tag("null").map(|_| JsonValue::Null)
 }
 
-fn json_bool<'a>() -> impl Parser<StrInputStream<'a>, Output = JsonValue<'a>, Error = ParseError> {
-  tag("true")
-    .map(|_| JsonValue::Bool(true))
-    .or(tag("false").map(|_| JsonValue::Bool(false)))
-}
-
 fn json_number<'a>() -> impl Parser<StrInputStream<'a>, Output = JsonValue<'a>, Error = ParseError> {
   float().map(JsonValue::Number)
 }
 
 fn json_string_value<'a>() -> impl Parser<StrInputStream<'a>, Output = JsonValue<'a>, Error = ParseError> {
   quoted_string().map(JsonValue::String)
+}
+
+fn is_json_number_start(byte: u8) -> bool {
+  byte == b'-' || byte.is_ascii_digit()
 }
 
 // ── Compound (built via recursive) ──────────────
@@ -75,12 +73,14 @@ fn build_json_value_parser<'a>() -> impl Parser<StrInputStream<'a>, Output = Jso
       });
 
     // ── value: ws (null | bool | number | string | array | object) ──
-    json_null()
-      .or(json_bool())
-      .or(json_number())
-      .or(json_string_value())
-      .or(array)
-      .or(object)
+    predictive_choice::<StrInputStream<'a>, JsonValue<'a>>()
+      .when_byte(b'n', json_null())
+      .when_byte(b't', tag("true").map(|_| JsonValue::Bool(true)))
+      .when_byte(b'f', tag("false").map(|_| JsonValue::Bool(false)))
+      .when_predicate(is_json_number_start, json_number())
+      .when_byte(b'"', json_string_value())
+      .when_byte(b'[', array)
+      .when_byte(b'{', object)
       .context("JSON value")
   })
 }

@@ -37,6 +37,8 @@ pub use crate::combinator::fn_parser::fn_parser;
 pub use crate::combinator::guard::guard;
 pub use crate::combinator::position::position;
 #[cfg(feature = "alloc")]
+pub use crate::combinator::predictive_choice::predictive_choice;
+#[cfg(feature = "alloc")]
 pub use crate::combinator::recursive::recursive;
 pub use crate::ops::Ops;
 

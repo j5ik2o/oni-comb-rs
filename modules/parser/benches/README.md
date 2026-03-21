@@ -169,13 +169,13 @@ Same-machine rerun on March 21, 2026 using the same 107KB JSON file (100 samples
 
 | Library | Mean | Throughput (mean, MiB/s) |
 |---------|------|-------------------------|
-| oni-comb | 671.7 µs | 152.0 |
-| **winnow** | **176.0 µs** | **580.0** |
-| nom | 286.1 µs | 356.8 |
-| chumsky | 493.9 µs | 206.7 |
-| pom | 7,880 µs | 13.0 |
+| oni-comb | 300.5 µs | 339.6 |
+| **winnow** | **174.9 µs** | **583.7** |
+| nom | 284.0 µs | 359.4 |
+| chumsky | 560.4 µs | 182.2 |
+| pom | 7,532 µs | 13.6 |
 
-**On this rerun, `winnow` still leads the full-JSON benchmark, followed by `nom` and `chumsky`. oni-comb improves to 152.0 MiB/s after the latest `take_while*` hot-path cleanup and still beats `pom`, but the realistic 107KB payload remains slower than the top three parsers.** The latest gain mainly comes from removing per-token checkpoint/reset churn in generic scanning paths:
+**On this rerun, `winnow` still leads the full-JSON benchmark, with `nom` next. oni-comb climbs to 339.6 MiB/s after the predictive-choice pass and now sits close to `nom`, clearly ahead of `chumsky` and `pom`.** The latest gain mainly comes from reducing linear `or`-chain trial work in JSON value dispatch while preserving declarative combinator code:
 - Function recursion via `fn_parser` (eliminates `recursive()`'s `Box<dyn Parser>` vtable)
 - Leading-byte dispatch via `peek_byte` (eliminates `or` chain linear scanning)
 - Zero-copy strings via `quoted_string` (unescaped strings use `&str` slices)
@@ -183,7 +183,7 @@ Same-machine rerun on March 21, 2026 using the same 107KB JSON file (100 samples
 - ASCII fast-path token access in `StrInputStream`
 - Lower-overhead generic `take_while*` loops that avoid per-token checkpoint/reset churn in whitespace and separator handling
 
-During the later `improve-recursive-runtime` rerun on March 21, 2026, `json_full/oni-comb` measured about **685.7 µs / 148.9 MiB/s**. That recovered most of an earlier thunk-prototype regression (~707µs), but it still did not beat the 671.7µs snapshot above, so `recursive()` is only part of the full-JSON bottleneck story.
+The intermediate `improve-recursive-runtime` rerun reached about **685.7 µs / 148.9 MiB/s**; the later predictive-choice pass cut that roughly in half again to **300.5 µs / 339.6 MiB/s**, which confirms that recursive runtime overhead was only part of the macro bottleneck story.
 
 ### Heap Allocation Measurement (dhat-rs)
 
@@ -305,8 +305,8 @@ Introduced `Token`/`Slice` associated types to `InputStream` trait and moved `sa
 
 ## Overall Assessment
 
-- **`winnow` still leads the macro benchmark** — 580.0 MiB/s on the 107KB JSON rerun, with `nom` at 356.8 MiB/s and `chumsky` at 206.7 MiB/s; oni-comb now reaches 152.0 MiB/s
-- **The latest `take_while*` hot-path cleanup recovered both subset JSON and full JSON** — `null` fell to 16.5ns, `object_large` to ~1.38µs, and the 107KB full-JSON run improved to 671.7µs
+- **`winnow` still leads the macro benchmark** — 583.7 MiB/s on the 107KB JSON rerun, with `nom` at 359.4 MiB/s; oni-comb now reaches 339.6 MiB/s and has moved well ahead of `chumsky` / `pom`
+- **Predictive choice is the highest-ROI macro optimization so far** — the 107KB full-JSON run improved from the previous 685.7µs intermediate snapshot to about 300.5µs while keeping the grammar declarative
 - **Token-level generic parsers remain competitive, but the latest rerun is less flattering than the previous snapshot** — identifier 11B: oni-comb 20.0ns vs winnow 20.5ns / nom 33.3ns; integer 20B: oni-comb 22.8ns vs winnow 22.7ns / nom 22.5ns
 - **chumsky 0.12 remains dramatically better than older releases** — short identifiers are still in the same ballpark as oni-comb (`"x"`: 16.6ns vs 14.6ns), but medium/long inputs still trail substantially (`"foo_bar_123"`: 85.0ns vs 20.0ns)
 - **flat_map still has a measurable gap to the best parsers** — especially same-type branch dispatch (`"1one"`: oni-comb 10.6ns vs winnow 2.4ns / nom 2.6ns)

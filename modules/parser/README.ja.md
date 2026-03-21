@@ -16,7 +16,7 @@
 
 ## パフォーマンス
 
-- **JSON フルベンチ再計測（2026-03-21）** — 107KB サンプルで `671.7 µs`、`152.0 MiB/s`。`winnow` / `nom` / `chumsky` には及ばないが、`pom` よりは 11.7 倍速い
+- **JSON フルベンチ再計測（2026-03-21、predictive-choice 適用後）** — 107KB サンプルで `300.5 µs`、`339.6 MiB/s`。`winnow` には及ばないが、`nom` と近いレンジまで回復し、`chumsky` / `pom` は明確に上回る
 - **generic token パーサーは今回の `comparison` 再計測でも competitive** — identifier `"foo_bar_123"` が `20.0 ns`、integer `"184467...615"` が `22.8 ns`
 - **最新の JSON subset 再計測では `take_while*` ホットパス整理後に回復** — `null` が `16.5 ns`、`{"name":"oni-comb",...}` が `661.3 ns`、`{"a":1,...,"h":8}` が `1,379 ns`
 - **残るホットスポット** — 極小の分岐ディスパッチ系 microbenchmark では `flat_map` がまだ `winnow` / `nom` に劣る
@@ -66,6 +66,7 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 | `escaped(open, close, esc, handler)` | 汎用エスケープ文字列 | `String` |
 | `lexeme(p)` | パーサー実行後に後続の空白を消費 | `P::Output` |
 | `between(l, p, r)` | l, p, r を順に実行し p の値を返す | `P::Output` |
+| `predictive_choice()` | 次の byte から分岐先を選ぶ（入力は消費しない） | `P::Output` |
 | `recursive(f)` | 再帰パーサーを構築 | `P::Output` |
 | `fn_parser(f)` | 関数を Parser にラップ | `O` |
 

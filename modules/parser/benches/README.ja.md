@@ -169,13 +169,13 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 | ライブラリ | Mean | Throughput (mean, MiB/s) |
 |-----------|------|-------------------------|
-| oni-comb | 671.7 µs | 152.0 |
-| **winnow** | **176.0 µs** | **580.0** |
-| nom | 286.1 µs | 356.8 |
-| chumsky | 493.9 µs | 206.7 |
-| pom | 7,880 µs | 13.0 |
+| oni-comb | 300.5 µs | 339.6 |
+| **winnow** | **174.9 µs** | **583.7** |
+| nom | 284.0 µs | 359.4 |
+| chumsky | 560.4 µs | 182.2 |
+| pom | 7,532 µs | 13.6 |
 
-**今回の再計測でも JSON フルベンチの首位は `winnow` で、続いて `nom`、`chumsky` が並ぶ。oni-comb は最新の `take_while*` ホットパス整理で 152.0 MiB/s まで改善し `pom` は上回るが、107KB の実運用寄り JSON ではまだ上位 3 実装より遅い。** 今回の改善は主に generic scan path の per-token checkpoint/reset を減らした効果で、次の設計要素と組み合わさっている:
+**今回の再計測でも JSON フルベンチの首位は `winnow` で、続いて `nom`。oni-comb は predictive-choice 適用で 339.6 MiB/s まで伸び、`nom` と近いレンジまで回復し、`chumsky` / `pom` は明確に上回った。** 今回の改善は、宣言的な combinator 記述を保ったまま JSON value dispatch の `or` 連鎖を減らした効果が大きい:
 - `fn_parser` による関数再帰（`recursive()` の `Box<dyn Parser>` vtable を排除）
 - `peek_byte` による先頭バイト分岐（`or` チェーンの線形スキャンを排除）
 - `quoted_string` によるゼロコピー文字列（エスケープなし文字列は `&str` スライス）
@@ -183,7 +183,7 @@ cargo bench -p oni-comb-parser --bench alloc_count
 - `StrInputStream` の ASCII fast path
 - `take_while*` の generic ループから per-token checkpoint/reset を外し、空白・区切り処理のオーバーヘッドを減らしたこと
 
-その後の `improve-recursive-runtime` 作業中の再計測では、`json_full/oni-comb` は **約 685.7µs / 148.9 MiB/s** だった。初期の thunk 試作版で一度 ~707µs まで落ちた状態からは回復したが、上の 671.7µs スナップショットはまだ上回れておらず、`recursive()` だけでは JSON フル全体のボトルネックを説明しきれない。
+`improve-recursive-runtime` の途中再計測では `json_full/oni-comb` は **約 685.7µs / 148.9 MiB/s** に留まっていたが、その後の predictive-choice 適用で **300.5µs / 339.6 MiB/s** までさらに半減した。JSON フルの主因は `recursive()` だけでなく、value dispatch の `or` 連鎖にも強くあったことが確認できた。
 
 ### ヒープアロケーション計測（dhat-rs）
 
@@ -305,8 +305,8 @@ dhat: At t-end:  0 bytes in 0 blocks
 
 ## 総合評価
 
-- **マクロベンチの首位は引き続き `winnow`** — 107KB JSON 再計測で 580.0 MiB/s、`nom` は 356.8 MiB/s、`chumsky` は 206.7 MiB/s、oni-comb は 152.0 MiB/s
-- **最新の `take_while*` ホットパス整理で subset JSON と full JSON の両方が回復** — `null` は 16.5ns、`object_large` は ~1.38µs、107KB full JSON も 671.7µs まで改善
+- **マクロベンチの首位は引き続き `winnow`** — 107KB JSON 再計測で 583.7 MiB/s、`nom` は 359.4 MiB/s、oni-comb は 339.6 MiB/s まで伸び、`chumsky` / `pom` を大きく上回った
+- **predictive choice は今のところ最も ROI が高いマクロ最適化** — 107KB full JSON は直前の 685.7µs スナップショットから約 300.5µs まで短縮しつつ、文法の declarative 性を維持した
 - **generic token パーサーは依然 competitive だが、今回の再計測は前回より厳しい** — identifier 11B: oni-comb 20.0ns vs winnow 20.5ns / nom 33.3ns、integer 20B: oni-comb 22.8ns vs winnow 22.7ns / nom 22.5ns
 - **chumsky 0.12 は旧版より大幅改善したまま** — 短い identifier は今も oni-comb と近い（`"x"`: 16.6ns vs 14.6ns）が、中〜長入力ではなお差がある（`"foo_bar_123"`: 85.0ns vs 20.0ns）
 - **flat_map は依然として最速勢に差がある** — とくに同一型分岐（`"1one"`: oni-comb 10.6ns vs winnow 2.4ns / nom 2.6ns）

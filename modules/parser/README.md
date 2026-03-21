@@ -16,7 +16,7 @@ A parser-monad combinator library for Rust. The core crate of [oni-comb-rs](../.
 
 ## Performance
 
-- **Full JSON benchmark rerun (March 21, 2026)** — `671.7 µs`, `152.0 MiB/s` on the 107KB sample; still behind `winnow`, `nom`, and `chumsky`, but 11.7x faster than `pom`
+- **Full JSON benchmark rerun (March 21, 2026, predictive-choice pass)** — `300.5 µs`, `339.6 MiB/s` on the 107KB sample; still behind `winnow`, roughly in the same range as `nom`, and now clearly ahead of `chumsky` and `pom`
 - **Generic token parsers remain competitive in the latest `comparison` rerun** — identifier `"foo_bar_123"` is `20.0 ns`, while integer `"184467...615"` is `22.8 ns`
 - **Latest JSON subset rerun recovered after the `take_while*` hot-path cleanup** — `null` is `16.5 ns`, `{"name":"oni-comb",...}` is `661.3 ns`, and `{"a":1,...,"h":8}` is `1,379 ns`
 - **Remaining hotspot** — `flat_map` still trails `winnow` / `nom` on the smallest branch-dispatch microbenchmarks
@@ -67,6 +67,7 @@ assert_eq!(int_parser.parse_next(&mut input).unwrap(), 42);
 | `escaped(open, close, esc, handler)` | Generic escaped string | `String` |
 | `lexeme(p)` | Run parser then consume trailing whitespace | `P::Output` |
 | `between(l, p, r)` | Run l, p, r and return p's value | `P::Output` |
+| `predictive_choice()` | Select branch from next byte without consuming input | `P::Output` |
 | `recursive(f)` | Build recursive parser | `P::Output` |
 | `fn_parser(f)` | Wrap function as Parser | `O` |
 

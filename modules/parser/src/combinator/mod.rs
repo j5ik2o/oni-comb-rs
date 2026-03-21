@@ -21,6 +21,8 @@ pub mod not;
 pub mod optional;
 pub mod or;
 pub mod peek;
+#[cfg(feature = "alloc")]
+pub mod predictive_choice;
 pub mod position;
 #[cfg(feature = "alloc")]
 pub mod recursive;
