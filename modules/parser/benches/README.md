@@ -173,7 +173,7 @@ Same-machine rerun on March 21, 2026 using the same 107KB JSON file (100 samples
 | **winnow** | **176.0 µs** | **580.0** |
 | nom | 286.1 µs | 356.8 |
 | chumsky | 493.9 µs | 206.7 |
-| pom | 7.88 ms | 13.0 |
+| pom | 7,880 µs | 13.0 |
 
 **On this rerun, `winnow` still leads the full-JSON benchmark, followed by `nom` and `chumsky`. oni-comb improves to 152.0 MiB/s after the latest `take_while*` hot-path cleanup and still beats `pom`, but the realistic 107KB payload remains slower than the top three parsers.** The latest gain mainly comes from removing per-token checkpoint/reset churn in generic scanning paths:
 - Function recursion via `fn_parser` (eliminates `recursive()`'s `Box<dyn Parser>` vtable)

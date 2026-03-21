@@ -173,7 +173,7 @@ cargo bench -p oni-comb-parser --bench alloc_count
 | **winnow** | **176.0 µs** | **580.0** |
 | nom | 286.1 µs | 356.8 |
 | chumsky | 493.9 µs | 206.7 |
-| pom | 7.88 ms | 13.0 |
+| pom | 7,880 µs | 13.0 |
 
 **今回の再計測でも JSON フルベンチの首位は `winnow` で、続いて `nom`、`chumsky` が並ぶ。oni-comb は最新の `take_while*` ホットパス整理で 152.0 MiB/s まで改善し `pom` は上回るが、107KB の実運用寄り JSON ではまだ上位 3 実装より遅い。** 今回の改善は主に generic scan path の per-token checkpoint/reset を減らした効果で、次の設計要素と組み合わさっている:
 - `fn_parser` による関数再帰（`recursive()` の `Box<dyn Parser>` vtable を排除）
