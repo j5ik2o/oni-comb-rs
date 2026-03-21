@@ -148,18 +148,18 @@ cargo bench -p oni-comb-parser --bench alloc_count
 
 | 入力 | 時間 |
 |------|------|
-| `42` | 166 ns |
-| `1 + 2` | 268 ns |
-| `1 + 2 * 3` | 299 ns |
-| `(1 + 2) * 3` | 487 ns |
-| `1 + 2 * (3 - 4) + 5` | 719 ns |
-| `(((1 + 2) * 3) - 4) / 5` | 1,044 ns |
-| `1 + 2 + ... + 8` | 862 ns |
+| `42` | 159 ns |
+| `1 + 2` | 249 ns |
+| `1 + 2 * 3` | 282 ns |
+| `(1 + 2) * 3` | 451 ns |
+| `1 + 2 * (3 - 4) + 5` | 670 ns |
+| `(((1 + 2) * 3) - 4) / 5` | 972 ns |
+| `1 + 2 + ... + 8` | 810 ns |
 
 **所見:**
-- 単一整数で ~166ns は依然かなり重い。`recursive()` の `Rc<UnsafeCell<Box<dyn Parser>>>` 経由の間接呼び出し + `whitespace0` のオーバーヘッド。
-- 括弧のネストごとにおおむね ~200ns 追加されており、再帰 1 段の `Box<dyn Parser>` コストと整合する。
-- 8項の加算チェーンは ~0.86µs。主ボトルネックは引き続き `chainl1` ループ自体ではない。
+- 2026-03-21 の後続再計測では、`recursive()` ランタイムを owner/ref 分離 + typed thunk に置き換えたことで、単一整数ケースは ~169ns から ~159ns まで下がった。steady-state から `Box<dyn Parser>` と `Option` チェックを外した効果が出ている。
+- 括弧付き・深いネストのケースも一貫して改善したが、再帰 1 段ごとに依然おおむね ~190-220ns 増えるため、共有ランタイム indirection と `whitespace0` はまだ支配的なコストである。
+- 8項の加算チェーンは ~0.81µs。主ボトルネックは引き続き `chainl1` ループ自体ではない。
 
 ### JSON フルベンチ（107KB sample.json）
 
@@ -182,6 +182,8 @@ cargo bench -p oni-comb-parser --bench alloc_count
 - `take_while1` による数値パースのゼロコピー化
 - `StrInputStream` の ASCII fast path
 - `take_while*` の generic ループから per-token checkpoint/reset を外し、空白・区切り処理のオーバーヘッドを減らしたこと
+
+その後の `improve-recursive-runtime` 作業中の再計測では、`json_full/oni-comb` は **約 685.7µs / 148.9 MiB/s** だった。初期の thunk 試作版で一度 ~707µs まで落ちた状態からは回復したが、上の 671.7µs スナップショットはまだ上回れておらず、`recursive()` だけでは JSON フル全体のボトルネックを説明しきれない。
 
 ### ヒープアロケーション計測（dhat-rs）
 
@@ -256,7 +258,7 @@ dhat: At t-end:  0 bytes in 0 blocks
 
 ### 残存するボトルネック
 
-1. **`recursive()` は依然として重い**: 四則演算ベンチの単一整数で ~151ns（`fn_parser` なら ~3ns）。`recursive()` が必要なケース（文法構造上 `fn` で書けない場合）では vtable コストが残る。
+1. **`recursive()` は依然として重い**: owner/ref 分離 + typed thunk 化の後でも、四則演算ベンチの単一整数は ~159ns で、`fn_parser` 相当（~3ns）とはまだ大きな差がある。主因はもはや旧 `Box<dyn Parser>` vtable そのものではなく、共有ランタイム indirection と周辺の空白処理である。
 2. **`flat_map` はまだ最速勢より重い**: 同一型分岐は 5.7 / 5.5 / 4.1ns まで改善したが、winnow / nom にはまだ差がある。異種型 boxed 分岐は winnow にかなり近づいたが、nom との差は大きい。
 
 ### Generic InputStream リファクタリングの影響（InputStream トレイトジェネリック化）

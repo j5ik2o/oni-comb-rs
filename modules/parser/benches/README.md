@@ -148,18 +148,18 @@ The full JSON section later in this document is the separate `json_full` rerun f
 
 | Input | Time |
 |-------|------|
-| `42` | 166 ns |
-| `1 + 2` | 268 ns |
-| `1 + 2 * 3` | 299 ns |
-| `(1 + 2) * 3` | 487 ns |
-| `1 + 2 * (3 - 4) + 5` | 719 ns |
-| `(((1 + 2) * 3) - 4) / 5` | 1,044 ns |
-| `1 + 2 + ... + 8` | 862 ns |
+| `42` | 159 ns |
+| `1 + 2` | 249 ns |
+| `1 + 2 * 3` | 282 ns |
+| `(1 + 2) * 3` | 451 ns |
+| `1 + 2 * (3 - 4) + 5` | 670 ns |
+| `(((1 + 2) * 3) - 4) / 5` | 972 ns |
+| `1 + 2 + ... + 8` | 810 ns |
 
 **Observations:**
-- ~166ns for a single integer is still quite heavy. This is due to `recursive()`'s indirect calls via `Rc<UnsafeCell<Box<dyn Parser>>>` + `whitespace0` overhead.
-- Each level of parenthesis nesting still adds roughly ~200ns, consistent with one additional `Box<dyn Parser>` recursion stage.
-- The 8-term addition chain is now ~0.86µs, which still suggests the `chainl1` loop itself is not the main bottleneck.
+- A later March 21, 2026 rerun after the `recursive()` runtime refactor lowered the single-integer case from ~169ns to ~159ns by removing `Box<dyn Parser>` and steady-state `Option` checks from the recursive hot path.
+- Parenthesized and nested cases also improved across the board, but each extra recursion layer still adds roughly ~190-220ns, so recursive indirection plus `whitespace0` remain material costs.
+- The 8-term addition chain is now ~0.81µs, which still suggests the `chainl1` loop itself is not the main bottleneck.
 
 ### Full JSON Benchmark (107KB sample.json)
 
@@ -182,6 +182,8 @@ Same-machine rerun on March 21, 2026 using the same 107KB JSON file (100 samples
 - Zero-copy number parsing via `take_while1`
 - ASCII fast-path token access in `StrInputStream`
 - Lower-overhead generic `take_while*` loops that avoid per-token checkpoint/reset churn in whitespace and separator handling
+
+During the later `improve-recursive-runtime` rerun on March 21, 2026, `json_full/oni-comb` measured about **685.7 µs / 148.9 MiB/s**. That recovered most of an earlier thunk-prototype regression (~707µs), but it still did not beat the 671.7µs snapshot above, so `recursive()` is only part of the full-JSON bottleneck story.
 
 ### Heap Allocation Measurement (dhat-rs)
 
@@ -256,7 +258,7 @@ The tables below are historical snapshots captured during earlier optimization s
 
 ### Remaining Bottlenecks
 
-1. **`recursive()` is still heavy**: A single integer in the arithmetic benchmark takes ~151ns (`fn_parser` would be ~3ns). The vtable cost remains for cases where `recursive()` is needed (when `fn` recursion isn't structurally feasible).
+1. **`recursive()` is still heavy**: after the owner/ref split + typed thunk runtime change, a single integer in the arithmetic benchmark is down to ~159ns, but it is still far from `fn_parser`-style recursion (~3ns). The remaining cost is now the shared runtime indirection plus surrounding whitespace handling, not the old `Box<dyn Parser>` vtable itself.
 2. **`flat_map` is still costlier than the best parsers**: same-type branches improved to 5.7 / 5.5 / 4.1ns, but still trail winnow and nom; heterogeneous boxed branches are now near winnow, but nom remains far ahead.
 
 ### Generic InputStream Refactoring Effect (InputStream trait generification)

@@ -61,6 +61,29 @@ fn recursive_with_map() {
   assert_eq!(depth.clone().parse_next(&mut input).unwrap(), 3);
 }
 
+#[test]
+fn recursive_root_clone_keeps_runtime_alive() {
+  let value = recursive(|value| tag("x").or(between(tag("("), value, tag(")"))));
+  let mut cloned = value.clone();
+
+  drop(value);
+
+  let mut input = StrInputStream::new("((x))");
+  assert_eq!(cloned.parse_next(&mut input).unwrap(), "x");
+}
+
+#[test]
+fn recursive_reference_can_be_reused_across_multiple_branches() {
+  let value = recursive(|value| {
+    let paren = between(tag("("), value.clone(), tag(")"));
+    let brace = between(tag("{"), value, tag("}"));
+    tag("x").or(paren).or(brace)
+  });
+
+  let mut input = StrInputStream::new("{(x)}");
+  assert_eq!(value.clone().parse_next(&mut input).unwrap(), "x");
+}
+
 // ── リスト構造 ────────────────────────────────
 
 #[test]
