@@ -81,6 +81,30 @@ impl<'a> StrInputStream<'a> {
     }
   }
 
+  #[inline]
+  pub(crate) fn consume_ascii_whitespace_prefix(&mut self) -> &'a str {
+    let start = self.offset;
+    let bytes = self.src.as_bytes();
+
+    while self.offset < bytes.len() {
+      match bytes[self.offset] {
+        b' ' | b'\t' | b'\r' => {
+          self.offset += 1;
+          self.column += 1;
+        }
+        b'\n' => {
+          self.offset += 1;
+          self.line += 1;
+          self.column = 1;
+          self.line_start = self.offset;
+        }
+        _ => break,
+      }
+    }
+
+    &self.src[start..self.offset]
+  }
+
   pub(crate) fn as_str(&self) -> &'a str {
     &self.src[self.offset..]
   }

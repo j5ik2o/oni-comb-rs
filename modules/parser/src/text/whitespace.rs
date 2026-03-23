@@ -1,16 +1,46 @@
-use crate::primitive::take_while0::TakeWhile0;
-use crate::primitive::take_while1::TakeWhile1;
+use crate::error::{ExpectError, Expected};
+use crate::fail::{Fail, PResult};
+use crate::input_stream::InputStream;
+use crate::parser::Parser;
 use crate::str_input_stream::StrInputStream;
-use crate::text::take_while::{take_while0, take_while1};
 
-fn is_ws(c: char) -> bool {
-  c.is_ascii_whitespace()
+pub struct Whitespace0;
+
+pub fn whitespace0() -> Whitespace0 {
+  Whitespace0
 }
 
-pub fn whitespace0<'a>() -> TakeWhile0<fn(char) -> bool, StrInputStream<'a>> {
-  take_while0(is_ws as fn(char) -> bool)
+impl<'a> Parser<StrInputStream<'a>> for Whitespace0 {
+  type Error = <StrInputStream<'a> as InputStream>::Error;
+  type Output = &'a str;
+
+  #[inline]
+  fn parse_next(&mut self, input: &mut StrInputStream<'a>) -> PResult<&'a str, Self::Error> {
+    Ok(input.consume_ascii_whitespace_prefix())
+  }
 }
 
-pub fn whitespace1<'a>() -> TakeWhile1<fn(char) -> bool, StrInputStream<'a>> {
-  take_while1(is_ws as fn(char) -> bool)
+pub struct Whitespace1;
+
+pub fn whitespace1() -> Whitespace1 {
+  Whitespace1
+}
+
+impl<'a> Parser<StrInputStream<'a>> for Whitespace1 {
+  type Error = <StrInputStream<'a> as InputStream>::Error;
+  type Output = &'a str;
+
+  #[inline]
+  fn parse_next(&mut self, input: &mut StrInputStream<'a>) -> PResult<&'a str, Self::Error> {
+    let matched = input.consume_ascii_whitespace_prefix();
+
+    if matched.is_empty() {
+      return Err(Fail::Backtrack(Self::Error::from_position(
+        input.position(),
+        Expected::Description("at least one matching token"),
+      )));
+    }
+
+    Ok(matched)
+  }
 }
